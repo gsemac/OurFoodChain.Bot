@@ -31,6 +31,8 @@ namespace OurFoodChain {
 
             _discord_client.Log += _log;
             _discord_client.MessageReceived += _messageReceived;
+            _discord_client.ReactionAdded += _reactionReceived;
+            _discord_client.ReactionRemoved += _reactionRemoved;
 
         }
 
@@ -49,8 +51,16 @@ namespace OurFoodChain {
 
         public async Task Connect() {
 
+            // Install commands.
+
+            await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly());
+
+            // Login to Discord.
+
             await _discord_client.LoginAsync(TokenType.Bot, _config.token);
             await _discord_client.StartAsync();
+
+            // Set the bot's "Now Playing".
 
             await _discord_client.SetGameAsync(_config.playing);
 
@@ -82,10 +92,58 @@ namespace OurFoodChain {
             if (!_isUserMessage(message))
                 return;
 
+            if (BotUtils.TWO_PART_COMMAND_WAIT_PARAMS.ContainsKey(message.Author.Id)) {
+
+                await BotUtils.HandleTwoPartCommandResponse(message);
+
+                return;
+
+            }
+
             if (!_isBotCommand(message as SocketUserMessage))
                 return;
 
             await _executeCommand(message as SocketUserMessage);
+
+        }
+        private async Task _reactionReceived(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
+
+            if (!CommandUtils.PAGINATED_MESSAGES.ContainsKey(reaction.MessageId))
+                return;
+
+            if (reaction.UserId == _discord_client.CurrentUser.Id)
+                return;
+
+            CommandUtils.PaginatedMessage paginated = CommandUtils.PAGINATED_MESSAGES[reaction.MessageId];
+            
+            if (paginated.pages is null || paginated.pages.Count() <= 0)
+                return;
+            
+            if (++paginated.index >= paginated.pages.Count())
+                paginated.index = 0;
+
+            await cached.DownloadAsync().Result.ModifyAsync(msg => msg.Embed = paginated.pages[paginated.index]);
+
+        }
+        private async Task _reactionRemoved(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
+
+            if (!CommandUtils.PAGINATED_MESSAGES.ContainsKey(reaction.MessageId))
+                return;
+
+            if (reaction.UserId == _discord_client.CurrentUser.Id)
+                return;
+
+            CommandUtils.PaginatedMessage paginated = CommandUtils.PAGINATED_MESSAGES[reaction.MessageId];
+
+            if (paginated.pages is null || paginated.pages.Count() <= 0)
+                return;
+
+            if (paginated.index <= 0)
+                paginated.index = paginated.pages.Count() - 1;
+            else
+                --paginated.index;
+
+            await cached.DownloadAsync().Result.ModifyAsync(msg => msg.Embed = paginated.pages[paginated.index]);
 
         }
 

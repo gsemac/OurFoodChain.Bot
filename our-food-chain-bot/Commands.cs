@@ -143,7 +143,6 @@ namespace OurFoodChain {
             else {
 
                 EmbedBuilder embed = new EmbedBuilder();
-                embed.WithColor(Color.Green);
 
                 StringBuilder builder = new StringBuilder();
                 Species sp = sp_list[0];
@@ -155,9 +154,18 @@ namespace OurFoodChain {
                 builder.Append("**Zone(s):** ");
 
                 List<string> zone_names = new List<string>();
+                Color embed_color = Color.Blue;
 
-                foreach (Zone zone in await BotUtils.GetZonesFromDb(sp.id))
+                foreach (Zone zone in await BotUtils.GetZonesFromDb(sp.id)) {
+
+                    if (zone.type == ZoneType.Terrestrial)
+                        embed_color = Color.DarkGreen;
+
                     zone_names.Add(zone.name);
+
+                }
+
+                embed.WithColor(embed_color);
 
                 builder.AppendLine(string.Join(", ", zone_names));
 
@@ -250,16 +258,15 @@ namespace OurFoodChain {
                 await Database.ExecuteNonQuery(cmd);
 
             }
-            Console.WriteLine(genus_info.id);
-            Console.WriteLine(genus_info.name);
+
             long species_id = await BotUtils.GetSpeciesIdFromDb(genus_info.id, species);
-            Console.WriteLine(species_id);
+
             // Add to all given zones.
 
             foreach (string zoneName in zones) {
 
                 Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
-                Console.WriteLine(zone_info.name);
+
                 if (zone_info is null || zone_info.id == -1) {
 
                     await ReplyAsync("The given Zone does not exist.");
@@ -456,7 +463,7 @@ namespace OurFoodChain {
                 species_name_list.Sort();
 
                 if (species_name_list.Count() > 0)
-                    embed.AddField("Extant species in this zone:", string.Join(Environment.NewLine, species_name_list));
+                    embed.AddField(string.Format("Extant species in this zone ({0}):", species_name_list.Count()), string.Join(Environment.NewLine, species_name_list));
 
 
                 await ReplyAsync("", false, embed.Build());
@@ -1032,6 +1039,8 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Phylum(name) VALUES($phylum);")) {
 
                 cmd.Parameters.AddWithValue("$phylum", phylum);
+
+                await Database.ExecuteNonQuery(cmd);
 
             }
 

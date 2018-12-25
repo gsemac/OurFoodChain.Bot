@@ -199,7 +199,7 @@ namespace OurFoodChain {
 
                 embed.WithTitle(title);
                 embed.WithDescription(builder.ToString());
-                embed.WithImageUrl(sp.pics);
+                embed.WithThumbnailUrl(sp.pics);
 
                 await ReplyAsync("", false, embed.Build());
 
@@ -501,11 +501,11 @@ namespace OurFoodChain {
         public async Task Map() {
 
             EmbedBuilder page1 = new EmbedBuilder {
-                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/526549551444787211/image0.jpg"
+                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194144225886218/OFC2.png"
             };
 
             EmbedBuilder page2 = new EmbedBuilder {
-                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/526549561238487040/image0.jpg"
+                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194196260683778/OFCtruelabels.png"
             };
 
             IUserMessage message = await ReplyAsync("", false, page1.Build());

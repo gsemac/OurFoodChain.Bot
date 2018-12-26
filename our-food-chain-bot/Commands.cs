@@ -1138,32 +1138,47 @@ namespace OurFoodChain {
         }
 
         [Command("search")]
-        public async Task Search(string terms) {
+        public async Task Search(params string[] terms) {
 
-            List<Species> list = new List<Species>();
+            if (terms.Count() <= 0) {
 
-            foreach (string term in terms.Split(' ')) {
+                await ReplyAsync("Too few search terms have been provided.");
 
-                string t = "%" + term.Trim() + "%";
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name LIKE $term OR description LIKE $term;")) {
-
-                    cmd.Parameters.AddWithValue("$term", t);
-
-                    using (DataTable rows = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in rows.Rows)
-                            list.Add(await Species.FromDataRow(row));
-
-                }
+                return;
 
             }
 
-            List<string> names_list = new List<string>();
+            List<Species> list = new List<Species>();
+
+            List<string> term_query_builder = new List<string>();
+
+            for (int i = 0; i < terms.Count(); ++i)
+                term_query_builder.Add(string.Format("(name LIKE {0} OR description LIKE {0} OR common_name LIKE {0})", string.Format("$term{0}", i)));
+
+            string query_str = string.Format("SELECT * FROM Species WHERE {0};", string.Join(" AND ", term_query_builder));
+
+            using (SQLiteCommand cmd = new SQLiteCommand(query_str)) {
+
+                // Add all terms to the query.
+
+                for (int i = 0; i < terms.Count(); ++i) {
+
+                    string term = "%" + terms[i].Trim() + "%";
+
+                    cmd.Parameters.AddWithValue(string.Format("$term{0}", i), term);
+
+                }
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        list.Add(await Species.FromDataRow(row));
+
+            }
+
+            SortedSet<string> names_list = new SortedSet<string>();
 
             foreach (Species sp in list)
                 names_list.Add(sp.GetShortName());
-
-            names_list.Sort();
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle("Search results");

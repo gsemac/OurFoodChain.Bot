@@ -1,4 +1,6 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -136,11 +138,40 @@ namespace OurFoodChain {
 
     }
 
+    class Role {
+
+        public long id;
+        public string name;
+        public string description;
+
+        public string GetDescriptionOrDefault() {
+
+            if (string.IsNullOrEmpty(description))
+                return BotUtils.DEFAULT_DESCRIPTION;
+
+            return description;
+
+        }
+
+        public static Role FromDataRow(DataRow row) {
+
+            Role role = new Role();
+            role.id = row.Field<long>("id");
+            role.name = row.Field<string>("name");
+            role.description = row.Field<string>("description");
+
+            return role;
+
+        }
+
+    }
+
     class BotUtils {
 
         public static readonly string DEFAULT_SPECIES_DESCRIPTION = "No description provided.";
         public static readonly string DEFAULT_GENUS_DESCRIPTION = "No description provided.";
         public static readonly string DEFAULT_ZONE_DESCRIPTION = "No description provided.";
+        public static readonly string DEFAULT_DESCRIPTION = "No description provided.";
 
         public static Dictionary<ulong, TwoPartCommandWaitParams> TWO_PART_COMMAND_WAIT_PARAMS = new Dictionary<ulong, TwoPartCommandWaitParams>();
 
@@ -306,6 +337,28 @@ namespace OurFoodChain {
             return null;
 
         }
+        public static async Task<Species[]> GetSpeciesFromDbByRole(Role role) {
+
+            // Return all species with the given role.
+
+            List<Species> species = new List<Species>();
+
+            if (role is null || role.id <= 0)
+                return species.ToArray();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesRoles WHERE role_id=$role_id) ORDER BY name ASC;")) {
+
+                cmd.Parameters.AddWithValue("$role_id", role.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        species.Add(await Species.FromDataRow(row));
+
+            }
+
+            return species.ToArray();
+
+        }
         public static async Task<Zone> GetZoneFromDb(long zoneId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id=$zone_id;")) {
@@ -338,6 +391,86 @@ namespace OurFoodChain {
             }
 
             return null;
+
+        }
+        public static async Task<Role> GetRoleFromDb(long roleId) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE id=$role_id;")) {
+
+                cmd.Parameters.AddWithValue("$role_id", roleId);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    return Role.FromDataRow(row);
+
+            }
+
+            return null;
+
+
+        }
+        public static async Task<Role[]> GetRolesFromDb() {
+
+            List<Role> roles = new List<Role>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles;"))
+            using (DataTable rows = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in rows.Rows)
+                    roles.Add(Role.FromDataRow(row));
+
+            // Sort roles by name in alphabetical order.
+            roles.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+
+            return roles.ToArray();
+
+        }
+        public static async Task<Role[]> GetRolesFromDbBySpecies(Species species) {
+
+            // Return all roles assigned to the given species.
+
+            List<Role> roles = new List<Role>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE id IN (SELECT role_id FROM SpeciesRoles WHERE species_id=$species_id) ORDER BY name ASC;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        roles.Add(Role.FromDataRow(row));
+
+            }
+
+            return roles.ToArray();
+
+        }
+        public static async Task<Role> GetRoleFromDb(string roleName) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE name=$name;")) {
+
+                cmd.Parameters.AddWithValue("$name", roleName.ToLower());
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    return Role.FromDataRow(row);
+
+            }
+
+            return null;
+
+        }
+
+        public static async Task AddRoleToDb(Role role) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Roles(name, description) VALUES($name, $description);")) {
+
+                cmd.Parameters.AddWithValue("$name", role.name.ToLower());
+                cmd.Parameters.AddWithValue("$description", role.description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
 
         }
 
@@ -388,6 +521,54 @@ namespace OurFoodChain {
             }
 
             TWO_PART_COMMAND_WAIT_PARAMS.Remove(message.Author.Id);
+
+        }
+
+        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context) {
+
+            await context.Channel.SendMessageAsync("No such species exists.");
+
+        }
+        public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, Species[] speciesList) {
+
+            EmbedBuilder embed = new EmbedBuilder();
+            List<string> lines = new List<string>();
+
+            embed.WithTitle("Matching species");
+
+            foreach (Species sp in speciesList)
+                lines.Add(GenerateSpeciesName(sp));
+
+            embed.WithDescription(string.Join(Environment.NewLine, lines));
+
+            await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {
+
+            if (speciesList.Count() <= 0) {
+                await ReplyAsync_NoSuchSpeciesExists(context);
+                return false;
+            }
+            else if (speciesList.Count() > 1) {
+                await ReplyAsync_MatchingSpecies(context, speciesList);
+                return false;
+            }
+
+            return true;
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateRole(ICommandContext context, Role role) {
+
+            if (role is null || role.id <= 0) {
+
+                await context.Channel.SendMessageAsync("No such role exists.");
+
+                return false;
+
+            }
+
+            return true;
 
         }
 

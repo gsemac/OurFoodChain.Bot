@@ -719,7 +719,7 @@ namespace OurFoodChain {
                 builder.WithTitle("Commands list");
                 builder.WithFooter("For more information, use \"help <command>\".");
 
-                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey` `ownedby`");
+                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey` `ownedby` `search`");
                 builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc`");
 
             }
@@ -864,6 +864,12 @@ namespace OurFoodChain {
                         description = "Lists all species owned by the given user. If no username is provided, lists all species owned by the user who used the command.";
                         aliases = "ownedby, addedby";
                         example = "?ownedby username";
+                        break;
+
+                    case "search":
+                        description = "Lists species that have names or descriptions matching the search terms.";
+                        aliases = "search";
+                        example = "?search \"coral\"";
                         break;
 
                     default:
@@ -1128,6 +1134,42 @@ namespace OurFoodChain {
                 }
 
             }
+
+        }
+
+        [Command("search")]
+        public async Task Search(string terms) {
+
+            List<Species> list = new List<Species>();
+
+            foreach (string term in terms.Split(' ')) {
+
+                string t = "%" + term.Trim() + "%";
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name LIKE $term OR description LIKE $term;")) {
+
+                    cmd.Parameters.AddWithValue("$term", t);
+
+                    using (DataTable rows = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in rows.Rows)
+                            list.Add(await Species.FromDataRow(row));
+
+                }
+
+            }
+
+            List<string> names_list = new List<string>();
+
+            foreach (Species sp in list)
+                names_list.Add(sp.GetShortName());
+
+            names_list.Sort();
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithTitle("Search results");
+            embed.WithDescription(string.Join(Environment.NewLine, names_list));
+
+            await ReplyAsync("", false, embed);
 
         }
 

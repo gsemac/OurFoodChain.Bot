@@ -792,8 +792,8 @@ namespace OurFoodChain {
                 builder.WithTitle("Commands list");
                 builder.WithFooter("For more information, use \"help <command>\".");
 
-                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey` `ownedby` `search`");
-                builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc`");
+                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey` `ownedby` `search` `roles`");
+                builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc` `+role` `-role` `addrole` `setroledesc`");
 
             }
             else {
@@ -943,6 +943,40 @@ namespace OurFoodChain {
                         description = "Lists species that have names or descriptions matching the search terms.";
                         aliases = "search";
                         example = "?search \"coral\"";
+                        break;
+
+                    case "+role":
+                    case "setrole":
+                        description = "Sets the given species' role.";
+                        aliases = "+role, setrole";
+                        example = "?+role H. quattuorus detritivore";
+                        break;
+
+                    case "-role":
+                    case "unsetrole":
+                        description = "Removes the given species' role.";
+                        aliases = "-role, unsetrole";
+                        example = "?-role H. quattuorus predator";
+                        break;
+
+                    case "roles":
+                    case "role":
+                        description = "Lists all roles, shows information about the given role, or lists roles assigned to the given species.";
+                        aliases = "roles, role";
+                        example = "?roles\n?role predator\n?roles H. quattuorus";
+                        break;
+
+                    case "setroledescription":
+                    case "setroledesc":
+                        description = "Sets the description for the given role.";
+                        aliases = "setroledescription, setroledesc";
+                        example = "?setroledesc predator \"eats living things\"";
+                        break;
+
+                    case "addrole":
+                        description = "Adds a new role. To add a role to a species, use `+role` instead.";
+                        aliases = "addrole";
+                        example = "?addrole predator \"eats living things\"";
                         break;
 
                     default:
@@ -1310,7 +1344,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("-role")]
+        [Command("-role"), Alias("unsetrole")]
         public async Task RemoveRole(string genus, string species, string role) {
 
             // Get the species.

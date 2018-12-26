@@ -122,8 +122,16 @@ namespace OurFoodChain {
 
         }
 
-        [Command("info"), Alias("i", "species", "sp")]
-        public async Task Info(string genus, string species) {
+        [Command("info"), Alias("i", "species", "sp", "s")]
+        public async Task Info(string genus, string species = "") {
+
+            // If the user does not provide a genus + species, query by species only.
+            if (string.IsNullOrEmpty(species)) {
+
+                species = genus;
+                genus = "";
+
+            }
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
@@ -131,13 +139,17 @@ namespace OurFoodChain {
                 await ReplyAsync("No such species exists.");
             else if (sp_list.Count() > 1) {
 
+                EmbedBuilder embed = new EmbedBuilder();
                 StringBuilder builder = new StringBuilder();
-                builder.AppendLine("**Species is ambiguous:**");
+
+                embed.WithTitle("Matching species");
 
                 foreach (Species sp in sp_list)
                     builder.AppendLine(BotUtils.GenerateSpeciesName(sp));
 
-                await ReplyAsync(builder.ToString());
+                embed.WithDescription(builder.ToString());
+
+                await ReplyAsync("", false, embed.Build());
 
             }
             else {
@@ -165,6 +177,8 @@ namespace OurFoodChain {
 
                 }
 
+                zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
+
                 embed.WithColor(embed_color);
 
                 builder.AppendLine(string.Join(", ", zone_names));
@@ -176,7 +190,7 @@ namespace OurFoodChain {
 
                 string title = string.Format("{0} {1}", StringUtils.ToTitleCase(sp.genus), sp.name);
 
-                builder.AppendLine("**Description:**");
+                builder.Append("**Description:** ");
                 builder.AppendLine(description);
 
                 // Check if the species is extinct.
@@ -667,10 +681,12 @@ namespace OurFoodChain {
         }
 
         [Command("setowner"), Alias("setown", "claim")]
-        public async Task SetOwner(string genus, string species, string owner = "") {
+        public async Task SetOwner(string genus, string species, IUser user = null) {
 
-            if (string.IsNullOrEmpty(owner))
-                owner = Context.User.Username;
+            if (user is null)
+                user = Context.User;
+
+            string owner = user.Username;
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
@@ -703,7 +719,7 @@ namespace OurFoodChain {
                 builder.WithTitle("Commands list");
                 builder.WithFooter("For more information, use \"help <command>\".");
 
-                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey`");
+                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey` `ownedby`");
                 builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc`");
 
             }
@@ -727,7 +743,7 @@ namespace OurFoodChain {
                     case "info":
                     case "i":
                         description = "Shows information about the given species.";
-                        aliases = "info, i";
+                        aliases = "info, i, sp, species, s";
                         example = "?info H. quattuorus";
                         break;
 
@@ -804,7 +820,7 @@ namespace OurFoodChain {
                     case "setancestor":
                         description = "Sets the ancestor of the given species (i.e., the species it evolved from).";
                         aliases = "setancestor";
-                        example = "?setancestor H. quattuorus H. ancientous";
+                        example = "?setancestor <derived species> <ancestor species>\n?setancestor H. quattuorus H. ancientous";
                         break;
 
                     case "setcommon":
@@ -819,7 +835,7 @@ namespace OurFoodChain {
                     case "setprey":
                         description = "Sets a species eaten by another species. Successive calls are additive, and do not replace existing relationships.";
                         aliases = "setprey, seteats, setpredates";
-                        example = "?setprey P. filterarious H. quattuorus\n?setprey P. filterarious H. quattuorus \"babies only\"";
+                        example = "?setprey <predator species> <prey species>\n?setprey P. filterarious H. quattuorus\n?setprey P. filterarious H. quattuorus \"babies only\"";
                         break;
 
                     case "prey":
@@ -841,6 +857,13 @@ namespace OurFoodChain {
                         description = "Sets the description for the given genus.";
                         aliases = "setgenusdescription, setgenusdesc, setgdesc";
                         example = "?setgdesc helix \"they have swirly shells\"";
+                        break;
+
+                    case "ownedby":
+                    case "addedby":
+                        description = "Lists all species owned by the given user. If no username is provided, lists all species owned by the user who used the command.";
+                        aliases = "ownedby, addedby";
+                        example = "?ownedby username";
                         break;
 
                     default:
@@ -1070,6 +1093,41 @@ namespace OurFoodChain {
             }
 
             await ReplyAsync("Phylum set successfully.");
+
+        }
+
+        [Command("addedby"), Alias("ownedby")]
+        public async Task AddedBy(IUser user = null) {
+
+            if (user is null)
+                user = Context.User;
+
+            string username = user.Username;
+
+            // List all species owned by the given user.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner=$owner;")) {
+
+                cmd.Parameters.AddWithValue("$owner", username);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+
+                    EmbedBuilder embed = new EmbedBuilder();
+                    List<string> lines = new List<string>();
+
+                    foreach (DataRow row in rows.Rows)
+                        lines.Add((await Species.FromDataRow(row)).GetShortName());
+
+                    lines.Sort();
+
+                    embed.WithTitle(string.Format("Species owned by {0}", username));
+                    embed.WithDescription(string.Join(Environment.NewLine, lines));
+
+                    await ReplyAsync("", false, embed.Build());
+
+                }
+
+            }
 
         }
 

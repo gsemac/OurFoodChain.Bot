@@ -187,7 +187,7 @@ namespace OurFoodChain {
             bool genus_is_abbrev = false;
             string selection_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND (name=$species;";
 
-            if (Regex.Match(genus, @"[a-z]\.?$").Success) {
+            if (string.IsNullOrEmpty(genus) || Regex.Match(genus, @"[a-z]\.?$").Success) {
 
                 selection_str = "SELECT * FROM Species WHERE name=$species;";
                 genus_is_abbrev = true;
@@ -208,7 +208,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
                     foreach (DataRow row in rows.Rows) {
 
-                        if (genus_is_abbrev) {
+                        if (!string.IsNullOrEmpty(genus) && genus_is_abbrev) {
 
                             genus_info = await GetGenusFromDb(row.Field<long>("genus_id"));
 

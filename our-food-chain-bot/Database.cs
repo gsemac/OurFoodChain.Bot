@@ -156,6 +156,8 @@ namespace OurFoodChain {
                     await _update006(conn);
                 if (version < 7)
                     await _update007(conn);
+                if (version < 8)
+                    await _update008(conn);
 
                 conn.Close();
 
@@ -243,6 +245,14 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesRoles(species_id INTEGER, role_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(role_id) REFERENCES Roles(id), PRIMARY KEY(species_id, role_id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+        }
+        private static async Task _update008(SQLiteConnection conn) {
+
+            await _updateDatabaseVersion(conn, 8);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE SpeciesRoles ADD COLUMN notes TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
         }

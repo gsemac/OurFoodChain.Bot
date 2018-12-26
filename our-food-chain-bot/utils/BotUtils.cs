@@ -153,6 +153,8 @@ namespace OurFoodChain {
         public string name;
         public string description;
 
+        public string notes;
+
         public string GetDescriptionOrDefault() {
 
             if (string.IsNullOrEmpty(description))
@@ -368,7 +370,7 @@ namespace OurFoodChain {
             return species.ToArray();
 
         }
-        public static async Task<Species[]> GetSpeciesFromDbByZone(Zone zone) {
+        public static async Task<Species[]> GetSpeciesFromDbByZone(Zone zone, bool extantOnly = true) {
 
             // Return all species in the given zone.
 
@@ -377,7 +379,10 @@ namespace OurFoodChain {
             if (zone is null || zone.id <= 0)
                 return species.ToArray();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) ORDER BY name ASC;")) {
+            string query_all = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) ORDER BY name ASC;";
+            string query_extant = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) AND id NOT IN (SELECT species_id FROM Extinctions) ORDER BY name ASC;";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(extantOnly ? query_extant : query_all)) {
 
                 cmd.Parameters.AddWithValue("$zone_id", zone.id);
 
@@ -469,6 +474,29 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
                         roles.Add(Role.FromDataRow(row));
+
+            }
+
+            // Get role notes.
+            // #todo Get the roles and notes using a single query.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesRoles WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows) {
+
+                        long role_id = row.Field<long>("role_id");
+                        string notes = row.Field<string>("notes");
+
+                        foreach (Role role in roles)
+                            if (role.id == role_id) {
+                                role.notes = notes;
+                                break;
+                            }
+
+                    }
 
             }
 

@@ -202,7 +202,7 @@ namespace OurFoodChain {
 
                     if (!(row is null)) {
 
-                        title += " (EXTINCT)";
+                        title += " [EXTINCT]";
                         embed.WithColor(Color.Red);
 
                         builder.AppendLine(string.Format("**{0}**", row.Field<string>("reason")));
@@ -391,8 +391,6 @@ namespace OurFoodChain {
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string name = "") {
 
-
-
             // If no zone was provided, list all zones.
 
             if (string.IsNullOrEmpty(name) || name == "aquatic" || name == "terrestrial") {
@@ -507,10 +505,10 @@ namespace OurFoodChain {
 
                     if(roles_list.Count() <= 0) {
 
-                        if (!roles_map.ContainsKey("Unspecified"))
-                            roles_map["Unspecified"] = new List<Species>();
+                        if (!roles_map.ContainsKey("no role"))
+                            roles_map["no role"] = new List<Species>();
 
-                        roles_map["Unspecified"].Add(sp);
+                        roles_map["no role"].Add(sp);
 
                         continue;
 
@@ -527,10 +525,15 @@ namespace OurFoodChain {
 
                 }
 
+                // Sort the list of species belonging to each role.
                 foreach (List<Species> i in roles_map.Values)
                     i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                foreach (string i in roles_map.Keys) {
+                // Create a sorted list of keys so that the roles are in order.
+                List<string> sorted_keys = new List<string>(roles_map.Keys);
+                sorted_keys.Sort();
+
+                foreach (string i in sorted_keys) {
 
                     StringBuilder lines = new StringBuilder();
 
@@ -546,14 +549,21 @@ namespace OurFoodChain {
                 // 
 
                 IUserMessage message = await ReplyAsync("", false, pages[0]);
-                await message.AddReactionAsync(new Emoji("◀"));
-                await message.AddReactionAsync(new Emoji("▶"));
 
-                CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
-                    pages = pages.ToArray()
-                };
+                // Only bother with pagination if the zone actually contains species.
 
-                CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
+                if (species_list.Count() > 0) {
+
+                    await message.AddReactionAsync(new Emoji("◀"));
+                    await message.AddReactionAsync(new Emoji("▶"));
+
+                    CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
+                        pages = pages.ToArray()
+                    };
+
+                    CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
+
+                }
 
             }
 
@@ -949,7 +959,7 @@ namespace OurFoodChain {
                     case "setrole":
                         description = "Sets the given species' role.";
                         aliases = "+role, setrole";
-                        example = "?+role H. quattuorus detritivore";
+                        example = "?+role H. quattuorus detritivore\n?+role H. quattuorus detritivore \"larvae only\"";
                         break;
 
                     case "-role":
@@ -1313,7 +1323,7 @@ namespace OurFoodChain {
         }
 
         [Command("+role"), Alias("setrole")]
-        public async Task SetRole(string genus, string species, string role) {
+        public async Task SetRole(string genus, string species, string role, string notes = "") {
 
             // Get the species.
 
@@ -1331,10 +1341,11 @@ namespace OurFoodChain {
 
             // Update the species.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesRoles(species_id, role_id) VALUES($species_id, $role_id);")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesRoles(species_id, role_id, notes) VALUES($species_id, $role_id, $notes);")) {
 
                 cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
+                cmd.Parameters.AddWithValue("$notes", notes);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -1472,8 +1483,16 @@ namespace OurFoodChain {
 
                 StringBuilder lines = new StringBuilder();
 
-                foreach (Role i in roles)
-                    lines.AppendLine(StringUtils.ToTitleCase(i.name));
+                foreach (Role i in roles) {
+
+                    lines.Append(StringUtils.ToTitleCase(i.name));
+
+                    if (!string.IsNullOrEmpty(i.notes))
+                        lines.Append(string.Format(" ({0})", i.notes));
+
+                    lines.AppendLine();
+
+                }
 
                 EmbedBuilder embed = new EmbedBuilder();
 

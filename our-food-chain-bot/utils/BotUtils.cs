@@ -61,6 +61,15 @@ namespace OurFoodChain {
         public string GetShortDescription() {
             return GetShortDescription(description);
         }
+        public string GetDescriptionOrDefault() {
+
+            if (string.IsNullOrEmpty(description))
+                return BotUtils.DEFAULT_ZONE_DESCRIPTION;
+
+            return description;
+
+        }
+
         public static string GetShortDescription(string description) {
             return Regex.Match(description, "^[a-zA-Z0-9 ,;:\\-\"]+(?:\\.+|[!\\?])").Value;
         }
@@ -359,6 +368,28 @@ namespace OurFoodChain {
             return species.ToArray();
 
         }
+        public static async Task<Species[]> GetSpeciesFromDbByZone(Zone zone) {
+
+            // Return all species in the given zone.
+
+            List<Species> species = new List<Species>();
+
+            if (zone is null || zone.id <= 0)
+                return species.ToArray();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) ORDER BY name ASC;")) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        species.Add(await Species.FromDataRow(row));
+
+            }
+
+            return species.ToArray();
+
+        }
         public static async Task<Zone> GetZoneFromDb(long zoneId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id=$zone_id;")) {
@@ -563,6 +594,19 @@ namespace OurFoodChain {
             if (role is null || role.id <= 0) {
 
                 await context.Channel.SendMessageAsync("No such role exists.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateZone(ICommandContext context, Zone zone) {
+
+            if (zone is null || zone.id <= 0) {
+
+                await context.Channel.SendMessageAsync("No such zone exists.");
 
                 return false;
 

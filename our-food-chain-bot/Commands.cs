@@ -391,7 +391,7 @@ namespace OurFoodChain {
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string name = "") {
 
-            EmbedBuilder embed = new EmbedBuilder();
+
 
             // If no zone was provided, list all zones.
 
@@ -411,6 +411,8 @@ namespace OurFoodChain {
                         zone_list.Add(OurFoodChain.Zone.FromDataRow(row));
 
                 zone_list.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.name, rhs.name));
+
+                EmbedBuilder embed = new EmbedBuilder();
 
                 foreach (Zone zone_info in zone_list) {
 
@@ -440,52 +442,118 @@ namespace OurFoodChain {
                 return;
 
             }
-
-            Zone zone = await BotUtils.GetZoneFromDb(name);
-
-            if (zone is null)
-                await ReplyAsync("No such zone exists.");
             else {
 
-                string description = zone.description;
+                Zone zone = await BotUtils.GetZoneFromDb(name);
 
-                if (string.IsNullOrEmpty(description))
-                    description = BotUtils.DEFAULT_ZONE_DESCRIPTION;
+                if (!await BotUtils.ReplyAsync_ValidateZone(Context, zone))
+                    return;
 
-                embed.WithTitle(string.Format("{0} ({1})", StringUtils.ToTitleCase(zone.name), zone.type.ToString()));
-                embed.WithDescription(description);
+                List<Embed> pages = new List<Embed>();
+
+                string title = string.Format("{0} ({1})", StringUtils.ToTitleCase(zone.name), zone.type.ToString());
+                string description = zone.GetDescriptionOrDefault();
+                Color color = Color.Blue;
 
                 switch (zone.type) {
                     case ZoneType.Aquatic:
-                        embed.WithColor(Color.Blue);
+                        color = Color.Blue;
                         break;
                     case ZoneType.Terrestrial:
-                        embed.WithColor(Color.DarkGreen);
+                        color = Color.DarkGreen;
                         break;
                 }
+
+                // Page #1 will contain a simple list of organisms.
+
+                EmbedBuilder embed1 = new EmbedBuilder();
+
+                embed1.WithTitle(title);
+                embed1.WithDescription(description);
+                embed1.WithColor(color);
 
                 // Get all species living in this zone.
 
-                List<string> species_name_list = new List<string>();
+                List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByZone(zone));
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * from Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) AND id NOT IN (SELECT species_id FROM Extinctions);")) {
+                species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                    cmd.Parameters.AddWithValue("$zone_id", zone.id);
+                if (species_list.Count() > 0) {
 
-                    DataTable rows = await Database.GetRowsAsync(cmd);
+                    StringBuilder lines = new StringBuilder();
 
-                    foreach (DataRow row in rows.Rows)
-                        species_name_list.Add((await Species.FromDataRow(row)).GetShortName());
+                    foreach (Species sp in species_list)
+                        lines.AppendLine(sp.GetShortName());
+
+                    embed1.AddField(string.Format("Extant species in this zone ({0}):", species_list.Count()), lines.ToString());
 
                 }
 
-                species_name_list.Sort();
+                pages.Add(embed1.Build());
 
-                if (species_name_list.Count() > 0)
-                    embed.AddField(string.Format("Extant species in this zone ({0}):", species_name_list.Count()), string.Join(Environment.NewLine, species_name_list));
+                // Page 2 will contain the organisms organized by role.
 
+                EmbedBuilder embed2 = new EmbedBuilder();
 
-                await ReplyAsync("", false, embed.Build());
+                embed2.WithTitle(title);
+                embed2.WithDescription(description);
+                embed2.WithColor(color);
+
+                Dictionary<string, List<Species>> roles_map = new Dictionary<string, List<Species>>();
+
+                foreach (Species sp in species_list) {
+
+                    Role[] roles_list = await BotUtils.GetRolesFromDbBySpecies(sp);
+
+                    if(roles_list.Count() <= 0) {
+
+                        if (!roles_map.ContainsKey("Unspecified"))
+                            roles_map["Unspecified"] = new List<Species>();
+
+                        roles_map["Unspecified"].Add(sp);
+
+                        continue;
+
+                    }
+
+                    foreach (Role role in roles_list) {
+
+                        if (!roles_map.ContainsKey(role.name))
+                            roles_map[role.name] = new List<Species>();
+
+                        roles_map[role.name].Add(sp);
+
+                    }
+
+                }
+
+                foreach (List<Species> i in roles_map.Values)
+                    i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+                foreach (string i in roles_map.Keys) {
+
+                    StringBuilder lines = new StringBuilder();
+
+                    foreach (Species j in roles_map[i])
+                        lines.AppendLine(j.GetShortName());
+
+                    embed2.AddInlineField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString());
+
+                }
+
+                pages.Add(embed2.Build());
+
+                // 
+
+                IUserMessage message = await ReplyAsync("", false, pages[0]);
+                await message.AddReactionAsync(new Emoji("◀"));
+                await message.AddReactionAsync(new Emoji("▶"));
+
+                CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
+                    pages = pages.ToArray()
+                };
+
+                CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
 
             }
 
@@ -1210,7 +1278,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setrole")]
+        [Command("+role"), Alias("setrole")]
         public async Task SetRole(string genus, string species, string role) {
 
             // Get the species.
@@ -1242,6 +1310,38 @@ namespace OurFoodChain {
 
         }
 
+        [Command("-role")]
+        public async Task RemoveRole(string genus, string species, string role) {
+
+            // Get the species.
+
+            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
+
+            // Get the role.
+
+            Role role_info = await BotUtils.GetRoleFromDb(role);
+
+            if (!await BotUtils.ReplyAsync_ValidateRole(Context, role_info))
+                return;
+
+            // Update the species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesRoles WHERE species_id=$species_id AND role_id=$role_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$role_id", role_info.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+                await ReplyAsync("Role removed successfully.");
+
+            }
+
+        }
+
         [Command("roles"), Alias("role")]
         public async Task Roles(string nameOrGenus = "", string species = "") {
 
@@ -1250,10 +1350,30 @@ namespace OurFoodChain {
             if (string.IsNullOrEmpty(nameOrGenus) && string.IsNullOrEmpty(species)) {
 
                 EmbedBuilder embed = new EmbedBuilder();
-                embed.WithTitle("All roles");
 
-                foreach (Role role in await BotUtils.GetRolesFromDb())
-                    embed.AddField(StringUtils.ToTitleCase(role.name), role.GetDescriptionOrDefault());
+                Role[] roles_list = await BotUtils.GetRolesFromDb();
+
+                embed.WithTitle(string.Format("All roles ({0})", roles_list.Count()));
+
+                foreach (Role role in roles_list) {
+
+                    long count = 0;
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE role_id=$role_id;")) {
+
+                        cmd.Parameters.AddWithValue("$role_id", role.id);
+
+                        count = (await Database.GetRowAsync(cmd)).Field<long>("count(*)");
+
+                    }
+
+                    string title = string.Format("{0} ({1})",
+                        StringUtils.ToTitleCase(role.name),
+                        count);
+
+                    embed.AddField(title, role.GetDescriptionOrDefault());
+
+                }
 
                 await ReplyAsync("", false, embed.Build());
 
@@ -1273,7 +1393,7 @@ namespace OurFoodChain {
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.WithTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
                 embed.WithDescription(role.GetDescriptionOrDefault());
-           
+
                 // List species with this role.
 
                 Species[] species_list = await BotUtils.GetSpeciesFromDbByRole(role);
@@ -1285,7 +1405,7 @@ namespace OurFoodChain {
                     foreach (Species sp in species_list)
                         lines.AppendLine(sp.GetShortName());
 
-                    embed.WithDescription(string.Format("**Species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count()));
+                    embed.WithDescription(string.Format("{2}\n\n**Species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count(), role.GetDescriptionOrDefault()));
 
                 }
 
@@ -1329,6 +1449,27 @@ namespace OurFoodChain {
                 await ReplyAsync("", false, embed.Build());
 
             }
+
+        }
+
+        [Command("setroledescription"), Alias("setroledesc")]
+        public async Task SetRoleDescription(string name, string description) {
+
+            Role role = await BotUtils.GetRoleFromDb(name);
+
+            if (!await BotUtils.ReplyAsync_ValidateRole(Context, role))
+                return;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Roles SET description=$description WHERE name=$name;")) {
+
+                cmd.Parameters.AddWithValue("$name", role.name);
+                cmd.Parameters.AddWithValue("$description", description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await ReplyAsync("Set description successfully.");
 
         }
 

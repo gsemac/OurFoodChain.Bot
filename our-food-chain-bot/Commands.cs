@@ -1111,6 +1111,7 @@ namespace OurFoodChain {
 
                         }
 
+                        prey_list.Sort((lhs, rhs) => lhs.Item1.GetShortName().CompareTo(rhs.Item1.GetShortName()));
 
                         StringBuilder description = new StringBuilder();
 

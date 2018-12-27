@@ -168,7 +168,7 @@ namespace OurFoodChain {
 
             string zones_value = string.Join(", ", zone_names);
 
-            embed.AddInlineField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "?" : zones_value);
+            embed.AddInlineField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value);
 
             // Check if the species is extinct.
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
@@ -688,45 +688,127 @@ namespace OurFoodChain {
 
         }
 
-        [Command("+zone"), Alias("+zones", "setzone", "setzones")]
-        public async Task SetZone(string genus, string species, string zone) {
+        [Command("+zone"), Alias("+zones")]
+        public async Task PlusZone(string genus, string species, string zone = "") {
 
-            string[] zones = zone.Split(',', '/');
+            // If the zone argument is empty, assume the user omitted the genus.
+
+            if (string.IsNullOrEmpty(zone)) {
+                zone = species;
+                species = genus;
+                genus = string.Empty;
+            }
+
+            // Get the specified species.
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
 
-                // Remove existing zone information for this species.
-                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id;")) {
+            // Add new zone information for the species.
+
+            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
+
+                string name = zoneName.Trim();
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
 
                     cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                    cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
 
                     await Database.ExecuteNonQuery(cmd);
 
                 }
 
-                // Add new zone information for this species.
-                foreach (string zoneName in zones) {
+            }
 
-                    string name = zoneName.Trim();
+            await ReplyAsync("Zone(s) added successfully.");
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
+        }
+        [Command("-zone"), Alias("-zones")]
+        public async Task MinusZone(string genus, string species, string zone = "") {
 
-                        cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
-                        cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
+            // If the zone argument is empty, assume the user omitted the genus.
 
-                        await Database.ExecuteNonQuery(cmd);
+            if (string.IsNullOrEmpty(zone)) {
+                zone = species;
+                species = genus;
+                genus = string.Empty;
+            }
 
-                    }
+            // Get the specified species.
+
+            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
+
+            // Remove the zone information for the species.
+            // #todo This can be done in a single query.
+
+            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                    cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(zoneName)).id);
+
+                    await Database.ExecuteNonQuery(cmd);
 
                 }
 
-                await ReplyAsync("Zone(s) added successfully.");
+            }
+
+            await ReplyAsync("Zone(s) removed successfully.");
+
+        }
+        [Command("setzone"), Alias("setzones")]
+        public async Task SetZone(string genus, string species, string zone = "") {
+
+            // If the zone argument is empty, assume the user omitted the genus.
+
+            if (string.IsNullOrEmpty(zone)) {
+                zone = species;
+                species = genus;
+                genus = string.Empty;
+            }
+
+            // Get the specified species.
+
+            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
+
+            // Delete existing zone information for the species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+
+                await Database.ExecuteNonQuery(cmd);
 
             }
+
+            // Add new zone information for the species.
+
+            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
+
+                string name = zoneName.Trim();
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                    cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+            await ReplyAsync("Zone(s) set successfully.");
 
         }
 
@@ -783,9 +865,9 @@ namespace OurFoodChain {
         #region "help"
 
         private class CommandInfo {
-            public string name;
-            public string description;
-            public string category;
+            public string name = "";
+            public string description = "";
+            public string category = "uncategorized";
             public string[] aliases;
             public string[] examples;
         }

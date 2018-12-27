@@ -1,0 +1,12 @@
+﻿{
+  "name": "-zone",
+  "aliases": [
+    "-zones"
+  ],
+  "category": "updates",
+  "description": "Removes the species from the given zones. You can specify multiple zones at once.",
+  "examples": [
+    "-zone H. quattuorus 12",
+    "-zones H. quattuorus 22/23"
+  ]
+}

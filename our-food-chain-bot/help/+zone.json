@@ -1,12 +1,10 @@
 ﻿{
   "name": "+zone",
   "aliases": [
-    "+zones",
-    "setzone",
-    "setzones"
+    "+zones"
   ],
   "category": "updates",
-  "description": "Sets the zones occupied by the given species.",
+  "description": "Adds the species to the given zones. You can specify multiple zones at once.",
   "examples": [
     "+zone H. quattuorus 12",
     "+zones H. quattuorus 22/23"

@@ -58,6 +58,16 @@ namespace OurFoodChain {
             return zone;
 
         }
+        public static string[] ParseZoneList(string zoneList) {
+
+            string[] result = zoneList.Split(',', '/');
+
+            for (int i = 0; i < result.Count(); ++i)
+                result[i] = result[i].Trim().ToLower();
+
+            return result;
+
+        }
 
         public string GetShortDescription() {
             return GetShortDescription(description);

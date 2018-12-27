@@ -757,9 +757,65 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context) {
+        public static async Task<Species> ReplyAsync_FindSpecies(ICommandContext context, string genus, string species) {
 
-            await context.Channel.SendMessageAsync("No such species exists.");
+            Species[] sp_list = await GetSpeciesFromDb(genus, species);
+
+            if (sp_list.Count() <= 0) {
+
+                // The species could not be find. Check all species to find a suggestion.
+
+                List<Species> sp_list_2 = new List<Species>();
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species;")) {
+
+                    using (DataTable rows = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in rows.Rows)
+                            sp_list_2.Add(await Species.FromDataRow(row));
+
+                }
+
+                sp_list = sp_list_2.ToArray();
+
+                int min_dist = int.MaxValue;
+                string suggestion = string.Empty;
+
+                foreach (Species sp in sp_list) {
+
+                    int dist = LevenshteinDistance.Compute(species, sp.name);
+
+                    if (dist < min_dist) {
+                        min_dist = dist;
+                        suggestion = sp.GetShortName();
+                    }
+
+                }
+
+                await ReplyAsync_NoSuchSpeciesExists(context, suggestion);
+
+                return null;
+
+            }
+            else if (sp_list.Count() > 1) {
+
+                await ReplyAsync_MatchingSpecies(context, sp_list);
+                return null;
+
+            }
+
+            return sp_list[0];
+
+        }
+        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context, string suggestion = "") {
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("No such species exists.");
+
+            if (!string.IsNullOrEmpty(suggestion))
+                sb.Append(string.Format(" Did you mean **{0}**?", suggestion));
+
+            await context.Channel.SendMessageAsync(sb.ToString());
 
         }
         public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, Species[] speciesList) {
@@ -777,20 +833,20 @@ namespace OurFoodChain {
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
-        public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {
+        //public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {
 
-            if (speciesList.Count() <= 0) {
-                await ReplyAsync_NoSuchSpeciesExists(context);
-                return false;
-            }
-            else if (speciesList.Count() > 1) {
-                await ReplyAsync_MatchingSpecies(context, speciesList);
-                return false;
-            }
+        //    if (speciesList.Count() <= 0) {
+        //        await ReplyAsync_NoSuchSpeciesExists(context);
+        //        return false;
+        //    }
+        //    else if (speciesList.Count() > 1) {
+        //        await ReplyAsync_MatchingSpecies(context, speciesList);
+        //        return false;
+        //    }
 
-            return true;
+        //    return true;
 
-        }
+        //}
         public static async Task<bool> ReplyAsync_ValidateRole(ICommandContext context, Role role) {
 
             if (role is null || role.id <= 0) {

@@ -134,15 +134,13 @@ namespace OurFoodChain {
 
             }
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             EmbedBuilder embed = new EmbedBuilder();
             StringBuilder description_builder = new StringBuilder();
-
-            Species sp = sp_list[0];
 
             string embed_title = sp.GetFullName();
             Color embed_color = Color.Blue;
@@ -677,12 +675,12 @@ namespace OurFoodChain {
         [Command("ancestry2"), Alias("lineage2")]
         public async Task Lineage2(string genus, string species) {
 
-            Species[] species_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list))
+            if (sp is null)
                 return;
 
-            string image = await BotUtils.GenerateEvolutionTreeImage(species_list[0]);
+            string image = await BotUtils.GenerateEvolutionTreeImage(sp);
 
             await Context.Channel.SendFileAsync(image);
 
@@ -701,9 +699,9 @@ namespace OurFoodChain {
 
             // Get the specified species.
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             // Add new zone information for the species.
@@ -714,7 +712,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                    cmd.Parameters.AddWithValue("$species_id", sp.id);
                     cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
 
                     await Database.ExecuteNonQuery(cmd);
@@ -739,9 +737,9 @@ namespace OurFoodChain {
 
             // Get the specified species.
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             // Remove the zone information for the species.
@@ -751,7 +749,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                    cmd.Parameters.AddWithValue("$species_id", sp.id);
                     cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(zoneName)).id);
 
                     await Database.ExecuteNonQuery(cmd);
@@ -776,16 +774,16 @@ namespace OurFoodChain {
 
             // Get the specified species.
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             // Delete existing zone information for the species.
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -799,7 +797,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                    cmd.Parameters.AddWithValue("$species_id", sp.id);
                     cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
 
                     await Database.ExecuteNonQuery(cmd);
@@ -844,14 +842,14 @@ namespace OurFoodChain {
 
             string owner = user.Username;
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner WHERE id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
                 cmd.Parameters.AddWithValue("$owner", owner);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -1054,16 +1052,16 @@ namespace OurFoodChain {
 
             // Get the specified species.
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             // Get the preyed-upon species.
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE species_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
@@ -1097,7 +1095,7 @@ namespace OurFoodChain {
 
                         EmbedBuilder embed = new EmbedBuilder();
 
-                        embed.WithTitle(string.Format("Species preyed upon by {0} ({1})", sp_list[0].GetShortName(), prey_list.Count()));
+                        embed.WithTitle(string.Format("Species preyed upon by {0} ({1})", sp.GetShortName(), prey_list.Count()));
                         embed.WithDescription(description.ToString());
 
                         await ReplyAsync("", false, embed.Build());
@@ -1384,9 +1382,9 @@ namespace OurFoodChain {
 
             // Get the species.
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             // Get the role.
@@ -1400,7 +1398,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesRoles(species_id, role_id, notes) VALUES($species_id, $role_id, $notes);")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
                 cmd.Parameters.AddWithValue("$notes", notes);
 
@@ -1417,9 +1415,9 @@ namespace OurFoodChain {
 
             // Get the species.
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+            if (sp is null)
                 return;
 
             // Get the role.
@@ -1433,7 +1431,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesRoles WHERE species_id=$species_id AND role_id=$role_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -1522,14 +1520,14 @@ namespace OurFoodChain {
 
                 // Get the species.
 
-                Species[] sp_list = await BotUtils.GetSpeciesFromDb(nameOrGenus, species);
+                Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, nameOrGenus, species);
 
-                if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                if (sp is null)
                     return;
 
                 // Get the role(s) assigned to this species.
 
-                Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp_list[0]);
+                Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp);
 
                 if (roles.Count() <= 0) {
                     await ReplyAsync("No roles have been assigned to this species.");
@@ -1553,7 +1551,7 @@ namespace OurFoodChain {
 
                 EmbedBuilder embed = new EmbedBuilder();
 
-                embed.WithTitle(string.Format("{0}'s role(s) ({1})", sp_list[0].GetShortName(), roles.Count()));
+                embed.WithTitle(string.Format("{0}'s role(s) ({1})", sp.GetShortName(), roles.Count()));
                 embed.WithDescription(lines.ToString());
 
                 await ReplyAsync("", false, embed.Build());

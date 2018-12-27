@@ -236,11 +236,10 @@ namespace OurFoodChain {
 
             Genus genus_info = await BotUtils.GetGenusFromDb(genus);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, phylum_id, genus_id, owner, timestamp) VALUES($name, $description, $phylum_id, $genus_id, $owner, $timestamp);")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp) VALUES($name, $description, $genus_id, $owner, $timestamp);")) {
 
                 cmd.Parameters.AddWithValue("$name", species);
                 cmd.Parameters.AddWithValue("$description", description);
-                cmd.Parameters.AddWithValue("$phylum_id", 0);
                 cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
                 cmd.Parameters.AddWithValue("$owner", Context.User.Username);
                 cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -781,18 +780,89 @@ namespace OurFoodChain {
 
         }
 
+        #region "help"
+
+        private class CommandInfo {
+            public string name;
+            public string description;
+            public string[] aliases;
+            public string[] examples;
+        }
+
         [Command("help"), Alias("h")]
         public async Task Help(string command = "") {
 
             EmbedBuilder builder = new EmbedBuilder();
 
+            List<CommandInfo> info_commands = new List<CommandInfo>();
+
+            info_commands.Add(new CommandInfo {
+                name = "ancestry",
+                description = "Lists ancestors of the given species.",
+                aliases = new string[] { "lineage", "ancestors" },
+                examples = new string[] {
+                    "?lineage <genus> <species>",
+                    "?lineage H. quattuorus"
+                }
+            });
+
+            info_commands.Add(new CommandInfo {
+                name = "genus",
+                description = "Lists all species under the given genus. If no genus is provided, lists all genera.",
+                aliases = new string[] { "g", "genus", "genera" },
+                examples = new string[] {
+                    "?genus <genus>",
+                    "?genus helix"
+                }
+            });
+
+            info_commands.Add(new CommandInfo {
+                name = "help",
+                description = "Displays help information.",
+                aliases = new string[] { "h" },
+                examples = new string[] {
+                    "?help",
+                    "?help genus"
+                }
+            });
+
+            info_commands.Add(new CommandInfo {
+                name = "info",
+                description = "Shows information about the given species.",
+                aliases = new string[] { "i", "s" },
+                examples = new string[] {
+                    "?info <genus> <species>",
+                    "?info H. quattuorus",
+                    "?info quattuorus"
+                }
+            });
+
+            info_commands.Add(new CommandInfo {
+                name = "map",
+                description = "Displays the map.",
+                examples = new string[] {
+                    "?map"
+                }
+            });
+
+            info_commands.Add(new CommandInfo {
+                name = "zone",
+                description = "Shows information about the given zone. If no zone is provided, lists all zones.",
+                aliases = new string[] { "z", "zones" },
+                examples = new string[] {
+                    "?zone 1",
+                    "?zones aquatic",
+                    "?zones terrestrial"
+                }
+            });
+
             if (string.IsNullOrEmpty(command)) {
 
                 builder.WithTitle("Commands list");
-                builder.WithFooter("For more information, use \"help <command>\".");
+                builder.WithFooter("For more information, use \"help <command>\". e.g. \"help info\"");
 
-                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `help` `predates` `prey` `ownedby` `search` `roles`");
-                builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc` `+role` `-role` `addrole` `setroledesc`");
+                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `lineage2` `help` `predates` `prey` `ownedby` `search` `roles` `family`");
+                builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc` `+role` `-role` `addrole` `setroledesc` `addfamily` `setfamily` `setfamilydesc`");
 
             }
             else {
@@ -803,50 +873,6 @@ namespace OurFoodChain {
                 string example = "-";
 
                 switch (command) {
-
-                    case "genus":
-                    case "g":
-                    case "genera":
-                        description = "Lists all species under the given genus. If no genus is provided, lists all genera.";
-                        aliases = "genus, g, genera";
-                        example = "?genus helix";
-                        break;
-
-                    case "info":
-                    case "i":
-                        description = "Shows information about the given species.";
-                        aliases = "info, i, sp, species, s";
-                        example = "?info H. quattuorus";
-                        break;
-
-                    case "zone":
-                    case "z":
-                    case "zones":
-                        description = "Shows information about the given zone. If no zone is provided, lists all zones.";
-                        aliases = "zone, zones, z";
-                        example = "?zone 1\n?zones aquatic\n?zones terrestrial";
-                        break;
-
-                    case "map":
-                        description = "Displays the map.";
-                        aliases = "map";
-                        example = "?map";
-                        break;
-
-                    case "lineage":
-                    case "ancestry":
-                    case "ancestors":
-                        description = "Lists ancestors of the given species.";
-                        aliases = "lineage, ancestry, ancestors";
-                        example = "?lineage H. quattuorus";
-                        break;
-
-                    case "help":
-                    case "h":
-                        description = "Displays help information.";
-                        aliases = "help, h";
-                        example = "?help";
-                        break;
 
                     case "addsp":
                     case "addspecies":
@@ -993,6 +1019,8 @@ namespace OurFoodChain {
             await ReplyAsync("", false, builder.Build());
 
         }
+
+        #endregion
 
         [Command("setprey"), Alias("seteats", "setpredates")]
         public async Task SetPredates(string genus, string species, string eatsGenus, string eatsSpecies, string notes = "") {
@@ -1155,61 +1183,146 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setphylum")]
-        public async Task SetPhylum(string genus, string species, string phylum) {
+        #region "family"
 
-            // Get the specified species.
+        [Command("family"), Alias("f")]
+        public async Task Family(string family = "") {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            // If no family was specified, show all families.
 
-            if (sp_list.Count() <= 0) {
+            if (string.IsNullOrEmpty(family)) {
 
-                await ReplyAsync("No such species exists.");
+                EmbedBuilder embed = new EmbedBuilder();
 
-                return;
+                Family[] families = await BotUtils.GetFamiliesFromDb();
 
-            }
+                embed.WithTitle(string.Format("All families ({0})", families.Count()));
 
-            // Create the phylum if it doesn't already exist.
+                StringBuilder description = new StringBuilder();
 
-            phylum = phylum.ToLower();
+                foreach (Family f in families) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Phylum(name) VALUES($phylum);")) {
+                    // Count the genera in this family.
+                    int genera_count = (await BotUtils.GetGeneraFromDb(f)).Count();
 
-                cmd.Parameters.AddWithValue("$phylum", phylum);
+                    description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(f.name), genera_count));
 
-                await Database.ExecuteNonQuery(cmd);
+                }
 
-            }
+                embed.WithDescription(description.ToString());
 
-            // Get the ID of the phylum.
-
-            long phylum_id = -1;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT id FROM Phylum WHERE name=$name;")) {
-
-                cmd.Parameters.AddWithValue("$name", phylum);
-
-                phylum_id = (await Database.GetRowAsync(cmd)).Field<long>("id");
+                await ReplyAsync("", false, embed.Build());
 
             }
+            else {
 
-            // Update the species.
+                // Get the specified family.
 
-            Species sp = sp_list[0];
+                Family family_info = await BotUtils.GetFamilyFromDb(family);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET phylum_id=$phylum_id WHERE id=$species_id;")) {
+                if (!await BotUtils.ReplyAsync_ValidateFamily(Context, family_info))
+                    return;
 
-                cmd.Parameters.AddWithValue("$phylum_id", phylum_id);
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                // Get all genera in this family.
 
-                await Database.ExecuteNonQuery(cmd);
+                Genus[] genus_info = await BotUtils.GetGeneraFromDb(family_info);
+
+                EmbedBuilder embed = new EmbedBuilder();
+                embed.WithTitle(StringUtils.ToTitleCase(family_info.name));
+
+                StringBuilder description = new StringBuilder();
+                description.AppendLine(family_info.GetDescriptionOrDefault());
+                description.AppendLine();
+
+                if (genus_info.Count() > 0) {
+
+                    description.AppendLine("**Genera in this family:**");
+
+                    foreach (Genus i in genus_info) {
+
+                        // Count the species in this genus.
+
+                        long species_count = 0;
+
+                        using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM Species WHERE genus_id=$genus_id;")) {
+                            cmd.Parameters.AddWithValue("$genus_id", i.id);
+                            species_count = await Database.GetScalar<long>(cmd);
+                        }
+
+                        description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(i.name), species_count));
+
+                    }
+
+                }
+                else
+                    description.AppendLine("This family contains no genera.");
+
+                embed.WithDescription(description.ToString());
+
+                await ReplyAsync("", false, embed.Build());
 
             }
-
-            await ReplyAsync("Phylum set successfully.");
 
         }
+        [Command("addfamily")]
+        public async Task AddFamily(string family, string description = "") {
+
+            Family family_info = new Family();
+            family_info.name = family;
+            family_info.description = description;
+
+            await BotUtils.AddFamilyToDb(family_info);
+
+            await ReplyAsync("Family added successfully.");
+
+        }
+        [Command("setfamily")]
+        public async Task SetFamily(string genus, string family) {
+
+            // Get the specified genus.
+
+            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
+
+            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
+                return;
+
+            // Get the specified family.
+
+            Family family_info = await BotUtils.GetFamilyFromDb(family);
+
+            if (!await BotUtils.ReplyAsync_ValidateFamily(Context, family_info))
+                return;
+
+            // Update the genus.
+
+            genus_info.family_id = family_info.id;
+
+            await BotUtils.UpdateGenusInDb(genus_info);
+
+            await ReplyAsync("Family set successfully.");
+
+        }
+        [Command("setfamilydesc"), Alias("setfamilydescription")]
+        public async Task SetFamilyDesc(string family, string description) {
+
+            // Get the specified family.
+
+            Family family_info = await BotUtils.GetFamilyFromDb(family);
+
+            if (!await BotUtils.ReplyAsync_ValidateFamily(Context, family_info))
+                return;
+
+            // Update the family.
+
+            family_info.description = description;
+
+            await BotUtils.UpdateFamilyInDb(family_info);
+
+            await ReplyAsync("Family updated successfully.");
+
+        }
+
+        #endregion
 
         [Command("addedby"), Alias("ownedby")]
         public async Task AddedBy(IUser user = null) {

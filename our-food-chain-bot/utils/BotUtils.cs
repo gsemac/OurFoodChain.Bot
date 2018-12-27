@@ -90,17 +90,61 @@ namespace OurFoodChain {
 
     }
 
+    class Family {
+
+        public long id;
+        public long order_id;
+        public string name;
+        public string description;
+
+        public Family() {
+
+            id = -1;
+            order_id = 0;
+
+        }
+
+        public string GetDescriptionOrDefault() {
+
+            if (string.IsNullOrEmpty(description))
+                return BotUtils.DEFAULT_DESCRIPTION;
+
+            return description;
+
+        }
+
+        public static Family FromDataRow(DataRow row) {
+
+            Family result = new Family {
+                id = row.Field<long>("id"),
+                name = row.Field<string>("name"),
+                description = row.Field<string>("description")
+            };
+
+            result.order_id = (row["order_id"] == DBNull.Value) ? 0 : row.Field<long>("order_id");
+
+            return result;
+
+        }
+
+    }
+
     class Genus {
 
         public long id;
+        public long family_id;
         public string name;
+        public string description;
 
         public static Genus FromDataRow(DataRow row) {
 
             Genus result = new Genus {
                 id = row.Field<long>("id"),
-                name = row.Field<string>("name")
+                name = row.Field<string>("name"),
+                description = row.Field<string>("description")
             };
+
+            result.family_id = (row["family_id"] == DBNull.Value) ? 0 : row.Field<long>("family_id");
 
             return result;
 
@@ -332,6 +376,40 @@ namespace OurFoodChain {
             return null;
 
         }
+        public static async Task<Genus[]> GetGeneraFromDb(Family family) {
+
+            List<Genus> genera = new List<Genus>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE family_id=$family_id ORDER BY name ASC;")) {
+
+                cmd.Parameters.AddWithValue("$family_id", family.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+
+                    foreach (DataRow row in rows.Rows)
+                        genera.Add(Genus.FromDataRow(row));
+
+                }
+
+            }
+
+            return genera.ToArray();
+
+        }
+        public static async Task UpdateGenusInDb(Genus genus) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET name=$name, description=$description, family_id=$family_id WHERE id=$genus_id;")) {
+
+                cmd.Parameters.AddWithValue("$name", genus.name);
+                cmd.Parameters.AddWithValue("$description", genus.description);
+                cmd.Parameters.AddWithValue("$family_id", genus.family_id);
+                cmd.Parameters.AddWithValue("$genus_id", genus.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
         public static async Task<long> GetSpeciesIdFromDb(long genusId, string species) {
 
             long species_id = -1;
@@ -538,6 +616,73 @@ namespace OurFoodChain {
             return null;
 
         }
+        public static async Task<Family> GetFamilyFromDb(string family) {
+
+            Family family_info = null;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Family WHERE name=$family;")) {
+
+                cmd.Parameters.AddWithValue("$family", family.ToLower());
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    family_info = Family.FromDataRow(row);
+
+            }
+
+            return family_info;
+
+        }
+        public static async Task<Family[]> GetFamiliesFromDb() {
+
+            List<Family> result = new List<Family>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Family;"))
+            using (DataTable rows = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in rows.Rows)
+                    result.Add(Family.FromDataRow(row));
+
+            // Sort roles by name in alphabetical order.
+            result.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+
+            return result.ToArray();
+
+        }
+        public static async Task UpdateFamilyInDb(Family family) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Family SET name=$name, description=$description, order_id=$order_id WHERE id=$family_id;")) {
+
+                cmd.Parameters.AddWithValue("$name", family.name.ToLower());
+                cmd.Parameters.AddWithValue("$description", family.description);
+                cmd.Parameters.AddWithValue("$order_id", family.order_id);
+                cmd.Parameters.AddWithValue("$family_id", family.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+        public static async Task AddFamilyToDb(Family family) {
+
+            string query = "INSERT INTO Family(name, description, order_id) VALUES($name, $description, $order_id);";
+
+            if (family.order_id <= 0)
+                query = "INSERT INTO Family(name, description) VALUES($name, $description);";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
+                cmd.Parameters.AddWithValue("$name", family.name.ToLower());
+                cmd.Parameters.AddWithValue("$description", family.description);
+
+                if (family.order_id > 0)
+                    cmd.Parameters.AddWithValue("$order_id", family.order_id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
 
         public static async Task AddRoleToDb(Role role) {
 
@@ -662,6 +807,33 @@ namespace OurFoodChain {
             return true;
 
         }
+        public static async Task<bool> ReplyAsync_ValidateGenus(ICommandContext context, Genus genus) {
+
+            if (genus is null || genus.id <= 0) {
+
+                await context.Channel.SendMessageAsync("No such genus exists.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateFamily(ICommandContext context, Family family) {
+
+            if (family is null || family.id <= 0) {
+
+                await context.Channel.SendMessageAsync("No such family exists.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+
 
         private static int _getSpeciesTreeWidth(Tree<Species>.TreeNode root, Font font) {
 

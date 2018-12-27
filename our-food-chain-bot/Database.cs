@@ -96,6 +96,19 @@ namespace OurFoodChain {
             await command.ExecuteNonQueryAsync();
 
         }
+        public static async Task<T> GetScalar<T>(SQLiteCommand command) {
+
+            using (SQLiteConnection conn = await GetConnectionAsync()) {
+
+                await conn.OpenAsync();
+
+                DataRow row = await GetRowAsync(conn, command);
+
+                return (T)row[0];
+
+            }
+
+        }
 
         private static readonly string DATABASE_FILE_NAME = "data.db";
         private static readonly string DATABASE_CONNECTION_STRING = string.Format("Data Source={0}", DATABASE_FILE_NAME);
@@ -116,19 +129,16 @@ namespace OurFoodChain {
 
                 if (version <= 0) {
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Genus(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
+                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Zones(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, description TEXT, UNIQUE(name, type));", conn))
                         await cmd.ExecuteNonQueryAsync();
 
                     using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Phylum(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
                         await cmd.ExecuteNonQueryAsync();
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Phylum(name, description) VALUES(\"default\", \"(default phylum)\")", conn))
+                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Genus(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
                         await cmd.ExecuteNonQueryAsync();
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Zones(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, description TEXT, UNIQUE(name, type));", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Species(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, phylum_id INTEGER, genus_id INTEGER, timestamp NUMERIC, UNIQUE(name, genus_id), FOREIGN KEY(phylum_id) REFERENCES Phylum(id), FOREIGN KEY(genus_id) REFERENCES Genus(id));", conn))
+                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Species(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, genus_id INTEGER, timestamp NUMERIC, UNIQUE(name, genus_id), FOREIGN KEY(genus_id) REFERENCES Genus(id));", conn))
                         await cmd.ExecuteNonQueryAsync();
 
                     using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesZones(species_id INTEGER, zone_id INTEGER, notes TEXT, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(zone_id) REFERENCES Zones(id), PRIMARY KEY(species_id, zone_id));", conn))
@@ -158,6 +168,8 @@ namespace OurFoodChain {
                     await _update007(conn);
                 if (version < 8)
                     await _update008(conn);
+                if (version < 9)
+                    await _update009(conn);
 
                 conn.Close();
 
@@ -253,6 +265,32 @@ namespace OurFoodChain {
             await _updateDatabaseVersion(conn, 8);
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE SpeciesRoles ADD COLUMN notes TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+        }
+        private static async Task _update009(SQLiteConnection conn) {
+
+            await _updateDatabaseVersion(conn, 9);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Domain(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Kingdom(id INTEGER PRIMARY KEY AUTOINCREMENT, domain_id INTEGER, name TEXT UNIQUE, description TEXT, FOREIGN KEY(domain_id) REFERENCES Domain(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Phylum ADD COLUMN kingdom_id INTEGER REFERENCES Kingdom(id);", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Class(id INTEGER PRIMARY KEY AUTOINCREMENT, phylum_id INTEGER, name TEXT UNIQUE, description TEXT, FOREIGN KEY(phylum_id) REFERENCES Phylum(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Ord(id INTEGER PRIMARY KEY AUTOINCREMENT, class_id INTEGER, name TEXT UNIQUE, description TEXT, FOREIGN KEY(class_id) REFERENCES Class(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Family(id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER, name TEXT UNIQUE, description TEXT, FOREIGN KEY(order_id) REFERENCES Ord(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Genus ADD COLUMN family_id INTEGER REFERENCES Family(id);", conn))
                 await cmd.ExecuteNonQueryAsync();
 
         }

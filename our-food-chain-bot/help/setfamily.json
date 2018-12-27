@@ -4,6 +4,7 @@
   "category": "updates",
   "description": "Sets the family for the given genus.",
   "examples": [
+    "setfamily <genus> <family>",
     "setfamily helix helidae"
   ]
 }

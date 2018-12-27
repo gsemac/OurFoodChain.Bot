@@ -1,0 +1,10 @@
+﻿{
+  "name": "setgenus",
+  "aliases": [],
+  "category": "updates",
+  "description": "Sets the genus for the given species.",
+  "examples": [
+    "setgenus <species> <genus>",
+    "setgenus circumferus helix"
+  ]
+}

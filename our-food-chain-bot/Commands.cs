@@ -122,6 +122,37 @@ namespace OurFoodChain {
             }
 
         }
+        [Command("setgenus")]
+        public async Task SetGenus(string species, string genus) {
+
+            // Get the specified species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, "", species);
+
+            if (sp is null)
+                return;
+
+            // Get the specified genus.
+
+            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
+
+            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
+                return;
+
+            // Update the species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET genus_id=$genus_id WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await ReplyAsync("Genus set successfully.");
+
+        }
 
         [Command("info"), Alias("i", "species", "sp", "s")]
         public async Task Info(string genus, string species = "") {
@@ -148,7 +179,6 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(sp.commonName))
                 embed_title += string.Format(" ({0})", StringUtils.ToTitleCase(sp.commonName));
 
-            embed.WithColor(embed_color);
             embed.AddInlineField("Owner", string.IsNullOrEmpty(sp.owner) ? "?" : sp.owner);
 
             List<string> zone_names = new List<string>();
@@ -161,6 +191,8 @@ namespace OurFoodChain {
                 zone_names.Add(zone.GetShortName());
 
             }
+
+            embed.WithColor(embed_color);
 
             zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 

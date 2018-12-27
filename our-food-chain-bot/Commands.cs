@@ -966,9 +966,9 @@ namespace OurFoodChain {
             Species[] predator_list = await BotUtils.GetSpeciesFromDb(genus, species);
             Species[] eaten_list = await BotUtils.GetSpeciesFromDb(eatsGenus, eatsSpecies);
 
-            if (predator_list.Count() == 0)
+            if (predator_list.Count() != 0)
                 await ReplyAsync("The predator species does not exist.");
-            else if (eaten_list.Count() == 0)
+            else if (eaten_list.Count() != 0)
                 await ReplyAsync("The victim species does not exist.");
             else {
 
@@ -1043,45 +1043,62 @@ namespace OurFoodChain {
         }
 
         [Command("prey")]
-        public async Task Prey(string genus, string species) {
+        public async Task Prey(string genus, string species = "") {
+
+            // If no species argument was provided, assume the user omitted the genus.
+
+            if (string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
+
+            // Get the specified species.
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
-            if (sp_list.Count() == 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
 
-                EmbedBuilder embed = new EmbedBuilder();
+            // Get the preyed-upon species.
 
-                embed.WithTitle(string.Format("Species preyed upon by {0}", sp_list[0].GetShortName()));
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE species_id=$species_id;")) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE species_id=$species_id;")) {
+                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
-
-                    DataTable rows = await Database.GetRowsAsync(cmd);
+                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     if (rows.Rows.Count <= 0)
                         await ReplyAsync("This species does not prey upon any other species.");
                     else {
 
-                        StringBuilder builder = new StringBuilder();
+                        List<Tuple<Species, string>> prey_list = new List<Tuple<Species, string>>();
 
                         foreach (DataRow row in rows.Rows) {
 
-                            Species sp = await BotUtils.GetSpeciesFromDb(row.Field<long>("eats_id"));
-                            string notes = row.Field<string>("notes");
-
-                            builder.Append(sp.GetShortName());
-
-                            if (!string.IsNullOrEmpty(notes))
-                                builder.Append(string.Format(" ({0})", notes));
-
-                            builder.AppendLine();
+                            prey_list.Add(new Tuple<Species, string>(
+                                await BotUtils.GetSpeciesFromDb(row.Field<long>("eats_id")),
+                                row.Field<string>("notes")));
 
                         }
 
-                        embed.WithDescription(builder.ToString());
+
+                        StringBuilder description = new StringBuilder();
+
+                        foreach (Tuple<Species, string> prey in prey_list) {
+
+                            description.Append(prey.Item1.GetShortName());
+
+                            if (!string.IsNullOrEmpty(prey.Item2))
+                                description.Append(string.Format(" ({0})", prey.Item2));
+
+                            description.AppendLine();
+
+                        }
+
+                        EmbedBuilder embed = new EmbedBuilder();
+
+                        embed.WithTitle(string.Format("Species preyed upon by {0} ({1})", sp_list[0].GetShortName(), prey_list.Count()));
+                        embed.WithDescription(description.ToString());
 
                         await ReplyAsync("", false, embed.Build());
 

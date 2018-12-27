@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -67,6 +68,11 @@ namespace OurFoodChain {
                 return BotUtils.DEFAULT_ZONE_DESCRIPTION;
 
             return description;
+
+        }
+        public string GetShortName() {
+
+            return Regex.Replace(name, "^zone\\s+", "", RegexOptions.IgnoreCase);
 
         }
 
@@ -139,9 +145,22 @@ namespace OurFoodChain {
             return BotUtils.GenerateSpeciesName(this);
 
         }
+        public string GetFullName() {
+
+            return string.Format("{0} {1}", StringUtils.ToTitleCase(genus), name);
+
+        }
         public string GetTimeStampAsDateString() {
 
             return DateTimeOffset.FromUnixTimeSeconds(timestamp).Date.ToUniversalTime().ToShortDateString();
+
+        }
+        public string GetDescriptionOrDefault() {
+
+            if (string.IsNullOrEmpty(description))
+                return BotUtils.DEFAULT_SPECIES_DESCRIPTION;
+
+            return description;
 
         }
 
@@ -641,6 +660,148 @@ namespace OurFoodChain {
             }
 
             return true;
+
+        }
+
+        private static int _getSpeciesTreeWidth(Tree<Species>.TreeNode root, Font font) {
+
+            int width = (int)GraphicsUtils.MeasureString(root.value.GetShortName(), font).Width;
+
+            int child_width = 0;
+
+            foreach (Tree<Species>.TreeNode i in root.childNodes)
+                child_width += _getSpeciesTreeWidth(i, font);
+
+            return Math.Max(width, child_width);
+
+        }
+        private static void _drawSpeciesTree(Tree<Species>.TreeNode root, Font font, Graphics gfx, Species highlightSpecies, int x, int y, int w) {
+
+            // Draw the tree using DFS.
+
+            SizeF size = GraphicsUtils.MeasureString(root.value.GetShortName(), font);
+            int dx = x + (w / 2) - ((int)size.Width / 2);
+            int dy = y;
+
+            using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.Black))
+                gfx.DrawString(root.value.GetShortName(), font, brush, new Point(dx, dy));
+
+            int cx = 0;
+            int cy = y + (int)size.Height * 3;
+            int cw = root.childNodes.Count() > 0 ? w / root.childNodes.Count() : w;
+
+            foreach (Tree<Species>.TreeNode n in root.childNodes) {
+
+                using (Brush brush = new SolidBrush(System.Drawing.Color.Black))
+                using (Pen pen = new Pen(brush, 2.0f)) {
+
+                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+
+                    gfx.DrawLine(pen, new Point(x + (w / 2), y + (int)size.Height), new Point(cx + (cw / 2), cy));
+
+                }
+
+                _drawSpeciesTree(n, font, gfx, highlightSpecies, cx, cy, cw);
+
+                cx += cw;
+
+            }
+
+        }
+
+        public static async Task<string> GenerateEvolutionTreeImage(Species sp) {
+
+            // Start by finding the earliest ancestor of this species.
+
+            long id = sp.id;
+
+            while (true) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id;")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", id);
+
+                    DataRow row = await Database.GetRowAsync(cmd);
+
+                    if (!(row is null))
+                        id = row.Field<long>("ancestor_id");
+                    else
+                        break;
+
+                }
+
+            }
+
+            // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
+
+            Tree<Species>.TreeNode root = new Tree<Species>.TreeNode();
+            root.value = await BotUtils.GetSpeciesFromDb(id);
+
+            Queue<Tree<Species>.TreeNode> queue = new Queue<Tree<Species>.TreeNode>();
+            queue.Enqueue(root);
+
+            while (queue.Count() > 0) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id);")) {
+
+                    cmd.Parameters.AddWithValue("$ancestor_id", queue.First().value.id);
+
+                    using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+
+                        // Add each species in this tier to the list.
+
+                        foreach (DataRow row in rows.Rows) {
+
+                            Tree<Species>.TreeNode node = new Tree<Species>.TreeNode();
+                            node.value = await Species.FromDataRow(row);
+
+                            queue.First().childNodes.Add(node);
+                            queue.Enqueue(node);
+
+                        }
+
+                    }
+
+                }
+
+                queue.Dequeue();
+
+            }
+
+            // Generate the evolution tree image.
+
+            using (Font font = new Font("Calibri", 12)) {
+
+                // Determine the dimensions of the image.
+
+                int padding = 30;
+                int width = _getSpeciesTreeWidth(root, font) + padding;
+                int depth = Tree<Species>.Depth(root);
+                int line_height = (int)GraphicsUtils.MeasureString("test", font).Height;
+                int height = (depth - 1) * (line_height * 3) + line_height;
+
+                // Create the bitmap.
+
+                using (Bitmap bmp = new Bitmap(width, height))
+                using (Graphics gfx = Graphics.FromImage(bmp)) {
+
+                    gfx.Clear(System.Drawing.Color.Transparent);
+                    gfx.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                    gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                    _drawSpeciesTree(root, font, gfx, sp, 0, 0, width);
+
+                    // Save the result.
+
+                    string fname = sp.GetShortName() + ".png";
+
+                    bmp.Save(fname);
+
+                    return fname;
+
+                }
+
+            }
 
         }
 

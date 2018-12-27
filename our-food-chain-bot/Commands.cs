@@ -135,90 +135,66 @@ namespace OurFoodChain {
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else if (sp_list.Count() > 1) {
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
 
-                EmbedBuilder embed = new EmbedBuilder();
-                StringBuilder builder = new StringBuilder();
+            EmbedBuilder embed = new EmbedBuilder();
+            StringBuilder description_builder = new StringBuilder();
 
-                embed.WithTitle("Matching species");
+            Species sp = sp_list[0];
 
-                foreach (Species sp in sp_list)
-                    builder.AppendLine(BotUtils.GenerateSpeciesName(sp));
+            string embed_title = sp.GetFullName();
+            Color embed_color = Color.Blue;
 
-                embed.WithDescription(builder.ToString());
+            if (!string.IsNullOrEmpty(sp.commonName))
+                embed_title += string.Format(" ({0})", StringUtils.ToTitleCase(sp.commonName));
 
-                await ReplyAsync("", false, embed.Build());
+            embed.WithColor(embed_color);
+            embed.AddInlineField("Owner", sp.owner);
+
+            List<string> zone_names = new List<string>();
+
+            foreach (Zone zone in await BotUtils.GetZonesFromDb(sp.id)) {
+
+                if (zone.type == ZoneType.Terrestrial)
+                    embed_color = Color.DarkGreen;
+
+                zone_names.Add(zone.GetShortName());
 
             }
-            else {
 
-                EmbedBuilder embed = new EmbedBuilder();
+            zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
-                StringBuilder builder = new StringBuilder();
-                Species sp = sp_list[0];
+            embed.AddInlineField("Zone(s)", string.Join(", ", zone_names));
 
-                if (!string.IsNullOrEmpty(sp.commonName))
-                    builder.AppendLine(string.Format("**AKA:** {0}", StringUtils.ToTitleCase(sp.commonName)));
+            // Check if the species is extinct.
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
 
-                builder.AppendLine(string.Format("**Owner:** {0}", sp.owner));
-                builder.Append("**Zone(s):** ");
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
 
-                List<string> zone_names = new List<string>();
-                Color embed_color = Color.Blue;
+                DataRow row = await Database.GetRowAsync(cmd);
 
-                foreach (Zone zone in await BotUtils.GetZonesFromDb(sp.id)) {
+                if (!(row is null)) {
 
-                    if (zone.type == ZoneType.Terrestrial)
-                        embed_color = Color.DarkGreen;
+                    embed_title = "[EXTINCT] " + embed_title;
+                    embed.WithColor(Color.Red);
 
-                    zone_names.Add(zone.name);
+                    string reason = row.Field<string>("reason");
+
+                    if (!string.IsNullOrEmpty(reason))
+                        description_builder.AppendLine(string.Format("**{0}**\n", reason));
 
                 }
 
-                zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
-
-                embed.WithColor(embed_color);
-
-                builder.AppendLine(string.Join(", ", zone_names));
-
-                string description = sp.description;
-
-                if (string.IsNullOrEmpty(description))
-                    description = BotUtils.DEFAULT_SPECIES_DESCRIPTION;
-
-                string title = string.Format("{0} {1}", StringUtils.ToTitleCase(sp.genus), sp.name);
-
-                builder.Append("**Description:** ");
-                builder.AppendLine(description);
-
-                // Check if the species is extinct.
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", sp.id);
-
-                    DataRow row = await Database.GetRowAsync(cmd);
-
-                    if (!(row is null)) {
-
-                        title += " [EXTINCT]";
-                        embed.WithColor(Color.Red);
-
-                        builder.AppendLine(string.Format("**{0}**", row.Field<string>("reason")));
-
-                    }
-
-                }
-
-                embed.WithTitle(title);
-                embed.WithDescription(builder.ToString());
-                embed.WithThumbnailUrl(sp.pics);
-
-                await ReplyAsync("", false, embed.Build());
-
-
             }
+
+            description_builder.Append(sp.GetDescriptionOrDefault());
+
+            embed.WithTitle(embed_title);
+            embed.WithDescription(description_builder.ToString());
+            embed.WithThumbnailUrl(sp.pics);
+
+            await ReplyAsync("", false, embed.Build());
 
         }
 
@@ -503,7 +479,7 @@ namespace OurFoodChain {
 
                     Role[] roles_list = await BotUtils.GetRolesFromDbBySpecies(sp);
 
-                    if(roles_list.Count() <= 0) {
+                    if (roles_list.Count() <= 0) {
 
                         if (!roles_map.ContainsKey("no role"))
                             roles_map["no role"] = new List<Species>();
@@ -693,6 +669,20 @@ namespace OurFoodChain {
                 await ReplyAsync(string.Join(Environment.NewLine, entries));
 
             }
+
+        }
+
+        [Command("lineage2")]
+        public async Task Lineage2(string genus, string species) {
+
+            Species[] species_list = await BotUtils.GetSpeciesFromDb(genus, species);
+
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list))
+                return;
+
+            string image = await BotUtils.GenerateEvolutionTreeImage(species_list[0]);
+
+            await Context.Channel.SendFileAsync(image);
 
         }
 

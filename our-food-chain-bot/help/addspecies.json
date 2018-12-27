@@ -1,0 +1,12 @@
+﻿{
+  "name": "addspecies",
+  "aliases": [
+    "addsp"
+  ],
+  "category": "updates",
+  "description": "Adds a new species to the database.",
+  "examples": [
+    "addsp helix quattuorus \"zone 12\" \"my description\"",
+    "addsp helix quattuorus 12"
+  ]
+}

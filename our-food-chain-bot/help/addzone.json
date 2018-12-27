@@ -1,0 +1,13 @@
+﻿{
+  "name": "addzone",
+  "aliases": [
+    "addz"
+  ],
+  "category": "updates",
+  "description": "Adds a new zone to the database. Numeric zones are automatically categorized as aquatic, and alphabetic zones are categorized as terrestrial.",
+  "examples": [
+    "addzone 25",
+    "addzone 25 aquatic",
+    "addzone 25 terrestrial \"my description\""
+  ]
+}

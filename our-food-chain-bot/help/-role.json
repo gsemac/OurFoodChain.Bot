@@ -1,0 +1,11 @@
+﻿{
+  "name": "-role",
+  "aliases": [
+    "unsetrole"
+  ],
+  "category": "updates",
+  "description": "Removes the role from the given species.",
+  "examples": [
+    "-role H. quattuorus predator"
+  ]
+}

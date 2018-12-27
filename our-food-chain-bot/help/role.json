@@ -1,0 +1,13 @@
+﻿{
+  "name": "role",
+  "aliases": [
+    "roles"
+  ],
+  "category": "info",
+  "description": "Lists all roles, shows information about the given role, or lists roles assigned to the given species.",
+  "examples": [
+    "roles",
+    "role predator",
+    "roles H. quattuorus"
+  ]
+}

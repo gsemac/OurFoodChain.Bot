@@ -1,0 +1,11 @@
+﻿{
+  "name": "predates",
+  "aliases": [
+    "eats"
+  ],
+  "category": "info",
+  "description": "Lists all species that prey upon the given species.",
+  "examples": [
+    "predates H. quattuorus"
+  ]
+}

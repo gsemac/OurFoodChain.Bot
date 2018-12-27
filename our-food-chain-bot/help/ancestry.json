@@ -1,0 +1,14 @@
+﻿{
+  "name": "ancestry",
+  "aliases": [
+    "ancestry",
+    "ancestors",
+    "lineage"
+  ],
+  "category": "info",
+  "description": "Lists ancestors of the given species.",
+  "examples": [
+    "lineage <genus> <species>",
+    "lineage H. quattuorus"
+  ]
+}

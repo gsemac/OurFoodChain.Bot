@@ -1,0 +1,10 @@
+﻿{
+  "name": "setancestor",
+  "aliases": [],
+  "category": "updates",
+  "description": "Sets the ancestor of the given species (i.e., the species it evolved from).",
+  "examples": [
+    "setancestor <derived species> <ancestor species>",
+    "setancestor H. evolvedus H. ancientous"
+  ]
+}

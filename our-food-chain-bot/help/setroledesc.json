@@ -1,0 +1,11 @@
+﻿{
+  "name": "setroledesc",
+  "aliases": [
+    "setroledescription"
+  ],
+  "category": "updates",
+  "description": "Sets the description for the given role.",
+  "examples": [
+    "setroledesc predator \"eats living things\""
+  ]
+}

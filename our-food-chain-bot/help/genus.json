@@ -1,0 +1,13 @@
+﻿{
+  "name": "genus",
+  "aliases": [
+    "g",
+    "genera"
+  ],
+  "category": "info",
+  "description": "Lists all species under the given genus. If no genus is provided, lists all genera.",
+  "examples": [
+    "genus <genus>",
+    "genus helix"
+  ]
+}

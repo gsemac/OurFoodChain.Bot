@@ -1,0 +1,11 @@
+﻿{
+  "name": "ancestry2",
+  "aliases": [
+    "lineage2"
+  ],
+  "category": "info",
+  "description": "Displays an evolution chart for the given species.",
+  "examples": [
+    "ancestry2 H. quattuorus"
+  ]
+}

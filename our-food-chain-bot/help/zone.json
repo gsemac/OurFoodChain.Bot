@@ -1,0 +1,14 @@
+﻿{
+  "name": "zone",
+  "aliases": [
+    "z",
+    "zones"
+  ],
+  "category": "info",
+  "description": "Shows information about the given zone. If no zone is provided, lists all zones.",
+  "examples": [
+    "zone 1",
+    "zones aquatic",
+    "zones terrestrial"
+  ]
+}

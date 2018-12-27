@@ -1,0 +1,12 @@
+﻿{
+  "name": "+role",
+  "aliases": [
+    "setrole"
+  ],
+  "category": "updates",
+  "description": "Sets the role fulfilled by the given species.",
+  "examples": [
+    "+role H. quattuorus detritivore",
+    "+role H. quattuorus detritivore \"larvae only\""
+  ]
+}

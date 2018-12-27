@@ -1,0 +1,9 @@
+﻿{
+  "name": "search",
+  "aliases": [],
+  "category": "info",
+  "description": "Lists species that have names or descriptions matching the search terms.",
+  "examples": [
+    "search coral"
+  ]
+}

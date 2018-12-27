@@ -1,0 +1,14 @@
+﻿{
+  "name": "setspeciesdesc",
+  "aliases": [
+    "setdesc",
+    "setdescription",
+    "setsdesc"
+  ],
+  "category": "updates",
+  "description": "Sets the description for the given species. Leave description blank to provide it in a separate message.",
+  "examples": [
+    "setdesc H. quattuorus \"my description\"",
+    "setdesc H. quattuorus"
+  ]
+}

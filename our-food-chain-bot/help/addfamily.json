@@ -1,0 +1,9 @@
+﻿{
+  "name": "addfamily",
+  "aliases": [],
+  "category": "updates",
+  "description": "Adds a new family. To add a family to a genus, use `setfamily` instead.",
+  "examples": [
+    "addfamily \"helidae\""
+  ]
+}

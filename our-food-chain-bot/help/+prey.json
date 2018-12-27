@@ -1,0 +1,15 @@
+﻿{
+  "name": "+prey",
+  "aliases": [
+    "setpredates",
+    "seteats",
+    "setprey"
+  ],
+  "category": "updates",
+  "description": "Sets a species eaten by another species. Successive calls are additive, and do not replace existing relationships.",
+  "examples": [
+    "setprey <predator species> <prey species>",
+    "setprey P. filterarious H. quattuorus",
+    "setprey P. filterarious H. quattuorus \"babies only\""
+  ]
+}

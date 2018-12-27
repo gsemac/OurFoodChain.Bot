@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -286,7 +287,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setdescription"), Alias("setdesc")]
+        [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
         public async Task SetDescription(string genus, string species, string description = "") {
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
@@ -629,7 +630,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("lineage"), Alias("ancestry", "ancestors")]
+        [Command("ancestry"), Alias("lineage", "ancestors")]
         public async Task Lineage(string genus, string species) {
 
             Species[] species_list = await BotUtils.GetSpeciesFromDb(genus, species);
@@ -673,7 +674,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("lineage2")]
+        [Command("ancestry2"), Alias("lineage2")]
         public async Task Lineage2(string genus, string species) {
 
             Species[] species_list = await BotUtils.GetSpeciesFromDb(genus, species);
@@ -687,7 +688,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setzone"), Alias("setzones")]
+        [Command("+zone"), Alias("+zones", "setzone", "setzones")]
         public async Task SetZone(string genus, string species, string zone) {
 
             string[] zones = zone.Split(',', '/');
@@ -784,6 +785,7 @@ namespace OurFoodChain {
         private class CommandInfo {
             public string name;
             public string description;
+            public string category;
             public string[] aliases;
             public string[] examples;
         }
@@ -791,237 +793,92 @@ namespace OurFoodChain {
         [Command("help"), Alias("h")]
         public async Task Help(string command = "") {
 
-            EmbedBuilder builder = new EmbedBuilder();
 
-            List<CommandInfo> info_commands = new List<CommandInfo>();
 
-            info_commands.Add(new CommandInfo {
-                name = "ancestry",
-                description = "Lists ancestors of the given species.",
-                aliases = new string[] { "lineage", "ancestors" },
-                examples = new string[] {
-                    "?lineage <genus> <species>",
-                    "?lineage H. quattuorus"
+            // Load all command info files.
+
+            List<CommandInfo> command_info = new List<CommandInfo>();
+            string[] fnames = System.IO.Directory.GetFiles("help", "*.json", System.IO.SearchOption.TopDirectoryOnly);
+
+            foreach (string fname in fnames)
+                command_info.Add(JsonConvert.DeserializeObject<CommandInfo>(System.IO.File.ReadAllText(fname)));
+
+            if (!string.IsNullOrEmpty(command)) {
+
+                // Find the requested command.
+
+                command = command.ToLower();
+
+                CommandInfo info = null;
+
+                foreach (CommandInfo c in command_info)
+                    if (c.name == command || c.aliases.Contains(command)) {
+                        info = c;
+                        break;
+                    }
+
+                if (info is null)
+                    await ReplyAsync("The given command does not exist, or is not yet documented.");
+                else {
+
+                    EmbedBuilder builder = new EmbedBuilder();
+
+                    builder.WithTitle(string.Format("Help: {0}", info.name));
+
+                    builder.AddField("Description", info.description);
+
+                    if (info.aliases.Count() > 0)
+                        builder.AddField("Aliases", string.Join(", ", info.aliases));
+
+                    if (info.examples.Count() > 0)
+                        builder.AddField("Example(s)", string.Join(Environment.NewLine, info.examples));
+
+                    await ReplyAsync("", false, builder.Build());
+
                 }
-            });
-
-            info_commands.Add(new CommandInfo {
-                name = "genus",
-                description = "Lists all species under the given genus. If no genus is provided, lists all genera.",
-                aliases = new string[] { "g", "genus", "genera" },
-                examples = new string[] {
-                    "?genus <genus>",
-                    "?genus helix"
-                }
-            });
-
-            info_commands.Add(new CommandInfo {
-                name = "help",
-                description = "Displays help information.",
-                aliases = new string[] { "h" },
-                examples = new string[] {
-                    "?help",
-                    "?help genus"
-                }
-            });
-
-            info_commands.Add(new CommandInfo {
-                name = "info",
-                description = "Shows information about the given species.",
-                aliases = new string[] { "i", "s" },
-                examples = new string[] {
-                    "?info <genus> <species>",
-                    "?info H. quattuorus",
-                    "?info quattuorus"
-                }
-            });
-
-            info_commands.Add(new CommandInfo {
-                name = "map",
-                description = "Displays the map.",
-                examples = new string[] {
-                    "?map"
-                }
-            });
-
-            info_commands.Add(new CommandInfo {
-                name = "zone",
-                description = "Shows information about the given zone. If no zone is provided, lists all zones.",
-                aliases = new string[] { "z", "zones" },
-                examples = new string[] {
-                    "?zone 1",
-                    "?zones aquatic",
-                    "?zones terrestrial"
-                }
-            });
-
-            if (string.IsNullOrEmpty(command)) {
-
-                builder.WithTitle("Commands list");
-                builder.WithFooter("For more information, use \"help <command>\". e.g. \"help info\"");
-
-                builder.AddField("Info", "`genus` `info` `zone` `map` `lineage` `lineage2` `help` `predates` `prey` `ownedby` `search` `roles` `family`");
-                builder.AddField("Updates", "`addsp` `addzone` `setpic` `setdesc` `setextinct` `setowner` `setancestor` `setcommonname` `setprey` `setgenusdesc` `+role` `-role` `addrole` `setroledesc` `addfamily` `setfamily` `setfamilydesc`");
 
             }
             else {
 
-                builder.WithTitle(string.Format("Help: {0}", command));
-                string description = "No description available";
-                string aliases = "-";
-                string example = "-";
+                // Sort commands alphabetically.
+                command_info.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
-                switch (command) {
+                SortedDictionary<string, List<CommandInfo>> commands_lists = new SortedDictionary<string, List<CommandInfo>>();
 
-                    case "addsp":
-                    case "addspecies":
-                        description = "Adds a new species to the database.";
-                        aliases = "addsp, addspecies";
-                        example = "?addsp helix quattuorus \"zone 12\" \"my description\"\n?addsp helix quattuorus 12";
-                        break;
+                foreach (CommandInfo c in command_info) {
 
-                    case "addzone":
-                    case "addz":
-                        description = "Adds a new zone to the database. Numeric zones are automatically categorized as aquatic, and alphabetic zones are categorized as terrestrial.";
-                        aliases = "addz, addzone";
-                        example = "?addzone 25\n?addzone 25 aquatic\n?addzone 25 terrestrial \"my description\"";
-                        break;
+                    if (!commands_lists.ContainsKey(c.category))
+                        commands_lists[c.category] = new List<CommandInfo>();
 
-                    case "setpic":
-                        description = "Sets the picture for the given species.";
-                        aliases = "setpic";
-                        example = "?setpic H. quattuorus https://website.com/image.jpg";
-                        break;
-
-                    case "setdesc":
-                    case "setdescription":
-                        description = "Sets the description for the given species. Leave description blank to provide it in a separate message.";
-                        aliases = "setdesc, setdescription";
-                        example = "?setdesc H. quattuorus \"my description\"\n?setdesc H. quattuorus";
-                        break;
-
-                    case "setextinct":
-                        description = "Marks the given species as extinct.";
-                        aliases = "setextinct";
-                        example = "?setextinct H. quattuorus \"died of starvation\"\n?setextinct H. quattuorus";
-                        break;
-
-                    case "setown":
-                    case "claim":
-                    case "setowner":
-                        description = "Sets the owner of the given species.";
-                        aliases = "setowner, setown, claim";
-                        example = "?claim H. quattuorus\n?setowner H. quattuorus \"my name\"";
-                        break;
-
-                    case "setancestor":
-                        description = "Sets the ancestor of the given species (i.e., the species it evolved from).";
-                        aliases = "setancestor";
-                        example = "?setancestor <derived species> <ancestor species>\n?setancestor H. quattuorus H. ancientous";
-                        break;
-
-                    case "setcommon":
-                    case "setcommonname":
-                        description = "Sets the common name for the given species.";
-                        aliases = "setcommonname, setcommon";
-                        example = "?setcommonname H. quattuorus \"swirly star\"";
-                        break;
-
-                    case "setpredates":
-                    case "seteats":
-                    case "setprey":
-                        description = "Sets a species eaten by another species. Successive calls are additive, and do not replace existing relationships.";
-                        aliases = "setprey, seteats, setpredates";
-                        example = "?setprey <predator species> <prey species>\n?setprey P. filterarious H. quattuorus\n?setprey P. filterarious H. quattuorus \"babies only\"";
-                        break;
-
-                    case "prey":
-                        description = "Lists the species prayed upon by the given species.";
-                        aliases = "prey";
-                        example = "?prey P. filterarious";
-                        break;
-
-                    case "eats":
-                    case "predates":
-                        description = "Lists the species that pray upon the given species.";
-                        aliases = "predates, eats";
-                        example = "?predates H. quattuorus";
-                        break;
-
-                    case "setgenusdescription":
-                    case "setgenusdesc":
-                    case "setgdesc":
-                        description = "Sets the description for the given genus.";
-                        aliases = "setgenusdescription, setgenusdesc, setgdesc";
-                        example = "?setgdesc helix \"they have swirly shells\"";
-                        break;
-
-                    case "ownedby":
-                    case "addedby":
-                        description = "Lists all species owned by the given user. If no username is provided, lists all species owned by the user who used the command.";
-                        aliases = "ownedby, addedby";
-                        example = "?ownedby username";
-                        break;
-
-                    case "search":
-                        description = "Lists species that have names or descriptions matching the search terms.";
-                        aliases = "search";
-                        example = "?search \"coral\"";
-                        break;
-
-                    case "+role":
-                    case "setrole":
-                        description = "Sets the given species' role.";
-                        aliases = "+role, setrole";
-                        example = "?+role H. quattuorus detritivore\n?+role H. quattuorus detritivore \"larvae only\"";
-                        break;
-
-                    case "-role":
-                    case "unsetrole":
-                        description = "Removes the given species' role.";
-                        aliases = "-role, unsetrole";
-                        example = "?-role H. quattuorus predator";
-                        break;
-
-                    case "roles":
-                    case "role":
-                        description = "Lists all roles, shows information about the given role, or lists roles assigned to the given species.";
-                        aliases = "roles, role";
-                        example = "?roles\n?role predator\n?roles H. quattuorus";
-                        break;
-
-                    case "setroledescription":
-                    case "setroledesc":
-                        description = "Sets the description for the given role.";
-                        aliases = "setroledescription, setroledesc";
-                        example = "?setroledesc predator \"eats living things\"";
-                        break;
-
-                    case "addrole":
-                        description = "Adds a new role. To add a role to a species, use `+role` instead.";
-                        aliases = "addrole";
-                        example = "?addrole predator \"eats living things\"";
-                        break;
-
-                    default:
-                        await ReplyAsync("No such command exists.");
-                        return;
+                    commands_lists[c.category].Add(c);
 
                 }
 
-                builder.AddField("Description", description);
-                builder.AddField("Aliases", aliases);
-                builder.AddField("Example(s)", example);
+                EmbedBuilder builder = new EmbedBuilder();
+
+                builder.WithTitle("Commands list");
+                builder.WithFooter("Want to know more about a command? Use \"help <command>\", e.g.: \"help setpic\"");
+
+                foreach (string cat in commands_lists.Keys) {
+
+                    List<string> command_str_list = new List<string>();
+
+                    foreach (CommandInfo c in commands_lists[cat])
+                        command_str_list.Add(string.Format("`{0}`", c.name));
+
+                    builder.AddField(StringUtils.ToTitleCase(cat), string.Join("  ", command_str_list));
+
+                }
+
+                await ReplyAsync("", false, builder.Build());
 
             }
-
-            await ReplyAsync("", false, builder.Build());
 
         }
 
         #endregion
 
-        [Command("setprey"), Alias("seteats", "setpredates")]
+        [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
         public async Task SetPredates(string genus, string species, string eatsGenus, string eatsSpecies, string notes = "") {
 
             Species[] predator_list = await BotUtils.GetSpeciesFromDb(genus, species);
@@ -1184,7 +1041,7 @@ namespace OurFoodChain {
 
         #region "family"
 
-        [Command("family"), Alias("f")]
+        [Command("family"), Alias("f", "families")]
         public async Task Family(string family = "") {
 
             // If no family was specified, show all families.

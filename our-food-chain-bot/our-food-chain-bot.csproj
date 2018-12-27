@@ -164,7 +164,40 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="help\+zone.json" />
+    <None Include="help\setextinct.json" />
+    <None Include="help\+role.json" />
+    <None Include="help\-role.json" />
+    <None Include="help\addfamily.json" />
+    <None Include="help\addrole.json" />
+    <None Include="help\addspecies.json" />
+    <None Include="help\addzone.json" />
+    <None Include="help\ancestry.json" />
+    <None Include="help\ancestry2.json" />
+    <None Include="help\family.json" />
+    <None Include="help\genus.json" />
+    <None Include="help\help.json" />
+    <None Include="help\species.json" />
+    <None Include="help\map.json" />
+    <None Include="help\setancestor.json" />
+    <None Include="help\ownedby.json" />
+    <None Include="help\predates.json" />
+    <None Include="help\prey.json" />
+    <None Include="help\role.json" />
+    <None Include="help\search.json" />
+    <None Include="help\setcommonname.json" />
+    <None Include="help\setfamily.json" />
+    <None Include="help\setfamilydesc.json" />
+    <None Include="help\setgenusdesc.json" />
+    <None Include="help\setowner.json" />
+    <None Include="help\setpic.json" />
+    <None Include="help\setroledesc.json" />
+    <None Include="help\setspeciesdesc.json" />
+    <None Include="help\zone.json" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="help\+prey.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -175,4 +208,7 @@
     <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.109.2\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.109.2\build\net46\System.Data.SQLite.Core.targets'))" />
   </Target>
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.109.2\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.109.2\build\net46\System.Data.SQLite.Core.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(ProjectDir)help\*.*" "$(TargetDir)\help" /Y /I /E</PostBuildEvent>
+  </PropertyGroup>
 </Project>

@@ -1,0 +1,9 @@
+﻿{
+  "name": "setpic",
+  "aliases": [],
+  "category": "updates",
+  "description": "Sets the picture for the given species.",
+  "examples": [
+    "setpic H. quattuorus https://website.com/image.jpg"
+  ]
+}

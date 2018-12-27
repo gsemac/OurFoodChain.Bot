@@ -1,0 +1,13 @@
+﻿{
+  "name": "help",
+  "aliases": [
+    "h"
+  ],
+  "category": "info",
+  "description": "Displays help information.",
+  "examples": [
+    "help",
+    "help <command>",
+    "help addspecies"
+  ]
+}

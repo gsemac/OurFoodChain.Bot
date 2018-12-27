@@ -1,0 +1,9 @@
+﻿{
+  "name": "setfamily",
+  "aliases": [],
+  "category": "updates",
+  "description": "Sets the family for the given genus.",
+  "examples": [
+    "setfamily helix helidae"
+  ]
+}

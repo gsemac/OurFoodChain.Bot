@@ -1,0 +1,9 @@
+﻿{
+  "name": "map",
+  "aliases": [],
+  "category": "info",
+  "description": "Displays the map.",
+  "examples": [
+    "map"
+  ]
+}

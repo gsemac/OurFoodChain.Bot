@@ -1,0 +1,11 @@
+﻿{
+  "name": "setfamilydesc",
+  "aliases": [
+    "setfamilydescription"
+  ],
+  "category": "updates",
+  "description": "Sets the description for the given family.",
+  "examples": [
+    "setfamilydesc helidae \"they have swirly shells\""
+  ]
+}

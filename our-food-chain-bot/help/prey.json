@@ -1,0 +1,9 @@
+﻿{
+  "name": "prey",
+  "aliases": [],
+  "category": "info",
+  "description": "Lists all species preyed upon by the given species.",
+  "examples": [
+    "prey P. filterarious"
+  ]
+}

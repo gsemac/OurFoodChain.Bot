@@ -150,7 +150,7 @@ namespace OurFoodChain {
                 embed_title += string.Format(" ({0})", StringUtils.ToTitleCase(sp.commonName));
 
             embed.WithColor(embed_color);
-            embed.AddInlineField("Owner", sp.owner);
+            embed.AddInlineField("Owner", string.IsNullOrEmpty(sp.owner) ? "?" : sp.owner);
 
             List<string> zone_names = new List<string>();
 
@@ -165,7 +165,9 @@ namespace OurFoodChain {
 
             zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
-            embed.AddInlineField("Zone(s)", string.Join(", ", zone_names));
+            string zones_value = string.Join(", ", zone_names);
+
+            embed.AddInlineField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "?" : zones_value);
 
             // Check if the species is extinct.
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
@@ -263,9 +265,9 @@ namespace OurFoodChain {
 
                 if (zone_info is null || zone_info.id == -1) {
 
-                    await ReplyAsync("The given Zone does not exist.");
+                    await ReplyAsync(string.Format("The given zone does not exist: {0}", zoneName));
 
-                    return;
+                    continue;
 
                 }
 
@@ -761,22 +763,19 @@ namespace OurFoodChain {
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp_list))
+                return;
 
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner WHERE id=$species_id;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner WHERE id=$species_id;")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
-                    cmd.Parameters.AddWithValue("$owner", owner);
+                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
+                cmd.Parameters.AddWithValue("$owner", owner);
 
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-                await ReplyAsync("Owner added successfully.");
+                await Database.ExecuteNonQuery(cmd);
 
             }
+
+            await ReplyAsync("Owner added successfully.");
 
         }
 

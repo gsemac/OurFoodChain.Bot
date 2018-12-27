@@ -554,8 +554,7 @@ namespace OurFoodChain {
 
                 if (species_list.Count() > 0) {
 
-                    await message.AddReactionAsync(new Emoji("◀"));
-                    await message.AddReactionAsync(new Emoji("▶"));
+                    await message.AddReactionAsync(new Emoji("🇷"));
 
                     CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
                         pages = pages.ToArray()

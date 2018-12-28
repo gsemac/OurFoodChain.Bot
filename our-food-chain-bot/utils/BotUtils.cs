@@ -624,9 +624,13 @@ namespace OurFoodChain {
         }
         public static async Task<Role> GetRoleFromDb(string roleName) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE name=$name;")) {
+            // Allow for querying using the plural of the role (e.g., "producers").
+            string role_name_plural = roleName.TrimEnd('s');
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE name=$name OR name=$plural;")) {
 
                 cmd.Parameters.AddWithValue("$name", roleName.ToLower());
+                cmd.Parameters.AddWithValue("$plural", role_name_plural.ToLower());
 
                 DataRow row = await Database.GetRowAsync(cmd);
 

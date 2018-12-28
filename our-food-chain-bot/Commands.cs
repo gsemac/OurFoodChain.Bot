@@ -1232,7 +1232,7 @@ namespace OurFoodChain {
 
                 if (genus_info.Count() > 0) {
 
-                    description.AppendLine("**Genera in this family:**");
+                    description.AppendLine(string.Format("**Genera in this family ({0}):**", genus_info.Count()));
 
                     foreach (Genus i in genus_info) {
 

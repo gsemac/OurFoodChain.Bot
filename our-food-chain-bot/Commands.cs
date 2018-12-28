@@ -46,10 +46,14 @@ namespace OurFoodChain {
 
                         }
 
-                        builder.AppendLine(string.Format("{0} ({1})",
-                            StringUtils.ToTitleCase(genus_info.name),
-                            count
-                            ));
+                        // Empty genera will not be listed.
+                        // Since genera cannot be manually added at the moment, this will only occur when all species within it have been moved or deleted.
+
+                        if (count > 0)
+                            builder.AppendLine(string.Format("{0} ({1})",
+                                StringUtils.ToTitleCase(genus_info.name),
+                                count
+                                ));
 
                     }
 
@@ -725,7 +729,7 @@ namespace OurFoodChain {
 
             // If the species parameter was not provided, assume the user only provided the species.
 
-            if(string.IsNullOrEmpty(species)) {
+            if (string.IsNullOrEmpty(species)) {
                 species = genus;
                 genus = string.Empty;
             }
@@ -1132,7 +1136,7 @@ namespace OurFoodChain {
                                 if (!string.IsNullOrEmpty(notes))
                                     line_text += string.Format(" ({0})", notes);
 
-                                lines.Add(line_text);
+                                lines.Add(sp.isExtinct ? string.Format("~~{0}~~", line_text) : line_text);
 
                             }
 
@@ -1610,7 +1614,9 @@ namespace OurFoodChain {
 
                 // List species with this role.
 
-                Species[] species_list = await BotUtils.GetSpeciesFromDbByRole(role);
+                List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByRole(role));
+
+                species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
                 if (species_list.Count() > 0) {
 

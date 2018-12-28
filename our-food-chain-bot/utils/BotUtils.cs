@@ -310,6 +310,14 @@ namespace OurFoodChain {
             genus = genus.ToLower();
             species = species.ToLower();
 
+            // Ignore any stray periods in the genus/species names.
+
+            if (!string.IsNullOrEmpty(genus))
+                genus = genus.Trim('.');
+
+            if (!string.IsNullOrEmpty(species))
+                species = species.Trim('.');
+
             Genus genus_info = null;
 
             List<Species> matches = new List<Species>();
@@ -965,7 +973,7 @@ namespace OurFoodChain {
 
             using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.Black))
                 gfx.DrawString(root.value.GetShortName(), font, brush, new Point(dx, dy));
-                    
+
             int cx = 0;
             int cy = y + (int)size.Height * 3;
             int cw = root.childNodes.Count() > 0 ? w / root.childNodes.Count() : w;

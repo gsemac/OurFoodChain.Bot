@@ -1433,6 +1433,7 @@ namespace OurFoodChain {
 
                     embed.WithTitle(string.Format("Species owned by {0}", username));
                     embed.WithDescription(string.Join(Environment.NewLine, lines));
+                    embed.WithThumbnailUrl(user.GetAvatarUrl(size:32));
 
                     await ReplyAsync("", false, embed.Build());
 

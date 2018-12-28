@@ -950,9 +950,22 @@ namespace OurFoodChain {
             int dx = x + (w / 2) - ((int)size.Width / 2);
             int dy = y;
 
+            if (root.value.isExtinct && System.IO.File.Exists("res/x.png"))
+                using (Bitmap extinctIcon = new Bitmap("res/x.png")) {
+
+                    float icon_scale = size.Height / extinctIcon.Height;
+                    int icon_w = (int)(extinctIcon.Width * icon_scale);
+                    int icon_h = (int)(extinctIcon.Height * icon_scale);
+                    int icon_x = x + (w / 2) - (icon_w / 2);
+                    int icon_y = dy + ((int)size.Height / 2) - (icon_h / 2);
+
+                    gfx.DrawImage(extinctIcon, new Rectangle(icon_x, icon_y, icon_w, icon_h));
+
+                }
+
             using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.Black))
                 gfx.DrawString(root.value.GetShortName(), font, brush, new Point(dx, dy));
-
+                    
             int cx = 0;
             int cy = y + (int)size.Height * 3;
             int cw = root.childNodes.Count() > 0 ? w / root.childNodes.Count() : w;

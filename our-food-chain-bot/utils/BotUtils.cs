@@ -979,8 +979,12 @@ namespace OurFoodChain {
 
             }
 
-            if (invalid_zones.Count() <= 0 && !showErrorsOnly)
-                await ReplyAsync_Success(context, string.Format("Zones updated successfully."));
+            if (invalid_zones.Count() <= 0) {
+
+                if (!showErrorsOnly)
+                    await ReplyAsync_Success(context, string.Format("Zones updated successfully."));
+
+            }
             else
                 await ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): {0}", string.Join(", ", invalid_zones)));
 

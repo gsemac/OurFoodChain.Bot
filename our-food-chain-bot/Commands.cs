@@ -456,6 +456,11 @@ namespace OurFoodChain {
 
                 EmbedBuilder embed = new EmbedBuilder();
 
+                embed.WithFooter(string.Format("For detailed information, use \"{0}zone <zone>\", e.g.: \"{0}zone 1\"",
+                    OurFoodChainBot.GetInstance().GetConfig().prefix));
+
+                StringBuilder sb = new StringBuilder();
+
                 foreach (Zone zone_info in zone_list) {
 
                     string description = zone_info.description;
@@ -463,10 +468,10 @@ namespace OurFoodChain {
                     if (string.IsNullOrEmpty(description))
                         description = BotUtils.DEFAULT_ZONE_DESCRIPTION;
 
-                    embed.AddField(string.Format("**{0}** ({1})",
-                        StringUtils.ToTitleCase(zone_info.name), zone_info.type.ToString()),
-                        OurFoodChain.Zone.GetShortDescription(description)
-                        );
+                    sb.Append(string.Format("{1} **{0}**: ", StringUtils.ToTitleCase(zone_info.name), zone_info.type == ZoneType.Aquatic ? "🌊" : "🌳"));
+                    sb.Append(OurFoodChain.Zone.GetShortDescription(description));
+
+                    sb.AppendLine();
 
                 }
 
@@ -478,6 +483,7 @@ namespace OurFoodChain {
                     embed.WithColor(Color.DarkGreen);
 
                 embed.WithTitle(StringUtils.ToTitleCase(string.Format("{0} zones", name)));
+                embed.WithDescription(sb.ToString());
 
                 await ReplyAsync("", false, embed.Build());
 
@@ -493,7 +499,7 @@ namespace OurFoodChain {
 
                 List<Embed> pages = new List<Embed>();
 
-                string title = string.Format("{0} ({1})", StringUtils.ToTitleCase(zone.name), zone.type.ToString());
+                string title = string.Format("{0} {1}", zone.type == ZoneType.Aquatic ? "🌊" : "🌳", StringUtils.ToTitleCase(zone.name));
                 string description = zone.GetDescriptionOrDefault();
                 Color color = Color.Blue;
 

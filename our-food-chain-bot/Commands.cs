@@ -1104,50 +1104,53 @@ namespace OurFoodChain {
         }
 
         [Command("predates"), Alias("eats")]
-        public async Task Predates(string genus, string species) {
+        public async Task Predates(string genus, string species = "") {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            // If the species parameter was not provided, assume the user only provided the species.
+            if (string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
 
-            if (sp_list.Count() == 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-                EmbedBuilder embed = new EmbedBuilder();
+            if (sp is null)
+                return;
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE eats_id=$eats_id;")) {
+            EmbedBuilder embed = new EmbedBuilder();
 
-                    cmd.Parameters.AddWithValue("$eats_id", sp_list[0].id);
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE eats_id=$eats_id AND species_id NOT IN (SELECT species_id FROM Extinctions);")) {
 
-                    using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+                cmd.Parameters.AddWithValue("$eats_id", sp.id);
 
-                        if (rows.Rows.Count <= 0)
-                            await ReplyAsync("This species has no natural predators.");
-                        else {
+                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
-                            List<string> lines = new List<string>();
+                    if (rows.Rows.Count <= 0)
+                        await ReplyAsync("This species has no extant natural predators.");
+                    else {
 
-                            foreach (DataRow row in rows.Rows) {
+                        List<string> lines = new List<string>();
 
-                                Species sp = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
-                                string notes = row.Field<string>("notes");
+                        foreach (DataRow row in rows.Rows) {
 
-                                string line_text = sp.GetShortName();
+                            Species s = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
+                            string notes = row.Field<string>("notes");
 
-                                if (!string.IsNullOrEmpty(notes))
-                                    line_text += string.Format(" ({0})", notes);
+                            string line_text = s.GetShortName();
 
-                                lines.Add(sp.isExtinct ? string.Format("~~{0}~~", line_text) : line_text);
+                            if (!string.IsNullOrEmpty(notes))
+                                line_text += string.Format(" ({0})", notes);
 
-                            }
-
-                            lines.Sort();
-
-                            embed.WithTitle(string.Format("Predators of {0} ({1})", sp_list[0].GetShortName(), lines.Count()));
-                            embed.WithDescription(string.Join(Environment.NewLine, lines));
-
-                            await ReplyAsync("", false, embed.Build());
+                            lines.Add(s.isExtinct ? string.Format("~~{0}~~", line_text) : line_text);
 
                         }
+
+                        lines.Sort();
+
+                        embed.WithTitle(string.Format("Predators of {0} ({1})", sp.GetShortName(), lines.Count()));
+                        embed.WithDescription(string.Join(Environment.NewLine, lines));
+
+                        await ReplyAsync("", false, embed.Build());
 
                     }
 
@@ -1161,7 +1164,6 @@ namespace OurFoodChain {
         public async Task Prey(string genus, string species = "") {
 
             // If no species argument was provided, assume the user omitted the genus.
-
             if (string.IsNullOrEmpty(species)) {
                 species = genus;
                 genus = string.Empty;

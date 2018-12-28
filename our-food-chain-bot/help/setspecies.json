@@ -1,0 +1,10 @@
+﻿{
+  "name": "setspecies",
+  "aliases": [],
+  "category": "updates",
+  "description": "Renames the given species.",
+  "examples": [
+    "setspecies <old name> <new name>",
+    "setspecies circumferos circumferus"
+  ]
+}

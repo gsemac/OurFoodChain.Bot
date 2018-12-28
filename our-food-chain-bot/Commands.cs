@@ -240,6 +240,30 @@ namespace OurFoodChain {
             await ReplyAsync("", false, embed.Build());
 
         }
+        [Command("setspecies")]
+        public async Task SetSpecies(string species, string newName) {
+
+            // Get the specified species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, "", species);
+
+            if (sp is null)
+                return;
+
+            // Update the species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name=$name WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$name", newName.ToLower());
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await ReplyAsync("Species renamed successfully.");
+
+        }
 
         [Command("setpic")]
         public async Task SetPic(string genus, string species, string imageUrl) {

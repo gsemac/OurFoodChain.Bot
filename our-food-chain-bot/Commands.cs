@@ -299,10 +299,7 @@ namespace OurFoodChain {
         }
 
         [Command("addspecies"), Alias("addsp")]
-        public async Task AddSpecies(string genus, string species, string zone, string description = "") {
-
-            string[] zones = zone.Split(',', '/');
-            species = species.ToLower();
+        public async Task AddSpecies(string genus, string species, string zone = "", string description = "") {
 
             await BotUtils.AddGenusToDb(genus);
 
@@ -329,7 +326,7 @@ namespace OurFoodChain {
 
             // Add to all given zones.
 
-            foreach (string zoneName in zones) {
+            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
 
                 Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
 
@@ -671,13 +668,17 @@ namespace OurFoodChain {
         [Command("map")]
         public async Task Map() {
 
+            string footer = "Click the Z reaction to show zone labels.";
+
             EmbedBuilder page1 = new EmbedBuilder {
                 ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194144225886218/OFC2.png"
             };
+            page1.WithFooter(footer);
 
             EmbedBuilder page2 = new EmbedBuilder {
                 ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194196260683778/OFCtruelabels.png"
             };
+            page1.WithFooter(footer);
 
             IUserMessage message = await ReplyAsync("", false, page1.Build());
             await message.AddReactionAsync(new Emoji("🇿"));

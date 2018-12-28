@@ -60,6 +60,9 @@ namespace OurFoodChain {
         }
         public static string[] ParseZoneList(string zoneList) {
 
+            if (string.IsNullOrEmpty(zoneList))
+                return new string[] { };
+
             string[] result = zoneList.Split(',', '/');
 
             for (int i = 0; i < result.Count(); ++i)

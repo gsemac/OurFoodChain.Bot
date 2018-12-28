@@ -752,9 +752,9 @@ namespace OurFoodChain {
 
             List<string> entries = new List<string>();
 
-            entries.Add(string.Format("**{0} - {1}**", species_list[0].GetTimeStampAsDateString(), species_list[0].GetShortName()));
+            entries.Add(string.Format("**{0} - {1}**", sp.GetTimeStampAsDateString(), sp.GetShortName()));
 
-            long species_id = species_list[0].id;
+            long species_id = sp.id;
 
             while (true) {
 

@@ -307,7 +307,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp) VALUES($name, $description, $genus_id, $owner, $timestamp);")) {
 
-                cmd.Parameters.AddWithValue("$name", species);
+                cmd.Parameters.AddWithValue("$name", species.ToLower());
                 cmd.Parameters.AddWithValue("$description", description);
                 cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
                 cmd.Parameters.AddWithValue("$owner", Context.User.Username);

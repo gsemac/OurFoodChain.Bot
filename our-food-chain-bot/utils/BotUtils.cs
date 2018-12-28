@@ -543,7 +543,10 @@ namespace OurFoodChain {
         }
         public static async Task<Zone> GetZoneFromDb(string zoneName) {
 
-            zoneName = Zone.GetFullName(zoneName).ToLower();
+            if (string.IsNullOrEmpty(zoneName))
+                return null;
+
+            zoneName = Zone.GetFullName(zoneName.Trim()).ToLower();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name=$name;")) {
 
@@ -936,7 +939,61 @@ namespace OurFoodChain {
             return true;
 
         }
+        public static async Task ReplyAsync_AddZonesToSpecies(ICommandContext context, long speciesId, string zones, bool showErrorsOnly = false) {
 
+            List<string> invalid_zones = new List<string>();
+
+            foreach (string zoneName in Zone.ParseZoneList(zones)) {
+
+                Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
+
+                // If the given zone does not exist, add it to the list of invalid zones.
+
+                if (zone_info is null) {
+
+                    invalid_zones.Add(StringUtils.ToTitleCase(Zone.GetFullName(zoneName)));
+
+                    continue;
+
+                }
+
+                // Add the zone relationship into the database (do nothing if the relationship already exists).
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", speciesId);
+                    cmd.Parameters.AddWithValue("$zone_id", (zone_info.id));
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+            if (invalid_zones.Count() <= 0 && !showErrorsOnly)
+                await context.Channel.SendMessageAsync("Zone(s) updated successfully.");
+            else
+                await BotUtils.ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): {0}", string.Join(", ", invalid_zones)));
+
+        }
+        public static async Task ReplyAsync_Warning(ICommandContext context, string text) {
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription(string.Format("⚠️ {0}", text));
+            embed.WithColor(Discord.Color.Orange);
+
+            await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
+        public static async Task ReplyAsync_Error(ICommandContext context, string text) {
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription(string.Format("❌ {0}", text));
+            embed.WithColor(Discord.Color.Red);
+
+            await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
 
         private static int _getSpeciesTreeWidth(Tree<Species>.TreeNode root, Font font) {
 

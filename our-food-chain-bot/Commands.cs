@@ -308,6 +308,13 @@ namespace OurFoodChain {
         [Command("addspecies"), Alias("addsp")]
         public async Task AddSpecies(string genus, string species, string zone = "", string description = "") {
 
+            // Check if the species already exists before attempting to add it.
+
+            if ((await BotUtils.GetSpeciesFromDb(genus, species)).Count() > 0) {
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("The species \"{0}\" already exists.", BotUtils.GenerateSpeciesName(genus, species)));
+                return;
+            }
+
             await BotUtils.AddGenusToDb(genus);
 
             Genus genus_info = await BotUtils.GetGenusFromDb(genus);
@@ -327,34 +334,12 @@ namespace OurFoodChain {
             long species_id = await BotUtils.GetSpeciesIdFromDb(genus_info.id, species);
 
             if (species_id < 0) {
-                await ReplyAsync("Failed to add species (invalid ID).");
+                await BotUtils.ReplyAsync_Error(Context, "Failed to add species (invalid Species ID).");
                 return;
             }
 
             // Add to all given zones.
-
-            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
-
-                Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
-
-                if (zone_info is null || zone_info.id == -1) {
-
-                    await ReplyAsync(string.Format("The given zone does not exist: {0}", zoneName));
-
-                    continue;
-
-                }
-
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", species_id);
-                    cmd.Parameters.AddWithValue("$zone_id", zone_info.id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-            }
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, species_id, zone, showErrorsOnly: false);
 
             await ReplyAsync("Species created successfully.");
 
@@ -402,7 +387,8 @@ namespace OurFoodChain {
 
             name = name.ToLower();
 
-            // If an invalid type was provided, use it as the description instead.
+            // If an invalid type was provided, assume the user meant it as a description instead.
+            // i.e., "addzone <name> <description>"
             if (type.ToLower() != "aquatic" && type.ToLower() != "terrestrial") {
 
                 description = type;
@@ -430,7 +416,7 @@ namespace OurFoodChain {
             Zone zone = await BotUtils.GetZoneFromDb(name);
 
             if (!(zone is null)) {
-                await ReplyAsync(string.Format("A zone named \"{0}\" already exists.", StringUtils.ToTitleCase(zone.name)));
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", StringUtils.ToTitleCase(zone.name)));
                 return;
             }
 
@@ -839,23 +825,7 @@ namespace OurFoodChain {
                 return;
 
             // Add new zone information for the species.
-
-            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
-
-                string name = zoneName.Trim();
-
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", sp.id);
-                    cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-            }
-
-            await ReplyAsync("Zone(s) added successfully.");
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp.id, zone, showErrorsOnly: false);
 
         }
         [Command("-zone"), Alias("-zones")]
@@ -879,19 +849,13 @@ namespace OurFoodChain {
             // Remove the zone information for the species.
             // #todo This can be done in a single query.
 
-            List<string> failed_zones = new List<string>();
-
             foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
 
                 Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
 
-                // If the given zone does not exist, add it to the list of failures.
-                if (zone_info is null) {
-
-                    failed_zones.Add(zoneName);
+                // If the given zone does not exist, silently skip it.
+                if (zone_info is null)
                     continue;
-
-                }
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
 
@@ -904,16 +868,7 @@ namespace OurFoodChain {
 
             }
 
-            StringBuilder description = new StringBuilder();
-
-            if (failed_zones.Count() <= 0)
-                description.Append("Zone(s) removed successfully.");
-            else {
-
-                description.Append("Some zones could not be removed (do not exist): ");
-                description.Append(string.Join(", ", failed_zones));
-
-            }
+            await ReplyAsync("Zone(s) removed successfully.");
 
         }
         [Command("setzone"), Alias("setzones")]
@@ -945,23 +900,7 @@ namespace OurFoodChain {
             }
 
             // Add new zone information for the species.
-
-            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
-
-                string name = zoneName.Trim();
-
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", sp.id);
-                    cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(name)).id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-            }
-
-            await ReplyAsync("Zone(s) set successfully.");
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp.id, zone, showErrorsOnly: false);
 
         }
 

@@ -721,7 +721,14 @@ namespace OurFoodChain {
         }
 
         [Command("ancestry"), Alias("lineage", "ancestors")]
-        public async Task Lineage(string genus, string species) {
+        public async Task Lineage(string genus, string species = "") {
+
+            // If the species parameter was not provided, assume the user only provided the species.
+
+            if(string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
 
             Species[] species_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
@@ -766,6 +773,13 @@ namespace OurFoodChain {
 
         [Command("ancestry2"), Alias("lineage2")]
         public async Task Lineage2(string genus, string species) {
+
+            // If the species parameter was not provided, assume the user only provided the species.
+
+            if (string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 

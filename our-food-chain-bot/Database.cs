@@ -114,12 +114,26 @@ namespace OurFoodChain {
         private static readonly string DATABASE_CONNECTION_STRING = string.Format("Data Source={0}", DATABASE_FILE_NAME);
         private static bool _initialized = false;
 
+        private static void _backupDatabase() {
+
+            if (System.IO.File.Exists(DATABASE_FILE_NAME)) {
+
+                System.IO.Directory.CreateDirectory("backups");
+
+                System.IO.File.Copy(DATABASE_FILE_NAME, System.IO.Path.Combine("backups", string.Format("{0}-{1}", DateTimeOffset.Now.ToUnixTimeSeconds(), DATABASE_FILE_NAME)));
+
+            }
+
+        }
         private static async Task _initializeAsync() {
 
             if (_initialized)
                 return;
 
             _initialized = true;
+
+            // Backup the database before performing any operations on it.
+            _backupDatabase();
 
             using (SQLiteConnection conn = await GetConnectionAsync()) {
 

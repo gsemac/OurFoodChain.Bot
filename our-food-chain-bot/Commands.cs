@@ -772,7 +772,7 @@ namespace OurFoodChain {
         }
 
         [Command("ancestry2"), Alias("lineage2")]
-        public async Task Lineage2(string genus, string species) {
+        public async Task Lineage2(string genus, string species = "") {
 
             // If the species parameter was not provided, assume the user only provided the species.
 

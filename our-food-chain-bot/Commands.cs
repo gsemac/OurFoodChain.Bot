@@ -744,44 +744,42 @@ namespace OurFoodChain {
                 genus = string.Empty;
             }
 
-            Species[] species_list = await BotUtils.GetSpeciesFromDb(genus, species);
 
-            if (species_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-                List<string> entries = new List<string>();
+            if (sp is null)
+                return;
 
-                entries.Add(string.Format("**{0} - {1}**", species_list[0].GetTimeStampAsDateString(), species_list[0].GetShortName()));
+            List<string> entries = new List<string>();
 
-                long species_id = species_list[0].id;
+            entries.Add(string.Format("**{0} - {1}**", species_list[0].GetTimeStampAsDateString(), species_list[0].GetShortName()));
 
-                while (true) {
+            long species_id = species_list[0].id;
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
+            while (true) {
 
-                        cmd.Parameters.AddWithValue("$species_id", species_id);
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
 
-                        DataRow row = await Database.GetRowAsync(cmd);
+                    cmd.Parameters.AddWithValue("$species_id", species_id);
 
-                        if (row is null)
-                            break;
+                    DataRow row = await Database.GetRowAsync(cmd);
 
-                        species_id = row.Field<long>("ancestor_id");
+                    if (row is null)
+                        break;
 
-                        Species ancestor = await BotUtils.GetSpeciesFromDb(species_id);
+                    species_id = row.Field<long>("ancestor_id");
 
-                        entries.Add(string.Format("{0} - {1}", ancestor.GetTimeStampAsDateString(), ancestor.GetShortName()));
+                    Species ancestor = await BotUtils.GetSpeciesFromDb(species_id);
 
-                    }
+                    entries.Add(string.Format("{0} - {1}", ancestor.GetTimeStampAsDateString(), ancestor.GetShortName()));
 
                 }
 
-                entries.Reverse();
-
-                await ReplyAsync(string.Join(Environment.NewLine, entries));
-
             }
+
+            entries.Reverse();
+
+            await ReplyAsync(string.Join(Environment.NewLine, entries));
 
         }
 
@@ -1435,7 +1433,7 @@ namespace OurFoodChain {
 
                     embed.WithTitle(string.Format("Species owned by {0}", username));
                     embed.WithDescription(string.Join(Environment.NewLine, lines));
-                    embed.WithThumbnailUrl(user.GetAvatarUrl(size:32));
+                    embed.WithThumbnailUrl(user.GetAvatarUrl(size: 32));
 
                     await ReplyAsync("", false, embed.Build());
 

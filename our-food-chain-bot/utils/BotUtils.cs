@@ -787,7 +787,7 @@ namespace OurFoodChain {
 
                     await UpdateSpeciesDescription(p.args[0], p.args[1], message.Content);
 
-                    await message.Channel.SendMessageAsync("Description added successfully.");
+                    await message.Channel.SendMessageAsync("Description updated successfully.");
 
                     break;
 
@@ -945,7 +945,7 @@ namespace OurFoodChain {
 
             foreach (string zoneName in Zone.ParseZoneList(zones)) {
 
-                Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
+                Zone zone_info = await GetZoneFromDb(zoneName);
 
                 // If the given zone does not exist, add it to the list of invalid zones.
 
@@ -971,11 +971,12 @@ namespace OurFoodChain {
             }
 
             if (invalid_zones.Count() <= 0 && !showErrorsOnly)
-                await context.Channel.SendMessageAsync("Zone(s) updated successfully.");
+                await ReplyAsync_Success(context, string.Format("Zones updated successfully."));
             else
-                await BotUtils.ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): {0}", string.Join(", ", invalid_zones)));
+                await ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): {0}", string.Join(", ", invalid_zones)));
 
         }
+
         public static async Task ReplyAsync_Warning(ICommandContext context, string text) {
 
             EmbedBuilder embed = new EmbedBuilder();
@@ -990,6 +991,15 @@ namespace OurFoodChain {
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(string.Format("❌ {0}", text));
             embed.WithColor(Discord.Color.Red);
+
+            await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
+        public static async Task ReplyAsync_Success(ICommandContext context, string text) {
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription(string.Format("✅ {0}", text));
+            embed.WithColor(Discord.Color.Green);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 

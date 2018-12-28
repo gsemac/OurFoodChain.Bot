@@ -137,18 +137,27 @@ namespace OurFoodChain {
 
         }
         [Command("setgenus")]
-        public async Task SetGenus(string species, string genus) {
+        public async Task SetGenus(string genus, string species, string newGenus = "") {
+
+            // If there is no argument for "newGenus", assume the user omitted the original genus.
+            // e.g.: setgenus <species> <newGenus>
+
+            if (string.IsNullOrEmpty(newGenus)) {
+                newGenus = species;
+                species = genus;
+                genus = string.Empty;
+            }
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, "", species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
             if (sp is null)
                 return;
 
             // Get the specified genus.
 
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
+            Genus genus_info = await BotUtils.GetGenusFromDb(newGenus);
 
             if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
                 return;
@@ -164,7 +173,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Genus set successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(genus_info.name)));
 
         }
 
@@ -246,11 +255,20 @@ namespace OurFoodChain {
 
         }
         [Command("setspecies")]
-        public async Task SetSpecies(string species, string newName) {
+        public async Task SetSpecies(string genus, string species, string newName = "") {
+
+            // If no "newName" argument is provided, assume that the user omitted the genus.
+            // i.e. "setspecies <old> <new>"
+
+            if (string.IsNullOrEmpty(newName)) {
+                newName = genus;
+                species = genus;
+                genus = string.Empty;
+            }
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, "", species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -266,7 +284,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Species renamed successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been successfully renamed to **{1}**.", sp.GetShortName(), BotUtils.GenerateSpeciesName(genus, newName)));
 
         }
 
@@ -299,7 +317,7 @@ namespace OurFoodChain {
 
                 }
 
-                await ReplyAsync("Image added successfully.");
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added a picture for **{0}**.", sp.GetShortName()));
 
             }
 
@@ -339,40 +357,37 @@ namespace OurFoodChain {
             }
 
             // Add to all given zones.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, species_id, zone, showErrorsOnly: false);
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, species_id, zone, showErrorsOnly: true);
 
-            await ReplyAsync("Species created successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
         }
 
         [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
         public async Task SetDescription(string genus, string species, string description = "") {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
+            if (sp is null)
+                return;
+
+            if (string.IsNullOrEmpty(description)) {
+
+                TwoPartCommandWaitParams p = new TwoPartCommandWaitParams();
+                p.type = TwoPartCommandWaitParamsType.Description;
+                p.args = new string[] { genus, species };
+                p.timestamp = DateTime.Now;
+
+                BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
+
+                await ReplyAsync(string.Format("Enter a description for **{0}**.", sp.GetShortName()));
+
+            }
             else {
 
-                if (string.IsNullOrEmpty(description)) {
+                await BotUtils.UpdateSpeciesDescription(genus, species, description);
 
-                    TwoPartCommandWaitParams p = new TwoPartCommandWaitParams();
-                    p.type = TwoPartCommandWaitParamsType.Description;
-                    p.args = new string[] { genus, species };
-                    p.timestamp = DateTime.Now;
-
-                    BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
-
-                    await ReplyAsync(string.Format("Enter a description for {0}.", BotUtils.GenerateSpeciesName(genus, species)));
-
-                }
-                else {
-
-                    await BotUtils.UpdateSpeciesDescription(genus, species, description);
-
-                    await ReplyAsync("Description added successfully.");
-
-                }
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
 
             }
 
@@ -430,7 +445,10 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Zone created successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new {0} zone, **{1}**.",
+                type.ToLower(),
+                StringUtils.ToTitleCase(OurFoodChain.Zone.GetFullName(name)))
+                );
 
         }
 
@@ -644,7 +662,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("The species is now extinct.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("The last **{0}** has perished, and the species is now extinct.", sp.GetShortName()));
 
         }
         [Command("extinct")]
@@ -714,11 +732,11 @@ namespace OurFoodChain {
             Species[] ancestor_list = await BotUtils.GetSpeciesFromDb(ancestorGenus, ancestorSpecies);
 
             if (descendant_list.Count() == 0)
-                await ReplyAsync("The child species does not exist.");
+                await BotUtils.ReplyAsync_Error(Context, "The child species does not exist.");
             else if (ancestor_list.Count() == 0)
-                await ReplyAsync("The parent species does not exist.");
+                await BotUtils.ReplyAsync_Error(Context, "The parent species does not exist.");
             else if (descendant_list[0].id == ancestor_list[0].id)
-                await ReplyAsync("A species cannot be its own ancestor.");
+                await BotUtils.ReplyAsync_Error(Context, "A species cannot be its own ancestor.");
             else {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Ancestors(species_id, ancestor_id) VALUES($species_id, $ancestor_id);")) {
@@ -730,7 +748,7 @@ namespace OurFoodChain {
 
                 }
 
-                await ReplyAsync("Ancestor updated successfully.");
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been set as an ancestor of **{1}**.", ancestor_list[0].GetShortName(), descendant_list[0].GetShortName()));
 
             }
 
@@ -849,6 +867,8 @@ namespace OurFoodChain {
             // Remove the zone information for the species.
             // #todo This can be done in a single query.
 
+            List<string> removed_from_zones_list = new List<string>();
+
             foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
 
                 Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
@@ -856,6 +876,8 @@ namespace OurFoodChain {
                 // If the given zone does not exist, silently skip it.
                 if (zone_info is null)
                     continue;
+
+                removed_from_zones_list.Add(StringUtils.ToTitleCase(zone_info.name));
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
 
@@ -868,7 +890,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Zone(s) removed successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits **{1}**.", sp.GetShortName(), StringUtils.DisjunctiveJoin(", ", removed_from_zones_list)));
 
         }
         [Command("setzone"), Alias("setzones")]
@@ -905,26 +927,32 @@ namespace OurFoodChain {
         }
 
         [Command("setcommonname"), Alias("setcommon")]
-        public async Task SetCommonName(string genus, string species, string commonName) {
+        public async Task SetCommonName(string genus, string species, string commonName = "") {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            // If the "commonName" argument was omitted, assume the user omitted the genus.
+            // e.g. setcommon <species> <commonName>
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            if (string.IsNullOrEmpty(commonName)) {
+                commonName = species;
+                species = genus;
+                genus = string.Empty;
+            }
 
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET common_name = $common_name WHERE id=$species_id;")) {
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
-                    cmd.Parameters.AddWithValue("$common_name", commonName);
+            if (sp is null)
+                return;
 
-                    await Database.ExecuteNonQuery(cmd);
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET common_name = $common_name WHERE id=$species_id;")) {
 
-                }
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$common_name", commonName.ToLower());
 
-                await ReplyAsync("Common name added successfully.");
+                await Database.ExecuteNonQuery(cmd);
 
             }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(commonName)));
 
         }
 
@@ -950,7 +978,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Owner added successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", sp.GetShortName(), owner));
 
         }
 
@@ -1066,9 +1094,9 @@ namespace OurFoodChain {
             Species[] eaten_list = await BotUtils.GetSpeciesFromDb(eatsGenus, eatsSpecies);
 
             if (predator_list.Count() <= 0)
-                await ReplyAsync("The predator species does not exist.");
+                await BotUtils.ReplyAsync_Error(Context, "The predator species does not exist.");
             else if (eaten_list.Count() <= 0)
-                await ReplyAsync("The victim species does not exist.");
+                await BotUtils.ReplyAsync_Error(Context, "The victim species does not exist.");
             else if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, predator_list) || !await BotUtils.ReplyAsync_ValidateSpecies(Context, eaten_list))
                 return;
             else {
@@ -1083,7 +1111,7 @@ namespace OurFoodChain {
 
                 }
 
-                await ReplyAsync("Predation updated successfully.");
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now preys upon **{1}**.", predator_list[0].GetShortName(), eaten_list[0].GetShortName()));
 
             }
 
@@ -1219,26 +1247,19 @@ namespace OurFoodChain {
 
             Genus genus_info = await BotUtils.GetGenusFromDb(genus);
 
-            if (genus_info is null || genus_info.id == -1) {
-
-                await ReplyAsync("No such genus exists");
-
+            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
                 return;
 
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET description=$description WHERE id=$genus_id;")) {
+
+                cmd.Parameters.AddWithValue("$description", description);
+                cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
             }
-            else {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET description=$description WHERE id=$genus_id;")) {
-
-                    cmd.Parameters.AddWithValue("$description", description);
-                    cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-                await ReplyAsync("Description added successfully.");
-            }
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for genus **{0}**.", StringUtils.ToTitleCase(genus_info.name)));
 
         }
 
@@ -1377,7 +1398,7 @@ namespace OurFoodChain {
 
             await BotUtils.UpdateFamilyInDb(family_info);
 
-            await ReplyAsync("Family updated successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for family **{0}**.", StringUtils.ToTitleCase(family_info.name)));
 
         }
 
@@ -1485,7 +1506,7 @@ namespace OurFoodChain {
 
             await BotUtils.AddRoleToDb(role);
 
-            await ReplyAsync("Role added successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Succesfully created the new role **{0}**.", name));
 
         }
 
@@ -1516,7 +1537,7 @@ namespace OurFoodChain {
 
                 await Database.ExecuteNonQuery(cmd);
 
-                await ReplyAsync("Role added successfully.");
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(role_info.name)));
 
             }
 
@@ -1548,7 +1569,7 @@ namespace OurFoodChain {
 
                 await Database.ExecuteNonQuery(cmd);
 
-                await ReplyAsync("Role removed successfully.");
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtils.ToTitleCase(role_info.name), sp.GetShortName()));
 
             }
 
@@ -1691,7 +1712,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Set description successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for role **{0}**.", StringUtils.ToTitleCase(role.name)));
 
         }
 

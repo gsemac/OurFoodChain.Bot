@@ -20,6 +20,27 @@ namespace OurFoodChain {
             return double.TryParse(str, out num);
 
         }
+        public static string DisjunctiveJoin(string separator, IEnumerable<string> values) {
+
+            if (values.Count() <= 0)
+                return "";
+
+            if (values.Count() == 1)
+                return values.First();
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i + 1 < values.Count(); ++i) {
+                sb.Append(values.ElementAt(i));
+                sb.Append(separator);
+            }
+
+            sb.Append(" or ");
+            sb.Append(values.Last());
+
+            return sb.ToString();
+
+        }
 
     }
 

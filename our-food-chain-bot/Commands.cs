@@ -356,7 +356,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Species added successfully.");
+            await ReplyAsync("Species created successfully.");
 
         }
 
@@ -425,7 +425,16 @@ namespace OurFoodChain {
 
             }
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Zones(name, type, description) VALUES($name, $type, $description);")) {
+            // Don't attempt to create the zone if it already exists.
+
+            Zone zone = await BotUtils.GetZoneFromDb(name);
+
+            if (!(zone is null)) {
+                await ReplyAsync(string.Format("A zone named \"{0}\" already exists.", StringUtils.ToTitleCase(zone.name)));
+                return;
+            }
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Zones(name, type, description) VALUES($name, $type, $description);")) {
 
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
                 cmd.Parameters.AddWithValue("$type", type.ToLower());
@@ -435,7 +444,7 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Zone added successfully.");
+            await ReplyAsync("Zone created successfully.");
 
         }
 
@@ -870,12 +879,24 @@ namespace OurFoodChain {
             // Remove the zone information for the species.
             // #todo This can be done in a single query.
 
+            List<string> failed_zones = new List<string>();
+
             foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
+
+                Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
+
+                // If the given zone does not exist, add it to the list of failures.
+                if (zone_info is null) {
+
+                    failed_zones.Add(zoneName);
+                    continue;
+
+                }
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
 
                     cmd.Parameters.AddWithValue("$species_id", sp.id);
-                    cmd.Parameters.AddWithValue("$zone_id", (await BotUtils.GetZoneFromDb(zoneName)).id);
+                    cmd.Parameters.AddWithValue("$zone_id", (zone_info.id));
 
                     await Database.ExecuteNonQuery(cmd);
 
@@ -883,7 +904,16 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync("Zone(s) removed successfully.");
+            StringBuilder description = new StringBuilder();
+
+            if (failed_zones.Count() <= 0)
+                description.Append("Zone(s) removed successfully.");
+            else {
+
+                description.Append("Some zones could not be removed (do not exist): ");
+                description.Append(string.Join(", ", failed_zones));
+
+            }
 
         }
         [Command("setzone"), Alias("setzones")]

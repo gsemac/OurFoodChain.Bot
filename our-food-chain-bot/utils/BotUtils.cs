@@ -862,20 +862,20 @@ namespace OurFoodChain {
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
-        //public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {
+        public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {
 
-        //    if (speciesList.Count() <= 0) {
-        //        await ReplyAsync_NoSuchSpeciesExists(context);
-        //        return false;
-        //    }
-        //    else if (speciesList.Count() > 1) {
-        //        await ReplyAsync_MatchingSpecies(context, speciesList);
-        //        return false;
-        //    }
+            if (speciesList.Count() <= 0) {
+                await ReplyAsync_NoSuchSpeciesExists(context);
+                return false;
+            }
+            else if (speciesList.Count() > 1) {
+                await ReplyAsync_MatchingSpecies(context, speciesList);
+                return false;
+            }
 
-        //    return true;
+            return true;
 
-        //}
+        }
         public static async Task<bool> ReplyAsync_ValidateRole(ICommandContext context, Role role) {
 
             if (role is null || role.id <= 0) {

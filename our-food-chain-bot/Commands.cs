@@ -1091,10 +1091,12 @@ namespace OurFoodChain {
             Species[] predator_list = await BotUtils.GetSpeciesFromDb(genus, species);
             Species[] eaten_list = await BotUtils.GetSpeciesFromDb(eatsGenus, eatsSpecies);
 
-            if (predator_list.Count() != 0)
+            if (predator_list.Count() <= 0)
                 await ReplyAsync("The predator species does not exist.");
-            else if (eaten_list.Count() != 0)
+            else if (eaten_list.Count() <= 0)
                 await ReplyAsync("The victim species does not exist.");
+            else if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, predator_list) || !await BotUtils.ReplyAsync_ValidateSpecies(Context, eaten_list))
+                return;
             else {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Predates(species_id, eats_id, notes) VALUES($species_id, $eats_id, $notes);")) {

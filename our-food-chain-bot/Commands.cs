@@ -616,27 +616,30 @@ namespace OurFoodChain {
         }
 
         [Command("setextinct")]
-        public async Task SetExtinct(string genus, string species, string reason = "") {
+        public async Task SetExtinct(string genus, string species = "", string reason = "") {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            // If the species parameter was not provided, assume the user only provided the species.
+            if (string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else {
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp);")) {
+            if (sp is null)
+                return;
 
-                    cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
-                    cmd.Parameters.AddWithValue("$reason", reason);
-                    cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp);")) {
 
-                    await Database.ExecuteNonQuery(cmd);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$reason", reason);
+                cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
-                    await ReplyAsync("The species is now extinct.");
-
-                }
+                await Database.ExecuteNonQuery(cmd);
 
             }
+
+            await ReplyAsync("The species is now extinct.");
 
         }
         [Command("extinct")]

@@ -34,6 +34,8 @@ namespace OurFoodChain {
             _discord_client.ReactionAdded += _reactionReceived;
             _discord_client.ReactionRemoved += _reactionRemoved;
 
+            _instance = this;
+
         }
 
         public void LoadSettings(string filePath) {
@@ -66,13 +68,22 @@ namespace OurFoodChain {
 
         }
 
-        private struct Config {
+        public Config GetConfig() {
+            return _config;
+        }
+
+        public struct Config {
             public string[] adminIds;
             public string token;
             public string prefix;
             public string playing;
         }
 
+        public static OurFoodChainBot GetInstance() {
+            return _instance;
+        }
+
+        static OurFoodChainBot _instance = null;
         Config _config;
 
         private DiscordSocketClient _discord_client;
@@ -115,10 +126,10 @@ namespace OurFoodChain {
                 return;
 
             CommandUtils.PaginatedMessage paginated = CommandUtils.PAGINATED_MESSAGES[reaction.MessageId];
-            
+
             if (paginated.pages is null || paginated.pages.Count() <= 0)
                 return;
-            
+
             if (++paginated.index >= paginated.pages.Count())
                 paginated.index = 0;
 

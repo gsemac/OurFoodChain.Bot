@@ -223,9 +223,10 @@ namespace OurFoodChain {
                     embed.WithColor(Color.Red);
 
                     string reason = row.Field<string>("reason");
+                    string ts = BotUtils.GetTimeStampAsDateString((long)row.Field<decimal>("timestamp"));
 
                     if (!string.IsNullOrEmpty(reason))
-                        description_builder.AppendLine(string.Format("**{0}**\n", reason));
+                        description_builder.AppendLine(string.Format("**{0}: {1}**\n", ts, reason));
 
                 }
 
@@ -634,6 +635,31 @@ namespace OurFoodChain {
             }
 
         }
+        [Command("extinct")]
+        public async Task Extinct() {
+
+            List<Species> sp_list = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Extinctions);"))
+            using (DataTable rows = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in rows.Rows)
+                    sp_list.Add(await Species.FromDataRow(row));
+
+            sp_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+            StringBuilder description = new StringBuilder();
+
+            foreach (Species sp in sp_list)
+                description.AppendLine(sp.GetShortName());
+
+            EmbedBuilder embed = new EmbedBuilder();
+
+            embed.WithTitle(string.Format("Extinct species ({0})", sp_list.Count()));
+            embed.WithDescription(description.ToString());
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
 
         [Command("map")]
         public async Task Map() {
@@ -976,8 +1002,14 @@ namespace OurFoodChain {
                     if (info.aliases.Count() > 0)
                         builder.AddField("Aliases", string.Join(", ", info.aliases));
 
-                    if (info.examples.Count() > 0)
+                    if (info.examples.Count() > 0) {
+
+                        for (int i = 0; i < info.examples.Count(); ++i)
+                            info.examples[i] = OurFoodChainBot.GetInstance().GetConfig().prefix + info.examples[i];
+
                         builder.AddField("Example(s)", string.Join(Environment.NewLine, info.examples));
+
+                    }
 
                     await ReplyAsync("", false, builder.Build());
 
@@ -1003,7 +1035,8 @@ namespace OurFoodChain {
                 EmbedBuilder builder = new EmbedBuilder();
 
                 builder.WithTitle("Commands list");
-                builder.WithFooter("Want to know more about a command? Use \"help <command>\", e.g.: \"help setpic\"");
+                builder.WithFooter(string.Format("Want to know more about a command? Use \"{0}help <command>\", e.g.: \"{0}help setpic\"",
+                    OurFoodChainBot.GetInstance().GetConfig().prefix));
 
                 foreach (string cat in commands_lists.Keys) {
 
@@ -1203,7 +1236,7 @@ namespace OurFoodChain {
 
         }
 
-        #region "family"
+        #region Family
 
         [Command("family"), Alias("f", "families")]
         public async Task Family(string family = "") {

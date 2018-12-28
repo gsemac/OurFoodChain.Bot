@@ -219,9 +219,7 @@ namespace OurFoodChain {
 
         }
         public string GetTimeStampAsDateString() {
-
-            return DateTimeOffset.FromUnixTimeSeconds(timestamp).Date.ToUniversalTime().ToShortDateString();
-
+            return BotUtils.GetTimeStampAsDateString(timestamp);
         }
         public string GetDescriptionOrDefault() {
 
@@ -729,6 +727,11 @@ namespace OurFoodChain {
         public static string GenerateSpeciesName(Species species) {
 
             return GenerateSpeciesName(species.genus, species.name);
+
+        }
+        public static string GetTimeStampAsDateString(long ts) {
+
+            return DateTimeOffset.FromUnixTimeSeconds(ts).Date.ToUniversalTime().ToShortDateString();
 
         }
         public static async Task UpdateSpeciesDescription(string genus, string species, string description) {

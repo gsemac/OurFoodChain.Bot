@@ -1,0 +1,9 @@
+﻿{
+  "name": "extinct",
+  "aliases": [],
+  "category": "info",
+  "description": "Lists all extinct species.",
+  "examples": [
+    "extinct"
+  ]
+}

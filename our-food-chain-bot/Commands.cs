@@ -271,17 +271,24 @@ namespace OurFoodChain {
         }
 
         [Command("setpic")]
-        public async Task SetPic(string genus, string species, string imageUrl) {
+        public async Task SetPic(string genus, string species, string imageUrl = "") {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            // If no argument was provided for the image URL, assume the user only provided the species and URL.
 
-            if (sp_list.Count() <= 0)
-                await ReplyAsync("No such species exists.");
-            else if (!Regex.Match(imageUrl, "^https?:").Success)
+            if (string.IsNullOrEmpty(imageUrl)) {
+                imageUrl = species;
+                species = genus;
+                genus = string.Empty;
+            }
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            if (!Regex.Match(imageUrl, "^https?:").Success)
                 await ReplyAsync("Please provide a valid image URL.");
             else {
-
-                Species sp = sp_list[0];
 
                 using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
 
@@ -1716,6 +1723,24 @@ namespace OurFoodChain {
             }
 
             await ReplyAsync("Set description successfully.");
+
+        }
+
+        private static Random _random_generator = new Random();
+        [Command("roll")]
+        public async Task Roll(int min = 0, int max = 0) {
+
+            if (min == 0 && max == 0) {
+                min = 1;
+                max = 6;
+            }
+            else if (max == 0) {
+                max = min;
+                min = 0;
+            }
+
+            // [min, max)
+            await ReplyAsync(_random_generator.Next(min, max + 1).ToString());
 
         }
 

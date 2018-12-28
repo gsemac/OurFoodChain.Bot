@@ -105,11 +105,21 @@ namespace OurFoodChain {
 
                     using (DataTable rows = await Database.GetRowsAsync(conn, cmd)) {
 
-                        builder.AppendLine();
-                        builder.AppendLine("**Species in this genus:**");
+                        List<Species> sp_list = new List<Species>();
 
                         foreach (DataRow row in rows.Rows)
-                            builder.AppendLine(BotUtils.GenerateSpeciesName(genus_name, row.Field<string>("name")));
+                            sp_list.Add(await Species.FromDataRow(row));
+
+                        sp_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+                        builder.AppendLine();
+                        builder.AppendLine(string.Format("**Species in this genus ({0}):**", sp_list.Count()));
+
+                        foreach (Species sp in sp_list)
+                            if (sp.isExtinct)
+                                builder.AppendLine(string.Format("~~{0}~~", sp.GetShortName()));
+                            else
+                                builder.AppendLine(sp.GetShortName());
 
                         embed.WithDescription(builder.ToString());
 

@@ -165,13 +165,16 @@ namespace OurFoodChain {
     class Species {
 
         public long id;
-        public string genus;
         public string name;
         public string description;
         public string owner;
         public long timestamp;
         public string pics;
         public string commonName;
+
+        // fields that stored directly in the table
+        public string genus;
+        public bool isExtinct;
 
         public static async Task<Species> FromDataRow(DataRow row) {
 
@@ -189,6 +192,17 @@ namespace OurFoodChain {
                 commonName = row.Field<string>("common_name"),
                 pics = row.Field<string>("pics")
             };
+
+            species.isExtinct = false;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                if (!(await Database.GetRowAsync(cmd) is null))
+                    species.isExtinct = true;
+
+            }
 
             return species;
 

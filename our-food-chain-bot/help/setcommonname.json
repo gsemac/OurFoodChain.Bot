@@ -3,7 +3,7 @@
   "aliases": [
     "setcommon"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the common name for the given species.",
   "examples": [
     "setcommonname H. quattuorus \"swirly star\""

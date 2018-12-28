@@ -3,7 +3,7 @@
   "aliases": [
     "addz"
   ],
-  "category": "updates",
+  "category": "create",
   "description": "Adds a new zone to the database. Numeric zones are automatically categorized as aquatic, and alphabetic zones are categorized as terrestrial.",
   "examples": [
     "addzone 25",

@@ -1,7 +1,7 @@
 ﻿{
   "name": "setfamily",
   "aliases": [],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the family for the given genus.",
   "examples": [
     "setfamily <genus> <family>",

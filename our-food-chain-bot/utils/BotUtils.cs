@@ -368,9 +368,18 @@ namespace OurFoodChain {
         }
         public static async Task AddGenusToDb(string genus) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Genus(name) VALUES($name);")) {
+            Genus genus_info = new Genus();
+            genus_info.name = genus;
 
-                cmd.Parameters.AddWithValue("$name", genus.ToLower());
+            await AddGenusToDb(genus_info);
+
+        }
+        public static async Task AddGenusToDb(Genus genus) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Genus(name, description) VALUES($name, $description);")) {
+
+                cmd.Parameters.AddWithValue("$name", genus.name.ToLower());
+                cmd.Parameters.AddWithValue("$description", genus.description);
 
                 await Database.ExecuteNonQuery(cmd);
 

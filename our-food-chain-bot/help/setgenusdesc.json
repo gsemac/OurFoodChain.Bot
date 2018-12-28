@@ -4,7 +4,7 @@
     "setgenusdescription",
     "setgdesc"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the description for the given genus.",
   "examples": [
     "setgdesc helix \"they have swirly shells\""

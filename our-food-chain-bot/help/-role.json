@@ -3,7 +3,7 @@
   "aliases": [
     "unsetrole"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Removes the role from the given species.",
   "examples": [
     "-role H. quattuorus predator"

@@ -136,6 +136,28 @@ namespace OurFoodChain {
             }
 
         }
+        [Command("addgenus")]
+        public async Task AddGenus(string genus, string description = "") {
+
+            // Make sure that the genus doesn't already exist.
+
+            if (!(await BotUtils.GetGenusFromDb(genus) is null)) {
+
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("The genus **{0}** already exists.", StringUtils.ToTitleCase(genus)));
+
+                return;
+
+            }
+
+            Genus genus_info = new Genus();
+            genus_info.name = genus;
+            genus_info.description = description;
+
+            await BotUtils.AddGenusToDb(genus_info);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new genus, **{0}**.", StringUtils.ToTitleCase(genus)));
+
+        }
         [Command("setgenus")]
         public async Task SetGenus(string genus, string species, string newGenus = "") {
 
@@ -364,7 +386,14 @@ namespace OurFoodChain {
         }
 
         [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
-        public async Task SetDescription(string genus, string species, string description = "") {
+        public async Task SetDescription(string genus, string species = "", string description = "") {
+
+            // If the "species" argument was not provided, assume the user omitted the genus.
+
+            if(string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
@@ -1353,7 +1382,7 @@ namespace OurFoodChain {
 
             await BotUtils.AddFamilyToDb(family_info);
 
-            await ReplyAsync("Family added successfully.");
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new family, **{0}**.", StringUtils.ToTitleCase(family)));
 
         }
         [Command("setfamily")]

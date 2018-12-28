@@ -3,7 +3,7 @@
   "aliases": [
     "+zones"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Adds the species to the given zones. You can specify multiple zones at once.",
   "examples": [
     "+zone H. quattuorus 12",

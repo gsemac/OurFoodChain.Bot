@@ -1,0 +1,10 @@
+﻿{
+  "name": "addgenus",
+  "aliases": [],
+  "category": "create",
+  "description": "Adds a new genus. To add a genus to a species, use `setgenus` instead.",
+  "examples": [
+    "addgenus helix",
+    "addgenus helix \"swirly shells\""
+  ]
+}

@@ -5,7 +5,7 @@
     "seteats",
     "setprey"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets a species eaten by another species. Successive calls are additive, and do not replace existing relationships.",
   "examples": [
     "setprey <predator species> <prey species>",

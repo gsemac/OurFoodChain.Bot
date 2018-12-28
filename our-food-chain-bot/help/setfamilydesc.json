@@ -3,7 +3,7 @@
   "aliases": [
     "setfamilydescription"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the description for the given family.",
   "examples": [
     "setfamilydesc helidae \"they have swirly shells\""

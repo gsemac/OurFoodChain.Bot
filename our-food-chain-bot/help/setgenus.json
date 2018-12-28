@@ -1,7 +1,7 @@
 ﻿{
   "name": "setgenus",
   "aliases": [],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the genus for the given species.",
   "examples": [
     "setgenus <species> <genus>",

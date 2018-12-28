@@ -3,7 +3,7 @@
   "aliases": [
     "-zones"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Removes the species from the given zones. You can specify multiple zones at once.",
   "examples": [
     "-zone H. quattuorus 12",

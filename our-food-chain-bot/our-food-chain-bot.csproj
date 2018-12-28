@@ -167,6 +167,7 @@
     <None Include="config.json" />
     <None Include="help\+zone.json" />
     <None Include="help\-zone.json" />
+    <None Include="help\addgenus.json" />
     <None Include="help\extinct.json" />
     <None Include="help\setextinct.json" />
     <None Include="help\+role.json" />

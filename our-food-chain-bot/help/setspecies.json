@@ -1,7 +1,7 @@
 ﻿{
   "name": "setspecies",
   "aliases": [],
-  "category": "updates",
+  "category": "update",
   "description": "Renames the given species.",
   "examples": [
     "setspecies <old name> <new name>",

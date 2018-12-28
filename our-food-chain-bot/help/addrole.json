@@ -1,7 +1,7 @@
 ﻿{
   "name": "addrole",
   "aliases": [],
-  "category": "updates",
+  "category": "create",
   "description": "Adds a new role. To add a role to a species, use `+role` instead.",
   "examples": [
     "addrole predator \"eats living things\""

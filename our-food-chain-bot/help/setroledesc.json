@@ -3,7 +3,7 @@
   "aliases": [
     "setroledescription"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the description for the given role.",
   "examples": [
     "setroledesc predator \"eats living things\""

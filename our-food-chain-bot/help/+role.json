@@ -3,7 +3,7 @@
   "aliases": [
     "setrole"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the role fulfilled by the given species.",
   "examples": [
     "+role H. quattuorus detritivore",

@@ -4,7 +4,7 @@
     "setown",
     "claim"
   ],
-  "category": "updates",
+  "category": "update",
   "description": "Sets the owner of the given species. Use \"claim\" with no arguments to claim a species as your own.",
   "examples": [
     "claim H. quattuorus",

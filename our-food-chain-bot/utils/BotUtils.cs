@@ -734,6 +734,11 @@ namespace OurFoodChain {
             return DateTimeOffset.FromUnixTimeSeconds(ts).Date.ToUniversalTime().ToShortDateString();
 
         }
+        public static string Strikeout(string str) {
+
+            return string.Format("~~{0}~~", str);
+
+        }
         public static async Task UpdateSpeciesDescription(string genus, string species, string description) {
 
             Species[] sp_list = await GetSpeciesFromDb(genus, species);

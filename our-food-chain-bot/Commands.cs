@@ -1202,7 +1202,7 @@ namespace OurFoodChain {
 
                         foreach (Tuple<Species, string> prey in prey_list) {
 
-                            description.Append(prey.Item1.GetShortName());
+                            description.Append(prey.Item1.isExtinct ? BotUtils.Strikeout(prey.Item1.GetShortName()) : prey.Item1.GetShortName());
 
                             if (!string.IsNullOrEmpty(prey.Item2))
                                 description.Append(string.Format(" ({0})", prey.Item2));

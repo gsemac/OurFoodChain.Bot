@@ -1424,15 +1424,20 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     EmbedBuilder embed = new EmbedBuilder();
-                    List<string> lines = new List<string>();
+                    List<Species> species_list = new List<Species>();
 
                     foreach (DataRow row in rows.Rows)
-                        lines.Add((await Species.FromDataRow(row)).GetShortName());
+                        species_list.Add(await Species.FromDataRow(row));
 
-                    lines.Sort();
+                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+                    StringBuilder description = new StringBuilder();
+
+                    foreach (Species sp in species_list)
+                        description.AppendLine(sp.isExtinct ? BotUtils.Strikeout(sp.GetShortName()) : sp.GetShortName());
 
                     embed.WithTitle(string.Format("Species owned by {0}", username));
-                    embed.WithDescription(string.Join(Environment.NewLine, lines));
+                    embed.WithDescription(description.ToString());
                     embed.WithThumbnailUrl(user.GetAvatarUrl(size: 32));
 
                     await ReplyAsync("", false, embed.Build());

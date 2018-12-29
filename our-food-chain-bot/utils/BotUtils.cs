@@ -465,25 +465,6 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task<long> GetSpeciesIdFromDb(long genusId, string species) {
-
-            long species_id = -1;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT id FROM Species WHERE name=$species AND genus_id=$genus_id;")) {
-
-                cmd.Parameters.AddWithValue("$species", species);
-                cmd.Parameters.AddWithValue("$genus_id", genusId);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    species_id = row.Field<long>("id");
-
-            }
-
-            return species_id;
-
-        }
         public static async Task<Species> GetSpeciesFromDb(long speciesId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id=$species_id;")) {

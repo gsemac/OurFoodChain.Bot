@@ -428,7 +428,9 @@ namespace OurFoodChain {
 
             }
 
-            long species_id = await BotUtils.GetSpeciesIdFromDb(genus_info.id, species);
+            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
+            Species sp = sp_list.Count() > 0 ? sp_list[0] : null;
+            long species_id = sp == null ? -1 : sp.id;
 
             if (species_id < 0) {
                 await BotUtils.ReplyAsync_Error(Context, "Failed to add species (invalid Species ID).");
@@ -438,7 +440,7 @@ namespace OurFoodChain {
             // Add to all given zones.
             await BotUtils.ReplyAsync_AddZonesToSpecies(Context, species_id, zone, showErrorsOnly: true);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
         }
 

@@ -149,6 +149,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Taxon.cs" />
     <Compile Include="utils\ArrayUtils.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Database.cs" />

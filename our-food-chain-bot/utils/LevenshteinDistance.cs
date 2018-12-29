@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
+    // https://stackoverflow.com/questions/6944056/c-sharp-compare-string-similarity
+
     static class LevenshteinDistance {
 
         public static int Compute(string s, string t) {

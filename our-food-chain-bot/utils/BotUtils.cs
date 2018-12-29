@@ -309,9 +309,6 @@ namespace OurFoodChain {
         }
         public static async Task<Species[]> GetSpeciesFromDb(string genus, string species) {
 
-            genus = genus.ToLower();
-            species = species.ToLower();
-
             // Ignore any stray periods in the genus/species names.
 
             if (!string.IsNullOrEmpty(genus))
@@ -319,6 +316,20 @@ namespace OurFoodChain {
 
             if (!string.IsNullOrEmpty(species))
                 species = species.Trim('.');
+
+            // If the genus is empty but the species contains a period, assume everything to the left of the period is the genus.
+
+            if (string.IsNullOrEmpty(genus) && species.Contains('.')) {
+
+                string[] parts = species.Split('.');
+
+                genus = parts[0];
+                species = parts[1];
+
+            }
+
+            genus = genus.ToLower();
+            species = species.ToLower();
 
             Genus genus_info = null;
 

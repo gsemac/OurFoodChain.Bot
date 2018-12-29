@@ -344,6 +344,36 @@ namespace OurFoodChain {
             }
 
         }
+        [Command("pic")]
+        public async Task Pic(string genus, string species = "") {
+
+            if (string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            if (string.IsNullOrEmpty(sp.pics)) {
+
+                await ReplyAsync(string.Format("**{0}** does not have a picture.", sp.GetShortName()));
+
+                return;
+
+            }
+
+            EmbedBuilder embed = new EmbedBuilder();
+
+            embed.WithTitle(sp.GetShortName());
+            embed.WithImageUrl(sp.pics);
+            embed.WithFooter(string.Format(string.Format("This species belongs to {0}", sp.owner)));
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
 
         [Command("addspecies"), Alias("addsp")]
         public async Task AddSpecies(string genus, string species, string zone = "", string description = "") {
@@ -390,7 +420,7 @@ namespace OurFoodChain {
 
             // If the "species" argument was not provided, assume the user omitted the genus.
 
-            if(string.IsNullOrEmpty(species)) {
+            if (string.IsNullOrEmpty(species)) {
                 species = genus;
                 genus = string.Empty;
             }

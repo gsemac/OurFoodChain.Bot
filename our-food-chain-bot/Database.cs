@@ -308,6 +308,32 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
         }
+        private static async Task _update010(SQLiteConnection conn) {
+
+            await _updateDatabaseVersion(conn, 10);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Domain ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Kingdom ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Phlyum ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Class ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Order ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Family ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Genus ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+        }
 
     }
 

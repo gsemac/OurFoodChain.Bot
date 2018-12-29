@@ -1,0 +1,9 @@
+﻿{
+  "name": "pic",
+  "aliases": [],
+  "category": "info",
+  "description": "Shows a picture of the given species.",
+  "examples": [
+    "pic"
+  ]
+}

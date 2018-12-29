@@ -1603,6 +1603,10 @@ namespace OurFoodChain {
         }
 
         [Command("+role"), Alias("setrole")]
+        public async Task SetRole(string species, string role) {
+            await SetRole("", species, role, "");
+        }
+        [Command("+role"), Alias("setrole")]
         public async Task SetRole(string genus, string species, string role, string notes = "") {
 
             // Get the species.
@@ -1635,6 +1639,10 @@ namespace OurFoodChain {
 
         }
 
+        [Command("-role"), Alias("unsetrole")]
+        public async Task RemoveRole(string species, string role) {
+            await RemoveRole("", species, role);
+        }
         [Command("-role"), Alias("unsetrole")]
         public async Task RemoveRole(string genus, string species, string role) {
 

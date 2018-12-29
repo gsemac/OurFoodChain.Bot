@@ -1,0 +1,11 @@
+﻿{
+  "name": "setgenuspic",
+  "aliases": [
+    "setgpic"
+  ],
+  "category": "update",
+  "description": "Sets the picture for the given genus.",
+  "examples": [
+    "setpic helix https://website.com/image.jpg"
+  ]
+}

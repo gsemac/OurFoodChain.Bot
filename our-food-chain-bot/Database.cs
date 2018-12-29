@@ -184,6 +184,8 @@ namespace OurFoodChain {
                     await _update008(conn);
                 if (version < 9)
                     await _update009(conn);
+                if (version < 10)
+                    await _update010(conn);
 
                 conn.Close();
 
@@ -318,13 +320,13 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Kingdom ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Phlyum ADD COLUMN pics TEXT;", conn))
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Phylum ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Class ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Order ADD COLUMN pics TEXT;", conn))
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Ord ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Family ADD COLUMN pics TEXT;", conn))

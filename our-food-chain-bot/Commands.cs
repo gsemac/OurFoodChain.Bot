@@ -81,9 +81,13 @@ namespace OurFoodChain {
 
                     if (!(row is null)) {
 
-                        string description = row.Field<string>("description");
-                        genus_id = row.Field<long>("id");
-                        genus_name = row.Field<string>("name");
+                        Genus genus_info = OurFoodChain.Genus.FromDataRow(row);
+
+                        string description = genus_info.description;
+                        genus_id = genus_info.id;
+                        genus_name = genus_info.name;
+
+                        embed.WithThumbnailUrl(genus_info.pics);
 
                         if (string.IsNullOrEmpty(description))
                             description = BotUtils.DEFAULT_GENUS_DESCRIPTION;
@@ -196,6 +200,29 @@ namespace OurFoodChain {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(genus_info.name)));
+
+        }
+        [Command("setgenuspic"), Alias("setgpic")]
+        public async Task SetGenusPic(string genus, string picUrl) {
+
+            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
+
+            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
+                return;
+
+            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, picUrl))
+                return;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET pics=$url WHERE id=$genus_id;")) {
+
+                cmd.Parameters.AddWithValue("$url", picUrl);
+                cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added a picture for **{0}**.", StringUtils.ToTitleCase(genus_info.name)));
 
         }
 

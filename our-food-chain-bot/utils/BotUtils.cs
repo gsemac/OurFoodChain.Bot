@@ -148,13 +148,15 @@ namespace OurFoodChain {
         public long family_id;
         public string name;
         public string description;
+        public string pics;
 
         public static Genus FromDataRow(DataRow row) {
 
             Genus result = new Genus {
                 id = row.Field<long>("id"),
                 name = row.Field<string>("name"),
-                description = row.Field<string>("description")
+                description = row.Field<string>("description"),
+                pics = row.Field<string>("pics")
             };
 
             result.family_id = (row["family_id"] == DBNull.Value) ? 0 : row.Field<long>("family_id");
@@ -987,6 +989,19 @@ namespace OurFoodChain {
             }
             else
                 await ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): {0}", string.Join(", ", invalid_zones)));
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateImageUrl(ICommandContext context, string imageUrl) {
+
+            if (!Regex.Match(imageUrl, "^https?:").Success) {
+
+                await ReplyAsync_Error(context, "The image URL is invalid.");
+
+                return false;
+
+            }
+
+            return true;
 
         }
 

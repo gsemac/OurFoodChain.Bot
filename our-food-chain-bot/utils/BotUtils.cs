@@ -1309,7 +1309,7 @@ namespace OurFoodChain {
             using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.Black))
                 gfx.DrawString(root.value.GetShortName(), font, brush, new Point(dx, dy));
 
-            int cx = 0;
+            int cx = x;
             int cy = y + (int)size.Height * 3;
             int cw = root.childNodes.Count() > 0 ? w / root.childNodes.Count() : w;
 

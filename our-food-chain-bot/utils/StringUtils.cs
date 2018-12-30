@@ -21,6 +21,13 @@ namespace OurFoodChain {
 
         }
         public static string DisjunctiveJoin(string separator, IEnumerable<string> values) {
+            return _joinWithUniqueEndSeparator(separator, " or ", values);
+        }
+        public static string ConjunctiveJoin(string separator, IEnumerable<string> values) {
+            return _joinWithUniqueEndSeparator(separator, " and ", values);
+        }
+
+        private static string _joinWithUniqueEndSeparator(string separator, string endSeparator, IEnumerable<string> values) {
 
             if (values.Count() <= 0)
                 return "";
@@ -35,10 +42,11 @@ namespace OurFoodChain {
                 sb.Append(separator);
             }
 
-            sb.Append(" or ");
+            sb.Append(endSeparator);
             sb.Append(values.Last());
 
             return sb.ToString();
+
 
         }
 

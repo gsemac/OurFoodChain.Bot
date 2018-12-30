@@ -438,7 +438,7 @@ namespace OurFoodChain {
             }
 
             // Add to all given zones.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, species_id, zone, showErrorsOnly: true);
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: true);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
@@ -486,9 +486,7 @@ namespace OurFoodChain {
 
             // Allow the user to specify zones with numbers (e.g., "1") or single letters (e.g., "A").
             // Otherwise, the name is taken as-is.
-            name = OurFoodChain.Zone.GetFullName(name);
-
-            name = name.ToLower();
+            name = OurFoodChain.Zone.GetFullName(name).ToLower();
 
             // If an invalid type was provided, assume the user meant it as a description instead.
             // i.e., "addzone <name> <description>"
@@ -535,7 +533,7 @@ namespace OurFoodChain {
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new {0} zone, **{1}**.",
                 type.ToLower(),
-                StringUtils.ToTitleCase(OurFoodChain.Zone.GetFullName(name)))
+                OurFoodChain.Zone.GetFullName(name))
                 );
 
         }
@@ -931,7 +929,7 @@ namespace OurFoodChain {
                 return;
 
             // Add new zone information for the species.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp.id, zone, showErrorsOnly: false);
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: false);
 
         }
         [Command("-zone"), Alias("-zones")]
@@ -1010,7 +1008,7 @@ namespace OurFoodChain {
             }
 
             // Add new zone information for the species.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp.id, zone, showErrorsOnly: false);
+            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: false);
 
         }
 

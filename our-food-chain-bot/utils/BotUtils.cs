@@ -88,6 +88,9 @@ namespace OurFoodChain {
             return Regex.Replace(name, "^zone\\s+", "", RegexOptions.IgnoreCase);
 
         }
+        public string GetFullName() {
+            return GetFullName(name);
+        }
 
         public static string GetShortDescription(string description) {
             return Regex.Match(description, "^[a-zA-Z0-9 ,;:\\-\"]+(?:\\.+|[!\\?])").Value;
@@ -96,6 +99,8 @@ namespace OurFoodChain {
 
             if (StringUtils.IsNumeric(name) || name.Length == 1)
                 name = "zone " + name;
+
+            name = StringUtils.ToTitleCase(name);
 
             return name;
 
@@ -1044,8 +1049,9 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task ReplyAsync_AddZonesToSpecies(ICommandContext context, long speciesId, string zones, bool showErrorsOnly = false) {
+        public static async Task ReplyAsync_AddZonesToSpecies(ICommandContext context, Species sp, string zones, bool showErrorsOnly = false) {
 
+            List<string> valid_zones = new List<string>();
             List<string> invalid_zones = new List<string>();
 
             foreach (string zoneName in Zone.ParseZoneList(zones)) {
@@ -1066,19 +1072,23 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", speciesId);
+                    cmd.Parameters.AddWithValue("$species_id", sp.id);
                     cmd.Parameters.AddWithValue("$zone_id", (zone_info.id));
 
                     await Database.ExecuteNonQuery(cmd);
 
                 }
 
+                valid_zones.Add(zone_info.GetFullName());
+
             }
 
             if (invalid_zones.Count() <= 0) {
 
                 if (!showErrorsOnly)
-                    await ReplyAsync_Success(context, string.Format("Zones updated successfully."));
+                    await ReplyAsync_Success(context, string.Format("**{0}** now inhabits zones **{1}**.",
+                        sp.GetShortName(),
+                        StringUtils.ConjunctiveJoin(", ", valid_zones)));
 
             }
             else

@@ -672,9 +672,8 @@ namespace OurFoodChain {
 
             Taxon taxon_info = null;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM $table WHERE name=$name;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name=$name;", table_name))) {
 
-                cmd.Parameters.AddWithValue("$table", table_name);
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
 
                 DataRow row = await Database.GetRowAsync(cmd);
@@ -695,13 +694,41 @@ namespace OurFoodChain {
             if (string.IsNullOrEmpty(table_name))
                 return result.ToArray();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM $table;")) {
+            string query = "SELECT * FROM {0};";
 
-                cmd.Parameters.AddWithValue("$table", table_name);
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format(query, table_name))) {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
                         result.Add(Taxon.FromDataRow(row, type));
+
+            }
+
+            // Sort taxa alphabetically by name.
+            result.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+
+            return result.ToArray();
+
+        }
+        public static async Task<Taxon[]> GetSubTaxaFromDb(Taxon parentTaxon) {
+
+            List<Taxon> result = new List<Taxon>();
+
+            string table_name = Taxon.TypeToDatabaseTableName(parentTaxon.GetChildType());
+            string parent_column_name = Taxon.TypeToDatabaseColumnName(parentTaxon.type);
+
+            if (string.IsNullOrEmpty(table_name))
+                return result.ToArray();
+
+            string query = "SELECT * FROM {0} WHERE {1}=$parent_id;";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format(query, table_name, parent_column_name))) {
+
+                cmd.Parameters.AddWithValue("$parent_id", parentTaxon.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        result.Add(Taxon.FromDataRow(row, parentTaxon.GetChildType()));
 
             }
 
@@ -722,14 +749,15 @@ namespace OurFoodChain {
             string update_parent_column_name_str = string.Empty;
 
             if (!string.IsNullOrEmpty(parent_column_name))
-                update_parent_column_name_str = ", $parent_column_name=$parent_id";
+                update_parent_column_name_str = string.Format(", {0}=$parent_id", parent_column_name);
 
 
             using (SQLiteCommand cmd = new SQLiteCommand(string.Format(
-                "UPDATE $table SET name=$name, description=$description, pics=$pics{0} WHERE id=$id;",
+                "UPDATE {0} SET name=$name, description=$description, pics=$pics{1} WHERE id=$id;",
+                table_name,
                 update_parent_column_name_str))) {
 
-                cmd.Parameters.AddWithValue("$table", table_name);
+                cmd.Parameters.AddWithValue("$name", taxon.name);
                 cmd.Parameters.AddWithValue("$description", taxon.description);
                 cmd.Parameters.AddWithValue("$pics", taxon.pics);
                 cmd.Parameters.AddWithValue("$id", taxon.id);
@@ -755,9 +783,9 @@ namespace OurFoodChain {
             string query;
 
             if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id > 0)
-                query = "INSERT INTO $table(name, description, pics, $parent_column) VALUES($name, $description, $pics, $parent_id);";
+                query = string.Format("INSERT INTO {0}(name, description, pics, {1}) VALUES($name, $description, $pics, $parent_id);", table_name, parent_column_name);
             else
-                query = "INSERT INTO $table(name, description, pics) VALUES($name, $description, $pics);";
+                query = string.Format("INSERT INTO {0}(name, description, pics) VALUES($name, $description, $pics);", table_name);
 
             using (SQLiteCommand cmd = new SQLiteCommand(query)) {
 
@@ -1082,23 +1110,24 @@ namespace OurFoodChain {
 
                 EmbedBuilder embed = new EmbedBuilder();
 
-                Taxon[] taxa = await GetTaxaFromDb(TaxonType.Family);
+                Taxon[] all_taxa = await GetTaxaFromDb(type);
 
-                embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxa.Count()));
+                embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), all_taxa.Count()));
 
-                StringBuilder description = new StringBuilder();
+                StringBuilder taxon_description = new StringBuilder();
 
-                foreach (Taxon t in taxa) {
+                foreach (Taxon taxon in all_taxa) {
 
                     // Count the number of items under this taxon.
-                    int sub_taxa_count = (await GetTaxaFromDb(Taxon.TypeToChildType(type))).Count();
+
+                    int sub_taxa_count = (await GetSubTaxaFromDb(taxon)).Count();
 
                     if (sub_taxa_count > 0)
-                        description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(t.name), sub_taxa_count));
+                        taxon_description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
 
                 }
 
-                embed.WithDescription(description.ToString());
+                embed.WithDescription(taxon_description.ToString());
 
                 await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -1114,7 +1143,7 @@ namespace OurFoodChain {
 
                 // Get all sub-taxa under this taxon.
 
-                Taxon[] sub_taxa = await GetTaxaFromDb(Taxon.TypeToChildType(type));
+                Taxon[] sub_taxa = await GetSubTaxaFromDb(taxon);
 
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.WithTitle(taxon.GetName());
@@ -1127,20 +1156,20 @@ namespace OurFoodChain {
                 if (sub_taxa.Count() > 0) {
 
                     description.AppendLine(string.Format("**{0} in this {1} ({2}):**",
-                        Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true),
+                        StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)),
                         Taxon.TypeToName(type),
                         sub_taxa.Count()));
 
                     foreach (Taxon t in sub_taxa) {
 
                         // Count the sub-taxa under this taxon.
-
                         long sub_taxa_count = 0;
 
-                        using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM $table WHERE $parent=$parent_id;")) {
+                        using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
+                            Taxon.TypeToDatabaseTableName(t.GetChildType()),
+                            Taxon.TypeToDatabaseColumnName(t.type)
+                            ))) {
 
-                            cmd.Parameters.AddWithValue("$table", Taxon.TypeToDatabaseTableName(Taxon.TypeToChildType(type)));
-                            cmd.Parameters.AddWithValue("$parent", Taxon.TypeToDatabaseColumnName(Taxon.TypeToChildType(type)));
                             cmd.Parameters.AddWithValue("$parent_id", t.id);
 
                             sub_taxa_count = await Database.GetScalar<long>(cmd);
@@ -1168,9 +1197,22 @@ namespace OurFoodChain {
         }
         public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
 
-            Taxon taxon = new Taxon();
-            taxon.name = name;
-            taxon.description = description;
+            // Make sure that the taxon does not already exist before trying to add it.
+
+            Taxon taxon = await GetTaxonFromDb(name, type);
+
+            if (!(taxon is null)) {
+
+                await ReplyAsync_Warning(context, string.Format("The {0} **{1}** already exists.", Taxon.TypeToName(type), taxon.GetName()));
+
+                return;
+
+            }
+
+            taxon = new Taxon(type) {
+                name = name,
+                description = description
+            };
 
             await AddTaxonToDb(taxon, type);
 

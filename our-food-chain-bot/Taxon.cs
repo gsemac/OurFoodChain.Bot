@@ -20,16 +20,28 @@ namespace OurFoodChain {
 
     class Taxon {
 
+        public Taxon(TaxonType type) {
+
+            id = -1;
+            parent_id = -1;
+            this.type = type;
+
+        }
+
         public long id;
         public long parent_id; // For genera, this is the family_id, etc.
         public string name;
         public string description;
         public string pics;
+        public TaxonType type;
 
         public string GetName() {
 
             return StringUtils.ToTitleCase(name);
 
+        }
+        public string GetTypeName(bool plural = false) {
+            return TypeToName(type);
         }
         public string GetDescriptionOrDefault() {
 
@@ -39,24 +51,30 @@ namespace OurFoodChain {
             return description;
 
         }
+        public TaxonType GetParentType() {
+            return TypeToParentType(type);
+        }
+        public TaxonType GetChildType() {
+            return TypeToChildType(type);
+        }
 
         public static Taxon FromDataRow(DataRow row, TaxonType type) {
 
-            Taxon result = new Taxon {
+            Taxon taxon = new Taxon(type) {
                 id = row.Field<long>("id"),
                 name = row.Field<string>("name"),
                 description = row.Field<string>("description"),
                 pics = row.Field<string>("pics")
             };
 
-            string parent_id_name = TypeToDatabaseColumnName(TypeToParentType(type));
+            string parent_id_name = TypeToDatabaseColumnName(taxon.GetParentType());
 
             if (!string.IsNullOrEmpty(parent_id_name))
-                result.parent_id = (row[parent_id_name] == DBNull.Value) ? 0 : row.Field<long>(parent_id_name);
+                taxon.parent_id = (row[parent_id_name] == DBNull.Value) ? 0 : row.Field<long>(parent_id_name);
             else
-                result.parent_id = -1;
+                taxon.parent_id = -1;
 
-            return result;
+            return taxon;
 
         }
         public static string TypeToName(TaxonType type, bool plural = false) {
@@ -144,7 +162,7 @@ namespace OurFoodChain {
             if (type == TaxonType.Domain)
                 return string.Empty;
 
-            return string.Format("{0}_id", TypeToName(TypeToParentType(type)));
+            return string.Format("{0}_id", TypeToName(type));
 
         }
 

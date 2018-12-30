@@ -1808,6 +1808,51 @@ namespace OurFoodChain {
 
         }
 
+        [Command("taxonomy")]
+        public async Task Taxonomy(string species) {
+            await Taxonomy("", species);
+        }
+        [Command("taxonomy")]
+        public async Task Taxonomy(string genus, string species) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithTitle(string.Format("Taxonomy of {0}", sp.GetShortName()));
+
+            Taxon genus_info = await BotUtils.GetTaxonFromDb(sp.genusId, TaxonType.Genus);
+            Taxon family_info = await BotUtils.GetTaxonFromDb(genus_info.parent_id, TaxonType.Family);
+            Taxon order_info = await BotUtils.GetTaxonFromDb(family_info.parent_id, TaxonType.Order);
+            Taxon class_info = await BotUtils.GetTaxonFromDb(order_info.parent_id, TaxonType.Class);
+            Taxon phylum_info = await BotUtils.GetTaxonFromDb(class_info.parent_id, TaxonType.Phylum);
+            Taxon kingdom_info = await BotUtils.GetTaxonFromDb(phylum_info.parent_id, TaxonType.Kingdom);
+            Taxon domain_info = await BotUtils.GetTaxonFromDb(kingdom_info.parent_id, TaxonType.Domain);
+
+            string unknown = "Unknown";
+            string genus_name = genus_info is null ? unknown : genus_info.GetName();
+            string family_name = family_info is null ? unknown : family_info.GetName();
+            string order_name = order_info is null ? unknown : order_info.GetName();
+            string class_name = class_info is null ? unknown : class_info.GetName();
+            string phylum_name = phylum_info is null ? unknown : phylum_info.GetName();
+            string kingdom_name = kingdom_info is null ? unknown : kingdom_info.GetName();
+            string domain_name = domain_info is null ? unknown : domain_info.GetName();
+
+            embed.AddInlineField("Domain", domain_name);
+            embed.AddInlineField("Kingdom", kingdom_name);
+            embed.AddInlineField("Phylum", phylum_name);
+            embed.AddInlineField("Class", class_name);
+            embed.AddInlineField("Order", order_name);
+            embed.AddInlineField("Family", family_name);
+            embed.AddInlineField("Genus", genus_name);
+            embed.AddInlineField("Species", StringUtils.ToTitleCase(sp.name));
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
+
     }
 
 }

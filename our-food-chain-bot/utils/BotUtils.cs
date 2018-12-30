@@ -170,6 +170,7 @@ namespace OurFoodChain {
     class Species {
 
         public long id;
+        public long genusId;
         public string name;
         public string description;
         public string owner;
@@ -189,6 +190,7 @@ namespace OurFoodChain {
 
             Species species = new Species {
                 id = row.Field<long>("id"),
+                genusId = row.Field<long>("genus_id"),
                 name = row.Field<string>("name"),
                 genus = genus_info.name,
                 description = row.Field<string>("description"),
@@ -675,6 +677,29 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name=$name;", table_name))) {
 
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    taxon_info = Taxon.FromDataRow(row, type);
+
+            }
+
+            return taxon_info;
+
+        }
+        public static async Task<Taxon> GetTaxonFromDb(long id, TaxonType type) {
+
+            string table_name = Taxon.TypeToDatabaseTableName(type);
+
+            if (string.IsNullOrEmpty(table_name))
+                return null;
+
+            Taxon taxon_info = null;
+
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE id=$id;", table_name))) {
+
+                cmd.Parameters.AddWithValue("$id", id);
 
                 DataRow row = await Database.GetRowAsync(cmd);
 

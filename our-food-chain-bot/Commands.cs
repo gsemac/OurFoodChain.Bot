@@ -1370,11 +1370,95 @@ namespace OurFoodChain {
         public async Task SetFamily(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Family, child, parent);
         }
-        [Command("setfamilydesc"), Alias("setfamilydescription")]
+        [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
         public async Task SetFamilyDesc(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name, description);
         }
 
+        [Command("order"), Alias("o", "orders")]
+        public async Task Order(string name = "") {
+            await BotUtils.Command_ShowTaxon(Context, TaxonType.Order, name);
+        }
+        [Command("addorder")]
+        public async Task AddOrder(string name, string description = "") {
+            await BotUtils.Command_AddTaxon(Context, TaxonType.Order, name, description);
+        }
+        [Command("setorder")]
+        public async Task SetOrder(string child, string parent) {
+            await BotUtils.Command_SetTaxon(Context, TaxonType.Order, child, parent);
+        }
+        [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
+        public async Task SetOrderDescription(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Order, name, description);
+        }
+
+        [Command("class"), Alias("c", "classes")]
+        public async Task Class(string name = "") {
+            await BotUtils.Command_ShowTaxon(Context, TaxonType.Class, name);
+        }
+        [Command("addclass")]
+        public async Task AddClass(string name, string description = "") {
+            await BotUtils.Command_AddTaxon(Context, TaxonType.Class, name, description);
+        }
+        [Command("setclass")]
+        public async Task SetClass(string child, string parent) {
+            await BotUtils.Command_SetTaxon(Context, TaxonType.Class, child, parent);
+        }
+        [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
+        public async Task SetClassDescription(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Class, name, description);
+        }
+
+        [Command("phylum"), Alias("p", "phyla")]
+        public async Task Phylum(string name = "") {
+            await BotUtils.Command_ShowTaxon(Context, TaxonType.Phylum, name);
+        }
+        [Command("addphylum")]
+        public async Task AddPhylum(string name, string description = "") {
+            await BotUtils.Command_AddTaxon(Context, TaxonType.Phylum, name, description);
+        }
+        [Command("setphylum")]
+        public async Task SetPhylum(string child, string parent) {
+            await BotUtils.Command_SetTaxon(Context, TaxonType.Phylum, child, parent);
+        }
+        [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
+        public async Task SetPhylumDescription(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Phylum, name, description);
+        }
+
+        [Command("kingdom"), Alias("k", "kingdoms")]
+        public async Task Kingdom(string name = "") {
+            await BotUtils.Command_ShowTaxon(Context, TaxonType.Kingdom, name);
+        }
+        [Command("addkingdom")]
+        public async Task AddKingdom(string name, string description = "") {
+            await BotUtils.Command_AddTaxon(Context, TaxonType.Kingdom, name, description);
+        }
+        [Command("setkingdom")]
+        public async Task SetKingdom(string child, string parent) {
+            await BotUtils.Command_SetTaxon(Context, TaxonType.Kingdom, child, parent);
+        }
+        [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
+        public async Task SetKingdomDescription(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Kingdom, name, description);
+        }
+
+        [Command("domain"), Alias("d", "domains")]
+        public async Task Domain(string name = "") {
+            await BotUtils.Command_ShowTaxon(Context, TaxonType.Domain, name);
+        }
+        [Command("adddomain")]
+        public async Task AddDomain(string name, string description = "") {
+            await BotUtils.Command_AddTaxon(Context, TaxonType.Domain, name, description);
+        }
+        [Command("setdomain")]
+        public async Task SetDomain(string child, string parent) {
+            await BotUtils.Command_SetTaxon(Context, TaxonType.Domain, child, parent);
+        }
+        [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
+        public async Task SetDomainDescription(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Domain, name, description);
+        }
 
         [Command("addedby"), Alias("ownedby")]
         public async Task AddedBy(IUser user = null) {

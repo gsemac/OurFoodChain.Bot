@@ -1112,9 +1112,8 @@ namespace OurFoodChain {
 
                 Taxon[] all_taxa = await GetTaxaFromDb(type);
 
-                embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), all_taxa.Count()));
-
                 StringBuilder taxon_description = new StringBuilder();
+                int taxon_count = 0;
 
                 foreach (Taxon taxon in all_taxa) {
 
@@ -1122,11 +1121,15 @@ namespace OurFoodChain {
 
                     int sub_taxa_count = (await GetSubTaxaFromDb(taxon)).Count();
 
-                    if (sub_taxa_count > 0)
-                        taxon_description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
+                    if (sub_taxa_count <= 0)
+                        continue;
+
+                    taxon_description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
+                    ++taxon_count;
 
                 }
 
+                embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count));
                 embed.WithDescription(taxon_description.ToString());
 
                 await context.Channel.SendMessageAsync("", false, embed.Build());
@@ -1253,14 +1256,14 @@ namespace OurFoodChain {
         }
         public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name, string description) {
 
-            Taxon taxon = await GetTaxonFromDb(name, TaxonType.Family);
+            Taxon taxon = await GetTaxonFromDb(name, type);
 
-            if (!await ReplyAsync_ValidateTaxon(context, TaxonType.Family, taxon))
+            if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
                 return;
 
             taxon.description = description;
 
-            await UpdateTaxonInDb(taxon, TaxonType.Family);
+            await UpdateTaxonInDb(taxon, type);
 
             await ReplyAsync_Success(context, string.Format("Successfully updated description for {0} **{1}**.",
                 Taxon.TypeToName(type),

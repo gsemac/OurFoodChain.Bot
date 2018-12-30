@@ -1,7 +1,8 @@
 ﻿{
   "name": "setfamilydesc",
   "aliases": [
-    "setfamilydescription"
+    "setfamilydescription",
+    "setfdesc"
   ],
   "category": "update",
   "description": "Sets the description for the given family.",

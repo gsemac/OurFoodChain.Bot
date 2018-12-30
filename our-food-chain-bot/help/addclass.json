@@ -1,0 +1,9 @@
+﻿{
+	"name": "addclass",
+	"aliases": [],
+	"category": "create",
+	"description": "Adds a new class. To add an order to an class, use `setclass` instead.",
+  "examples": [
+    "addclass name"
+  ]
+}

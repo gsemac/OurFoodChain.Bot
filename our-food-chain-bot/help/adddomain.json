@@ -1,0 +1,9 @@
+﻿{
+  "name": "adddomain",
+  "aliases": [],
+  "category": "create",
+  "description": "Adds a new domain. To add a kingdom to a domain, use `setdomain` instead.",
+  "examples": [
+    "adddomain name"
+  ]
+}

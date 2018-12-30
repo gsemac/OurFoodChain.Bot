@@ -1,0 +1,9 @@
+﻿{
+  "name": "addphylum",
+  "aliases": [],
+  "category": "create",
+  "description": "Adds a new phylum. To add a kingdom to a phylum, use `setphylum` instead.",
+  "examples": [
+    "addphylum name"
+  ]
+}

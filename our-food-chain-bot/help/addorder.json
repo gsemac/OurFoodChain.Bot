@@ -1,0 +1,9 @@
+﻿{
+	"name": "addorder",
+	"aliases": [],
+	"category": "create",
+	"description": "Adds a new order. To add a family to an order, use `setorder` instead.",
+	"examples": [
+		"addorder name"
+	]
+}

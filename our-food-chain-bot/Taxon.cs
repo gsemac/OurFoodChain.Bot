@@ -159,7 +159,7 @@ namespace OurFoodChain {
         }
         public static string TypeToDatabaseColumnName(TaxonType type) {
 
-            if (type == TaxonType.Domain)
+            if (type <= 0)
                 return string.Empty;
 
             return string.Format("{0}_id", TypeToName(type));

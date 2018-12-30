@@ -379,6 +379,54 @@ namespace OurFoodChain {
             return matches.ToArray();
 
         }
+        public static async Task<Species[]> GetSpeciesFromDbByRole(Role role) {
+
+            // Return all species with the given role.
+
+            List<Species> species = new List<Species>();
+
+            if (role is null || role.id <= 0)
+                return species.ToArray();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesRoles WHERE role_id=$role_id) ORDER BY name ASC;")) {
+
+                cmd.Parameters.AddWithValue("$role_id", role.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        species.Add(await Species.FromDataRow(row));
+
+            }
+
+            return species.ToArray();
+
+        }
+        public static async Task<Species[]> GetSpeciesFromDbByZone(Zone zone, bool extantOnly = true) {
+
+            // Return all species in the given zone.
+
+            List<Species> species = new List<Species>();
+
+            if (zone is null || zone.id <= 0)
+                return species.ToArray();
+
+            string query_all = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) ORDER BY name ASC;";
+            string query_extant = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) AND id NOT IN (SELECT species_id FROM Extinctions) ORDER BY name ASC;";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(extantOnly ? query_extant : query_all)) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        species.Add(await Species.FromDataRow(row));
+
+            }
+
+            return species.ToArray();
+
+        }
+
         public static async Task AddGenusToDb(string genus) {
 
             Genus genus_info = new Genus();
@@ -481,53 +529,7 @@ namespace OurFoodChain {
             return null;
 
         }
-        public static async Task<Species[]> GetSpeciesFromDbByRole(Role role) {
 
-            // Return all species with the given role.
-
-            List<Species> species = new List<Species>();
-
-            if (role is null || role.id <= 0)
-                return species.ToArray();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesRoles WHERE role_id=$role_id) ORDER BY name ASC;")) {
-
-                cmd.Parameters.AddWithValue("$role_id", role.id);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows)
-                        species.Add(await Species.FromDataRow(row));
-
-            }
-
-            return species.ToArray();
-
-        }
-        public static async Task<Species[]> GetSpeciesFromDbByZone(Zone zone, bool extantOnly = true) {
-
-            // Return all species in the given zone.
-
-            List<Species> species = new List<Species>();
-
-            if (zone is null || zone.id <= 0)
-                return species.ToArray();
-
-            string query_all = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) ORDER BY name ASC;";
-            string query_extant = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) AND id NOT IN (SELECT species_id FROM Extinctions) ORDER BY name ASC;";
-
-            using (SQLiteCommand cmd = new SQLiteCommand(extantOnly ? query_extant : query_all)) {
-
-                cmd.Parameters.AddWithValue("$zone_id", zone.id);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows)
-                        species.Add(await Species.FromDataRow(row));
-
-            }
-
-            return species.ToArray();
-
-        }
         public static async Task<Zone> GetZoneFromDb(long zoneId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id=$zone_id;")) {
@@ -582,6 +584,7 @@ namespace OurFoodChain {
 
 
         }
+
         public static async Task<Role[]> GetRolesFromDb() {
 
             List<Role> roles = new List<Role>();
@@ -659,67 +662,113 @@ namespace OurFoodChain {
             return null;
 
         }
-        public static async Task<Family> GetFamilyFromDb(string family) {
 
-            Family family_info = null;
+        public static async Task<Taxon> GetTaxonFromDb(string name, TaxonType type) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Family WHERE name=$family;")) {
+            string table_name = Taxon.TypeToDatabaseTableName(type);
 
-                cmd.Parameters.AddWithValue("$family", family.ToLower());
+            if (string.IsNullOrEmpty(table_name))
+                return null;
+
+            Taxon taxon_info = null;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM $table WHERE name=$name;")) {
+
+                cmd.Parameters.AddWithValue("$table", table_name);
+                cmd.Parameters.AddWithValue("$name", name.ToLower());
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
                 if (!(row is null))
-                    family_info = Family.FromDataRow(row);
+                    taxon_info = Taxon.FromDataRow(row, type);
 
             }
 
-            return family_info;
+            return taxon_info;
 
         }
-        public static async Task<Family[]> GetFamiliesFromDb() {
+        public static async Task<Taxon[]> GetTaxaFromDb(TaxonType type) {
 
-            List<Family> result = new List<Family>();
+            List<Taxon> result = new List<Taxon>();
+            string table_name = Taxon.TypeToDatabaseTableName(type);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Family;"))
-            using (DataTable rows = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in rows.Rows)
-                    result.Add(Family.FromDataRow(row));
+            if (string.IsNullOrEmpty(table_name))
+                return result.ToArray();
 
-            // Sort roles by name in alphabetical order.
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM $table;")) {
+
+                cmd.Parameters.AddWithValue("$table", table_name);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        result.Add(Taxon.FromDataRow(row, type));
+
+            }
+
+            // Sort taxa alphabetically by name.
             result.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
             return result.ToArray();
 
         }
-        public static async Task UpdateFamilyInDb(Family family) {
+        public static async Task UpdateTaxonInDb(Taxon taxon, TaxonType type) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Family SET name=$name, description=$description, order_id=$order_id WHERE id=$family_id;")) {
+            string table_name = Taxon.TypeToDatabaseTableName(type);
 
-                cmd.Parameters.AddWithValue("$name", family.name.ToLower());
-                cmd.Parameters.AddWithValue("$description", family.description);
-                cmd.Parameters.AddWithValue("$order_id", family.order_id);
-                cmd.Parameters.AddWithValue("$family_id", family.id);
+            if (string.IsNullOrEmpty(table_name))
+                return;
+
+            string parent_column_name = Taxon.TypeToDatabaseColumnName(Taxon.TypeToParentType(type));
+            string update_parent_column_name_str = string.Empty;
+
+            if (!string.IsNullOrEmpty(parent_column_name))
+                update_parent_column_name_str = ", $parent_column_name=$parent_id";
+
+
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format(
+                "UPDATE $table SET name=$name, description=$description, pics=$pics{0} WHERE id=$id;",
+                update_parent_column_name_str))) {
+
+                cmd.Parameters.AddWithValue("$table", table_name);
+                cmd.Parameters.AddWithValue("$description", taxon.description);
+                cmd.Parameters.AddWithValue("$pics", taxon.pics);
+                cmd.Parameters.AddWithValue("$id", taxon.id);
+
+                if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id != -1) {
+                    cmd.Parameters.AddWithValue("$parent_column_name", parent_column_name);
+                    cmd.Parameters.AddWithValue("$parent_id", taxon.parent_id);
+                }
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
         }
-        public static async Task AddFamilyToDb(Family family) {
+        public static async Task AddTaxonToDb(Taxon taxon, TaxonType type) {
 
-            string query = "INSERT INTO Family(name, description, order_id) VALUES($name, $description, $order_id);";
+            string table_name = Taxon.TypeToDatabaseTableName(type);
 
-            if (family.order_id <= 0)
-                query = "INSERT INTO Family(name, description) VALUES($name, $description);";
+            if (string.IsNullOrEmpty(table_name))
+                return;
+
+            string parent_column_name = Taxon.TypeToDatabaseColumnName(Taxon.TypeToParentType(type));
+            string query;
+
+            if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id > 0)
+                query = "INSERT INTO $table(name, description, pics, $parent_column) VALUES($name, $description, $pics, $parent_id);";
+            else
+                query = "INSERT INTO $table(name, description, pics) VALUES($name, $description, $pics);";
 
             using (SQLiteCommand cmd = new SQLiteCommand(query)) {
 
-                cmd.Parameters.AddWithValue("$name", family.name.ToLower());
-                cmd.Parameters.AddWithValue("$description", family.description);
+                cmd.Parameters.AddWithValue("$name", taxon.name.ToLower());
+                cmd.Parameters.AddWithValue("$description", taxon.description);
+                cmd.Parameters.AddWithValue("$pics", taxon.pics);
 
-                if (family.order_id > 0)
-                    cmd.Parameters.AddWithValue("$order_id", family.order_id);
+                if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id > 0) {
+                    cmd.Parameters.AddWithValue("$parent_column", parent_column_name);
+                    cmd.Parameters.AddWithValue("$parent_id", taxon.parent_id);
+                }
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -929,11 +978,11 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyAsync_ValidateFamily(ICommandContext context, Family family) {
+        public static async Task<bool> ReplyAsync_ValidateTaxon(ICommandContext context, TaxonType type, Taxon taxon) {
 
-            if (family is null || family.id <= 0) {
+            if (taxon is null || taxon.id <= 0) {
 
-                await context.Channel.SendMessageAsync("No such family exists.");
+                await context.Channel.SendMessageAsync(string.Format("No such {0} exists.", Taxon.TypeToName(type)));
 
                 return false;
 
@@ -1022,6 +1071,159 @@ namespace OurFoodChain {
             embed.WithColor(Discord.Color.Green);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
+
+        public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type, string name) {
+
+            // If no taxon name was provided, list everything under the taxon.
+
+            if (string.IsNullOrEmpty(name)) {
+
+                EmbedBuilder embed = new EmbedBuilder();
+
+                Taxon[] taxa = await GetTaxaFromDb(TaxonType.Family);
+
+                embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxa.Count()));
+
+                StringBuilder description = new StringBuilder();
+
+                foreach (Taxon t in taxa) {
+
+                    // Count the number of items under this taxon.
+                    int sub_taxa_count = (await GetTaxaFromDb(Taxon.TypeToChildType(type))).Count();
+
+                    if (sub_taxa_count > 0)
+                        description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(t.name), sub_taxa_count));
+
+                }
+
+                embed.WithDescription(description.ToString());
+
+                await context.Channel.SendMessageAsync("", false, embed.Build());
+
+            }
+            else {
+
+                // Get the specified taxon.
+
+                Taxon taxon = await GetTaxonFromDb(name, type);
+
+                if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
+                    return;
+
+                // Get all sub-taxa under this taxon.
+
+                Taxon[] sub_taxa = await GetTaxaFromDb(Taxon.TypeToChildType(type));
+
+                EmbedBuilder embed = new EmbedBuilder();
+                embed.WithTitle(taxon.GetName());
+                embed.WithThumbnailUrl(taxon.pics);
+
+                StringBuilder description = new StringBuilder();
+                description.AppendLine(taxon.GetDescriptionOrDefault());
+                description.AppendLine();
+
+                if (sub_taxa.Count() > 0) {
+
+                    description.AppendLine(string.Format("**{0} in this {1} ({2}):**",
+                        Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true),
+                        Taxon.TypeToName(type),
+                        sub_taxa.Count()));
+
+                    foreach (Taxon t in sub_taxa) {
+
+                        // Count the sub-taxa under this taxon.
+
+                        long sub_taxa_count = 0;
+
+                        using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM $table WHERE $parent=$parent_id;")) {
+
+                            cmd.Parameters.AddWithValue("$table", Taxon.TypeToDatabaseTableName(Taxon.TypeToChildType(type)));
+                            cmd.Parameters.AddWithValue("$parent", Taxon.TypeToDatabaseColumnName(Taxon.TypeToChildType(type)));
+                            cmd.Parameters.AddWithValue("$parent_id", t.id);
+
+                            sub_taxa_count = await Database.GetScalar<long>(cmd);
+
+                        }
+
+                        description.AppendLine(string.Format("{0} ({1})",
+                            t.GetName(),
+                            sub_taxa_count));
+
+                    }
+
+                }
+                else
+                    description.AppendLine(string.Format("This {0} contains no {1}.",
+                        Taxon.TypeToName(type),
+                        Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)));
+
+                embed.WithDescription(description.ToString());
+
+                await context.Channel.SendMessageAsync("", false, embed.Build());
+
+            }
+
+        }
+        public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
+
+            Taxon taxon = new Taxon();
+            taxon.name = name;
+            taxon.description = description;
+
+            await AddTaxonToDb(taxon, type);
+
+            await ReplyAsync_Success(context, string.Format("Successfully created new {0}, **{1}**.",
+                Taxon.TypeToName(type),
+                taxon.GetName()));
+
+        }
+        public static async Task Command_SetTaxon(ICommandContext context, TaxonType type, string childTaxonName, string parentTaxonName) {
+
+            // Get the specified child taxon.
+
+            Taxon child = await GetTaxonFromDb(childTaxonName, Taxon.TypeToChildType(type));
+
+            if (!await ReplyAsync_ValidateTaxon(context, Taxon.TypeToChildType(type), child))
+                return;
+
+            // Get the specified parent taxon.
+
+            Taxon parent = await GetTaxonFromDb(parentTaxonName, type);
+
+            if (!await ReplyAsync_ValidateTaxon(context, type, parent))
+                return;
+
+            // Update the taxon.
+
+            child.parent_id = parent.id;
+
+            await UpdateTaxonInDb(child, Taxon.TypeToChildType(type));
+
+            await ReplyAsync_Success(context, string.Format("{0} **{1}** has sucessfully been placed under the {2} **{3}**.",
+                    StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type))),
+                    child.GetName(),
+                    StringUtils.ToTitleCase(Taxon.TypeToName(type)),
+                    parent.GetName()
+                ));
+
+        }
+        public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name, string description) {
+
+            Taxon taxon = await GetTaxonFromDb(name, TaxonType.Family);
+
+            if (!await ReplyAsync_ValidateTaxon(context, TaxonType.Family, taxon))
+                return;
+
+            taxon.description = description;
+
+            await UpdateTaxonInDb(taxon, TaxonType.Family);
+
+            await ReplyAsync_Success(context, string.Format("Successfully updated description for {0} **{1}**.",
+                Taxon.TypeToName(type),
+                taxon.GetName()
+                ));
 
         }
 

@@ -1357,146 +1357,24 @@ namespace OurFoodChain {
 
         }
 
-        #region Family
 
         [Command("family"), Alias("f", "families")]
-        public async Task Family(string family = "") {
-
-            // If no family was specified, show all families.
-
-            if (string.IsNullOrEmpty(family)) {
-
-                EmbedBuilder embed = new EmbedBuilder();
-
-                Family[] families = await BotUtils.GetFamiliesFromDb();
-
-                embed.WithTitle(string.Format("All families ({0})", families.Count()));
-
-                StringBuilder description = new StringBuilder();
-
-                foreach (Family f in families) {
-
-                    // Count the genera in this family.
-                    int genera_count = (await BotUtils.GetGeneraFromDb(f)).Count();
-
-                    description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(f.name), genera_count));
-
-                }
-
-                embed.WithDescription(description.ToString());
-
-                await ReplyAsync("", false, embed.Build());
-
-            }
-            else {
-
-                // Get the specified family.
-
-                Family family_info = await BotUtils.GetFamilyFromDb(family);
-
-                if (!await BotUtils.ReplyAsync_ValidateFamily(Context, family_info))
-                    return;
-
-                // Get all genera in this family.
-
-                Genus[] genus_info = await BotUtils.GetGeneraFromDb(family_info);
-
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.WithTitle(StringUtils.ToTitleCase(family_info.name));
-
-                StringBuilder description = new StringBuilder();
-                description.AppendLine(family_info.GetDescriptionOrDefault());
-                description.AppendLine();
-
-                if (genus_info.Count() > 0) {
-
-                    description.AppendLine(string.Format("**Genera in this family ({0}):**", genus_info.Count()));
-
-                    foreach (Genus i in genus_info) {
-
-                        // Count the species in this genus.
-
-                        long species_count = 0;
-
-                        using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM Species WHERE genus_id=$genus_id;")) {
-                            cmd.Parameters.AddWithValue("$genus_id", i.id);
-                            species_count = await Database.GetScalar<long>(cmd);
-                        }
-
-                        description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(i.name), species_count));
-
-                    }
-
-                }
-                else
-                    description.AppendLine("This family contains no genera.");
-
-                embed.WithDescription(description.ToString());
-
-                await ReplyAsync("", false, embed.Build());
-
-            }
-
+        public async Task Family(string name = "") {
+            await BotUtils.Command_ShowTaxon(Context, TaxonType.Family, name);
         }
         [Command("addfamily")]
-        public async Task AddFamily(string family, string description = "") {
-
-            Family family_info = new Family();
-            family_info.name = family;
-            family_info.description = description;
-
-            await BotUtils.AddFamilyToDb(family_info);
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new family, **{0}**.", StringUtils.ToTitleCase(family)));
-
+        public async Task AddFamily(string name, string description = "") {
+            await BotUtils.Command_AddTaxon(Context, TaxonType.Family, name, description);
         }
         [Command("setfamily")]
-        public async Task SetFamily(string genus, string family) {
-
-            // Get the specified genus.
-
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
-
-            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
-                return;
-
-            // Get the specified family.
-
-            Family family_info = await BotUtils.GetFamilyFromDb(family);
-
-            if (!await BotUtils.ReplyAsync_ValidateFamily(Context, family_info))
-                return;
-
-            // Update the genus.
-
-            genus_info.family_id = family_info.id;
-
-            await BotUtils.UpdateGenusInDb(genus_info);
-
-            await ReplyAsync("Family set successfully.");
-
+        public async Task SetFamily(string child, string parent) {
+            await BotUtils.Command_SetTaxon(Context, TaxonType.Family, child, parent);
         }
         [Command("setfamilydesc"), Alias("setfamilydescription")]
-        public async Task SetFamilyDesc(string family, string description) {
-
-            // Get the specified family.
-
-            Family family_info = await BotUtils.GetFamilyFromDb(family);
-
-            if (!await BotUtils.ReplyAsync_ValidateFamily(Context, family_info))
-                return;
-
-            // Update the family.
-
-            family_info.description = description;
-
-            await BotUtils.UpdateFamilyInDb(family_info);
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for family **{0}**.", StringUtils.ToTitleCase(family_info.name)));
-
+        public async Task SetFamilyDesc(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name, description);
         }
 
-        #endregion
 
         [Command("addedby"), Alias("ownedby")]
         public async Task AddedBy(IUser user = null) {

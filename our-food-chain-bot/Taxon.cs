@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace OurFoodChain {
 
     enum TaxonType {
-        Genus = 1,
+        Species = 1,
+        Genus,
         Family,
         Order,
         Class,
@@ -48,7 +49,7 @@ namespace OurFoodChain {
                 pics = row.Field<string>("pics")
             };
 
-            string parent_id_name = _getParentIdColumnNameFromTaxonType(type);
+            string parent_id_name = TypeToDatabaseColumnName(TypeToParentType(type));
 
             if (!string.IsNullOrEmpty(parent_id_name))
                 result.parent_id = (row[parent_id_name] == DBNull.Value) ? 0 : row.Field<long>(parent_id_name);
@@ -61,6 +62,8 @@ namespace OurFoodChain {
         public static string TypeToName(TaxonType type, bool plural = false) {
 
             switch (type) {
+                case TaxonType.Species:
+                    return plural ? "species" : "species";
                 case TaxonType.Genus:
                     return plural ? "genera" : "genus";
                 case TaxonType.Family:
@@ -83,6 +86,8 @@ namespace OurFoodChain {
         public static TaxonType TypeToParentType(TaxonType type) {
 
             switch (type) {
+                case TaxonType.Species:
+                    return TaxonType.Genus;
                 case TaxonType.Genus:
                     return TaxonType.Family;
                 case TaxonType.Family:
@@ -100,8 +105,41 @@ namespace OurFoodChain {
             }
 
         }
+        public static TaxonType TypeToChildType(TaxonType type) {
 
-        private static string _getParentIdColumnNameFromTaxonType(TaxonType type) {
+            switch (type) {
+                case TaxonType.Species:
+                    return 0;
+                case TaxonType.Genus:
+                    return TaxonType.Species;
+                case TaxonType.Family:
+                    return TaxonType.Genus;
+                case TaxonType.Order:
+                    return TaxonType.Family;
+                case TaxonType.Class:
+                    return TaxonType.Order;
+                case TaxonType.Phylum:
+                    return TaxonType.Class;
+                case TaxonType.Kingdom:
+                    return TaxonType.Phylum;
+                case TaxonType.Domain:
+                    return TaxonType.Kingdom;
+                default:
+                    return 0;
+            }
+
+        }
+        public static string TypeToDatabaseTableName(TaxonType type) {
+
+            string table_name = StringUtils.ToTitleCase(TypeToName(type));
+
+            if (table_name == "Order")
+                table_name = "Ord";
+
+            return table_name;
+
+        }
+        public static string TypeToDatabaseColumnName(TaxonType type) {
 
             if (type == TaxonType.Domain)
                 return string.Empty;

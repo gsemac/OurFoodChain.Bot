@@ -1131,6 +1131,7 @@ namespace OurFoodChain {
 
                 embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count));
                 embed.WithDescription(taxon_description.ToString());
+                embed.WithFooter(string.Format("Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
 
                 await context.Channel.SendMessageAsync("", false, embed.Build());
 

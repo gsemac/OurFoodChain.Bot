@@ -1798,6 +1798,16 @@ namespace OurFoodChain {
 
         }
 
+        [Command("backup")]
+        public async Task Backup() {
+
+            if (System.IO.File.Exists(Database.GetFilePath()))
+                await Context.Channel.SendFileAsync(Database.GetFilePath(), string.Format(string.Format("Database backup {0}", DateTime.UtcNow.ToString())));
+            else
+                await BotUtils.ReplyAsync_Error(Context, "Database file does not exist at the specified path.");
+
+        }
+
     }
 
 }

@@ -114,6 +114,10 @@ namespace OurFoodChain {
         private static readonly string DATABASE_CONNECTION_STRING = string.Format("Data Source={0}", DATABASE_FILE_NAME);
         private static bool _initialized = false;
 
+        public static string GetFilePath() {
+            return DATABASE_FILE_NAME;
+        }
+
         private static void _backupDatabase() {
 
             if (System.IO.File.Exists(DATABASE_FILE_NAME)) {

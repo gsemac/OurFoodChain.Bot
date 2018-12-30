@@ -1250,7 +1250,7 @@ namespace OurFoodChain {
             await ReplyAsync_Success(context, string.Format("{0} **{1}** has sucessfully been placed under the {2} **{3}**.",
                     StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type))),
                     child.GetName(),
-                    StringUtils.ToTitleCase(Taxon.TypeToName(type)),
+                    Taxon.TypeToName(type),
                     parent.GetName()
                 ));
 

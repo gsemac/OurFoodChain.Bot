@@ -1178,8 +1178,8 @@ namespace OurFoodChain {
         public static async Task ReplyAsync_Info(ICommandContext context, string text) {
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithDescription(string.Format("❕ {0}", text));
-            embed.WithColor(new Discord.Color(255, 255, 255));
+            embed.WithDescription(text);
+            embed.WithColor(Discord.Color.LightGrey);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 

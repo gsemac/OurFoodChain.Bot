@@ -1348,7 +1348,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     if (rows.Rows.Count <= 0)
-                        await ReplyAsync("This species has no extant natural predators.");
+                        await BotUtils.ReplyAsync_Info(Context, "This species has no extant natural predators.");
                     else {
 
                         List<string> lines = new List<string>();
@@ -1407,7 +1407,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     if (rows.Rows.Count <= 0)
-                        await ReplyAsync("This species does not prey upon any other species.");
+                        await BotUtils.ReplyAsync_Info(Context, "This species does not prey upon any other species.");
                     else {
 
                         List<Tuple<Species, string>> prey_list = new List<Tuple<Species, string>>();
@@ -1620,7 +1620,7 @@ namespace OurFoodChain {
 
             if (terms.Count() <= 0) {
 
-                await ReplyAsync("Too few search terms have been provided.");
+                await BotUtils.ReplyAsync_Error(Context, "Too few search terms have been provided.");
 
                 return;
 
@@ -1843,7 +1843,7 @@ namespace OurFoodChain {
                 Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp);
 
                 if (roles.Count() <= 0) {
-                    await ReplyAsync("No roles have been assigned to this species.");
+                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not been assigned any roles.", sp.GetShortName()));
                     return;
                 }
 

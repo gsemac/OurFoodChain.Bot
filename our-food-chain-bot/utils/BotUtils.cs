@@ -1083,16 +1083,17 @@ namespace OurFoodChain {
 
             }
 
-            if (invalid_zones.Count() <= 0) {
+            if (invalid_zones.Count() > 0)
+                await ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): **{0}**", string.Join(", ", invalid_zones)));
 
-                if (!showErrorsOnly)
-                    await ReplyAsync_Success(context, string.Format("**{0}** now inhabits zones **{1}**.",
-                        sp.GetShortName(),
-                        StringUtils.ConjunctiveJoin(", ", valid_zones)));
+            if (valid_zones.Count() > 0 && !showErrorsOnly) {
+
+                await ReplyAsync_Success(context, string.Format("**{0}** now inhabits {2} **{1}**.",
+                      sp.GetShortName(),
+                      StringUtils.ConjunctiveJoin(", ", valid_zones),
+                      valid_zones.Count() > 1 ? "zones" : "zone"));
 
             }
-            else
-                await ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): {0}", string.Join(", ", invalid_zones)));
 
         }
         public static async Task<bool> ReplyAsync_ValidateImageUrl(ICommandContext context, string imageUrl) {

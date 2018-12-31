@@ -71,6 +71,11 @@ namespace OurFoodChain {
         public Config GetConfig() {
             return _config;
         }
+        public ulong GetUserId() {
+
+            return _discord_client.CurrentUser.Id;
+
+        }
 
         public struct Config {
             public string[] adminIds;
@@ -118,44 +123,10 @@ namespace OurFoodChain {
 
         }
         private async Task _reactionReceived(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
-
-            if (!CommandUtils.PAGINATED_MESSAGES.ContainsKey(reaction.MessageId))
-                return;
-
-            if (reaction.UserId == _discord_client.CurrentUser.Id)
-                return;
-
-            CommandUtils.PaginatedMessage paginated = CommandUtils.PAGINATED_MESSAGES[reaction.MessageId];
-
-            if (paginated.pages is null || paginated.pages.Count() <= 0)
-                return;
-
-            if (++paginated.index >= paginated.pages.Count())
-                paginated.index = 0;
-
-            await cached.DownloadAsync().Result.ModifyAsync(msg => msg.Embed = paginated.pages[paginated.index]);
-
+            await CommandUtils.HandlePaginatedMessageReaction(cached, channel, reaction, true);
         }
         private async Task _reactionRemoved(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
-
-            if (!CommandUtils.PAGINATED_MESSAGES.ContainsKey(reaction.MessageId))
-                return;
-
-            if (reaction.UserId == _discord_client.CurrentUser.Id)
-                return;
-
-            CommandUtils.PaginatedMessage paginated = CommandUtils.PAGINATED_MESSAGES[reaction.MessageId];
-
-            if (paginated.pages is null || paginated.pages.Count() <= 0)
-                return;
-
-            if (paginated.index <= 0)
-                paginated.index = paginated.pages.Count() - 1;
-            else
-                --paginated.index;
-
-            await cached.DownloadAsync().Result.ModifyAsync(msg => msg.Embed = paginated.pages[paginated.index]);
-
+            await CommandUtils.HandlePaginatedMessageReaction(cached, channel, reaction, false);
         }
 
         private bool _isUserMessage(SocketMessage message) {

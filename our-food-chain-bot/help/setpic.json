@@ -1,6 +1,6 @@
 ﻿{
   "name": "setpic",
-  "aliases": [],
+  "aliases": [ "setspeciespic", "setspic" ],
   "category": "update",
   "description": "Sets the picture for the given species.",
   "examples": [

@@ -1,0 +1,9 @@
+﻿{
+  "name": "+pic",
+  "aliases": [ ],
+  "category": "update",
+  "description": "Adds a new picture to the image gallery for the given species. If the species does not already have a default picture (i.e. set with `setpic`), the picture will be used as the default.",
+  "examples": [
+    "+pic H. quattuorus https://website.com/image.jpg"
+  ]
+}

@@ -337,7 +337,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setpic")]
+        [Command("setpic"), Alias("setspeciespic", "setspic")]
         public async Task SetPic(string genus, string species, string imageUrl = "") {
 
             // If no argument was provided for the image URL, assume the user only provided the species and URL.
@@ -353,9 +353,118 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
-            if (!Regex.Match(imageUrl, "^https?:").Success)
-                await ReplyAsync("Please provide a valid image URL.");
-            else {
+            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+                return;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$url", imageUrl);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", sp.GetShortName()));
+
+        }
+        [Command("gallery"), Alias("pic", "pics")]
+        public async Task Gallery(string genus, string species = "") {
+
+            // If no argument was provided for the "species" parameter, assume the user omitted the genus.
+
+            if (string.IsNullOrEmpty(species)) {
+                species = genus;
+                genus = string.Empty;
+            }
+
+            // Get the species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            List<Picture> pictures = new List<Picture>();
+
+            // If the species has a picture assigned to it, add that as the first picture.
+
+            if (!string.IsNullOrEmpty(sp.pics))
+                pictures.Add(new Picture(sp.pics));
+
+            // Check the database for additional pictures to add to the gallery.
+            // We'll do this by generating a default gallery name for the species, and then checking that gallery.
+
+            string gallery_name = "species" + sp.id.ToString();
+
+            Gallery gallery = await BotUtils.GetGalleryFromDb(gallery_name);
+
+            if (!(gallery is null))
+                foreach (Picture p in await BotUtils.GetPicsFromDb(gallery))
+                    if (p.url != sp.pics)
+                        pictures.Add(p);
+
+            // If there were no images for this query, show a message and quit.
+
+            if (pictures.Count() <= 0) {
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not have any pictures.", sp.GetShortName()));
+
+                return;
+
+            }
+
+            // Display a paginated image gallery.
+
+            CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
+            int index = 1;
+
+            foreach (Picture p in pictures) {
+
+                EmbedBuilder embed = new EmbedBuilder();
+
+                string title = string.Format("Pictures of {0} ({1} of {2})", sp.GetShortName(), index, pictures.Count());
+                string footer = string.Format("\"{0}\" by {2} — {1}", p.GetName(), p.GetDescriptionOrDefault(), p.GetArtist());
+
+                embed.WithTitle(title);
+                embed.WithImageUrl(p.url);
+                embed.WithFooter(footer);
+
+                message.pages.Add(embed.Build());
+
+                ++index;
+
+            }
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, message);
+
+        }
+        [Command("+pic")]
+        public async Task PlusPic(string species, string imageUrl) {
+            await PlusPic("", species, imageUrl, "");
+        }
+        [Command("+pic")]
+        public async Task PlusPic(string species, string imageUrl, string description) {
+            await PlusPic("", species, imageUrl, description);
+        }
+        [Command("+pic")]
+        public async Task PlusPic(string genus, string species, string imageUrl, string description) {
+
+            // Get the species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Validate the image URL.
+
+            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+                return;
+
+            // If the species doesn't have a picture yet, use this as the picture for that species.
+
+            if (string.IsNullOrEmpty(sp.pics)) {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
 
@@ -366,39 +475,46 @@ namespace OurFoodChain {
 
                 }
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added a picture for **{0}**.", sp.GetShortName()));
+            }
+
+            // Create a gallery for the species if it doesn't already exist.
+
+            string gallery_name = "species" + sp.id.ToString();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Gallery(name) VALUES($name);")) {
+
+                cmd.Parameters.AddWithValue("$name", gallery_name);
+
+                await Database.ExecuteNonQuery(cmd);
 
             }
 
-        }
-        [Command("pic")]
-        public async Task Pic(string genus, string species = "") {
+            // Get the gallery for the species.
 
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
-            }
+            Gallery gallery = await BotUtils.GetGalleryFromDb(gallery_name);
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            if (gallery is null) {
 
-            if (sp is null)
+                await BotUtils.ReplyAsync_Error(Context, string.Format("Could not create a picture gallery for **{0}**.", sp.GetShortName()));
+
                 return;
 
-            if (string.IsNullOrEmpty(sp.pics)) {
+            }
 
-                await ReplyAsync(string.Format("**{0}** does not have a picture.", sp.GetShortName()));
+            // Add the new picture to the gallery.
 
-                return;
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, artist, description) VALUES($url, $gallery_id, $artist, $description);")) {
+
+                cmd.Parameters.AddWithValue("$url", imageUrl);
+                cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+                cmd.Parameters.AddWithValue("$artist", Context.User.Username);
+                cmd.Parameters.AddWithValue("$description", description);
+
+                await Database.ExecuteNonQuery(cmd);
 
             }
 
-            EmbedBuilder embed = new EmbedBuilder();
-
-            embed.WithTitle(sp.GetShortName());
-            embed.WithImageUrl(sp.pics);
-            embed.WithFooter(string.Format(string.Format("This species belongs to {0}", sp.owner)));
-
-            await ReplyAsync("", false, embed.Build());
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new picture for **{0}**.", sp.GetShortName()));
 
         }
 
@@ -713,7 +829,7 @@ namespace OurFoodChain {
                     await message.AddReactionAsync(new Emoji("🇷"));
 
                     CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
-                        pages = pages.ToArray()
+                        pages = pages
                     };
 
                     CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
@@ -796,7 +912,7 @@ namespace OurFoodChain {
             await message.AddReactionAsync(new Emoji("🇿"));
 
             CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
-                pages = new Embed[] { page1.Build(), page2.Build() }
+                pages = { page1.Build(), page2.Build() }
             };
 
             CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);

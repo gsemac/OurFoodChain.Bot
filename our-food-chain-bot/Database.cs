@@ -190,6 +190,8 @@ namespace OurFoodChain {
                     await _update009(conn);
                 if (version < 10)
                     await _update010(conn);
+                if (version < 11)
+                    await _update011(conn);
 
                 conn.Close();
 
@@ -337,6 +339,17 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Genus ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+        }
+        private static async Task _update011(SQLiteConnection conn) {
+
+            await _updateDatabaseVersion(conn, 11);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Gallery(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, UNIQUE(name));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Picture(id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT, gallery_id INTEGER, name TEXT, description TEXT, artist TEXT, FOREIGN KEY(gallery_id) REFERENCES Gallery(id), UNIQUE(gallery_id, url));", conn))
                 await cmd.ExecuteNonQueryAsync();
 
         }

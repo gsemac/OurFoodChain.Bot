@@ -149,6 +149,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Gallery.cs" />
+    <Compile Include="Picture.cs" />
     <Compile Include="Taxon.cs" />
     <Compile Include="utils\ArrayUtils.cs" />
     <Compile Include="Commands.cs" />
@@ -166,6 +168,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="help\+pic.json" />
     <None Include="help\+zone.json" />
     <None Include="help\-zone.json" />
     <None Include="help\addclass.json" />

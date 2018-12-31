@@ -847,6 +847,44 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Gallery> GetGalleryFromDb(string name) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gallery WHERE name=$name;")) {
+
+                cmd.Parameters.AddWithValue("$name", name);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    return Gallery.FromDataRow(row);
+
+            }
+
+            return null;
+
+        }
+        public static async Task<Picture[]> GetPicsFromDb(Gallery gallery) {
+
+            List<Picture> pictures = new List<Picture>();
+
+            if (!(gallery is null) && gallery.id > 0) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Picture WHERE gallery_id=$gallery_id;")) {
+
+                    cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+
+                    using (DataTable rows = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in rows.Rows)
+                            pictures.Add(Picture.FromDataRow(row));
+
+                }
+
+            }
+
+            return pictures.ToArray();
+
+        }
+
         public static string GenerateSpeciesName(string genus, string species) {
 
             return string.Format("{0}. {1}", genus.ToUpper()[0], species);
@@ -1133,6 +1171,15 @@ namespace OurFoodChain {
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(string.Format("✅ {0}", text));
             embed.WithColor(Discord.Color.Green);
+
+            await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
+        public static async Task ReplyAsync_Info(ICommandContext context, string text) {
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription(string.Format("❕ {0}", text));
+            embed.WithColor(new Discord.Color(255, 255, 255));
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 

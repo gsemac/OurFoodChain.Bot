@@ -1348,7 +1348,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     if (rows.Rows.Count <= 0)
-                        await BotUtils.ReplyAsync_Info(Context, "This species has no extant natural predators.");
+                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has no extant natural predators.", sp.GetShortName()));
                     else {
 
                         List<string> lines = new List<string>();
@@ -1407,7 +1407,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     if (rows.Rows.Count <= 0)
-                        await BotUtils.ReplyAsync_Info(Context, "This species does not prey upon any other species.");
+                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not prey upon any other species.", sp.GetShortName()));
                     else {
 
                         List<Tuple<Species, string>> prey_list = new List<Tuple<Species, string>>();

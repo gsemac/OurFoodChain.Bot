@@ -1659,7 +1659,10 @@ namespace OurFoodChain {
             SortedSet<string> names_list = new SortedSet<string>();
 
             foreach (Species sp in list)
-                names_list.Add(sp.GetShortName());
+                if (sp.isExtinct)
+                    names_list.Add(BotUtils.Strikeout(sp.GetShortName()));
+                else
+                    names_list.Add(sp.GetShortName());
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle("Search results");

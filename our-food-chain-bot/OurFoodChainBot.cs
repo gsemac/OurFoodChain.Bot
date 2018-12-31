@@ -156,6 +156,11 @@ namespace OurFoodChain {
         }
         private async Task<bool> _executeCommand(SocketUserMessage message) {
 
+            // If the message is just the bot's prefix, don't attempt to respond to it (this reduces "Unknown command" spam).
+
+            if (message.Content == _config.prefix)
+                return false;
+
             int pos = _getCommandArgumentsPosition(message);
             var context = new CommandContext(_discord_client, message);
 
@@ -164,7 +169,7 @@ namespace OurFoodChain {
             if (result.IsSuccess)
                 return true;
 
-            await context.Channel.SendMessageAsync(result.ErrorReason);
+            await BotUtils.ReplyAsync_Error(context, result.ErrorReason);
 
             return false;
 

@@ -1359,13 +1359,12 @@ namespace OurFoodChain {
         private static int _getSpeciesTreeWidth(Tree<Species>.TreeNode root, Font font) {
 
             int width = (int)GraphicsUtils.MeasureString(root.value.GetShortName(), font).Width;
-
-            int child_width = 0;
+            int max_child_width = 0;
 
             foreach (Tree<Species>.TreeNode i in root.childNodes)
-                child_width += _getSpeciesTreeWidth(i, font);
+                max_child_width = Math.Max(max_child_width, _getSpeciesTreeWidth(i, font));
 
-            return Math.Max(width, child_width);
+            return Math.Max(width, max_child_width * root.childNodes.Count());
 
         }
         private static void _drawSpeciesTree(Tree<Species>.TreeNode root, Font font, Graphics gfx, Species highlightSpecies, int x, int y, int w) {

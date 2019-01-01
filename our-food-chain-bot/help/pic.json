@@ -1,9 +1,12 @@
 ﻿{
   "name": "pic",
-  "aliases": [],
+  "aliases": [
+    "pics",
+    "gallery"
+  ],
   "category": "info",
   "description": "Shows a picture of the given species.",
   "examples": [
-    "pic"
+    "pic H. quattuorus"
   ]
 }

@@ -826,11 +826,12 @@ namespace OurFoodChain {
 
                 if (species_list.Count() > 0) {
 
-                    await message.AddReactionAsync(new Emoji("🇷"));
-
                     CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
                         pages = pages
                     };
+
+                    paginated.emojiToggle = "🇷";
+                    await message.AddReactionAsync(new Emoji("🇷"));
 
                     CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
 
@@ -896,7 +897,7 @@ namespace OurFoodChain {
         [Command("map")]
         public async Task Map() {
 
-            string footer = "Click the Z reaction to show zone labels.";
+            string footer = "Click the Z reaction to toggle zone labels.";
 
             EmbedBuilder page1 = new EmbedBuilder {
                 ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194144225886218/OFC2.png"
@@ -906,14 +907,16 @@ namespace OurFoodChain {
             EmbedBuilder page2 = new EmbedBuilder {
                 ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194196260683778/OFCtruelabels.png"
             };
-            page1.WithFooter(footer);
+            page2.WithFooter(footer);
 
             IUserMessage message = await ReplyAsync("", false, page1.Build());
-            await message.AddReactionAsync(new Emoji("🇿"));
 
             CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
                 pages = { page1.Build(), page2.Build() }
             };
+
+            paginated.emojiToggle = "🇿";
+            await message.AddReactionAsync(new Emoji("🇿"));
 
             CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
 
@@ -1656,7 +1659,10 @@ namespace OurFoodChain {
             SortedSet<string> names_list = new SortedSet<string>();
 
             foreach (Species sp in list)
-                names_list.Add(sp.GetShortName());
+                if (sp.isExtinct)
+                    names_list.Add(BotUtils.Strikeout(sp.GetShortName()));
+                else
+                    names_list.Add(sp.GetShortName());
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle("Search results");

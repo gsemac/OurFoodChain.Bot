@@ -30,7 +30,7 @@ namespace OurFoodChain.gotchi {
         }
         public bool IsHungry() {
 
-            return HoursSinceFed() > 6;
+            return HoursSinceFed() > 12;
 
         }
         public bool IsDead() {

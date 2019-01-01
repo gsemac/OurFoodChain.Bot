@@ -50,6 +50,8 @@ namespace OurFoodChain.gotchi {
                 _gotchi_image.Dispose();
 
             _gotchi_image = new Bitmap(filePath);
+            _gotchi_image.MakeTransparent(_gotchi_image.GetPixel(0, 0));
+
             _owns_gotchi_image = true;
 
         }

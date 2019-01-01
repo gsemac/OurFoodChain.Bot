@@ -88,7 +88,7 @@ namespace OurFoodChain.gotchi {
 
             string gotchi_pic = "res/gotchi/default.png";
 
-            if (!string.IsNullOrEmpty(sp.pics) && Regex.Match(sp.pics, @"^https:\/\/cdn\.discordapp\.com\/.+?\.(?:jpg|png)$").Success) {
+            if (!string.IsNullOrEmpty(sp.pics) && Regex.Match(sp.pics, @"^https:\/\/cdn\.discordapp\.com\/.+?\.(?:jpg|png)$", RegexOptions.IgnoreCase).Success) {
 
                 string downloads_dir = "res/gotchi/downloads";
                 string disk_fpath = System.IO.Path.Combine("res/gotchi/downloads", System.IO.Path.GetFileName(sp.pics));

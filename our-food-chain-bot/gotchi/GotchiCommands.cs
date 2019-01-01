@@ -174,6 +174,24 @@ namespace OurFoodChain.gotchi {
             if (sp is null)
                 return;
 
+            // The species must be a base species (e.g., doesn't evolve from anything).
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM Ancestors WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                long count = await Database.GetScalar<long>(cmd);
+
+                if(count > 0) {
+
+                    await BotUtils.ReplyAsync_Error(Context, "You must start with a base species (i.e., a species that doesn't evolve from anything).");
+
+                    return;
+
+                }
+
+            }
+
             // Create a gotchi for this user.
 
             await GotchiUtils.CreateGotchiAsync(Context.User, sp);

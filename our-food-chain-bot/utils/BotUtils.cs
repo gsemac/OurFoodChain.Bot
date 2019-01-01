@@ -1499,11 +1499,16 @@ namespace OurFoodChain {
 
                     // Save the result.
 
-                    string fname = sp.GetShortName() + ".png";
+                    string out_dir = "temp";
 
-                    bmp.Save(fname);
+                    if (!System.IO.Directory.Exists(out_dir))
+                        System.IO.Directory.CreateDirectory(out_dir);
 
-                    return fname;
+                    string fpath = System.IO.Path.Combine(out_dir, sp.GetShortName() + ".png");
+
+                    bmp.Save(fpath);
+
+                    return fpath;
 
                 }
 

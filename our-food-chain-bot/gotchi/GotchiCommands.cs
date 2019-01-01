@@ -127,6 +127,9 @@ namespace OurFoodChain.gotchi {
                 case "feed":
                     await GotchiFeed();
                     break;
+                default:
+                    await BotUtils.ReplyAsync_Error(Context, "Unknown command.");
+                    break;
 
             }
 

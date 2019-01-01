@@ -2,5 +2,7 @@
   "admin_ids": [],
   "token": "",
   "prefix": "?",
-  "playing": ""
+  "playing": "",
+  "scratch_server": -1,
+  "scratch_channel": -1
 }

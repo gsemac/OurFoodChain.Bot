@@ -1,0 +1,12 @@
+﻿{
+  "name": "gotchi",
+  "aliases": [],
+  "category": "fun",
+  "description": "Make a pet out of your favorite species. You must feed it once a day, and it will evolve once a week.",
+  "examples": [
+    "gotchi",
+    "gotchi get <species>",
+    "gotchi name <new name>",
+    "gotchi feed"
+  ]
+}

@@ -76,12 +76,19 @@ namespace OurFoodChain {
             return _discord_client.CurrentUser.Id;
 
         }
+        public IDiscordClient GetClient() {
+
+            return _discord_client;
+
+        }
 
         public struct Config {
             public string[] adminIds;
             public string token;
             public string prefix;
             public string playing;
+            public ulong scratch_server;
+            public ulong scratch_channel;
         }
 
         public static OurFoodChainBot GetInstance() {

@@ -1511,6 +1511,51 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<string> Reply_UploadFileToScratchServerAsync(ICommandContext context, string filePath) {
+
+            var client = OurFoodChainBot.GetInstance().GetClient();
+            ulong serverId = OurFoodChainBot.GetInstance().GetConfig().scratch_server;
+            ulong channelId = OurFoodChainBot.GetInstance().GetConfig().scratch_channel;
+
+            if (serverId <= 0 || channelId <= 0) {
+
+                await ReplyAsync_Error(context, "Cannot upload images because no scratch server/channel has been specified in the configuration file.");
+
+                return string.Empty;
+
+            }
+
+            IGuild guild = await client.GetGuildAsync(serverId);
+
+            if (guild is null) {
+
+                await ReplyAsync_Error(context, "Cannot upload images because the scratch server is inaccessible.");
+
+                return string.Empty;
+
+            }
+
+            ITextChannel channel = await guild.GetTextChannelAsync(channelId);
+
+            if (channel is null) {
+
+                await ReplyAsync_Error(context, "Cannot upload images because the scratch channel is inaccessible.");
+
+                return string.Empty;
+
+            }
+
+            IUserMessage result = await channel.SendFileAsync(filePath, "");
+
+            var enumerator = result.Attachments.GetEnumerator();
+            enumerator.MoveNext();
+
+            string url = enumerator.Current.Url;
+
+            return url;
+
+        }
+
     }
 
 }

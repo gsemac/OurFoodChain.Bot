@@ -68,6 +68,13 @@ namespace OurFoodChain.gotchi {
             return hours_diff;
 
         }
+        public long Age() {
+
+            long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            return (ts - born_ts) / 60 / 60 / 24;
+
+        }
 
         public static Gotchi FromDataRow(DataRow row) {
 

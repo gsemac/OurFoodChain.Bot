@@ -105,7 +105,8 @@ namespace OurFoodChain.gotchi {
 
             EmbedBuilder embed = new EmbedBuilder();
 
-            embed.WithTitle(string.Format("{0}'s {1} (\"{2}\")", Context.User.Username, sp.GetShortName(), StringUtils.ToTitleCase(gotchi.name)));
+            embed.WithTitle(string.Format("{0}'s \"{1}\"", Context.User.Username, StringUtils.ToTitleCase(gotchi.name)));
+            embed.WithDescription(string.Format("{0}, age {1}", sp.GetShortName(), gotchi.Age()));
             embed.WithImageUrl(gif_url);
             embed.WithFooter(string.Format(status, StringUtils.ToTitleCase(gotchi.name)));
 
@@ -182,7 +183,7 @@ namespace OurFoodChain.gotchi {
 
                 long count = await Database.GetScalar<long>(cmd);
 
-                if(count > 0) {
+                if (count > 0) {
 
                     await BotUtils.ReplyAsync_Error(Context, "You must start with a base species (i.e., a species that doesn't evolve from anything).");
 

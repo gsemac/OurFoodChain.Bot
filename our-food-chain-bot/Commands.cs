@@ -1922,7 +1922,12 @@ namespace OurFoodChain {
         public async Task Backup() {
 
             if (System.IO.File.Exists(Database.GetFilePath()))
-                await Context.Channel.SendFileAsync(Database.GetFilePath(), string.Format(string.Format("Database backup {0}", DateTime.UtcNow.ToString())));
+                try {
+                    await Context.Channel.SendFileAsync(Database.GetFilePath(), string.Format(string.Format("Database backup {0}", DateTime.UtcNow.ToString())));
+                }
+                catch (Exception) {
+                    await BotUtils.ReplyAsync_Error(Context, "Database file cannot be accessed.");
+                }
             else
                 await BotUtils.ReplyAsync_Error(Context, "Database file does not exist at the specified path.");
 

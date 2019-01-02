@@ -251,7 +251,7 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(sp.commonName))
                 embed_title += string.Format(" ({0})", StringUtils.ToTitleCase(sp.commonName));
 
-            embed.AddInlineField("Owner", string.IsNullOrEmpty(sp.owner) ? "?" : sp.owner);
+            embed.AddField("Owner", string.IsNullOrEmpty(sp.owner) ? "?" : sp.owner, inline: true);
 
             List<string> zone_names = new List<string>();
 
@@ -270,7 +270,7 @@ namespace OurFoodChain {
 
             string zones_value = string.Join(", ", zone_names);
 
-            embed.AddInlineField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value);
+            embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
 
             // Check if the species is extinct.
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
@@ -812,7 +812,7 @@ namespace OurFoodChain {
                     foreach (Species j in roles_map[i])
                         lines.AppendLine(j.GetShortName());
 
-                    embed2.AddInlineField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString());
+                    embed2.AddField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
 
                 }
 
@@ -1668,7 +1668,7 @@ namespace OurFoodChain {
             embed.WithTitle("Search results");
             embed.WithDescription(string.Join(Environment.NewLine, names_list));
 
-            await ReplyAsync("", false, embed);
+            await ReplyAsync("", false, embed.Build());
 
         }
 
@@ -1965,14 +1965,14 @@ namespace OurFoodChain {
             string kingdom_name = kingdom_info is null ? unknown : kingdom_info.GetName();
             string domain_name = domain_info is null ? unknown : domain_info.GetName();
 
-            embed.AddInlineField("Domain", domain_name);
-            embed.AddInlineField("Kingdom", kingdom_name);
-            embed.AddInlineField("Phylum", phylum_name);
-            embed.AddInlineField("Class", class_name);
-            embed.AddInlineField("Order", order_name);
-            embed.AddInlineField("Family", family_name);
-            embed.AddInlineField("Genus", genus_name);
-            embed.AddInlineField("Species", StringUtils.ToTitleCase(sp.name));
+            embed.AddField("Domain", domain_name, inline: true);
+            embed.AddField("Kingdom", kingdom_name, inline: true);
+            embed.AddField("Phylum", phylum_name, inline: true);
+            embed.AddField("Class", class_name, inline: true);
+            embed.AddField("Order", order_name, inline: true);
+            embed.AddField("Family", family_name, inline: true);
+            embed.AddField("Genus", genus_name, inline: true);
+            embed.AddField("Species", StringUtils.ToTitleCase(sp.name), inline: true);
 
             await ReplyAsync("", false, embed.Build());
 

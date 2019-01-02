@@ -55,7 +55,7 @@ namespace OurFoodChain {
 
             // Install commands.
 
-            await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly());
+            await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), _service_provider);
 
             // Login to Discord.
 

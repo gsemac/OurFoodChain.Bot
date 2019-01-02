@@ -95,8 +95,13 @@ namespace OurFoodChain.gotchi {
                 status = "Congratulations, {0} " + string.Format("evolved into {0}!", sp.GetShortName());
             if (gotchi.IsDead())
                 status = "Oh no... {0} has died...";
-            else if (gotchi.IsSleeping())
-                status = "{0} is taking a nap.";
+            else if (gotchi.IsSleeping()) {
+
+                long hours_left = gotchi.HoursOfSleepLeft();
+
+                status = "{0} is taking a nap. " + string.Format("Check back in {0} hour{1}.", hours_left, hours_left > 1 ? "s" : string.Empty);
+
+            }
             else if (gotchi.IsHungry())
                 status = "{0} is feeling hungry!";
             else if (gotchi.IsEating())

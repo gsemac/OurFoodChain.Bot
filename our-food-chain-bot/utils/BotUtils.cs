@@ -172,7 +172,8 @@ namespace OurFoodChain {
 
     }
 
-    class Species {
+    class Species :
+        IComparable<Species> {
 
         public long id;
         public long genusId;
@@ -242,6 +243,11 @@ namespace OurFoodChain {
 
         }
 
+        public int CompareTo(Species other) {
+
+            return GetShortName().CompareTo(other.GetShortName());
+
+        }
     }
 
     class Role {

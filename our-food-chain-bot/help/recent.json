@@ -1,0 +1,9 @@
+﻿{
+  "name": "recent",
+  "aliases": [],
+  "category": "info",
+  "description": "Shows a list of recent events (new species, extinctions, etc.).",
+  "examples": [
+    "recent"
+  ]
+}

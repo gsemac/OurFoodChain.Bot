@@ -2022,6 +2022,77 @@ namespace OurFoodChain {
 
         }
 
+        [Command("recent")]
+        public async Task Recent() {
+
+            double hours = 48;
+            long start_ts = DateTimeOffset.UtcNow.AddHours(-hours).ToUnixTimeSeconds();
+
+            // Get all species created recently.
+
+            List<Species> new_species = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp >= $start_ts;")) {
+
+                cmd.Parameters.AddWithValue("$start_ts", start_ts);
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows)
+                        new_species.Add(await Species.FromDataRow(row));
+
+            }
+
+            new_species.Sort();
+
+            // Get all extinctions that occurred recently.
+
+            List<Species> extinct_species = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE timestamp >= $start_ts;")) {
+
+                cmd.Parameters.AddWithValue("$start_ts", start_ts);
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows)
+                        extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
+
+            }
+
+            extinct_species.Sort();
+
+            // Build embed.
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithTitle(string.Format("Recent events ({0} hours)", hours));
+
+            StringBuilder description = new StringBuilder();
+
+            if (new_species.Count() > 0) {
+
+                foreach (Species sp in new_species)
+                    description.AppendLine(sp.GetFullName());
+
+                embed.AddField(string.Format("New species ({0})", new_species.Count()), description.ToString(), inline: true);
+
+                description.Clear();
+
+            }
+
+            if (extinct_species.Count() > 0) {
+
+                foreach (Species sp in extinct_species)
+                    description.AppendLine(sp.GetFullName());
+
+                embed.AddField(string.Format("Extinctions ({0})", extinct_species.Count()), description.ToString(), inline: true);
+
+                description.Clear();
+
+            }
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
+
     }
 
 }

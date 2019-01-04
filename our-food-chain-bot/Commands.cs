@@ -923,20 +923,26 @@ namespace OurFoodChain {
         }
 
         [Command("setancestor")]
-        public async Task SetAncestor(string genus, string species, string ancestorGenus, string ancestorSpecies = "") {
+        public async Task SetAncestor(string species, string ancestorSpecies) {
+            await SetAncestor(string.Empty, species, string.Empty, ancestorSpecies);
+        }
+        [Command("setancestor")]
+        public async Task SetAncestor(string genus, string species, string ancestorSpecies) {
+            await SetAncestor(genus, species, genus, ancestorSpecies);
+        }
+        [Command("setancestor")]
+        public async Task SetAncestor(string genus, string species, string ancestorGenus, string ancestorSpecies) {
 
-            // If the ancestor species was left blank, assume the same genus as current species.
-            if (string.IsNullOrEmpty(ancestorSpecies)) {
-
-                ancestorSpecies = ancestorGenus;
-                ancestorGenus = genus;
-
-            }
+            // Get the descendant and ancestor species.
 
             Species[] descendant_list = await BotUtils.GetSpeciesFromDb(genus, species);
             Species[] ancestor_list = await BotUtils.GetSpeciesFromDb(ancestorGenus, ancestorSpecies);
 
-            if (descendant_list.Count() == 0)
+            if (descendant_list.Count() > 1)
+                await BotUtils.ReplyAsync_Error(Context, string.Format("The child species \"{0}\" is too vague (there are multiple matches). Try including the genus.", species));
+            else if (ancestor_list.Count() > 1)
+                await BotUtils.ReplyAsync_Error(Context, string.Format("The ancestor species \"{0}\" is too vague (there are multiple matches). Try including the genus.", ancestorSpecies));
+            else if (descendant_list.Count() == 0)
                 await BotUtils.ReplyAsync_Error(Context, "The child species does not exist.");
             else if (ancestor_list.Count() == 0)
                 await BotUtils.ReplyAsync_Error(Context, "The parent species does not exist.");
@@ -944,16 +950,54 @@ namespace OurFoodChain {
                 await BotUtils.ReplyAsync_Error(Context, "A species cannot be its own ancestor.");
             else {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Ancestors(species_id, ancestor_id) VALUES($species_id, $ancestor_id);")) {
+                Species descendant = descendant_list[0];
+                Species ancestor = ancestor_list[0];
 
-                    cmd.Parameters.AddWithValue("$species_id", descendant_list[0].id);
-                    cmd.Parameters.AddWithValue("$ancestor_id", ancestor_list[0].id);
+                // Check if an ancestor has already been set for this species. If so, update the ancestor, but we'll show a different message later notifying the user of the change.
+
+                Species existing_ancestor_sp = null;
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", descendant.id);
+
+                    DataRow row = await Database.GetRowAsync(cmd);
+
+                    if (!(row is null)) {
+
+                        long ancestor_id = row.Field<long>("ancestor_id");
+
+                        existing_ancestor_sp = await BotUtils.GetSpeciesFromDb(ancestor_id);
+
+                    }
+
+                }
+
+                // If the ancestor has already been set to the species specified, quit.
+
+                if (!(existing_ancestor_sp is null) && existing_ancestor_sp.id == ancestor.id) {
+
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has already been set as the ancestor of **{1}**.", ancestor.GetShortName(), descendant.GetShortName()));
+
+                    return;
+
+                }
+
+                // Insert the new relationship into the database.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Ancestors(species_id, ancestor_id) VALUES($species_id, $ancestor_id);")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", descendant.id);
+                    cmd.Parameters.AddWithValue("$ancestor_id", ancestor.id);
 
                     await Database.ExecuteNonQuery(cmd);
 
                 }
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been set as an ancestor of **{1}**.", ancestor_list[0].GetShortName(), descendant_list[0].GetShortName()));
+                if (existing_ancestor_sp is null)
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been set as the ancestor of **{1}**.", ancestor.GetShortName(), descendant.GetShortName()));
+                else
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has replaced **{1}** as the ancestor of **{2}**.", ancestor.GetShortName(), existing_ancestor_sp.GetShortName(), descendant.GetShortName()));
 
             }
 

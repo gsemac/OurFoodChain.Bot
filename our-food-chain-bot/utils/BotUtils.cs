@@ -1395,7 +1395,7 @@ namespace OurFoodChain {
 
                 }
 
-            using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.Black))
+            using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.White))
                 gfx.DrawString(root.value.GetShortName(), font, brush, new Point(dx, dy));
 
             int cx = x;
@@ -1404,7 +1404,7 @@ namespace OurFoodChain {
 
             foreach (Tree<Species>.TreeNode n in root.childNodes) {
 
-                using (Brush brush = new SolidBrush(System.Drawing.Color.Black))
+                using (Brush brush = new SolidBrush(System.Drawing.Color.FromArgb(162, 164, 171)))
                 using (Pen pen = new Pen(brush, 2.0f)) {
 
                     pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
@@ -1497,7 +1497,7 @@ namespace OurFoodChain {
                 using (Bitmap bmp = new Bitmap(width, height))
                 using (Graphics gfx = Graphics.FromImage(bmp)) {
 
-                    gfx.Clear(System.Drawing.Color.Transparent);
+                    gfx.Clear(System.Drawing.Color.FromArgb(54, 57, 63));
                     gfx.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
                     gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 

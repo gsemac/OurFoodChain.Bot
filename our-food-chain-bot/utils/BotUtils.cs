@@ -343,7 +343,7 @@ namespace OurFoodChain {
             List<Species> matches = new List<Species>();
 
             bool genus_is_abbrev = false;
-            string selection_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND (name=$species;";
+            string selection_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND name=$species;";
 
             if (string.IsNullOrEmpty(genus) || Regex.Match(genus, @"[a-z]\.?$").Success) {
 
@@ -351,9 +351,16 @@ namespace OurFoodChain {
                 genus_is_abbrev = true;
 
             }
-            else
+            else {
+
                 // Since the genus is not abbreviated, we can get genus information immediately.
                 genus_info = await GetGenusFromDb(genus);
+
+                // If the genus doesn't exist, then the species doesn't exist.
+
+                return matches.ToArray();
+
+            }
 
             using (SQLiteConnection conn = await Database.GetConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand(selection_str)) {

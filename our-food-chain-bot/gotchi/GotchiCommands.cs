@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
+    [Group("gotchi")]
     public class Commands :
      ModuleBase {
 
         static Random _rng = new Random();
 
-        [Command("gotchi")]
+        [Command]
         public async Task Gotchi() {
 
             // Get this user's gotchi.
@@ -94,8 +95,13 @@ namespace OurFoodChain.gotchi {
                 status = "Congratulations, {0} " + string.Format("evolved into {0}!", sp.GetShortName());
             if (gotchi.IsDead())
                 status = "Oh no... {0} has died...";
-            else if (gotchi.IsSleeping())
-                status = "{0} is taking a nap.";
+            else if (gotchi.IsSleeping()) {
+
+                long hours_left = gotchi.HoursOfSleepLeft();
+
+                status = "{0} is taking a nap. " + string.Format("Check back in {0} hour{1}.", hours_left, hours_left > 1 ? "s" : string.Empty);
+
+            }
             else if (gotchi.IsHungry())
                 status = "{0} is feeling hungry!";
             else if (gotchi.IsEating())
@@ -113,28 +119,8 @@ namespace OurFoodChain.gotchi {
             await ReplyAsync("", false, embed.Build());
 
         }
-        [Command("gotchi")]
-        public async Task Gotchi(string command, string arg0 = "", string arg1 = "") {
-
-            switch (command.ToLower()) {
-
-                case "get":
-                    await GotchiGet(arg0, arg1);
-                    break;
-                case "name":
-                    await GotchiName(arg0);
-                    break;
-                case "feed":
-                    await GotchiFeed();
-                    break;
-                default:
-                    await BotUtils.ReplyAsync_Error(Context, "Unknown command.");
-                    break;
-
-            }
-
-        }
-        public async Task GotchiGet(string genus, string species) {
+        [Command("get")]
+        public async Task Get(string genus, string species = "") {
 
             if (string.IsNullOrEmpty(genus) && string.IsNullOrEmpty(species)) {
 
@@ -203,7 +189,8 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Success(Context, string.Format("All right **{0}**, take care of your new **{1}**!", Context.User.Username, sp.GetShortName()));
 
         }
-        public async Task GotchiName(string name) {
+        [Command("name")]
+        public async Task Name(string name) {
 
             Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
 
@@ -222,7 +209,8 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Sucessfully set {0}'s name to **{1}**.", StringUtils.ToTitleCase(gotchi.name), StringUtils.ToTitleCase(name)));
 
         }
-        public async Task GotchiFeed() {
+        [Command("feed")]
+        public async Task Feed() {
 
             Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
 

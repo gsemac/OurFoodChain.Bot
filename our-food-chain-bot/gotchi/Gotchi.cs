@@ -23,6 +23,14 @@ namespace OurFoodChain.gotchi {
             return (HoursSinceBirth() / 12) % 2 == 1;
 
         }
+        public long HoursOfSleepLeft() {
+
+            if (!IsSleeping())
+                return 0;
+
+            return 12 - (HoursSinceBirth() % 12);
+
+        }
         public bool IsEating() {
 
             return HoursSinceFed() < 1;

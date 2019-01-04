@@ -1,0 +1,10 @@
+﻿{
+  "name": "-prey",
+  "aliases": [],
+  "category": "update",
+  "description": "Removes the predator/prey relationship from the given species.",
+  "examples": [
+    "-prey <predator species> <prey species>",
+    "-prey P. filterarious H. quattuorus"
+  ]
+}

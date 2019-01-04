@@ -190,6 +190,7 @@
     <None Include="config.json" />
     <None Include="help\+pic.json" />
     <None Include="help\+zone.json" />
+    <None Include="help\-prey.json" />
     <None Include="help\-zone.json" />
     <None Include="help\addclass.json" />
     <None Include="help\adddomain.json" />

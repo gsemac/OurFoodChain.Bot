@@ -1371,6 +1371,31 @@ namespace OurFoodChain {
             }
 
         }
+        [Command("-prey")]
+        public async Task RemovePrey(string genus, string species, string eatsGenus, string eatsSpecies) {
+
+            // Get the predator and prey species.
+
+            Species predator = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species prey = await BotUtils.ReplyAsync_FindSpecies(Context, eatsGenus, eatsSpecies);
+
+            if (predator is null || prey is null)
+                return;
+
+            // Remove the relationship.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Predates WHERE species_id=$species_id AND eats_id=$eats_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", predator.id);
+                cmd.Parameters.AddWithValue("$eats_id", prey.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer preys upon **{1}**.", predator.GetShortName(), prey.GetShortName()));
+
+        }
 
         [Command("predates"), Alias("eats")]
         public async Task Predates(string genus, string species = "") {

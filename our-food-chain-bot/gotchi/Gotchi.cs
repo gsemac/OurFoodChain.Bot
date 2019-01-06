@@ -9,6 +9,9 @@ namespace OurFoodChain.gotchi {
 
     class Gotchi {
 
+        private const long HOURS_OF_SLEEP_PER_DAY = 8;
+        private const long HOURS_PER_DAY = 24;
+
         public long id = -1;
         public long species_id = -1;
         public string name;
@@ -20,7 +23,7 @@ namespace OurFoodChain.gotchi {
 
         public bool IsSleeping() {
 
-            return (HoursSinceBirth() / 12) % 2 == 1;
+            return (HoursSinceBirth() % HOURS_PER_DAY) >= (HOURS_PER_DAY - HOURS_OF_SLEEP_PER_DAY);
 
         }
         public long HoursOfSleepLeft() {
@@ -28,7 +31,7 @@ namespace OurFoodChain.gotchi {
             if (!IsSleeping())
                 return 0;
 
-            return 12 - (HoursSinceBirth() % 12);
+            return HOURS_PER_DAY - (HoursSinceBirth() % HOURS_PER_DAY);
 
         }
         public bool IsEating() {

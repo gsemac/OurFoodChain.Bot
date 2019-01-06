@@ -34,6 +34,10 @@ namespace OurFoodChain.gotchi {
 
         public void AddGotchi(int x, int y, Bitmap image, GotchiState type) {
 
+            // Make the background color transparent.
+            if (!(image is null))
+                image.MakeTransparent(image.GetPixel(0, 0));
+
             GotchiParams p = new GotchiParams {
                 Position = new Point(x, y),
                 Image = new PossibleOwnershipBitmap(image, false),
@@ -153,9 +157,11 @@ namespace OurFoodChain.gotchi {
 
             // Public properties
 
-            public Bitmap Bitmap {
+            public Bitmap Bitmap
+            {
                 get { return _bitmap; }
-                set {
+                set
+                {
 
                     _disposeBitmap();
 

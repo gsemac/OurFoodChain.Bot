@@ -34,6 +34,22 @@ namespace OurFoodChain.gotchi {
             return HOURS_PER_DAY - (HoursSinceBirth() % HOURS_PER_DAY);
 
         }
+        public long HoursSinceLastSlept() {
+
+            if (IsSleeping())
+                return 0;
+
+            return HoursSinceBirth() % HOURS_PER_DAY;
+
+        }
+        public long HoursUntilSleep() {
+
+            if (IsSleeping())
+                return 0;
+
+            return (HOURS_PER_DAY - HOURS_OF_SLEEP_PER_DAY) - (HoursSinceBirth() % HOURS_PER_DAY);
+
+        }
         public bool IsEating() {
 
             return HoursSinceFed() < 1;
@@ -79,11 +95,36 @@ namespace OurFoodChain.gotchi {
             return hours_diff;
 
         }
+        public bool IsReadyToEvolve() {
+
+            return HoursSinceEvolved() >= 7 * 24;
+
+        }
         public long Age() {
 
             long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            return (ts - born_ts) / 60 / 60 / 24;
+            return ((died_ts > 0 ? died_ts : ts) - born_ts) / 60 / 60 / 24;
+
+        }
+        public GotchiState State() {
+
+            if (IsDead())
+                return GotchiState.Dead;
+            else if (IsSleeping())
+                return GotchiState.Sleeping;
+            else if (IsReadyToEvolve())
+                return GotchiState.ReadyToEvolve;
+            else if (IsHungry())
+                return GotchiState.Hungry;
+            else if (IsEating())
+                return GotchiState.Eating;
+            else if (HoursSinceLastSlept() < 1)
+                return GotchiState.Energetic;
+            else if (HoursUntilSleep() <= 1)
+                return GotchiState.Tired;
+
+            return GotchiState.Happy;
 
         }
 

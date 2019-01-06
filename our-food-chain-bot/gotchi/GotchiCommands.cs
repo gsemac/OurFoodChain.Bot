@@ -28,7 +28,7 @@ namespace OurFoodChain.gotchi {
 
             bool evolved = false;
 
-            if (!gotchi.IsDead() && gotchi.HoursSinceEvolved() >= 7 * 24) {
+            if (!gotchi.IsDead() && gotchi.IsReadyToEvolve()) {
 
                 // Find all descendatants of this species.
 
@@ -55,19 +55,12 @@ namespace OurFoodChain.gotchi {
                 }
 
                 // Update the gotchi.
-                // Update the "last evolved" timestamp, even if it didn't evolve.
-                // We will also reset other timestamps when evolution occurs.
+                // Update the evolution timestamp, even if it didn't evolve (in case it has an evolution available next week).
 
-                gotchi.evolved_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-                if (evolved)
-                    gotchi.fed_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts, fed_ts=$fed_ts WHERE id=$id;")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts WHERE id=$id;")) {
 
                     cmd.Parameters.AddWithValue("$species_id", gotchi.species_id);
-                    cmd.Parameters.AddWithValue("$evolved_ts", gotchi.evolved_ts);
-                    cmd.Parameters.AddWithValue("$fed_ts", gotchi.fed_ts);
+                    cmd.Parameters.AddWithValue("$evolved_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                     cmd.Parameters.AddWithValue("$id", gotchi.id);
 
                     await Database.ExecuteNonQuery(cmd);
@@ -75,6 +68,11 @@ namespace OurFoodChain.gotchi {
                 }
 
             }
+
+            // If the gotchi tried to evolve but failed, update its evolution timestamp so that we get a valid state (i.e., not "ready to evolve").
+            // (Note that it will have already been updated in the database by this point.)
+            if (gotchi.IsReadyToEvolve() && !evolved)
+                gotchi.evolved_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             // Create the gotchi GIF.
 
@@ -91,21 +89,38 @@ namespace OurFoodChain.gotchi {
 
             string status = "{0} is feeling happy!";
 
-            if (evolved)
-                status = "Congratulations, {0} " + string.Format("evolved into {0}!", sp.GetShortName());
-            if (gotchi.IsDead())
-                status = "Oh no... {0} has died...";
-            else if (gotchi.IsSleeping()) {
+            switch (gotchi.State()) {
 
-                long hours_left = gotchi.HoursOfSleepLeft();
+                case GotchiState.Dead:
+                    status = "Oh no... {0} has died...";
+                    break;
 
-                status = "{0} is taking a nap. " + string.Format("Check back in {0} hour{1}.", hours_left, hours_left > 1 ? "s" : string.Empty);
+                case GotchiState.ReadyToEvolve:
+                    status = "Congratulations, {0} " + string.Format("evolved into {0}!", sp.GetShortName());
+                    break;
+
+                case GotchiState.Sleeping:
+                    long hours_left = gotchi.HoursOfSleepLeft();
+                    status = "{0} is taking a nap. " + string.Format("Check back in {0} hour{1}.", hours_left, hours_left > 1 ? "s" : string.Empty);
+                    break;
+
+                case GotchiState.Hungry:
+                    status = "{0} is feeling hungry!";
+                    break;
+
+                case GotchiState.Eating:
+                    status = "{0} is enjoying some delicious Suka-Flakes™!";
+                    break;
+
+                case GotchiState.Energetic:
+                    status = "{0} is feeling rowdy!";
+                    break;
+
+                case GotchiState.Tired:
+                    status = "{0} is getting a bit sleepy...";
+                    break;
 
             }
-            else if (gotchi.IsHungry())
-                status = "{0} is feeling hungry!";
-            else if (gotchi.IsEating())
-                status = "{0} is enjoying some delicious Suka-Flakes™!";
 
             // Send the message.
 

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -126,38 +127,29 @@ namespace OurFoodChain.gotchi {
 
             // Get the image for this gotchi.
 
-            string gotchi_image = await DownloadGotchiImage(gotchi);
+            string gotchi_image_path = await DownloadGotchiImage(gotchi);
 
             // Create the gotchi GIF.
 
-            string file_path = System.IO.Path.Combine(temp_dir, string.Format("{0}.gif", gotchi.owner_id));
+            string output_path = System.IO.Path.Combine(temp_dir, string.Format("{0}.gif", gotchi.owner_id));
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 
                 string background_fpath = "res/gotchi/home_aquatic.png";
 
                 if (System.IO.File.Exists(background_fpath))
-                    gif.SetBackgroundImage(background_fpath);
+                    gif.SetBackground(background_fpath);
 
-                if (System.IO.File.Exists(gotchi_image))
-                    gif.SetGotchiImage(gotchi_image);
+                using (Bitmap gotchi_image = System.IO.File.Exists(gotchi_image_path) ? new Bitmap(gotchi_image_path) : null) {
 
-                if (gotchi.IsDead())
-                    gif.SetGotchiGifType(GotchiGifType.Dead);
-                else if (gotchi.IsSleeping())
-                    gif.SetGotchiGifType(GotchiGifType.Sleeping);
-                else if (gotchi.IsHungry())
-                    gif.SetGotchiGifType(GotchiGifType.Hungry);
-                else if (gotchi.IsEating())
-                    gif.SetGotchiGifType(GotchiGifType.Eating);
-                else
-                    gif.SetGotchiGifType(GotchiGifType.Happy);
+                    gif.AddGotchi(gotchi_image, gotchi.State());
+                    gif.Save(output_path);
 
-                gif.Save(file_path);
+                }
 
             }
 
-            return file_path;
+            return output_path;
 
         }
         static public async Task<string> Reply_GenerateAndUploadGotchiGifAsync(ICommandContext context, Gotchi gotchi) {

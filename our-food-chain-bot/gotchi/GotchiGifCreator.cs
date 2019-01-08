@@ -34,9 +34,16 @@ namespace OurFoodChain.gotchi {
 
         public void AddGotchi(int x, int y, Bitmap image, GotchiState type) {
 
-            // Make the background color transparent.
-            if (!(image is null))
-                image.MakeTransparent(image.GetPixel(0, 0));
+            // Make the background color transparent (if it isn't already).
+
+            if (!(image is null)) {
+
+                Color c = image.GetPixel(0, 0);
+
+                if (c.A > 0)
+                    image.MakeTransparent(image.GetPixel(0, 0));
+
+            }
 
             GotchiParams p = new GotchiParams {
                 Position = new Point(x, y),

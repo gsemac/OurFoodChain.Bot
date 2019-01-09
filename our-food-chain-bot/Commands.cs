@@ -1004,15 +1004,11 @@ namespace OurFoodChain {
         }
 
         [Command("ancestry"), Alias("lineage", "ancestors")]
-        public async Task Lineage(string genus, string species = "") {
-
-            // If the species parameter was not provided, assume the user only provided the species.
-
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
-            }
-
+        public async Task Lineage(string species) {
+            await Lineage("", species);
+        }
+        [Command("ancestry"), Alias("lineage", "ancestors")]
+        public async Task Lineage(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
@@ -1051,16 +1047,12 @@ namespace OurFoodChain {
             await ReplyAsync(string.Join(Environment.NewLine, entries));
 
         }
-
         [Command("ancestry2"), Alias("lineage2")]
-        public async Task Lineage2(string genus, string species = "") {
-
-            // If the species parameter was not provided, assume the user only provided the species.
-
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
-            }
+        public async Task Lineage2(string species) {
+            await Lineage2("", species);
+        }
+        [Command("ancestry2"), Alias("lineage2")]
+        public async Task Lineage2(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
@@ -1068,6 +1060,24 @@ namespace OurFoodChain {
                 return;
 
             string image = await BotUtils.GenerateEvolutionTreeImage(sp);
+
+            await Context.Channel.SendFileAsync(image);
+
+        }
+
+        [Command("evolution"), Alias("evo")]
+        public async Task Evolution(string species) {
+            await Evolution("", species);
+        }
+        [Command("evolution"), Alias("evo")]
+        public async Task Evolution(string genus, string species) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            string image = await BotUtils.GenerateEvolutionTreeImage(sp, descendantsOnly: true);
 
             await Context.Channel.SendFileAsync(image);
 
@@ -1142,6 +1152,7 @@ namespace OurFoodChain {
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits **{1}**.", sp.GetShortName(), StringUtils.DisjunctiveJoin(", ", removed_from_zones_list)));
 
         }
+
         [Command("setzone"), Alias("setzones")]
         public async Task SetZone(string genus, string species, string zone = "") {
 

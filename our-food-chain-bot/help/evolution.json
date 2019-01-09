@@ -1,0 +1,11 @@
+﻿{
+	"name": "evolution",
+	"aliases": [
+		"evo"
+	],
+	"category": "info",
+	"description": "Like to the `ancestry2` command, displays an evolution chart for the given species, but only the descendants of the given species are displayed.",
+	"examples": [
+		"ancestry2 H. quattuorus"
+	]
+}

@@ -1427,24 +1427,28 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<string> GenerateEvolutionTreeImage(Species sp) {
+        public static async Task<string> GenerateEvolutionTreeImage(Species sp, bool descendantsOnly = false) {
 
             // Start by finding the earliest ancestor of this species.
 
             long id = sp.id;
 
-            while (true) {
+            if (!descendantsOnly) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id;")) {
+                while (true) {
 
-                    cmd.Parameters.AddWithValue("$species_id", id);
+                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id;")) {
 
-                    DataRow row = await Database.GetRowAsync(cmd);
+                        cmd.Parameters.AddWithValue("$species_id", id);
 
-                    if (!(row is null))
-                        id = row.Field<long>("ancestor_id");
-                    else
-                        break;
+                        DataRow row = await Database.GetRowAsync(cmd);
+
+                        if (!(row is null))
+                            id = row.Field<long>("ancestor_id");
+                        else
+                            break;
+
+                    }
 
                 }
 

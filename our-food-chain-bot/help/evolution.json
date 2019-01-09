@@ -4,8 +4,8 @@
 		"evo"
 	],
 	"category": "info",
-	"description": "Like to the `ancestry2` command, displays an evolution chart for the given species, but only the descendants of the given species are displayed.",
+	"description": "Like the `ancestry2` command, displays an evolution chart for the given species. Only the descendants of the species are displayed.",
 	"examples": [
-		"ancestry2 H. quattuorus"
+		"evo H. quattuorus"
 	]
 }

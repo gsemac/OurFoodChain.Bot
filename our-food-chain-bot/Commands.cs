@@ -900,12 +900,12 @@ namespace OurFoodChain {
             string footer = "Click the Z reaction to toggle zone labels.";
 
             EmbedBuilder page1 = new EmbedBuilder {
-                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194144225886218/OFC2.png"
+                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/533536364910608395/post-earthquake-map-blank.png"
             };
             page1.WithFooter(footer);
 
             EmbedBuilder page2 = new EmbedBuilder {
-                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/527194196260683778/OFCtruelabels.png"
+                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/533536393121759234/post-earthquake-map.png"
             };
             page2.WithFooter(footer);
 

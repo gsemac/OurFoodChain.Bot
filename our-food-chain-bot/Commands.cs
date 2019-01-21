@@ -890,7 +890,7 @@ namespace OurFoodChain {
 
             // Delete the extinction from the database.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE $species_id=$species_id;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE species_id=$species_id;")) {
 
                 cmd.Parameters.AddWithValue("$species_id", sp.id);
 

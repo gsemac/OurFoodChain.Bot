@@ -841,14 +841,12 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setextinct")]
-        public async Task SetExtinct(string genus, string species = "", string reason = "") {
-
-            // If the species parameter was not provided, assume the user only provided the species.
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
-            }
+        [Command("+extinct"), Alias("setextinct")]
+        public async Task SetExtinct(string species, string reason = "") {
+            await SetExtinct("", species, reason);
+        }
+        [Command("+extinct"), Alias("setextinct")]
+        public async Task SetExtinct(string genus, string species, string reason = "") {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
@@ -866,6 +864,41 @@ namespace OurFoodChain {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("The last **{0}** has perished, and the species is now extinct.", sp.GetShortName()));
+
+        }
+        [Command("-extinct"), Alias("setextant")]
+        public async Task MinusExtinct(string species, string reason = "") {
+            await MinusExtinct("", species, reason);
+        }
+        [Command("-extinct"), Alias("setextant")]
+        public async Task MinusExtinct(string genus, string species, string reason = "") {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // If the species is not extinct, don't do anything.
+
+            if (!sp.isExtinct) {
+
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is not extinct.", sp.GetShortName()));
+
+                return;
+
+            }
+
+            // Delete the extinction from the database.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("A population of **{0}** has been discovered! The species is no longer considered extinct.", sp.GetShortName()));
 
         }
         [Command("extinct")]

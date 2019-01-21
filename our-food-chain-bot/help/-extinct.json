@@ -1,0 +1,9 @@
+﻿{
+  "name": "-extinct",
+  "aliases": [ "setextant" ],
+  "category": "update",
+  "description": "Updates a previously extinct species to no longer being extinct.",
+  "examples": [
+    "-extinct H. quattuorus"
+  ]
+}

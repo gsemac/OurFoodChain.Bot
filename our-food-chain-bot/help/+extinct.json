@@ -1,0 +1,10 @@
+﻿{
+  "name": "+extinct",
+  "aliases": [ "setextinct" ],
+  "category": "update",
+  "description": "Marks the given species as extinct.",
+  "examples": [
+    "+extinct H. quattuorus \"died of starvation\"",
+    "+extinct H. quattuorus"
+  ]
+}

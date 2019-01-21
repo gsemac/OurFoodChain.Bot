@@ -232,48 +232,46 @@ namespace OurFoodChain {
 
         private static async Task _update002(SQLiteConnection conn) {
 
-            await _updateDatabaseVersion(conn, 2);
-
             // Add the "pics" field to the "Species" table.
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Species ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 2);
+
         }
         private static async Task _update003(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 3);
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Species ADD COLUMN owner TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 3);
+
         }
         private static async Task _update004(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 4);
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Species ADD COLUMN common_name TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 4);
+
         }
         private static async Task _update005(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 5);
 
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Predates(species_id INTEGER, eats_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(eats_id) REFERENCES Species(id), PRIMARY KEY(species_id, eats_id));", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 5);
+
         }
         private static async Task _update006(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 6);
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Predates ADD COLUMN notes TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 6);
+
         }
         private static async Task _update007(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 7);
 
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Roles(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
                 await cmd.ExecuteNonQueryAsync();
@@ -281,18 +279,18 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesRoles(species_id INTEGER, role_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(role_id) REFERENCES Roles(id), PRIMARY KEY(species_id, role_id));", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 7);
+
         }
         private static async Task _update008(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 8);
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE SpeciesRoles ADD COLUMN notes TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 8);
+
         }
         private static async Task _update009(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 9);
 
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Domain(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
                 await cmd.ExecuteNonQueryAsync();
@@ -315,10 +313,10 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Genus ADD COLUMN family_id INTEGER REFERENCES Family(id);", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 9);
+
         }
         private static async Task _update010(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 10);
 
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Domain ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
@@ -341,16 +339,18 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Genus ADD COLUMN pics TEXT;", conn))
                 await cmd.ExecuteNonQueryAsync();
 
+            await _updateDatabaseVersion(conn, 10);
+
         }
         private static async Task _update011(SQLiteConnection conn) {
-
-            await _updateDatabaseVersion(conn, 11);
 
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Gallery(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, UNIQUE(name));", conn))
                 await cmd.ExecuteNonQueryAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Picture(id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT, gallery_id INTEGER, name TEXT, description TEXT, artist TEXT, FOREIGN KEY(gallery_id) REFERENCES Gallery(id), UNIQUE(gallery_id, url));", conn))
                 await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 11);
 
         }
 

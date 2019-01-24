@@ -67,6 +67,9 @@ namespace OurFoodChain {
             await _discord_client.SetGameAsync(_config.playing);
 
         }
+        public async Task Log(LogSeverity severity, string source, string message) {
+            await _log(new LogMessage(severity, source, message));
+        }
 
         public Config GetConfig() {
             return _config;

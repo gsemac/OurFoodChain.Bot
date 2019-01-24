@@ -172,6 +172,10 @@
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Picture.cs" />
     <Compile Include="Taxon.cs" />
+    <Compile Include="trophies\TrophyCommands.cs" />
+    <Compile Include="trophies\Trophy.cs" />
+    <Compile Include="trophies\TrophyRegistry.cs" />
+    <Compile Include="trophies\TrophyScanner.cs" />
     <Compile Include="utils\ArrayUtils.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Database.cs" />

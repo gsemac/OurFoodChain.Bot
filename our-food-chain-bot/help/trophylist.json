@@ -1,0 +1,9 @@
+﻿{
+  "name": "trophylist",
+  "aliases": [ "achievementlist" ],
+  "category": "fun",
+  "description": "Lists all available trophies.",
+  "examples": [
+    "trophylist"
+  ]
+}

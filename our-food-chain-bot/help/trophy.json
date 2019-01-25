@@ -1,0 +1,9 @@
+﻿{
+  "name": "trophy",
+  "aliases": [ "achievement" ],
+  "category": "fun",
+  "description": "Displays information about the given trophy.",
+  "examples": [
+    "trophy \"polar power\""
+  ]
+}

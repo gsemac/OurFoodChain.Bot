@@ -89,28 +89,23 @@ namespace OurFoodChain.trophies {
 
             // Check for new trophies that the user has just unlocked.
 
-            List<Trophy> new_unlocked = new List<Trophy>();
+            foreach (Trophy trophy in await TrophyRegistry.GetTrophiesAsync())
+                if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item.userId)) {
 
-            foreach (Trophy trophy in TrophyRegistry.Trophies)
-                if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item.userId))
-                    new_unlocked.Add(trophy);
+                    // Insert new trophy into the database.
+                    await TrophyRegistry.SetUnlocked(item.userId, trophy);
 
-            // Insert all new trophies into the database.
+                    // Pop the new trophy.
+                    await _popTrophyAsync(item, trophy);
 
-            foreach (Trophy trophy in new_unlocked)
-                await TrophyRegistry.SetUnlocked(item.userId, trophy);
-
-            // Pop all newly-unlocked trophies.
-
-            foreach (Trophy trophy in new_unlocked)
-                await _popTrophyAsync(item, trophy);
+                }
 
         }
         private static async Task _popTrophyAsync(ScannerQueueItem item, Trophy trophy) {
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("🏆 Achievement unlocked!"));
-            embed.WithDescription(string.Format("Congratulations {0}! You've earned the **{1}** achievement.", item.context.User.Mention, trophy.GetName()));
+            embed.WithTitle(string.Format("🏆 Trophy unlocked!"));
+            embed.WithDescription(string.Format("Congratulations {0}! You've earned the **{1}** trophy.", item.context.User.Mention, trophy.GetName()));
             embed.WithFooter(trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 

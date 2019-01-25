@@ -1,0 +1,9 @@
+﻿{
+  "name": "trophies",
+  "aliases": [ "achievements" ],
+  "category": "fun",
+  "description": "Lists all trophies earned by the given user, or the current user if no user was provided.",
+  "examples": [
+    "trophies"
+  ]
+}

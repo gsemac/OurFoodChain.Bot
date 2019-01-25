@@ -16,6 +16,17 @@ namespace OurFoodChain.trophies {
             await _registerAllAsync();
 
         }
+        public static async Task<long> GetTimesUnlocked(Trophy trophy) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Trophies WHERE trophy_name=$trophy_name;")) {
+
+                cmd.Parameters.AddWithValue("$trophy_name", trophy.GetIdentifier());
+
+                return await Database.GetScalar<long>(cmd);
+
+            }
+
+        }
         public static async Task<UnlockedTrophyInfo[]> GetUnlockedTrophiesAsync(ulong userId) {
 
             List<UnlockedTrophyInfo> unlocked = new List<UnlockedTrophyInfo>();
@@ -56,6 +67,15 @@ namespace OurFoodChain.trophies {
             return unlocked.ToArray();
 
         }
+        public static async Task<Trophy> GetTrophyByIdentifierAsync(string identifier) {
+
+            foreach (Trophy trophy in await GetTrophiesAsync())
+                if (trophy.GetIdentifier() == identifier)
+                    return trophy;
+
+            return null;
+
+        }
         public static async Task SetUnlocked(ulong userId, Trophy trophy) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Trophies(user_id, trophy_name, timestamp) VALUES($user_id, $trophy_name, $timestamp);")) {
@@ -69,8 +89,13 @@ namespace OurFoodChain.trophies {
             }
 
         }
+        public static async Task<IReadOnlyCollection<Trophy>> GetTrophiesAsync() {
 
-        public static IReadOnlyCollection<Trophy> Trophies => _registry.AsReadOnly();
+            await InitializeAsync();
+
+            return _registry.AsReadOnly();
+
+        }
 
 
         private static List<Trophy> _registry = new List<Trophy>();

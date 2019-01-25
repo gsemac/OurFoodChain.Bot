@@ -13,6 +13,7 @@ namespace OurFoodChain.trophies {
             _name = name;
             _description = description;
             _checkUnlocked = checkUnlocked;
+            Secret = false;
 
         }
 
@@ -33,6 +34,8 @@ namespace OurFoodChain.trophies {
             return await _checkUnlocked(userId);
 
         }
+
+        public bool Secret { get; }
 
         private string _name;
         private string _description;

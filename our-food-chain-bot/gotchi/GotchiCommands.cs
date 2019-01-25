@@ -135,15 +135,11 @@ namespace OurFoodChain.gotchi {
 
         }
         [Command("get")]
-        public async Task Get(string genus, string species = "") {
-
-            if (string.IsNullOrEmpty(genus) && string.IsNullOrEmpty(species)) {
-
-                await BotUtils.ReplyAsync_Error(Context, "You must specify a species.");
-
-                return;
-
-            }
+        public async Task Get(string species) {
+            await Get("", species);
+        }
+        [Command("get")]
+        public async Task Get(string genus, string species) {
 
             // If the user already has a gotchi (and it's still alive!), don't let them make a new one.
 
@@ -168,11 +164,6 @@ namespace OurFoodChain.gotchi {
             }
 
             // Get the species that the user specified.
-
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
-            }
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 

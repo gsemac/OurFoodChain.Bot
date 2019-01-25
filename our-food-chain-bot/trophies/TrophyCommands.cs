@@ -161,7 +161,11 @@ namespace OurFoodChain.trophies {
 
             }
 
+            // #todo Show warning and do nothing if the user already has the trophy
+
             await TrophyRegistry.SetUnlocked(user.Id, t);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", t.GetName(), user.Username));
 
         }
         [Command("scantrophies")]
@@ -171,6 +175,8 @@ namespace OurFoodChain.trophies {
                 return;
 
             await TrophyScanner.AddToQueueAsync(Context, user.Id);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added user {0} to the trophy scanner queue.", user.Username));
 
         }
 

@@ -79,13 +79,30 @@ namespace OurFoodChain.trophies {
         }
         private static async Task _scanTrophiesAsync(ScannerQueueItem item) {
 
-            List<Trophy> unlocked = new List<Trophy>();
+            // Get the trophies the user has already unlocked so we don't pop trophies that have already been popped.
+
+            UnlockedTrophyInfo[] already_unlocked = await TrophyRegistry.GetUnlockedTrophiesAsync(item.userId);
+            HashSet<string> already_unlocked_identifiers = new HashSet<string>();
+
+            foreach (UnlockedTrophyInfo info in already_unlocked)
+                already_unlocked_identifiers.Add(info.identifier);
+
+            // Check for new trophies that the user has just unlocked.
+
+            List<Trophy> new_unlocked = new List<Trophy>();
 
             foreach (Trophy trophy in TrophyRegistry.Trophies)
-                if (await trophy.IsUnlocked(item.userId))
-                    unlocked.Add(trophy);
+                if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item.userId))
+                    new_unlocked.Add(trophy);
 
-            foreach (Trophy trophy in unlocked)
+            // Insert all new trophies into the database.
+
+            foreach (Trophy trophy in new_unlocked)
+                await TrophyRegistry.SetUnlocked(item.userId, trophy);
+
+            // Pop all newly-unlocked trophies.
+
+            foreach (Trophy trophy in new_unlocked)
                 await _popTrophyAsync(item, trophy);
 
         }

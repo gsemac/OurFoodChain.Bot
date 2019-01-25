@@ -19,6 +19,9 @@ namespace OurFoodChain.trophies {
         public string GetName() {
             return StringUtils.ToTitleCase(_name);
         }
+        public string GetIdentifier() {
+            return _name.ToLower().Replace(' ', '_');
+        }
         public string GetDescription() {
             return _description;
         }

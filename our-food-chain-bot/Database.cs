@@ -192,6 +192,8 @@ namespace OurFoodChain {
                     await _update010(conn);
                 if (version < 11)
                     await _update011(conn);
+                if (version < 12)
+                    await _update012(conn);
 
                 conn.Close();
 
@@ -351,6 +353,16 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 11);
+
+        }
+        private static async Task _update012(SQLiteConnection conn) {
+
+            // Initializes the Trophies table for storing records of earned trophies.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Trophies(user_id INTEGER, trophy_name TEXT, timestamp INTEGER, UNIQUE(user_id, trophy_name));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 12);
 
         }
 

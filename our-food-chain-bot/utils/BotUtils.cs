@@ -816,7 +816,9 @@ namespace OurFoodChain {
                 cmd.Parameters.AddWithValue("$description", taxon.description);
                 cmd.Parameters.AddWithValue("$pics", taxon.pics);
                 cmd.Parameters.AddWithValue("$id", taxon.id);
-                cmd.Parameters.AddWithValue("$common_name", taxon.common_name.ToLower());
+
+                // Because this field was added in a database update, it's possible for it to be null rather than the empty string.
+                cmd.Parameters.AddWithValue("$common_name", string.IsNullOrEmpty(taxon.common_name) ? "" : taxon.common_name.ToLower());
 
                 if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id != -1) {
                     cmd.Parameters.AddWithValue("$parent_column_name", parent_column_name);

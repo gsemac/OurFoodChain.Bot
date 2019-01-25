@@ -28,13 +28,13 @@ namespace OurFoodChain {
 
         }
 
-        public long id;
-        public long parent_id; // For genera, this is the family_id, etc.
-        public string name;
-        public string common_name;
-        public string description;
-        public string pics;
-        public TaxonType type;
+        public long id = -1;
+        public long parent_id = -1; // For genera, this is the family_id, etc.
+        public string name = "";
+        public string common_name = "";
+        public string description = "";
+        public string pics = "";
+        public TaxonType type = 0;
 
         public string GetName() {
 

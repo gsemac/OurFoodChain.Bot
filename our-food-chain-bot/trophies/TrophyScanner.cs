@@ -20,6 +20,11 @@ namespace OurFoodChain.trophies {
 
         public static async Task AddToQueueAsync(ICommandContext context, ulong userId) {
 
+            // If the user already exists in the queue, don't add them again.
+            foreach (ScannerQueueItem item in _scan_queue)
+                if (item.userId == userId)
+                    return;
+
             // Add the user to the scanner queue.
             _scan_queue.Enqueue(new ScannerQueueItem {
                 context = context,
@@ -36,7 +41,7 @@ namespace OurFoodChain.trophies {
         }
 
         // The scan delay is how long to wait before scanning trophies for the next user in the queue.
-        private const long SCAN_DELAY = 0; // 5 minutes
+        private const long SCAN_DELAY = 60 * 5; // 5 minutes
         private static ConcurrentQueue<ScannerQueueItem> _scan_queue = new ConcurrentQueue<ScannerQueueItem>();
         private static bool _scanner_running = false;
 

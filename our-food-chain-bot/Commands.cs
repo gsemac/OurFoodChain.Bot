@@ -556,6 +556,9 @@ namespace OurFoodChain {
             // Add to all given zones.
             await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: true);
 
+            // Add the user to the trophy scanner queue in case their species earned them any new trophies.
+            await trophies.TrophyScanner.AddToQueueAsync(Context, Context.User.Id);
+
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
         }
@@ -1276,6 +1279,9 @@ namespace OurFoodChain {
                 await Database.ExecuteNonQuery(cmd);
 
             }
+
+            // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
+            await trophies.TrophyScanner.AddToQueueAsync(Context, user.Id);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", sp.GetShortName(), owner));
 

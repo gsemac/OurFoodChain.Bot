@@ -294,6 +294,18 @@ namespace OurFoodChain {
             return (await GetSpeciesFromDb(genus, species)).Count() > 0;
 
         }
+        public static async Task<Zone[]> GetZonesFromDb() {
+
+            List<Zone> zones = new List<Zone>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones;"))
+            using (DataTable rows = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in rows.Rows)
+                    zones.Add(Zone.FromDataRow(row));
+
+            return zones.ToArray();
+
+        }
         public static async Task<Zone[]> GetZonesFromDb(long speciesId) {
 
             List<Zone> zones = new List<Zone>();

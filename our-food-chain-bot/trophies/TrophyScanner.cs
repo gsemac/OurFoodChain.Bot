@@ -12,6 +12,12 @@ namespace OurFoodChain.trophies {
 
     public class TrophyScanner {
 
+        public class ScannerQueueItem {
+            public ICommandContext context;
+            public ulong userId;
+            public long timestamp;
+        }
+
         public static async Task AddToQueueAsync(ICommandContext context, ulong userId) {
 
             // Add the user to the scanner queue.
@@ -27,13 +33,6 @@ namespace OurFoodChain.trophies {
             // Since there's something in the queue, start the trophy scanner (nothing will happen if it's already active).
             _startScanner();
 
-        }
-
-
-        private class ScannerQueueItem {
-            public ICommandContext context;
-            public ulong userId;
-            public long timestamp;
         }
 
         // The scan delay is how long to wait before scanning trophies for the next user in the queue.
@@ -90,7 +89,7 @@ namespace OurFoodChain.trophies {
             // Check for new trophies that the user has just unlocked.
 
             foreach (Trophy trophy in await TrophyRegistry.GetTrophiesAsync())
-                if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item.userId)) {
+                if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item)) {
 
                     // Insert new trophy into the database.
                     await TrophyRegistry.SetUnlocked(item.userId, trophy);

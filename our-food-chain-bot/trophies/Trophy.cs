@@ -6,40 +6,53 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.trophies {
 
+    public enum TrophyFlags {
+        Hidden = 1,
+        OneTime = 2
+    }
+
     public class Trophy {
 
-        public Trophy(string name, string description, Func<ulong, Task<bool>> checkUnlocked) {
+        public Trophy(string name, string description, Func<TrophyScanner.ScannerQueueItem, Task<bool>> checkUnlocked) {
 
-            _name = name;
+            this.name = name;
             _description = description;
             _checkUnlocked = checkUnlocked;
-            Secret = false;
+            Flags = 0;
+
+        }
+        public Trophy(string name, string description, TrophyFlags flags, Func<TrophyScanner.ScannerQueueItem, Task<bool>> checkUnlocked) :
+            this(name, description, checkUnlocked) {
+
+            Flags = flags;
 
         }
 
         public string GetName() {
-            return StringUtils.ToTitleCase(_name);
+            return StringUtils.ToTitleCase(name);
         }
         public string GetIdentifier() {
-            return _name.ToLower().Replace(' ', '_');
+            return name.ToLower().Replace(' ', '_');
         }
         public string GetDescription() {
             return _description;
         }
-        public async Task<bool> IsUnlocked(ulong userId) {
+        public async Task<bool> IsUnlocked(TrophyScanner.ScannerQueueItem item) {
 
             if (_checkUnlocked is null)
                 return false;
 
-            return await _checkUnlocked(userId);
+            return await _checkUnlocked(item);
 
         }
 
-        public bool Secret { get; }
+        public TrophyFlags Flags { get; }
 
-        private string _name;
+        public string name;
+
+
         private string _description;
-        private Func<ulong, Task<bool>> _checkUnlocked;
+        private Func<TrophyScanner.ScannerQueueItem, Task<bool>> _checkUnlocked;
 
     }
 

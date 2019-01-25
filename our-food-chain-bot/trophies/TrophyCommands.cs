@@ -53,7 +53,7 @@ namespace OurFoodChain.trophies {
 
             int total_users = (await Context.Guild.GetUsersAsync()).Count;
             int total_trophies = (await TrophyRegistry.GetTrophiesAsync()).Count;
-            int trophies_per_page = 25;
+            int trophies_per_page = 8;
             int total_pages = (int)Math.Ceiling((float)total_trophies / trophies_per_page);
             int current_page = 0;
             int current_page_trophy_count = 0;
@@ -75,9 +75,15 @@ namespace OurFoodChain.trophies {
                 }
 
                 long times_unlocked = await TrophyRegistry.GetTimesUnlocked(trophy);
-                string description = trophy.Secret ? "This is a secret trophy." : trophy.GetDescription();
+                string description = trophy.Flags.HasFlag(TrophyFlags.Hidden) ? "_This is a hidden trophy. Unlock it for details!_" : trophy.GetDescription();
+                string icon = "🏆";
 
-                embed.AddField(string.Format("🏆 **{0}** ({1:0.##}%)", trophy.GetName(), 100.0 * times_unlocked / total_users), description);
+                if (trophy.Flags.HasFlag(TrophyFlags.OneTime))
+                    icon = "🥇";
+                else if (trophy.Flags.HasFlag(TrophyFlags.Hidden))
+                    icon = "❓";
+
+                embed.AddField(string.Format("{0} **{1}** ({2:0.##}%)", icon, trophy.name, 100.0 * times_unlocked / total_users), description);
 
                 ++current_page_trophy_count;
 
@@ -106,8 +112,8 @@ namespace OurFoodChain.trophies {
 
             Trophy trophy = null;
 
-            foreach(Trophy t in await TrophyRegistry.GetTrophiesAsync())
-                if(t.GetName().ToLower() == name.ToLower()) {
+            foreach (Trophy t in await TrophyRegistry.GetTrophiesAsync())
+                if (t.GetName().ToLower() == name.ToLower()) {
 
                     trophy = t;
 
@@ -117,7 +123,7 @@ namespace OurFoodChain.trophies {
 
             // If no such trophy exists, return an error.
 
-            if(trophy is null) {
+            if (trophy is null) {
 
                 await BotUtils.ReplyAsync_Error(Context, "No such trophy exists.");
 
@@ -132,7 +138,7 @@ namespace OurFoodChain.trophies {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle(string.Format("🏆 {0} ({1:0.##}%)", trophy.GetName(), 100.0 * times_unlocked / total_users));
-            embed.WithDescription(trophy.Secret && times_unlocked <= 0 ? "This is a secret trophy." : trophy.GetDescription());
+            embed.WithDescription(trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0 ? "This is a secret trophy." : trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 
             await ReplyAsync("", false, embed.Build());

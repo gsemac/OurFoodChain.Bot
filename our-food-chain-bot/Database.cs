@@ -194,6 +194,8 @@ namespace OurFoodChain {
                     await _update011(conn);
                 if (version < 12)
                     await _update012(conn);
+                if (version < 13)
+                    await _update013(conn);
 
                 conn.Close();
 
@@ -363,6 +365,32 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 12);
+
+        }
+        private static async Task _update013(SQLiteConnection conn) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Genus ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Family ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Ord ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Class ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Phylum ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Kingdom ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Domain ADD COLUMN common_name TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 13);
 
         }
 

@@ -808,7 +808,7 @@ namespace OurFoodChain {
 
 
             using (SQLiteCommand cmd = new SQLiteCommand(string.Format(
-                "UPDATE {0} SET name=$name, description=$description, pics=$pics{1} WHERE id=$id;",
+                "UPDATE {0} SET name=$name, description=$description, pics=$pics{1}, common_name=$common_name WHERE id=$id;",
                 table_name,
                 update_parent_column_name_str))) {
 
@@ -816,6 +816,7 @@ namespace OurFoodChain {
                 cmd.Parameters.AddWithValue("$description", taxon.description);
                 cmd.Parameters.AddWithValue("$pics", taxon.pics);
                 cmd.Parameters.AddWithValue("$id", taxon.id);
+                cmd.Parameters.AddWithValue("$common_name", taxon.common_name.ToLower());
 
                 if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id != -1) {
                     cmd.Parameters.AddWithValue("$parent_column_name", parent_column_name);
@@ -1243,6 +1244,7 @@ namespace OurFoodChain {
                         continue;
 
                     taxon_description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
+
                     ++taxon_count;
 
                 }
@@ -1268,7 +1270,7 @@ namespace OurFoodChain {
                 Taxon[] sub_taxa = await GetSubTaxaFromDb(taxon);
 
                 EmbedBuilder embed = new EmbedBuilder();
-                embed.WithTitle(taxon.GetName());
+                embed.WithTitle(string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
                 embed.WithThumbnailUrl(taxon.pics);
 
                 StringBuilder description = new StringBuilder();
@@ -1387,6 +1389,24 @@ namespace OurFoodChain {
             await ReplyAsync_Success(context, string.Format("Successfully updated description for {0} **{1}**.",
                 Taxon.TypeToName(type),
                 taxon.GetName()
+                ));
+
+        }
+        public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonType type, string name, string commonName) {
+
+            Taxon taxon = await GetTaxonFromDb(name, type);
+
+            if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
+                return;
+
+            taxon.common_name = commonName;
+
+            await UpdateTaxonInDb(taxon, type);
+
+            await ReplyAsync_Success(context, string.Format("Members of the {0} **{1}** are now commonly known as **{2}**.",
+                Taxon.TypeToName(type),
+                taxon.GetName(),
+                taxon.GetCommonName()
                 ));
 
         }

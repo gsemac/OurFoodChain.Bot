@@ -31,6 +31,7 @@ namespace OurFoodChain {
         public long id;
         public long parent_id; // For genera, this is the family_id, etc.
         public string name;
+        public string common_name;
         public string description;
         public string pics;
         public TaxonType type;
@@ -39,6 +40,9 @@ namespace OurFoodChain {
 
             return StringUtils.ToTitleCase(name);
 
+        }
+        public string GetCommonName() {
+            return StringUtils.ToTitleCase(common_name);
         }
         public string GetTypeName(bool plural = false) {
             return TypeToName(type);
@@ -63,6 +67,7 @@ namespace OurFoodChain {
             Taxon taxon = new Taxon(type) {
                 id = row.Field<long>("id"),
                 name = row.Field<string>("name"),
+                common_name = row.Field<string>("common_name"),
                 description = row.Field<string>("description"),
                 pics = row.Field<string>("pics")
             };

@@ -1604,6 +1604,10 @@ namespace OurFoodChain {
         public async Task SetFamilyDesc(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name, description);
         }
+        [Command("setfamilycommonname"), Alias("setfamilycommon", "setfcommon")]
+        public async Task SetFamilyCommon(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Family, name, commonName);
+        }
 
         [Command("order"), Alias("o", "orders")]
         public async Task Order(string name = "") {
@@ -1620,6 +1624,10 @@ namespace OurFoodChain {
         [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
         public async Task SetOrderDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Order, name, description);
+        }
+        [Command("setordercommonname"), Alias("setordercommon", "setocommon")]
+        public async Task SetOrderCommon(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Order, name, commonName);
         }
 
         [Command("class"), Alias("c", "classes")]
@@ -1638,6 +1646,10 @@ namespace OurFoodChain {
         public async Task SetClassDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Class, name, description);
         }
+        [Command("setclasscommonname"), Alias("setclasscommon", "setccommon")]
+        public async Task SetClassCommon(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Class, name, commonName);
+        }
 
         [Command("phylum"), Alias("p", "phyla")]
         public async Task Phylum(string name = "") {
@@ -1654,6 +1666,10 @@ namespace OurFoodChain {
         [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
         public async Task SetPhylumDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Phylum, name, description);
+        }
+        [Command("setphylumcommonname"), Alias("setphylumcommon", "setpcommon")]
+        public async Task SetPhylumCommon(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Phylum, name, commonName);
         }
 
         [Command("kingdom"), Alias("k", "kingdoms")]
@@ -1672,6 +1688,10 @@ namespace OurFoodChain {
         public async Task SetKingdomDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Kingdom, name, description);
         }
+        [Command("setkingdomcommonname"), Alias("setkingdomcommon", "setkcommon")]
+        public async Task SetKingdomCommon(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Kingdom, name, commonName);
+        }
 
         [Command("domain"), Alias("d", "domains")]
         public async Task Domain(string name = "") {
@@ -1688,6 +1708,10 @@ namespace OurFoodChain {
         [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
         public async Task SetDomainDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Domain, name, description);
+        }
+        [Command("setdomaincommonname"), Alias("setdomaincommon", "setdcommon")]
+        public async Task SetDomainCommon(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Domain, name, commonName);
         }
 
         [Command("addedby"), Alias("ownedby")]

@@ -171,11 +171,10 @@ namespace OurFoodChain.trophies {
         [Command("scantrophies")]
         public async Task ScanTrophies(IGuildUser user = null) {
 
-            //if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, user, PrivilegeLevel.Moderator))
-            //    return;
-
             if (user is null)
                 user = (IGuildUser)Context.User;
+            else if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, user, PrivilegeLevel.Moderator)) // Mod privileges are required to scan someone else's trophies
+                return;
 
             await TrophyScanner.AddToQueueAsync(Context, user.Id, TrophyScanner.NO_DELAY);
 

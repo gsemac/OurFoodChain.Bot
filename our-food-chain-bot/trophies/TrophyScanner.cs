@@ -114,7 +114,7 @@ namespace OurFoodChain.trophies {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle(string.Format("🏆 Trophy unlocked!"));
-            embed.WithDescription(string.Format("Congratulations {0}! You've earned the **{1}** trophy.", item.context.User.Mention, trophy.GetName()));
+            embed.WithDescription(string.Format("Congratulations {0}! You've earned the **{1}** trophy.", item.context.Guild.GetUserAsync(item.userId), trophy.GetName()));
             embed.WithFooter(trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 

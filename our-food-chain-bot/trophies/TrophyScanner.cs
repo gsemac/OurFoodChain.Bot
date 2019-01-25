@@ -12,6 +12,8 @@ namespace OurFoodChain.trophies {
 
     public class TrophyScanner {
 
+        public const long NO_DELAY = 0;
+
         public class ScannerQueueItem {
             public ICommandContext context;
             public ulong userId;
@@ -19,6 +21,9 @@ namespace OurFoodChain.trophies {
         }
 
         public static async Task AddToQueueAsync(ICommandContext context, ulong userId) {
+            await AddToQueueAsync(context, userId, DateTimeOffset.Now.ToUnixTimeSeconds());
+        }
+        public static async Task AddToQueueAsync(ICommandContext context, ulong userId, long timestamp) {
 
             // If the user already exists in the queue, don't add them again.
             foreach (ScannerQueueItem item in _scan_queue)
@@ -29,7 +34,7 @@ namespace OurFoodChain.trophies {
             _scan_queue.Enqueue(new ScannerQueueItem {
                 context = context,
                 userId = userId,
-                timestamp = DateTimeOffset.Now.ToUnixTimeSeconds()
+                timestamp = timestamp
             });
 
             // Initialize the trophy registry (nothing will happen if it's already initialized).

@@ -153,7 +153,7 @@ namespace OurFoodChain.trophies {
 
             Trophy t = await TrophyRegistry.GetTrophyByNameAsync(trophy);
 
-            if (trophy is null) {
+            if (t is null) {
 
                 await BotUtils.ReplyAsync_Error(Context, "No such trophy exists.");
 
@@ -165,18 +165,21 @@ namespace OurFoodChain.trophies {
 
             await TrophyRegistry.SetUnlocked(user.Id, t);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", t.GetName(), user.Username));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", t.GetName(), user.Mention));
 
         }
         [Command("scantrophies")]
-        public async Task ScanTrophies(IGuildUser user) {
+        public async Task ScanTrophies(IGuildUser user = null) {
 
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, user, PrivilegeLevel.Moderator))
-                return;
+            //if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, user, PrivilegeLevel.Moderator))
+            //    return;
 
-            await TrophyScanner.AddToQueueAsync(Context, user.Id);
+            if (user is null)
+                user = (IGuildUser)Context.User;
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added user {0} to the trophy scanner queue.", user.Username));
+            await TrophyScanner.AddToQueueAsync(Context, user.Id, TrophyScanner.NO_DELAY);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added user **{0}** to the trophy scanner queue.", user.Username));
 
         }
 

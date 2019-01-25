@@ -1,0 +1,10 @@
+﻿{
+  "name": "awardtrophy",
+  "aliases": [ "award", "awardachievement" ],
+  "category": "fun",
+  "description": "Awards a trophy to the given user.",
+  "examples": [
+    "awardtrophy <user> <trophy>",
+    "awardtrophy username \"heating up\""
+  ]
+}

@@ -92,6 +92,7 @@ namespace OurFoodChain {
             public string playing;
             public ulong scratch_server;
             public ulong scratch_channel;
+            public ulong[] mod_role_ids;
         }
 
         public static OurFoodChainBot GetInstance() {

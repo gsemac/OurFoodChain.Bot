@@ -1209,6 +1209,16 @@ namespace OurFoodChain {
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
+        public static async Task<bool> ReplyAsync_CheckPrivilege(ICommandContext context, IGuildUser user, PrivilegeLevel level) {
+
+            if (CommandUtils.CheckPrivilege(context, user, level))
+                return true;
+
+            await ReplyAsync_Error(context, "You do not have the necessary privileges to use this command.");
+
+            return false;
+
+        }
 
         public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type, string name) {
 

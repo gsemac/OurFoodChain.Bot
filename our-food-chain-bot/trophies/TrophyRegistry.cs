@@ -77,6 +77,15 @@ namespace OurFoodChain.trophies {
             return null;
 
         }
+        public static async Task<Trophy> GetTrophyByNameAsync(string name) {
+
+            foreach (Trophy trophy in await GetTrophiesAsync())
+                if (trophy.name.ToLower() == name.ToLower())
+                    return trophy;
+
+            return null;
+
+        }
         public static async Task SetUnlocked(ulong userId, Trophy trophy) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Trophies(user_id, trophy_name, timestamp) VALUES($user_id, $trophy_name, $timestamp);")) {
@@ -185,7 +194,7 @@ namespace OurFoodChain.trophies {
 
             foreach (Zone zone in zones) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesZones WHERE zone_id=$zone_id AND species_id IN (SELECT species_id FROM Species WHERE owner=$owner);")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesZones WHERE zone_id=$zone_id AND species_id IN (SELECT id FROM Species WHERE owner=$owner);")) {
 
                     cmd.Parameters.AddWithValue("$zone_id", zone.id);
                     cmd.Parameters.AddWithValue("$owner", username);
@@ -222,7 +231,7 @@ namespace OurFoodChain.trophies {
             string username = item.context.User.Username;
             bool unlocked = false;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner=$owner AND id IN (SELECT species_id FROM SpeciesZones WHERE zone_id IN (SELECT zone_id FROM Zones WHERE type=$type;))")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner=$owner AND id IN (SELECT species_id FROM SpeciesZones WHERE zone_id IN (SELECT id FROM Zones WHERE type=$type))")) {
 
                 cmd.Parameters.AddWithValue("$owner", username);
                 cmd.Parameters.AddWithValue("$type", type_string);

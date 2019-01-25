@@ -4,5 +4,6 @@
   "prefix": "?",
   "playing": "",
   "scratch_server": -1,
-  "scratch_channel": -1
+  "scratch_channel": -1,
+  "mod_role_ids": []
 }

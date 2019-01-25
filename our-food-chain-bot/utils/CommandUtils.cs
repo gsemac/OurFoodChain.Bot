@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
+    public enum PrivilegeLevel {
+        Moderator
+    }
+
     class CommandUtils {
 
         public class PaginatedMessage {
@@ -91,6 +95,20 @@ namespace OurFoodChain {
 
             if (index_prev != message.index)
                 await cached.DownloadAsync().Result.ModifyAsync(msg => msg.Embed = message.pages[message.index]);
+
+        }
+
+        public static bool CheckPrivilege(ICommandContext context, IGuildUser user, PrivilegeLevel level) {
+        
+            if (level == PrivilegeLevel.Moderator) {
+
+                foreach (ulong id in OurFoodChainBot.GetInstance().GetConfig().mod_role_ids)
+                    if (user.RoleIds.Contains(id))
+                        return true;
+
+            }
+
+            return false;
 
         }
 

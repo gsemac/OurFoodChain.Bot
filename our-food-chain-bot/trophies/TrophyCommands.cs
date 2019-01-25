@@ -145,6 +145,34 @@ namespace OurFoodChain.trophies {
 
         }
 
+        [Command("awardtrophy"), Alias("award", "awardachievement")]
+        public async Task AwardTrophy(IGuildUser user, string trophy) {
+
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, user, PrivilegeLevel.Moderator))
+                return;
+
+            Trophy t = await TrophyRegistry.GetTrophyByNameAsync(trophy);
+
+            if (trophy is null) {
+
+                await BotUtils.ReplyAsync_Error(Context, "No such trophy exists.");
+
+                return;
+
+            }
+
+            await TrophyRegistry.SetUnlocked(user.Id, t);
+
+        }
+        [Command("scantrophies")]
+        public async Task ScanTrophies(IGuildUser user) {
+
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, user, PrivilegeLevel.Moderator))
+                return;
+
+            await TrophyScanner.AddToQueueAsync(Context, user.Id);
+
+        }
 
     }
 

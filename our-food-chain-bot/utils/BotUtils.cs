@@ -35,6 +35,7 @@ namespace OurFoodChain {
         public string name;
         public string description;
         public ZoneType type;
+        public string pics;
 
         public static Zone FromDataRow(DataRow row) {
 
@@ -42,6 +43,13 @@ namespace OurFoodChain {
             zone.id = row.Field<long>("id");
             zone.name = StringUtils.ToTitleCase(row.Field<string>("name"));
             zone.description = row.Field<string>("description");
+            zone.pics = row.Field<string>("pics");
+
+            // Since the "pics" column was added later, it may be null for some zones.
+            // To prevent issues witha accessing a null string, replace it with the empty string.
+
+            if (string.IsNullOrEmpty(zone.pics))
+                zone.pics = "";
 
             switch (row.Field<string>("type")) {
                 case "aquatic":

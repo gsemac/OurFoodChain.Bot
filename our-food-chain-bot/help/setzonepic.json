@@ -1,0 +1,9 @@
+﻿{
+  "name": "setzonepic",
+  "aliases": [],
+  "category": "update",
+  "description": "Sets the picture for the given zone.",
+  "examples": [
+    "setzonepic 4 https://website.com/image.jpg"
+  ]
+}

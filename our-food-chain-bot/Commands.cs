@@ -745,6 +745,7 @@ namespace OurFoodChain {
                 embed1.WithTitle(title);
                 embed1.WithDescription(description);
                 embed1.WithColor(color);
+                embed1.WithThumbnailUrl(zone.pics);
 
                 // Get all species living in this zone.
 
@@ -772,6 +773,7 @@ namespace OurFoodChain {
                 embed2.WithTitle(title);
                 embed2.WithDescription(description);
                 embed2.WithColor(color);
+                embed1.WithThumbnailUrl(zone.pics);
 
                 Dictionary<string, List<Species>> roles_map = new Dictionary<string, List<Species>>();
 
@@ -1220,6 +1222,36 @@ namespace OurFoodChain {
 
             // Add new zone information for the species.
             await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: false);
+
+        }
+
+        [Command("setzonepic")]
+        public async Task SetZonePic(string zone, string imageUrl) {
+
+            // Make sure that the given zone exists.
+
+            Zone z = await BotUtils.GetZoneFromDb(zone);
+
+            if (!await BotUtils.ReplyAsync_ValidateZone(Context, z))
+                return;
+
+            // Make sure the image URL is valid.
+
+            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+                return;
+
+            // Update the zone.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET pics=$pics WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$pics", imageUrl);
+                cmd.Parameters.AddWithValue("$id", z.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the picture for **{0}**.", z.GetFullName()));
 
         }
 

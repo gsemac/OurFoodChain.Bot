@@ -226,6 +226,7 @@
     <None Include="help\setgenus.json" />
     <None Include="help\setgenuspic.json" />
     <None Include="help\setspecies.json" />
+    <None Include="help\setzonepic.json" />
     <None Include="help\species.json" />
     <None Include="help\map.json" />
     <None Include="help\setancestor.json" />

@@ -196,6 +196,8 @@ namespace OurFoodChain {
                     await _update012(conn);
                 if (version < 13)
                     await _update013(conn);
+                if (version < 14)
+                    await _update014(conn);
 
                 conn.Close();
 
@@ -391,6 +393,16 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 13);
+
+        }
+        private static async Task _update014(SQLiteConnection conn) {
+
+            // Adds support for zone pictures.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Zones ADD COLUMN pics TEXT;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 14);
 
         }
 

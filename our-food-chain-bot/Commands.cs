@@ -439,13 +439,14 @@ namespace OurFoodChain {
             await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, message);
 
         }
+
         [Command("+pic")]
         public async Task PlusPic(string species, string imageUrl) {
             await PlusPic("", species, imageUrl, "");
         }
         [Command("+pic")]
-        public async Task PlusPic(string species, string imageUrl, string description) {
-            await PlusPic("", species, imageUrl, description);
+        public async Task PlusPic(string genus, string species, string imageUrl) {
+            await PlusPic(genus, species, imageUrl, "");
         }
         [Command("+pic")]
         public async Task PlusPic(string genus, string species, string imageUrl, string description) {

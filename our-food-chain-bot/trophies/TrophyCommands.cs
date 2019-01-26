@@ -36,7 +36,8 @@ namespace OurFoodChain.trophies {
                 if (trophy is null)
                     continue;
 
-                description_builder.AppendLine(string.Format("🏆 **{0}** - Earned {1} ({2:0.##}%)",
+                description_builder.AppendLine(string.Format("{0} **{1}** - Earned {2} ({3:0.##}%)",
+                   trophy.GetIcon(),
                    trophy.GetName(),
                    BotUtils.GetTimeStampAsDateString(info.timestamp),
                    100.0 * info.timesUnlocked / total_users
@@ -77,15 +78,26 @@ namespace OurFoodChain.trophies {
                 }
 
                 long times_unlocked = await TrophyRegistry.GetTimesUnlocked(trophy);
-                string description = trophy.Flags.HasFlag(TrophyFlags.Hidden) ? "_This is a hidden trophy. Unlock it for details!_" : trophy.GetDescription();
-                string icon = "🏆";
+                string description = (trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0) ? string.Format("_{0}_", trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION) : trophy.GetDescription();
 
-                if (trophy.Flags.HasFlag(TrophyFlags.OneTime))
-                    icon = "🥇";
-                else if (trophy.Flags.HasFlag(TrophyFlags.Hidden))
-                    icon = "❓";
+                // If this was a first-time trophy, show who unlocked it.
 
-                embed.AddField(string.Format("{0} **{1}** ({2:0.##}%)", icon, trophy.name, 100.0 * times_unlocked / total_users), description);
+                if (trophy.Flags.HasFlag(TrophyFlags.OneTime) && times_unlocked > 0) {
+
+                    ulong[] user_ids = await TrophyRegistry.GetUsersUnlocked(trophy);
+
+                    if (user_ids.Count() > 0) {
+
+                        IGuildUser user = await Context.Guild.GetUserAsync(user_ids.First());
+
+                        if (!(user is null))
+                            description += string.Format(" (unlocked by {0})", user.Mention);
+
+                    }
+
+                }
+
+                embed.AddField(string.Format("{0} **{1}** ({2:0.##}%)", trophy.GetIcon(), trophy.name, 100.0 * times_unlocked / total_users), description);
 
                 ++current_page_trophy_count;
 
@@ -139,8 +151,8 @@ namespace OurFoodChain.trophies {
             long times_unlocked = await TrophyRegistry.GetTimesUnlocked(trophy);
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("🏆 {0} ({1:0.##}%)", trophy.GetName(), 100.0 * times_unlocked / total_users));
-            embed.WithDescription(trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0 ? "This is a secret trophy." : trophy.GetDescription());
+            embed.WithTitle(string.Format("{0} {1} ({2:0.##}%)", trophy.GetIcon(), trophy.GetName(), 100.0 * times_unlocked / total_users));
+            embed.WithDescription(trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0 ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 
             await ReplyAsync("", false, embed.Build());

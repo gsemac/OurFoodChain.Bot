@@ -13,6 +13,8 @@ namespace OurFoodChain.trophies {
 
     public class Trophy {
 
+        public const string HIDDEN_TROPHY_DESCRIPTION = "This is a hidden trophy. Unlock it for details!";
+
         public Trophy(string name, string description, Func<TrophyScanner.ScannerQueueItem, Task<bool>> checkUnlocked) {
 
             this.name = name;
@@ -36,6 +38,18 @@ namespace OurFoodChain.trophies {
         }
         public string GetDescription() {
             return _description;
+        }
+        public string GetIcon() {
+
+            string icon = "🏆";
+
+            if (Flags.HasFlag(TrophyFlags.OneTime))
+                icon = "🥇";
+            else if (Flags.HasFlag(TrophyFlags.Hidden))
+                icon = "❓";
+
+            return icon;
+
         }
         public async Task<bool> IsUnlocked(TrophyScanner.ScannerQueueItem item) {
 

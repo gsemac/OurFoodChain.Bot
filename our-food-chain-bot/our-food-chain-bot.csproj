@@ -222,6 +222,7 @@
     <None Include="help\family.json" />
     <None Include="help\genus.json" />
     <None Include="help\help.json" />
+    <None Include="help\setfamilycommonname.json" />
     <None Include="help\setgenus.json" />
     <None Include="help\setgenuspic.json" />
     <None Include="help\setspecies.json" />

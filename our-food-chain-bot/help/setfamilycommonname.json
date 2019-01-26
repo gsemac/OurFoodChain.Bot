@@ -1,0 +1,12 @@
+﻿{
+  "name": "setfamilycommonname",
+  "aliases": [
+    "setfamilycommon",
+    "setfcommon"
+  ],
+  "category": "update",
+  "description": "Sets the common name for the given family.",
+  "examples": [
+    "setfamilycommonname helidae \"swirly stars\""
+  ]
+}

@@ -81,7 +81,7 @@ namespace OurFoodChain.trophies {
                 // When we've processed all users in the queue, shut down the scanner.
                 _scanner_running = false;
 
-                await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Trophies", "Shutting down trophy scanner");
+                await OurFoodChainBot.GetInstance().Log(LogSeverity.Info, "Trophies", "Shutting down trophy scanner");
 
             });
 
@@ -99,15 +99,22 @@ namespace OurFoodChain.trophies {
             // Check for new trophies that the user has just unlocked.
 
             foreach (Trophy trophy in await TrophyRegistry.GetTrophiesAsync())
-                if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item)) {
 
-                    // Insert new trophy into the database.
-                    await TrophyRegistry.SetUnlocked(item.userId, trophy);
+                try {
 
-                    // Pop the new trophy.
-                    await _popTrophyAsync(item, trophy);
+                    if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item)) {
+
+                        // Insert new trophy into the database.
+                        await TrophyRegistry.SetUnlocked(item.userId, trophy);
+
+                        // Pop the new trophy.
+                        await _popTrophyAsync(item, trophy);
+
+                    }
 
                 }
+                // If an error occurs when checking a trophy, we'll just move on to the next one.
+                catch (Exception) { }
 
         }
         private static async Task _popTrophyAsync(ScannerQueueItem item, Trophy trophy) {

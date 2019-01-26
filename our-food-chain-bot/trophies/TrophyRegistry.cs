@@ -124,22 +124,19 @@ namespace OurFoodChain.trophies {
             _registry.Add(new Trophy("Heating Up", "Create a species that lives within a zone with a warm climate.", _checkTrophy_heatingUp));
             _registry.Add(new Trophy("Atlantean", "Create a species that lives in water.", _checkTrophy_atlantean));
             _registry.Add(new Trophy("Kiss The Ground", "Create a species that lives on land.", _checkTrophy_kissTheGround));
-
-            // Not yet automatically detected
-
-            _registry.Add(new Trophy("Best of Both Worlds", "Create an amphibious species.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Hunter", "Create a carnivorous species.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Pacifist", "Create a herbivorous species.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Basics", "Create a producer species.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Death Brings Life", "Create a species that thrives off dead organisms.", _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("Best of Both Worlds", "Create an amphibious species.", _checkTrophy_bestOfBothWorlds));
+            _registry.Add(new Trophy("Hunter", "Create a carnivorous species.", _checkTrophy_hunter));
+            _registry.Add(new Trophy("Pacifist", "Create a herbivorous species.", _checkTrophy_pacifist));
+            _registry.Add(new Trophy("Basics", "Create a producer species.", _checkTrophy_basics));
+            _registry.Add(new Trophy("Death Brings Life", "Create a species that thrives off dead organisms.", _checkTrophy_deathBringsLife));
             _registry.Add(new Trophy("Communism", "Create a species that is eusocial.", TrophyFlags.Hidden, _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("All Mine", "Create a species that parasitic.", _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("All Mine", "Create a species that parasitic.", _checkTrophy_allMine));
             _registry.Add(new Trophy("Together", "Create a species that benefits from mutualism or is eusocial.", TrophyFlags.Hidden, _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Scrap That", "Create an evolution to your own species.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Lift Off", "Create a species that can fly.", TrophyFlags.Hidden, _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Trademarked", "Create a new genus.", _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("Scrap That", "Create an evolution to your own species.", _checkTrophy_scrapThat));
+            _registry.Add(new Trophy("Lift Off", "Create a species that can fly.", TrophyFlags.Hidden, _checkTrophy_liftOff));
+            _registry.Add(new Trophy("Trademarked", "Create a new genus.", _checkTrophy_trademarked));
             _registry.Add(new Trophy("Mad Scientist", "Create a species that uses chemical defense.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Beneath You", "Create a species that burrows or tunnels.", _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("Beneath You", "Create a species that burrows or tunnels.", _checkTrophy_beneathYou));
             _registry.Add(new Trophy("Outcast", "Create a species that has a change drastic enough to make it barely stay within its predecessors genus.", _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Centi", "Create a species that has more than 10 legs.", _checkTrophy_Placeholder));
 
@@ -165,7 +162,7 @@ namespace OurFoodChain.trophies {
 
         }
 
-        private static async Task<bool> _checkTrophy_Placeholder(TrophyScanner.ScannerQueueItem item) { return false; }
+        private static async Task<bool> _checkTrophy_Placeholder(TrophyScanner.ScannerQueueItem item) { return await Task.FromResult(false); }
         private static async Task<bool> _checkTrophy_polarPower(TrophyScanner.ScannerQueueItem item) {
             return await _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(item, "frigid|arctic|cold");
         }
@@ -178,7 +175,82 @@ namespace OurFoodChain.trophies {
         private static async Task<bool> _checkTrophy_kissTheGround(TrophyScanner.ScannerQueueItem item) {
             return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, ZoneType.Terrestrial);
         }
+        private static async Task<bool> _checkTrophy_bestOfBothWorlds(TrophyScanner.ScannerQueueItem item) {
 
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner 
+                AND id IN(SELECT species_id FROM SpeciesZones WHERE zone_id IN(SELECT id FROM Zones WHERE type =""aquatic""))
+                AND id IN(SELECT species_id FROM SpeciesZones WHERE zone_id IN(SELECT id FROM Zones WHERE type =""terrestrial""))");
+
+        }
+        private static async Task<bool> _checkTrophy_hunter(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""predator"" OR name = ""carnivore""))");
+
+        }
+        private static async Task<bool> _checkTrophy_pacifist(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""base-consumer"" OR name = ""herbivore""))");
+
+        }
+        private static async Task<bool> _checkTrophy_basics(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""producer""))");
+
+        }
+        private static async Task<bool> _checkTrophy_deathBringsLife(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""scavenger"" OR name = ""decomposer"" OR name = ""detritivore""))");
+
+        }
+        private static async Task<bool> _checkTrophy_allMine(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""parasite""))");
+
+        }
+        private static async Task<bool> _checkTrophy_scrapThat(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+	            AND id IN (SELECT ancestor_id FROM Ancestors WHERE species_id IN (SELECT id FROM Species WHERE owner=$owner))");
+
+        }
+        private static async Task<bool> _checkTrophy_liftOff(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
+                @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND description LIKE ""%can fly%"" OR description LIKE ""%flies%""");
+
+        }
+        private static async Task<bool> _checkTrophy_trademarked(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
+                @"SELECT COUNT(*) FROM (SELECT owner, genus_id, MIN(timestamp) FROM Species GROUP BY genus_id) WHERE owner = $owner");
+
+        }
+        private static async Task<bool> _checkTrophy_beneathYou(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
+                @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND description LIKE ""%burrow%"";");
+
+        }
+
+        private static async Task<bool> _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(TrophyScanner.ScannerQueueItem item, string query) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
+                cmd.Parameters.AddWithValue("$owner", (await item.context.Guild.GetUserAsync(item.userId)).Username);
+
+                if (await Database.GetScalar<long>(cmd) > 0)
+                    return true;
+
+            }
+
+            return false;
+
+        }
         private static async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(TrophyScanner.ScannerQueueItem item, string regexPattern) {
 
             // Get all zones.
@@ -189,7 +261,7 @@ namespace OurFoodChain.trophies {
 
             // Check if the user has any species in these zones.
 
-            string username = item.context.User.Username;
+            string username = (await item.context.Guild.GetUserAsync(item.userId)).Username;
             bool unlocked = false;
 
             foreach (Zone zone in zones) {
@@ -228,7 +300,7 @@ namespace OurFoodChain.trophies {
                     return false;
             }
 
-            string username = item.context.User.Username;
+            string username = (await item.context.Guild.GetUserAsync(item.userId)).Username;
             bool unlocked = false;
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner=$owner AND id IN (SELECT species_id FROM SpeciesZones WHERE zone_id IN (SELECT id FROM Zones WHERE type=$type))")) {

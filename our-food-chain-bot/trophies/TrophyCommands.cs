@@ -19,6 +19,8 @@ namespace OurFoodChain.trophies {
 
             UnlockedTrophyInfo[] unlocked = await TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
 
+            Array.Sort(unlocked, (x, y) => x.timestamp.CompareTo(y.timestamp));
+
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle(string.Format("{0}'s Trophies ({1:0.##}%)", user.Username, 100.0 * unlocked.Count() / (await TrophyRegistry.GetTrophiesAsync()).Count));
             embed.WithFooter(string.Format("See a list of all available trophies with the \"{0}trophylist\" command.", OurFoodChainBot.GetInstance().GetConfig().prefix));
@@ -37,7 +39,7 @@ namespace OurFoodChain.trophies {
                 description_builder.AppendLine(string.Format("🏆 **{0}** - Earned {1} ({2:0.##}%)",
                    trophy.GetName(),
                    BotUtils.GetTimeStampAsDateString(info.timestamp),
-                   100.0 * (double)info.timesUnlocked / total_users
+                   100.0 * info.timesUnlocked / total_users
                   ));
 
             }

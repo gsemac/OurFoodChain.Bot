@@ -749,6 +749,20 @@ namespace OurFoodChain {
             return taxon_info;
 
         }
+        public static async Task<Taxon> GetTaxonFromDb(string name) {
+
+            foreach (TaxonType type in new TaxonType[] { TaxonType.Domain, TaxonType.Kingdom, TaxonType.Phylum, TaxonType.Class, TaxonType.Order, TaxonType.Family, TaxonType.Genus, TaxonType.Species }) {
+
+                Taxon taxon = await GetTaxonFromDb(name, type);
+
+                if (!(taxon is null))
+                    return taxon;
+
+            }
+
+            return null;
+
+        }
         public static async Task<Taxon[]> GetTaxaFromDb(TaxonType type) {
 
             List<Taxon> result = new List<Taxon>();
@@ -867,6 +881,57 @@ namespace OurFoodChain {
                 await Database.ExecuteNonQuery(cmd);
 
             }
+
+        }
+        public static async Task<Species[]> GetSpeciesInTaxonFromDb(Taxon taxon) {
+
+            List<Species> species = new List<Species>();
+
+            if (taxon.type == TaxonType.Species) {
+
+                // Return all species with the same name as the taxon.
+
+                species.AddRange(await GetSpeciesFromDb("", taxon.name));
+
+            }
+            else if (taxon.type == TaxonType.Genus) {
+
+                // Return all species within this genus (rather than recursively calling this function for each species).
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE genus_id=$genus_id;")) {
+
+                    cmd.Parameters.AddWithValue("$genus_id", taxon.id);
+
+                    using (DataTable table = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in table.Rows)
+                            species.Add(await Species.FromDataRow(row));
+
+                }
+
+            }
+            else {
+
+                // Get all subtaxa and call this function recursively to get the species from each of them.
+
+                Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
+
+                foreach (Taxon t in subtaxa)
+                    species.AddRange(await GetSpeciesInTaxonFromDb(t));
+
+            }
+
+            return species.ToArray();
+
+        }
+        public static async Task<Species[]> GetSpeciesInTaxonFromDb(string taxonName) {
+
+            List<Species> species = new List<Species>();
+            Taxon taxon = await GetTaxonFromDb(taxonName);
+
+            if (!(taxon is null))
+                species.AddRange(await GetSpeciesInTaxonFromDb(taxon));
+
+            return species.ToArray();
 
         }
 

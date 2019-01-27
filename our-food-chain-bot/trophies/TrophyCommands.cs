@@ -182,7 +182,7 @@ namespace OurFoodChain.trophies {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", t.GetName(), user.Mention));
 
         }
-        [Command("scantrophies")]
+        [Command("scantrophies"), Alias("trophyscan")]
         public async Task ScanTrophies(IGuildUser user = null) {
 
             if (user is null)

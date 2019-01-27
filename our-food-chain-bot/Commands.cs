@@ -2225,6 +2225,49 @@ namespace OurFoodChain {
 
         }
 
+        [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
+        public async Task ListSpecies(string taxonName) {
+
+            // Get the taxon.
+
+            Taxon taxon = await BotUtils.GetTaxonFromDb(taxonName);
+
+            if (taxon is null) {
+
+                await BotUtils.ReplyAsync_Error(Context, "No such taxon exists.");
+
+                return;
+
+            }
+
+            // Get all species under that taxon.
+
+            List<Species> species = new List<Species>();
+            species.AddRange(await BotUtils.GetSpeciesInTaxonFromDb(taxon));
+
+            species.Sort((lhs, rhs) => lhs.GetFullName().CompareTo(rhs.GetFullName()));
+
+            // Send the result.
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithTitle(string.IsNullOrEmpty(taxon.common_name) ?
+                taxon.GetName() :
+                string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
+
+            StringBuilder description_builder = new StringBuilder();
+            description_builder.AppendLine(taxon.GetDescriptionOrDefault());
+            description_builder.AppendLine();
+            description_builder.AppendLine(string.Format("**Species in this {0} ({1}):**", taxon.GetTypeName(), species.Count()));
+
+            foreach (Species sp in species)
+                description_builder.AppendLine(sp.GetShortName());
+
+            embed.WithDescription(description_builder.ToString());
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
+
     }
 
 }

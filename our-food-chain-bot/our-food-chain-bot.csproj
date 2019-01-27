@@ -243,6 +243,7 @@
     <None Include="help\setpic.json" />
     <None Include="help\setroledesc.json" />
     <None Include="help\setspeciesdesc.json" />
+    <None Include="help\specieslist.json" />
     <None Include="help\trophies.json" />
     <None Include="help\trophy.json" />
     <None Include="help\trophylist.json" />

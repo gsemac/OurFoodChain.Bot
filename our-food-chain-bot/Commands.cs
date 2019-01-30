@@ -1426,6 +1426,10 @@ namespace OurFoodChain {
         #endregion
 
         [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
+        public async Task SetPredates(string species, string eatsSpecies, string notes = "") {
+            await SetPredates("", species, "", eatsSpecies, notes);
+        }
+        [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
         public async Task SetPredates(string genus, string species, string eatsGenus, string eatsSpecies, string notes = "") {
 
             Species[] predator_list = await BotUtils.GetSpeciesFromDb(genus, species);
@@ -1453,6 +1457,10 @@ namespace OurFoodChain {
 
             }
 
+        }
+        [Command("-prey")]
+        public async Task RemovePrey(string species, string eatsSpecies) {
+            await RemovePrey("", species, "", eatsSpecies);
         }
         [Command("-prey")]
         public async Task RemovePrey(string genus, string species, string eatsGenus, string eatsSpecies) {

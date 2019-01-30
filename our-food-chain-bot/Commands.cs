@@ -2268,7 +2268,10 @@ namespace OurFoodChain {
             description_builder.AppendLine(string.Format("**Species in this {0} ({1}):**", taxon.GetTypeName(), species.Count()));
 
             foreach (Species sp in species)
-                description_builder.AppendLine(sp.GetShortName());
+                if (sp.isExtinct)
+                    description_builder.AppendLine(string.Format("~~{0}~~", sp.GetShortName()));
+                else
+                    description_builder.AppendLine(sp.GetShortName());
 
             embed.WithDescription(description_builder.ToString());
 

@@ -114,7 +114,14 @@ namespace OurFoodChain.trophies {
 
                 }
                 // If an error occurs when checking a trophy, we'll just move on to the next one.
-                catch (Exception) { }
+                catch (Exception ex) {
+
+                    await OurFoodChainBot.GetInstance().Log(LogSeverity.Error, "Trophies", string.Format("Exception occured while checking \"{0}\" trophy: {1}",
+                        trophy.GetName(),
+                        ex.ToString()
+                        ));
+
+                }
 
         }
         private static async Task _popTrophyAsync(ScannerQueueItem item, Trophy trophy) {

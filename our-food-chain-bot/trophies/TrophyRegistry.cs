@@ -159,7 +159,7 @@ namespace OurFoodChain.trophies {
 
             // Natural event achievements
 
-            _registry.Add(new Trophy("Superior Survivor", "Have a species you own survive an extinction event.", _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("Superior Survivor", "Have a species you own survive an extinction event.", _checkTrophy_superiorSurvivor));
             _registry.Add(new Trophy("Natural Selection", "Have a species you own go extinct.", _checkTrophy_naturalSelection));
             _registry.Add(new Trophy("To Infinity And Beyond", "Own a species that spreads to another zone.", _checkTrophy_Placeholder));
             _registry.Add(new Trophy("A New World", "Create a species that spreads across an ocean body.", _checkTrophy_Placeholder));
@@ -176,6 +176,8 @@ namespace OurFoodChain.trophies {
             _registry.Add(new Trophy("Can We Keep It?", "Be the first to create a species with fur.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Turn On The AC!", "Be the first to create a warm-blooded species.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
+
+            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Trophies", "Finished registering trophies");
 
         }
 
@@ -257,6 +259,65 @@ namespace OurFoodChain.trophies {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
                 @"SELECT COUNT(*) FROM Extinctions WHERE species_id IN (SELECT id FROM Species WHERE owner = $owner);");
+
+        }
+        private static async Task<bool> _checkTrophy_superiorSurvivor(TrophyScanner.ScannerQueueItem item) {
+
+            // The minimum number of simultaneous extinctions to be considered an "exinction event"
+            long extinction_threshold = 5;
+            // The extinction threshold must be reached within the given number of hours
+            long ts_threshold = 24;
+
+            long current_threshold = 0;
+            long current_ts = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT timestamp FROM Extinctions ORDER BY timestamp ASC;"))
+            using (DataTable table = await Database.GetRowsAsync(cmd)) {
+
+                int row_index = 0;
+
+                foreach (DataRow row in table.Rows) {
+
+                    long ts = (long)row.Field<decimal>("timestamp");
+
+                    if (current_ts == 0)
+                        current_ts = ts;
+
+                    if (ts - current_ts > ts_threshold || row_index == table.Rows.Count) {
+
+                        // To make this process more efficient, we'll check the trophy condition at the end of an extinction event.
+                        // The check will also occur when we reach the end of the extinction records, in case it ended on an extinction event.
+
+                        if (current_threshold >= extinction_threshold) {
+
+                            // The user has a species that survived the extinction event if the species existed before the event, and still exists.
+
+                            using (SQLiteCommand cmd2 = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner = $owner AND timestamp <= $timestamp AND id NOT IN (SELECT species_id FROM Extinctions);")) {
+
+                                cmd2.Parameters.AddWithValue("$owner", (await item.context.Guild.GetUserAsync(item.userId)).Username);
+                                cmd2.Parameters.AddWithValue("$timestamp", current_ts);
+
+                                if (await Database.GetScalar<long>(cmd2) > 0)
+                                    return true;
+
+                            }
+
+                        }
+
+                        current_ts = ts;
+                        current_threshold = 0;
+
+                    }
+                    else
+                        ++current_threshold;
+
+                    ++row_index;
+
+                }
+
+            }
+
+            return false;
 
         }
 

@@ -147,7 +147,7 @@ namespace OurFoodChain.trophies {
             _registry.Add(new Trophy("Basics", "Create a producer species.", _checkTrophy_basics));
             _registry.Add(new Trophy("Death Brings Life", "Create a species that thrives off dead organisms.", _checkTrophy_deathBringsLife));
             _registry.Add(new Trophy("Communism", "Create a species that is eusocial.", TrophyFlags.Hidden, _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("All Mine", "Create a species that parasitic.", _checkTrophy_allMine));
+            _registry.Add(new Trophy("All Mine", "Create a species that is parasitic.", _checkTrophy_allMine));
             _registry.Add(new Trophy("Together", "Create a species that benefits from mutualism or is eusocial.", TrophyFlags.Hidden, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Scrap That", "Create an evolution to your own species.", _checkTrophy_scrapThat));
             _registry.Add(new Trophy("Lift Off", "Create a species that can fly.", TrophyFlags.Hidden, _checkTrophy_liftOff));
@@ -266,7 +266,7 @@ namespace OurFoodChain.trophies {
             // The minimum number of simultaneous extinctions to be considered an "exinction event"
             long extinction_threshold = 5;
             // The extinction threshold must be reached within the given number of hours
-            long ts_threshold = 24;
+            long ts_threshold = 24 * 60 * 60; // 24 hours
 
             long current_threshold = 0;
             long current_ts = 0;

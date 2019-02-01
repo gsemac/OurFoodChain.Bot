@@ -160,7 +160,7 @@ namespace OurFoodChain.trophies {
             // Natural event achievements
 
             _registry.Add(new Trophy("Superior Survivor", "Have a species you own survive an extinction event.", _checkTrophy_Placeholder));
-            _registry.Add(new Trophy("Natural Selection", "Have a species you own go extinct.", _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("Natural Selection", "Have a species you own go extinct.", _checkTrophy_naturalSelection));
             _registry.Add(new Trophy("To Infinity And Beyond", "Own a species that spreads to another zone.", _checkTrophy_Placeholder));
             _registry.Add(new Trophy("A New World", "Create a species that spreads across an ocean body.", _checkTrophy_Placeholder));
             _registry.Add(new Trophy("One To Rule Them All", "Create a species that turns into an apex predator.", _checkTrophy_Placeholder));
@@ -251,6 +251,12 @@ namespace OurFoodChain.trophies {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
                 @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND description LIKE ""%burrow%"";");
+
+        }
+        private static async Task<bool> _checkTrophy_naturalSelection(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
+                @"SELECT COUNT(*) FROM Extinctions WHERE species_id IN (SELECT id FROM Species WHERE owner = $owner);");
 
         }
 

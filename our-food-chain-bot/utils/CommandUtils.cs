@@ -99,7 +99,7 @@ namespace OurFoodChain {
         }
 
         public static bool CheckPrivilege(ICommandContext context, IGuildUser user, PrivilegeLevel level) {
-        
+
             if (level == PrivilegeLevel.Moderator) {
 
                 foreach (ulong id in OurFoodChainBot.GetInstance().GetConfig().mod_role_ids)

@@ -1,0 +1,10 @@
+﻿{
+  "name": "setmap",
+  "aliases": [],
+  "category": "update",
+  "description": "Sets the map images that are displayed when using the \"map\" command.",
+  "examples": [
+    "setmap <image url>",
+    "setmap <unlabeled image url> <labeled image url>"
+  ]
+}

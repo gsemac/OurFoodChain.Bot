@@ -165,6 +165,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="Gallery.cs" />
     <Compile Include="gotchi\Gotchi.cs" />
@@ -226,6 +227,7 @@
     <None Include="help\setfamilycommonname.json" />
     <None Include="help\setgenus.json" />
     <None Include="help\setgenuspic.json" />
+    <None Include="help\setmap.json" />
     <None Include="help\setspecies.json" />
     <None Include="help\setzonepic.json" />
     <None Include="help\species.json" />

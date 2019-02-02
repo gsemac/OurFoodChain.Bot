@@ -985,6 +985,27 @@ namespace OurFoodChain {
             return pictures.ToArray();
 
         }
+        public static async Task<Picture> GetPicFromDb(Gallery gallery, string name) {
+
+            if (!(gallery is null) && gallery.id > 0) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Picture WHERE gallery_id=$gallery_id AND name=$name;")) {
+
+                    cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+                    cmd.Parameters.AddWithValue("$name", name);
+
+                    DataRow row = await Database.GetRowAsync(cmd);
+
+                    if (!(row is null))
+                        return Picture.FromDataRow(row);
+
+                }
+
+            }
+
+            return null;
+
+        }
 
         public static string GenerateSpeciesName(string genus, string species) {
 

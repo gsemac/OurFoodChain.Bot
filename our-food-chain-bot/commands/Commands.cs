@@ -937,34 +937,6 @@ namespace OurFoodChain {
 
         }
 
-        [Command("map")]
-        public async Task Map() {
-
-            string footer = "Click the Z reaction to toggle zone labels.";
-
-            EmbedBuilder page1 = new EmbedBuilder {
-                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/533536364910608395/post-earthquake-map-blank.png"
-            };
-            page1.WithFooter(footer);
-
-            EmbedBuilder page2 = new EmbedBuilder {
-                ImageUrl = "https://cdn.discordapp.com/attachments/526503466001104926/533536393121759234/post-earthquake-map.png"
-            };
-            page2.WithFooter(footer);
-
-            IUserMessage message = await ReplyAsync("", false, page1.Build());
-
-            CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
-                pages = { page1.Build(), page2.Build() }
-            };
-
-            paginated.emojiToggle = "🇿";
-            await message.AddReactionAsync(new Emoji("🇿"));
-
-            CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
-
-        }
-
         [Command("setancestor")]
         public async Task SetAncestor(string species, string ancestorSpecies) {
             await SetAncestor(string.Empty, species, string.Empty, ancestorSpecies);

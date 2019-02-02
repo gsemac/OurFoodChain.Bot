@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain {
 
     public class RoleCommands :
-    ModuleBase {
+        ModuleBase {
 
         [Command("addrole")]
         public async Task AddRole(string name, string description = "") {

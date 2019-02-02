@@ -1987,15 +1987,17 @@ namespace OurFoodChain {
 
                 // No such role exists, so check if a species exists with the given name instead.
 
-                Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, "", nameOrSpecies);
+                Species[] matching_species = await BotUtils.GetSpeciesFromDb("", nameOrSpecies);
 
-                if (!(sp is null)) {
+                if (matching_species.Count() == 1)
+                    // If only one species was returned, show the roles assigned to that species.
+                    await Roles(matching_species[0]);
+                else if (matching_species.Count() > 1)
+                    // If multiple species were returned, provide a list of matching species for the user to choose from.
+                    await BotUtils.ReplyAsync_ValidateSpecies(Context, matching_species);
 
-                    await Roles(sp);
-
+                if (matching_species.Count() > 0)
                     return;
-
-                }
 
             }
 

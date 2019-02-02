@@ -165,6 +165,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="Gallery.cs" />
     <Compile Include="gotchi\Gotchi.cs" />
     <Compile Include="gotchi\GotchiCommands.cs" />
@@ -178,7 +179,7 @@
     <Compile Include="trophies\TrophyRegistry.cs" />
     <Compile Include="trophies\TrophyScanner.cs" />
     <Compile Include="utils\ArrayUtils.cs" />
-    <Compile Include="Commands.cs" />
+    <Compile Include="commands\Commands.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="OurFoodChainBot.cs" />
     <Compile Include="Program.cs" />

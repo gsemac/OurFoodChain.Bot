@@ -180,7 +180,7 @@ namespace OurFoodChain {
 
     }
 
-    class Species :
+    public class Species :
         IComparable<Species> {
 
         public long id;

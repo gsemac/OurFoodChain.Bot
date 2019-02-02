@@ -1944,122 +1944,133 @@ namespace OurFoodChain {
         }
 
         [Command("roles"), Alias("role")]
-        public async Task Roles(string nameOrGenus = "", string species = "") {
+        public async Task Roles() {
 
-            // If both arguments were left empty, just list all roles.
+            EmbedBuilder embed = new EmbedBuilder();
 
-            if (string.IsNullOrEmpty(nameOrGenus) && string.IsNullOrEmpty(species)) {
+            Role[] roles_list = await BotUtils.GetRolesFromDb();
 
-                EmbedBuilder embed = new EmbedBuilder();
+            embed.WithTitle(string.Format("All roles ({0})", roles_list.Count()));
 
-                Role[] roles_list = await BotUtils.GetRolesFromDb();
+            foreach (Role role in roles_list) {
 
-                embed.WithTitle(string.Format("All roles ({0})", roles_list.Count()));
+                long count = 0;
 
-                foreach (Role role in roles_list) {
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE role_id=$role_id;")) {
 
-                    long count = 0;
+                    cmd.Parameters.AddWithValue("$role_id", role.id);
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE role_id=$role_id;")) {
-
-                        cmd.Parameters.AddWithValue("$role_id", role.id);
-
-                        count = (await Database.GetRowAsync(cmd)).Field<long>("count(*)");
-
-                    }
-
-                    string title = string.Format("{0} ({1})",
-                        StringUtils.ToTitleCase(role.name),
-                        count);
-
-                    embed.AddField(title, role.GetDescriptionOrDefault());
+                    count = (await Database.GetRowAsync(cmd)).Field<long>("count(*)");
 
                 }
 
-                await ReplyAsync("", false, embed.Build());
+                string title = string.Format("{0} ({1})",
+                    StringUtils.ToTitleCase(role.name),
+                    count);
 
+                embed.AddField(title, role.GetDescriptionOrDefault());
+
+            }
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
+        [Command("roles"), Alias("role")]
+        public async Task Roles(string nameOrSpecies) {
+
+            // If a role with this name exists, that's what we'll prioritize (users can use the genus + species overload if they need to).
+            // If no such role exists, check for a species with this name instead.
+
+            Role role = await BotUtils.GetRoleFromDb(nameOrSpecies);
+
+            if (role is null) {
+
+                // No such role exists, so check if a species exists with the given name instead.
+
+                Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, "", nameOrSpecies);
+
+                if (!(sp is null)) {
+
+                    await Roles(sp);
+
+                    return;
+
+                }
+
+            }
+
+            // If we got here, the role is eiher not null, or it is null, but no species with the given name exists.
+            // In this case, proceed to validate the role, and display its information if possible.
+
+            if (!await BotUtils.ReplyAsync_ValidateRole(Context, role))
                 return;
 
-            }
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
+            embed.WithDescription(role.GetDescriptionOrDefault());
 
-            // If only the first argument was provided, show the role with that name.
+            // List species with this role.
 
-            if (!string.IsNullOrEmpty(nameOrGenus) && string.IsNullOrEmpty(species)) {
+            List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByRole(role));
 
-                Role role = await BotUtils.GetRoleFromDb(nameOrGenus);
+            species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                if (!await BotUtils.ReplyAsync_ValidateRole(Context, role))
-                    return;
-
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.WithTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
-                embed.WithDescription(role.GetDescriptionOrDefault());
-
-                // List species with this role.
-
-                List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByRole(role));
-
-                species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
-
-                if (species_list.Count() > 0) {
-
-                    StringBuilder lines = new StringBuilder();
-
-                    foreach (Species sp in species_list)
-                        lines.AppendLine(sp.GetShortName());
-
-                    embed.WithDescription(string.Format("{2}\n\n**Species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count(), role.GetDescriptionOrDefault()));
-
-                }
-
-                await ReplyAsync("", false, embed.Build());
-
-            }
-
-            // If two arguments were provided, take them as a genus and species.
-            // We will display the roles assigned to that species.
-
-            if (!string.IsNullOrEmpty(nameOrGenus) && !string.IsNullOrEmpty(species)) {
-
-                // Get the species.
-
-                Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, nameOrGenus, species);
-
-                if (sp is null)
-                    return;
-
-                // Get the role(s) assigned to this species.
-
-                Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp);
-
-                if (roles.Count() <= 0) {
-                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not been assigned any roles.", sp.GetShortName()));
-                    return;
-                }
-
-                // Display the role(s) to the user.
+            if (species_list.Count() > 0) {
 
                 StringBuilder lines = new StringBuilder();
 
-                foreach (Role i in roles) {
+                foreach (Species sp in species_list)
+                    lines.AppendLine(sp.GetShortName());
 
-                    lines.Append(StringUtils.ToTitleCase(i.name));
-
-                    if (!string.IsNullOrEmpty(i.notes))
-                        lines.Append(string.Format(" ({0})", i.notes));
-
-                    lines.AppendLine();
-
-                }
-
-                EmbedBuilder embed = new EmbedBuilder();
-
-                embed.WithTitle(string.Format("{0}'s role(s) ({1})", sp.GetShortName(), roles.Count()));
-                embed.WithDescription(lines.ToString());
-
-                await ReplyAsync("", false, embed.Build());
+                embed.WithDescription(string.Format("{2}\n\n**Species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count(), role.GetDescriptionOrDefault()));
 
             }
+
+            await ReplyAsync("", false, embed.Build());
+
+
+        }
+        [Command("roles"), Alias("role")]
+        public async Task Roles(string genus, string species) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (!(sp is null))
+                await Roles(sp);
+
+        }
+        public async Task Roles(Species species) {
+
+            // Get the role(s) assigned to this species.
+
+            Role[] roles = await BotUtils.GetRolesFromDbBySpecies(species);
+
+            if (roles.Count() <= 0) {
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not been assigned any roles.", species.GetShortName()));
+                return;
+            }
+
+            // Display the role(s) to the user.
+
+            StringBuilder lines = new StringBuilder();
+
+            foreach (Role i in roles) {
+
+                lines.Append(StringUtils.ToTitleCase(i.name));
+
+                if (!string.IsNullOrEmpty(i.notes))
+                    lines.Append(string.Format(" ({0})", i.notes));
+
+                lines.AppendLine();
+
+            }
+
+            EmbedBuilder embed = new EmbedBuilder();
+
+            embed.WithTitle(string.Format("{0}'s role(s) ({1})", species.GetShortName(), roles.Count()));
+            embed.WithDescription(lines.ToString());
+
+            await ReplyAsync("", false, embed.Build());
 
         }
 

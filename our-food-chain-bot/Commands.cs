@@ -2011,10 +2011,11 @@ namespace OurFoodChain {
             embed.WithTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
             embed.WithDescription(role.GetDescriptionOrDefault());
 
-            // List species with this role.
+            // List all extant species with this role.
 
             List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByRole(role));
 
+            species_list.RemoveAll(x => x.isExtinct);
             species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
             if (species_list.Count() > 0) {
@@ -2024,7 +2025,7 @@ namespace OurFoodChain {
                 foreach (Species sp in species_list)
                     lines.AppendLine(sp.GetShortName());
 
-                embed.WithDescription(string.Format("{2}\n\n**Species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count(), role.GetDescriptionOrDefault()));
+                embed.WithDescription(string.Format("{2}\n\n**Extant species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count(), role.GetDescriptionOrDefault()));
 
             }
 

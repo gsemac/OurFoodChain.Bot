@@ -848,11 +848,15 @@ namespace OurFoodChain {
         }
 
         [Command("+extinct"), Alias("setextinct")]
-        public async Task SetExtinct(string species, string reason = "") {
-            await SetExtinct("", species, reason);
+        public async Task SetExtinct(string species) {
+            await SetExtinct("", species, "");
         }
         [Command("+extinct"), Alias("setextinct")]
-        public async Task SetExtinct(string genus, string species, string reason = "") {
+        public async Task SetExtinct(string genus, string species) {
+            await SetExtinct(genus, species, "");
+        }
+        [Command("+extinct"), Alias("setextinct")]
+        public async Task SetExtinct(string genus, string species, string reason) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
@@ -872,12 +876,12 @@ namespace OurFoodChain {
             await BotUtils.ReplyAsync_Success(Context, string.Format("The last **{0}** has perished, and the species is now extinct.", sp.GetShortName()));
 
         }
-        [Command("-extinct"), Alias("setextant")]
-        public async Task MinusExtinct(string species, string reason = "") {
-            await MinusExtinct("", species, reason);
+        [Command("-extinct"), Alias("setextant", "unextinct")]
+        public async Task MinusExtinct(string species) {
+            await MinusExtinct("", species);
         }
-        [Command("-extinct"), Alias("setextant")]
-        public async Task MinusExtinct(string genus, string species, string reason = "") {
+        [Command("-extinct"), Alias("setextant", "unextinct")]
+        public async Task MinusExtinct(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 

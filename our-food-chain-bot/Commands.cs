@@ -1337,8 +1337,6 @@ namespace OurFoodChain {
         [Command("help"), Alias("h")]
         public async Task Help(string command = "") {
 
-
-
             // Load all command info files.
 
             List<CommandInfo> command_info = new List<CommandInfo>();
@@ -2149,6 +2147,7 @@ namespace OurFoodChain {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle(string.Format("Taxonomy of {0}", sp.GetShortName()));
+            embed.WithThumbnailUrl(sp.pics);
 
             Taxon genus_info = await BotUtils.GetTaxonFromDb(sp.genusId, TaxonType.Genus);
             Taxon family_info = await BotUtils.GetTaxonFromDb(genus_info.parent_id, TaxonType.Family);

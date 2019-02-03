@@ -1879,13 +1879,33 @@ namespace OurFoodChain {
             embed.WithTitle(string.Format("Taxonomy of {0}", sp.GetShortName()));
             embed.WithThumbnailUrl(sp.pics);
 
-            Taxon genus_info = await BotUtils.GetTaxonFromDb(sp.genusId, TaxonType.Genus);
-            Taxon family_info = await BotUtils.GetTaxonFromDb(genus_info.parent_id, TaxonType.Family);
-            Taxon order_info = await BotUtils.GetTaxonFromDb(family_info.parent_id, TaxonType.Order);
-            Taxon class_info = await BotUtils.GetTaxonFromDb(order_info.parent_id, TaxonType.Class);
-            Taxon phylum_info = await BotUtils.GetTaxonFromDb(class_info.parent_id, TaxonType.Phylum);
-            Taxon kingdom_info = await BotUtils.GetTaxonFromDb(phylum_info.parent_id, TaxonType.Kingdom);
-            Taxon domain_info = await BotUtils.GetTaxonFromDb(kingdom_info.parent_id, TaxonType.Domain);
+            Taxon genus_info = null,
+                family_info = null,
+                order_info = null,
+                class_info = null,
+                phylum_info = null,
+                kingdom_info = null,
+                domain_info = null;
+
+            genus_info = await BotUtils.GetTaxonFromDb(sp.genusId, TaxonType.Genus);
+
+            if (!(genus_info is null))
+                family_info = await BotUtils.GetTaxonFromDb(genus_info.parent_id, TaxonType.Family);
+
+            if (!(family_info is null))
+                order_info = await BotUtils.GetTaxonFromDb(family_info.parent_id, TaxonType.Order);
+
+            if (!(order_info is null))
+                class_info = await BotUtils.GetTaxonFromDb(order_info.parent_id, TaxonType.Class);
+
+            if (!(class_info is null))
+                phylum_info = await BotUtils.GetTaxonFromDb(class_info.parent_id, TaxonType.Phylum);
+
+            if (!(phylum_info is null))
+                kingdom_info = await BotUtils.GetTaxonFromDb(phylum_info.parent_id, TaxonType.Kingdom);
+
+            if (!(kingdom_info is null))
+                domain_info = await BotUtils.GetTaxonFromDb(kingdom_info.parent_id, TaxonType.Domain);
 
             string unknown = "Unknown";
             string genus_name = genus_info is null ? unknown : genus_info.GetName();

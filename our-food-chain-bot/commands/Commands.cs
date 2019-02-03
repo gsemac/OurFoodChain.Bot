@@ -1262,13 +1262,13 @@ namespace OurFoodChain {
         }
 
         [Command("setowner"), Alias("setown", "claim")]
-        public async Task SetOwner(string species, IUser user = null) {
+        public async Task SetOwner(string species, IUser user) {
 
             await SetOwner("", species, user);
 
         }
         [Command("setowner"), Alias("setown", "claim")]
-        public async Task SetOwner(string genus, string species, IUser user = null) {
+        public async Task SetOwner(string genus, string species, IUser user) {
 
             if (user is null)
                 user = Context.User;

@@ -290,10 +290,10 @@ namespace OurFoodChain {
 
     class BotUtils {
 
-        public static readonly string DEFAULT_SPECIES_DESCRIPTION = "No description provided.";
-        public static readonly string DEFAULT_GENUS_DESCRIPTION = "No description provided.";
-        public static readonly string DEFAULT_ZONE_DESCRIPTION = "No description provided.";
-        public static readonly string DEFAULT_DESCRIPTION = "No description provided.";
+        public const string DEFAULT_SPECIES_DESCRIPTION = "No description provided.";
+        public const string DEFAULT_GENUS_DESCRIPTION = "No description provided.";
+        public const string DEFAULT_ZONE_DESCRIPTION = "No description provided.";
+        public const string DEFAULT_DESCRIPTION = "No description provided.";
 
         public static Dictionary<ulong, TwoPartCommandWaitParams> TWO_PART_COMMAND_WAIT_PARAMS = new Dictionary<ulong, TwoPartCommandWaitParams>();
 
@@ -1007,6 +1007,40 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Period> GetPeriodFromDb(string name) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Period WHERE name = $name;")) {
+
+                cmd.Parameters.AddWithValue("$name", name.ToLower());
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    return Period.FromDataRow(row);
+
+            }
+
+            return null;
+
+        }
+        public static async Task<Period[]> GetPeriodsFromDb() {
+
+            List<Period> results = new List<Period>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Period;"))
+            using (DataTable table = await Database.GetRowsAsync(cmd)) {
+
+                foreach (DataRow row in table.Rows)
+                    results.Add(Period.FromDataRow(row));
+            }
+
+            // Have more recent periods listed first.
+            results.Sort((lhs, rhs) => rhs.GetStartTimestamp().CompareTo(lhs.GetStartTimestamp()));
+
+            return results.ToArray();
+
+        }
+
         public static string GenerateSpeciesName(string genus, string species) {
 
             return string.Format("{0}. {1}", genus.ToUpper()[0], species);
@@ -1020,6 +1054,11 @@ namespace OurFoodChain {
         public static string GetTimeStampAsDateString(long ts) {
 
             return DateTimeOffset.FromUnixTimeSeconds(ts).Date.ToUniversalTime().ToShortDateString();
+
+        }
+        public static string GetTimeStampAsDateString(long ts, string format) {
+
+            return DateTimeOffset.FromUnixTimeSeconds(ts).Date.ToUniversalTime().ToString(format);
 
         }
         public static string Strikeout(string str) {
@@ -1261,6 +1300,19 @@ namespace OurFoodChain {
             if (!Regex.Match(imageUrl, "^https?:").Success) {
 
                 await ReplyAsync_Error(context, "The image URL is invalid.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        public static async Task<bool> ReplyAsync_ValidatePeriod(ICommandContext context, Period period) {
+
+            if (period is null || period.id <= 0) {
+
+                await context.Channel.SendMessageAsync("No such period exists.");
 
                 return false;
 

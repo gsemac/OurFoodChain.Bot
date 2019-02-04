@@ -11,6 +11,8 @@ namespace OurFoodChain {
 
     class Database {
 
+        public const int DATABASE_VERSION = 15;
+
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
             if (!_initialized)
@@ -145,59 +147,10 @@ namespace OurFoodChain {
 
                 int version = await _getDatabaseVersion(conn);
 
-                if (version <= 0) {
+                // Update the database to the latest version.
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Zones(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, description TEXT, UNIQUE(name, type));", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Phylum(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Genus(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Species(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, genus_id INTEGER, timestamp NUMERIC, UNIQUE(name, genus_id), FOREIGN KEY(genus_id) REFERENCES Genus(id));", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesZones(species_id INTEGER, zone_id INTEGER, notes TEXT, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(zone_id) REFERENCES Zones(id), PRIMARY KEY(species_id, zone_id));", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Extinctions(species_id INTEGER PRIMARY KEY, reason TEXT, timestamp NUMERIC, FOREIGN KEY(species_id) REFERENCES Species(id));", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Ancestors(species_id INTEGER PRIMARY KEY, ancestor_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(ancestor_id) REFERENCES Species(id));", conn))
-                        await cmd.ExecuteNonQueryAsync();
-
-                    await _updateDatabaseVersion(conn, 1);
-
-                }
-
-                if (version < 2)
-                    await _update002(conn);
-                if (version < 3)
-                    await _update003(conn);
-                if (version < 4)
-                    await _update004(conn);
-                if (version < 5)
-                    await _update005(conn);
-                if (version < 6)
-                    await _update006(conn);
-                if (version < 7)
-                    await _update007(conn);
-                if (version < 8)
-                    await _update008(conn);
-                if (version < 9)
-                    await _update009(conn);
-                if (version < 10)
-                    await _update010(conn);
-                if (version < 11)
-                    await _update011(conn);
-                if (version < 12)
-                    await _update012(conn);
-                if (version < 13)
-                    await _update013(conn);
-                if (version < 14)
-                    await _update014(conn);
+                for (int i = ++version; i <= DATABASE_VERSION; ++i)
+                    await _applyDatabaseUpdate(conn, i);
 
                 conn.Close();
 
@@ -235,7 +188,107 @@ namespace OurFoodChain {
             }
 
         }
+        private static async Task _applyDatabaseUpdate(SQLiteConnection conn, int updateNumber) {
 
+            if (updateNumber <= 0)
+                return;
+
+            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updating database to version {0}", updateNumber));
+
+            switch (updateNumber) {
+
+                case 1:
+                    await _update001(conn);
+                    break;
+
+                case 2:
+                    await _update002(conn);
+                    break;
+
+                case 3:
+                    await _update003(conn);
+                    break;
+
+                case 4:
+                    await _update004(conn);
+                    break;
+
+                case 5:
+                    await _update005(conn);
+                    break;
+
+                case 6:
+                    await _update006(conn);
+                    break;
+
+                case 7:
+                    await _update007(conn);
+                    break;
+
+                case 8:
+                    await _update008(conn);
+                    break;
+
+                case 9:
+                    await _update009(conn);
+                    break;
+
+                case 10:
+                    await _update010(conn);
+                    break;
+
+                case 11:
+                    await _update011(conn);
+                    break;
+
+                case 12:
+                    await _update012(conn);
+                    break;
+
+                case 13:
+                    await _update013(conn);
+                    break;
+
+                case 14:
+                    await _update014(conn);
+                    break;
+
+                case 15:
+                    await _update015(conn);
+                    break;
+
+            }
+
+            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", updateNumber));
+
+        }
+
+        private static async Task _update001(SQLiteConnection conn) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Zones(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, description TEXT, UNIQUE(name, type));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Phylum(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Genus(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Species(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, genus_id INTEGER, timestamp NUMERIC, UNIQUE(name, genus_id), FOREIGN KEY(genus_id) REFERENCES Genus(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesZones(species_id INTEGER, zone_id INTEGER, notes TEXT, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(zone_id) REFERENCES Zones(id), PRIMARY KEY(species_id, zone_id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Extinctions(species_id INTEGER PRIMARY KEY, reason TEXT, timestamp NUMERIC, FOREIGN KEY(species_id) REFERENCES Species(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Ancestors(species_id INTEGER PRIMARY KEY, ancestor_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(ancestor_id) REFERENCES Species(id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 1);
+
+        }
         private static async Task _update002(SQLiteConnection conn) {
 
             // Add the "pics" field to the "Species" table.
@@ -403,6 +456,16 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 14);
+
+        }
+        private static async Task _update015(SQLiteConnection conn) {
+
+            // Adds support for periods.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Period(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_ts TEXT, end_ts TEXT, description TEXT, UNIQUE(name));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 15);
 
         }
 

@@ -103,12 +103,14 @@ namespace OurFoodChain {
 
             // #todo Add additional pages listing species names?
 
-            CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
+            //CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
 
-            for (int i = 0; i < pages.Count(); ++i)
-                message.pages.Add(pages[i].Build());
+            //for (int i = 0; i < pages.Count(); ++i)
+            //    message.pages.Add(pages[i].Build());
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, message);
+            //await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, message);
+
+            await ReplyAsync("", false, page_1.Build());
 
         }
         [Command("addperiod")]

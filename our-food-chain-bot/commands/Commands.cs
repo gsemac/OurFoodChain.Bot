@@ -2022,27 +2022,38 @@ namespace OurFoodChain {
 
             species.Sort((lhs, rhs) => lhs.GetFullName().CompareTo(rhs.GetFullName()));
 
-            // Send the result.
+            // We might get a lot of species, which may not fit in one embed.
+            // We'll need to use a paginated embed to reliably display the full list.
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.IsNullOrEmpty(taxon.common_name) ?
-                taxon.GetName() :
-                string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
+            // Create embed pages.
+
+            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("**Species in this {0} ({1}):**", taxon.GetTypeName(), species.Count()));
+
+            if (pages.Count <= 0)
+                pages.Add(new EmbedBuilder());
+
+            // Add description to the first page.
 
             StringBuilder description_builder = new StringBuilder();
             description_builder.AppendLine(taxon.GetDescriptionOrDefault());
-            description_builder.AppendLine();
-            description_builder.AppendLine(string.Format("**Species in this {0} ({1}):**", taxon.GetTypeName(), species.Count()));
 
-            foreach (Species sp in species)
-                if (sp.isExtinct)
-                    description_builder.AppendLine(string.Format("~~{0}~~", sp.GetShortName()));
-                else
-                    description_builder.AppendLine(sp.GetShortName());
+            // Add title to all pages.
 
-            embed.WithDescription(description_builder.ToString());
+            foreach (EmbedBuilder page in pages) {
 
-            await ReplyAsync("", false, embed.Build());
+                page.WithTitle(string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
+                page.WithDescription(description_builder.ToString());
+
+            }
+
+            // Send the result.
+
+            CommandUtils.PaginatedMessage reply = new CommandUtils.PaginatedMessage();
+
+            foreach (EmbedBuilder page in pages)
+                reply.pages.Add(page.Build());
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, reply);
 
         }
 

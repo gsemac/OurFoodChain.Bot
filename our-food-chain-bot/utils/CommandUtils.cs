@@ -15,6 +15,8 @@ namespace OurFoodChain {
 
     class CommandUtils {
 
+        private const int MAX_PAGINATED_MESSAGES = 50;
+
         public class PaginatedMessage {
 
             public List<Embed> pages = new List<Embed>();
@@ -51,6 +53,16 @@ namespace OurFoodChain {
                     await msg.AddReactionAsync(new Emoji(message.emojiToggle));
 
                 PAGINATED_MESSAGES.Add(msg.Id, message);
+
+            }
+
+            // If there are now over the maximum number of paginated messages, delete an old one.
+
+            while (PAGINATED_MESSAGES.Count > MAX_PAGINATED_MESSAGES) {
+
+                ulong oldest_message_id = PAGINATED_MESSAGES.Keys.Min();
+
+                PAGINATED_MESSAGES.Remove(oldest_message_id);
 
             }
 

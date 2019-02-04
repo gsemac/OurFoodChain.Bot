@@ -214,6 +214,7 @@
     <None Include="help\extinct.json" />
     <None Include="help\gotchi.json" />
     <None Include="help\pic.json" />
+    <None Include="help\random.json" />
     <None Include="help\recent.json" />
     <None Include="help\+extinct.json" />
     <None Include="help\+role.json" />

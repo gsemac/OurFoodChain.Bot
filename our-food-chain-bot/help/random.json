@@ -1,0 +1,11 @@
+﻿{
+  "name": "random",
+  "aliases": [
+    "rand"
+  ],
+  "category": "fun",
+  "description": "Displays information on a random species.",
+  "examples": [
+    "random"
+  ]
+}

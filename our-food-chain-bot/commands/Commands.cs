@@ -227,20 +227,21 @@ namespace OurFoodChain {
         }
 
         [Command("info"), Alias("i", "species", "sp", "s")]
-        public async Task Info(string genus, string species = "") {
-
-            // If the user does not provide a genus + species, query by species only.
-            if (string.IsNullOrEmpty(species)) {
-
-                species = genus;
-                genus = "";
-
-            }
+        public async Task Info(string species) {
+            await Info("", species);
+        }
+        [Command("info"), Alias("i", "species", "sp", "s")]
+        public async Task Info(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
             if (sp is null)
                 return;
+
+            await Info(sp);
+
+        }
+        public async Task Info(Species sp) {
 
             EmbedBuilder embed = new EmbedBuilder();
             StringBuilder description_builder = new StringBuilder();
@@ -2057,6 +2058,24 @@ namespace OurFoodChain {
                 reply.pages.Add(page.Build());
 
             await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, reply);
+
+        }
+
+        [Command("random"), Alias("rand")]
+        public async Task Random() {
+
+            // Get a random species from the database.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species ORDER BY RANDOM() LIMIT 1;")) {
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (row is null)
+                    await BotUtils.ReplyAsync_Info(Context, "No species have been added yet.");
+                else
+                    await Info(await Species.FromDataRow(row));
+
+            }
 
         }
 

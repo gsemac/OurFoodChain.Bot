@@ -1737,7 +1737,7 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Domain, name, commonName);
         }
 
-        [Command("addedby"), Alias("ownedby")]
+        [Command("addedby"), Alias("ownedby", "own")]
         public async Task AddedBy(IUser user = null) {
 
             if (user is null)

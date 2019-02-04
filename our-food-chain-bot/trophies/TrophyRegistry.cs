@@ -144,6 +144,7 @@ namespace OurFoodChain.trophies {
             _registry.Add(new Trophy("Best of Both Worlds", "Create an amphibious species.", _checkTrophy_bestOfBothWorlds));
             _registry.Add(new Trophy("Hunter", "Create a carnivorous species.", _checkTrophy_hunter));
             _registry.Add(new Trophy("Pacifist", "Create a herbivorous species.", _checkTrophy_pacifist));
+            _registry.Add(new Trophy("Two-Course Meal", "Create an omnivorous species.", _checkTrophy_twoCourseMeal));
             _registry.Add(new Trophy("Basics", "Create a producer species.", _checkTrophy_basics));
             _registry.Add(new Trophy("Death Brings Life", "Create a species that thrives off dead organisms.", _checkTrophy_deathBringsLife));
             _registry.Add(new Trophy("Communism", "Create a species that is eusocial.", TrophyFlags.Hidden, _checkTrophy_Placeholder));
@@ -211,6 +212,13 @@ namespace OurFoodChain.trophies {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""base-consumer"" OR name = ""herbivore""))");
+
+        }
+        private static async Task<bool> _checkTrophy_twoCourseMeal(TrophyScanner.ScannerQueueItem item) {
+
+            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""base-consumer"" OR name = ""herbivore""))
+                AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""predator"" OR name = ""carnivore""))");
 
         }
         private static async Task<bool> _checkTrophy_basics(TrophyScanner.ScannerQueueItem item) {

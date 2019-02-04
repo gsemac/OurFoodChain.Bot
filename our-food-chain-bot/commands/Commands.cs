@@ -1768,7 +1768,7 @@ namespace OurFoodChain {
                     foreach (Species sp in species_list)
                         description.AppendLine(sp.isExtinct ? BotUtils.Strikeout(sp.GetShortName()) : sp.GetShortName());
 
-                    embed.WithTitle(string.Format("Species owned by {0}", username));
+                    embed.WithTitle(string.Format("Species owned by {0} ({1})", username, species_list.Count));
                     embed.WithDescription(description.ToString());
                     embed.WithThumbnailUrl(user.GetAvatarUrl(size: 32));
 

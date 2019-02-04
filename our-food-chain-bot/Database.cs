@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 15;
+        public const int DATABASE_VERSION = 16;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -257,6 +257,10 @@ namespace OurFoodChain {
                     await _update015(conn);
                     break;
 
+                case 16:
+                    await _update016(conn);
+                    break;
+
             }
 
             await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", updateNumber));
@@ -466,6 +470,17 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 15);
+
+        }
+        private static async Task _update016(SQLiteConnection conn) {
+
+            // User ID is now stored alongside usernames.
+            // Usernames are saved so users can come and go from the server and their name won't be lost. However, user IDs are still required for the "ownedby" command to work after username changes.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Species ADD COLUMN user_id INTEGER;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 16);
 
         }
 

@@ -533,12 +533,13 @@ namespace OurFoodChain {
 
             Genus genus_info = await BotUtils.GetGenusFromDb(genus);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp) VALUES($name, $description, $genus_id, $owner, $timestamp);")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp, user_id) VALUES($name, $description, $genus_id, $owner, $timestamp, $user_id);")) {
 
                 cmd.Parameters.AddWithValue("$name", species.ToLower());
                 cmd.Parameters.AddWithValue("$description", description);
                 cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
                 cmd.Parameters.AddWithValue("$owner", Context.User.Username);
+                cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
                 cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
                 await Database.ExecuteNonQuery(cmd);
@@ -1280,10 +1281,11 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner WHERE id=$species_id;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner, user_id = $user_id WHERE id=$species_id;")) {
 
                 cmd.Parameters.AddWithValue("$species_id", sp.id);
                 cmd.Parameters.AddWithValue("$owner", owner);
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -1745,9 +1747,10 @@ namespace OurFoodChain {
 
             // List all species owned by the given user.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner=$owner;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner = $owner OR user_id = $user_id;")) {
 
                 cmd.Parameters.AddWithValue("$owner", username);
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 

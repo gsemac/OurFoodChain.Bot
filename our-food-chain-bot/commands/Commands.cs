@@ -2066,12 +2066,12 @@ namespace OurFoodChain {
 
             // Get a random species from the database.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species ORDER BY RANDOM() LIMIT 1;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions) ORDER BY RANDOM() LIMIT 1;")) {
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
                 if (row is null)
-                    await BotUtils.ReplyAsync_Info(Context, "No species have been added yet.");
+                    await BotUtils.ReplyAsync_Info(Context, "There are currently no extant species.");
                 else
                     await Info(await Species.FromDataRow(row));
 

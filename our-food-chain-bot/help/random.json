@@ -4,7 +4,7 @@
     "rand"
   ],
   "category": "fun",
-  "description": "Displays information on a random species.",
+  "description": "Displays information on a random extant species.",
   "examples": [
     "random"
   ]

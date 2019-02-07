@@ -596,7 +596,7 @@ namespace OurFoodChain {
 
                 BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("Reply with the description for **{0}**.\n\nReply with \"cancel\" to cancel the update.", species_list[0].GetShortName()));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("Reply with the description for **{0}**.\n\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
 
             }
 

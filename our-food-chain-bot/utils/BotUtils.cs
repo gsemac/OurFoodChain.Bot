@@ -1105,7 +1105,7 @@ namespace OurFoodChain {
 
                     if (message.Content.Equals("cancel", StringComparison.OrdinalIgnoreCase)) {
 
-                        await ReplyAsync_Info(p.context, "Description updated canceled.");
+                        await ReplyAsync_Info(p.context, "Description update canceled.");
 
                     }
                     else {

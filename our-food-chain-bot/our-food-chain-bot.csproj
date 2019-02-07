@@ -171,7 +171,7 @@
     <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Gallery.cs" />
     <Compile Include="gotchi\Gotchi.cs" />
-    <Compile Include="gotchi\GotchiCommands.cs" />
+    <Compile Include="commands\GotchiCommands.cs" />
     <Compile Include="gotchi\GotchiGifCreator.cs" />
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Period.cs" />

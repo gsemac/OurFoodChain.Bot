@@ -223,7 +223,14 @@ namespace OurFoodChain.gotchi {
             if (!await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi))
                 return;
 
-            if (gotchi.IsSleeping()) {
+            if (gotchi.IsDead()) {
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("You went to feed **{0}**, but it looks like it's too late...", StringUtils.ToTitleCase(gotchi.name)));
+
+                return;
+
+            }
+            else if (gotchi.IsSleeping()) {
 
                 await BotUtils.ReplyAsync_Info(Context, string.Format("Shhh, do not disturb! **{0}** is currently asleep. Try feeding them again later.", StringUtils.ToTitleCase(gotchi.name)));
 

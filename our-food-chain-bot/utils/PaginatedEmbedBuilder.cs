@@ -38,7 +38,7 @@ namespace OurFoodChain {
                 _pages.Add(new EmbedBuilder());
 
             foreach (EmbedBuilder page in _pages)
-                page.WithFooter(page.Footer.Text + footer);
+                page.WithFooter(page.Footer is null ? footer : page.Footer.Text + footer);
 
         }
 

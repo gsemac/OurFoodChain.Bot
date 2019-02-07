@@ -119,19 +119,21 @@ namespace OurFoodChain {
 
             OurFoodChainBot.Config config = OurFoodChainBot.GetInstance().GetConfig();
 
-            if (config.bot_admin_user_ids.Count() <= 0 && config.mod_role_ids.Count() <= 0)
+            if ((config.bot_admin_user_ids is null || config.bot_admin_user_ids.Count() <= 0) &&
+               (config.mod_role_ids is null || config.mod_role_ids.Count() <= 0))
                 return 0;
 
             // Check for Bot Admin privileges.
 
-            if (config.bot_admin_user_ids.Contains(user.Id))
+            if (!(config.bot_admin_user_ids is null) && config.bot_admin_user_ids.Contains(user.Id))
                 return PrivilegeLevel.BotAdmin;
 
             // Check for Server Moderator privileges.
 
-            foreach (ulong id in config.mod_role_ids)
-                if (user.RoleIds.Contains(id))
-                    return PrivilegeLevel.ServerModerator;
+            if (!(config.mod_role_ids is null))
+                foreach (ulong id in config.mod_role_ids)
+                    if (user.RoleIds.Contains(id))
+                        return PrivilegeLevel.ServerModerator;
 
             // Return basic privilege level.
 

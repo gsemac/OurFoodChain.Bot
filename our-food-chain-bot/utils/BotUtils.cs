@@ -1440,9 +1440,18 @@ namespace OurFoodChain {
                 }
 
                 string title = string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count);
+                List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: title);
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(items, fieldName: title));
-                embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
+
+                if (embed_pages.Count <= 0) {
+
+                    embed.SetTitle(title);
+                    embed.SetDescription(string.Format("No {0} have been added yet.", Taxon.TypeToName(type, plural: true)));
+
+                }
+                else
+                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
 
                 await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
 
@@ -1522,11 +1531,11 @@ namespace OurFoodChain {
 
         }
         public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
-
+            Console.WriteLine(1);
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
                 return;
-
+            Console.WriteLine(2);
             // Make sure that the taxon does not already exist before trying to add it.
 
             Taxon taxon = await GetTaxonFromDb(name, type);

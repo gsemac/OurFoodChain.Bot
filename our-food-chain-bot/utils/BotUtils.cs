@@ -1531,11 +1531,11 @@ namespace OurFoodChain {
 
         }
         public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
-            Console.WriteLine(1);
+        
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
                 return;
-            Console.WriteLine(2);
+         
             // Make sure that the taxon does not already exist before trying to add it.
 
             Taxon taxon = await GetTaxonFromDb(name, type);

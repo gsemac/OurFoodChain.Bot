@@ -1,9 +1,9 @@
 ﻿{
-  "admin_ids": [],
-  "token": "",
-  "prefix": "?",
+  "bot_admin_user_ids": [],
+  "mod_role_ids": [],
   "playing": "",
-  "scratch_server": -1,
+  "prefix": "?",
   "scratch_channel": -1,
-  "mod_role_ids": []
+  "scratch_server": -1,
+  "token": ""
 }

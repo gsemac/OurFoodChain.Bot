@@ -10,7 +10,10 @@ using System.Threading.Tasks;
 namespace OurFoodChain {
 
     public enum PrivilegeLevel {
-        Moderator
+        BotAdmin = 0,
+        ServerAdmin,
+        ServerModerator,
+        ServerMember
     }
 
     public class CommandUtils {
@@ -110,17 +113,34 @@ namespace OurFoodChain {
 
         }
 
-        public static bool CheckPrivilege(ICommandContext context, IGuildUser user, PrivilegeLevel level) {
+        public static PrivilegeLevel GetPrivilegeLevel(IGuildUser user) {
 
-            if (level == PrivilegeLevel.Moderator) {
+            // If there are no privileges set up in the configuration file, grant all users full privileges.
 
-                foreach (ulong id in OurFoodChainBot.GetInstance().GetConfig().mod_role_ids)
-                    if (user.RoleIds.Contains(id))
-                        return true;
+            OurFoodChainBot.Config config = OurFoodChainBot.GetInstance().GetConfig();
 
-            }
+            if (config.bot_admin_user_ids.Count() <= 0 && config.mod_role_ids.Count() <= 0)
+                return 0;
 
-            return false;
+            // Check for Bot Admin privileges.
+
+            if (config.bot_admin_user_ids.Contains(user.Id))
+                return PrivilegeLevel.BotAdmin;
+
+            // Check for Server Moderator privileges.
+
+            foreach (ulong id in config.mod_role_ids)
+                if (user.RoleIds.Contains(id))
+                    return PrivilegeLevel.ServerModerator;
+
+            // Return basic privilege level.
+
+            return PrivilegeLevel.ServerMember;
+
+        }
+        public static bool CheckPrivilege(IGuildUser user, PrivilegeLevel level) {
+
+            return GetPrivilegeLevel(user) <= level;
 
         }
 

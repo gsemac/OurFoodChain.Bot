@@ -197,6 +197,7 @@ namespace OurFoodChain {
         public string name;
         public string description;
         public string owner;
+        public long user_id;
         public long timestamp;
         public string pics;
         public string commonName;
@@ -223,6 +224,7 @@ namespace OurFoodChain {
                 pics = row.Field<string>("pics")
             };
 
+            species.user_id = row.IsNull("user_id") ? -1 : row.Field<long>("user_id");
             species.isExtinct = false;
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
@@ -1377,12 +1379,38 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyAsync_CheckPrivilege(ICommandContext context, IGuildUser user, PrivilegeLevel level) {
 
-            if (CommandUtils.CheckPrivilege(context, user, level))
+            if (CommandUtils.CheckPrivilege(user, level))
                 return true;
 
-            await ReplyAsync_Error(context, "You do not have the necessary privileges to use this command.");
+            string privilege_name = "";
+
+            switch (level) {
+
+                case PrivilegeLevel.BotAdmin:
+                    privilege_name = "Bot Admin";
+                    break;
+
+                case PrivilegeLevel.ServerAdmin:
+                    privilege_name = "Admin";
+                    break;
+
+                case PrivilegeLevel.ServerModerator:
+                    privilege_name = "Moderator";
+                    break;
+
+            }
+
+            await ReplyAsync_Error(context, string.Format("You must have **{0}** privileges to use this command.", privilege_name));
 
             return false;
+
+        }
+        public static async Task<bool> ReplyAsync_CheckPrivilegeOrOwnership(ICommandContext context, IGuildUser user, PrivilegeLevel level, Species species) {
+
+            if (user.Id == (ulong)species.user_id)
+                return true;
+
+            return await ReplyAsync_CheckPrivilege(context, user, level);
 
         }
 
@@ -1495,6 +1523,10 @@ namespace OurFoodChain {
         }
         public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
+
             // Make sure that the taxon does not already exist before trying to add it.
 
             Taxon taxon = await GetTaxonFromDb(name, type);
@@ -1520,6 +1552,10 @@ namespace OurFoodChain {
 
         }
         public static async Task Command_SetTaxon(ICommandContext context, TaxonType type, string childTaxonName, string parentTaxonName) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
 
             // Get the specified child taxon.
 
@@ -1551,6 +1587,10 @@ namespace OurFoodChain {
         }
         public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name, string description) {
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
+
             Taxon taxon = await GetTaxonFromDb(name, type);
 
             if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
@@ -1567,6 +1607,10 @@ namespace OurFoodChain {
 
         }
         public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonType type, string name, string commonName) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
 
             Taxon taxon = await GetTaxonFromDb(name, type);
 

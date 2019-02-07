@@ -20,6 +20,10 @@ namespace OurFoodChain {
         [Command("addgenus")]
         public async Task AddGenus(string genus, string description = "") {
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
             // Make sure that the genus doesn't already exist.
 
             if (!(await BotUtils.GetGenusFromDb(genus) is null)) {
@@ -41,6 +45,10 @@ namespace OurFoodChain {
         }
         [Command("setgenus")]
         public async Task SetGenus(string genus, string species, string newGenus = "") {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
 
             // If there is no argument for "newGenus", assume the user omitted the original genus.
             // e.g.: setgenus <species> <newGenus>
@@ -82,6 +90,10 @@ namespace OurFoodChain {
         [Command("setgenuspic"), Alias("setgpic")]
         public async Task SetGenusPic(string genus, string picUrl) {
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
             Genus genus_info = await BotUtils.GetGenusFromDb(genus);
 
             if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
@@ -104,6 +116,10 @@ namespace OurFoodChain {
         }
         [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
         public async Task SetGenusDescription(string genus, string description) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
 
             Genus genus_info = await BotUtils.GetGenusFromDb(genus);
 

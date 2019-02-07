@@ -177,7 +177,7 @@
     <Compile Include="Period.cs" />
     <Compile Include="Picture.cs" />
     <Compile Include="Taxon.cs" />
-    <Compile Include="trophies\TrophyCommands.cs" />
+    <Compile Include="commands\TrophyCommands.cs" />
     <Compile Include="trophies\Trophy.cs" />
     <Compile Include="trophies\UnlockedTrophyInfo.cs" />
     <Compile Include="trophies\TrophyRegistry.cs" />

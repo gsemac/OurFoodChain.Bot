@@ -86,13 +86,13 @@ namespace OurFoodChain {
         }
 
         public struct Config {
-            public string[] adminIds;
-            public string token;
-            public string prefix;
-            public string playing;
-            public ulong scratch_server;
-            public ulong scratch_channel;
+            public ulong[] bot_admin_user_ids;
             public ulong[] mod_role_ids;
+            public string playing;
+            public string prefix;
+            public ulong scratch_channel;
+            public ulong scratch_server;
+            public string token;
         }
 
         public static OurFoodChainBot GetInstance() {

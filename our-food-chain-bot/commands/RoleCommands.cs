@@ -16,6 +16,10 @@ namespace OurFoodChain {
         [Command("addrole")]
         public async Task AddRole(string name, string description = "") {
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
             Role role = new Role {
                 name = name,
                 description = description
@@ -236,6 +240,10 @@ namespace OurFoodChain {
 
         [Command("setroledescription"), Alias("setroledesc")]
         public async Task SetRoleDescription(string name, string description) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
 
             Role role = await BotUtils.GetRoleFromDb(name);
 

@@ -567,39 +567,51 @@ namespace OurFoodChain {
         }
 
         [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
-        public async Task SetDescription(string genus, string species = "", string description = "") {
+        public async Task SetDescription(string species) {
+            await SetDescription("", species);
+        }
+        [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
+        public async Task SetDescription(string speciesOrGenus, string descriptionOrSpecies) {
 
-            // If the "species" argument was not provided, assume the user omitted the genus.
+            // Either the user provided a species and a description, or they provided a genus and species and want to use the two-part command.
+            // If the species exists, we'll use the two-part command version. If it doesn't, we'll assume the user was providing a description directly.
 
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
+            Species[] species_list = await BotUtils.GetSpeciesFromDb(speciesOrGenus, descriptionOrSpecies);
+
+            if (species_list.Count() <= 0) {
+
+                // No such species exists for the given genus/species, so look for the species instead and update its description directly.
+
+                await SetDescription("", speciesOrGenus, descriptionOrSpecies);
+
             }
+            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {
+
+                // A species exists with the given genus/species, so initiate a two-part command.
+
+                TwoPartCommandWaitParams p = new TwoPartCommandWaitParams(Context);
+                p.type = TwoPartCommandWaitParamsType.Description;
+                p.args = new string[] { speciesOrGenus, descriptionOrSpecies };
+                p.timestamp = DateTime.Now;
+
+                BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("Reply with the description for **{0}**.\n\nReply with \"cancel\" to cancel the update.", species_list[0].GetShortName()));
+
+            }
+
+        }
+        [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
+        public async Task SetDescription(string genus, string species, string description) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
             if (sp is null)
                 return;
 
-            if (string.IsNullOrEmpty(description)) {
+            await BotUtils.UpdateSpeciesDescription(genus, species, description);
 
-                TwoPartCommandWaitParams p = new TwoPartCommandWaitParams();
-                p.type = TwoPartCommandWaitParamsType.Description;
-                p.args = new string[] { genus, species };
-                p.timestamp = DateTime.Now;
-
-                BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
-
-                await ReplyAsync(string.Format("Enter a description for **{0}**.", sp.GetShortName()));
-
-            }
-            else {
-
-                await BotUtils.UpdateSpeciesDescription(genus, species, description);
-
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
-
-            }
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
 
         }
 

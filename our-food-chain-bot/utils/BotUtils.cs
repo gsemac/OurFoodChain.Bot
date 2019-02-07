@@ -18,9 +18,18 @@ namespace OurFoodChain {
     }
 
     class TwoPartCommandWaitParams {
+
+        public TwoPartCommandWaitParams(ICommandContext context) {
+
+            this.context = context;
+
+        }
+
         public TwoPartCommandWaitParamsType type;
+        public ICommandContext context;
         public string[] args;
         public DateTime timestamp;
+
     }
 
     public enum ZoneType {
@@ -1094,9 +1103,17 @@ namespace OurFoodChain {
 
                 case TwoPartCommandWaitParamsType.Description:
 
-                    await UpdateSpeciesDescription(p.args[0], p.args[1], message.Content);
+                    if (message.Content.Equals("cancel", StringComparison.OrdinalIgnoreCase)) {
 
-                    await message.Channel.SendMessageAsync("Description updated successfully.");
+                        await ReplyAsync_Info(p.context, "Description updated canceled.");
+
+                    }
+                    else {
+
+                        await UpdateSpeciesDescription(p.args[0], p.args[1], message.Content);
+                        await ReplyAsync_Success(p.context, "Description updated successfully.");
+
+                    }
 
                     break;
 

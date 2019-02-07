@@ -1105,7 +1105,7 @@ namespace OurFoodChain {
 
                     if (message.Content.Equals("cancel", StringComparison.OrdinalIgnoreCase)) {
 
-                        await ReplyAsync_Info(p.context, "Description update canceled.");
+                        await message.Channel.SendMessageAsync("Description update canceled.");
 
                     }
                     else {
@@ -1392,11 +1392,8 @@ namespace OurFoodChain {
 
             if (string.IsNullOrEmpty(name)) {
 
-                EmbedBuilder embed = new EmbedBuilder();
-
                 Taxon[] all_taxa = await GetTaxaFromDb(type);
-
-                StringBuilder taxon_description = new StringBuilder();
+                List<string> items = new List<string>();
                 int taxon_count = 0;
 
                 foreach (Taxon taxon in all_taxa) {
@@ -1408,17 +1405,18 @@ namespace OurFoodChain {
                     if (sub_taxa_count <= 0)
                         continue;
 
-                    taxon_description.AppendLine(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
+                    items.Add(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
 
                     ++taxon_count;
 
                 }
 
-                embed.WithTitle(string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count));
-                embed.WithDescription(taxon_description.ToString());
-                embed.WithFooter(string.Format("Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
+                string title = string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count);
 
-                await context.Channel.SendMessageAsync("", false, embed.Build());
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(items, fieldName: title));
+                embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
 
             }
             else {
@@ -1451,23 +1449,34 @@ namespace OurFoodChain {
 
                     foreach (Taxon t in sub_taxa) {
 
-                        // Count the sub-taxa under this taxon.
-                        long sub_taxa_count = 0;
+                        if (t.type == TaxonType.Species) {
 
-                        using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
-                            Taxon.TypeToDatabaseTableName(t.GetChildType()),
-                            Taxon.TypeToDatabaseColumnName(t.type)
-                            ))) {
+                            // Do not attempt to count sub-taxa for species.
 
-                            cmd.Parameters.AddWithValue("$parent_id", t.id);
-
-                            sub_taxa_count = await Database.GetScalar<long>(cmd);
+                            description.AppendLine(t.GetName());
 
                         }
+                        else {
 
-                        description.AppendLine(string.Format("{0} ({1})",
-                            t.GetName(),
-                            sub_taxa_count));
+                            // Count the sub-taxa under this taxon.
+                            long sub_taxa_count = 0;
+
+                            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
+                                Taxon.TypeToDatabaseTableName(t.GetChildType()),
+                                Taxon.TypeToDatabaseColumnName(t.type)
+                                ))) {
+
+                                cmd.Parameters.AddWithValue("$parent_id", t.id);
+
+                                sub_taxa_count = await Database.GetScalar<long>(cmd);
+
+                            }
+
+                            description.AppendLine(string.Format("{0} ({1})",
+                                t.GetName(),
+                                sub_taxa_count));
+
+                        }
 
                     }
 

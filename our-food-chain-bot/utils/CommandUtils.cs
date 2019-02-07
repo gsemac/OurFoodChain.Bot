@@ -13,7 +13,7 @@ namespace OurFoodChain {
         Moderator
     }
 
-    class CommandUtils {
+    public class CommandUtils {
 
         private const int MAX_PAGINATED_MESSAGES = 50;
 

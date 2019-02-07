@@ -168,6 +168,7 @@
     <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\PeriodCommands.cs" />
     <Compile Include="commands\RoleCommands.cs" />
+    <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Gallery.cs" />
     <Compile Include="gotchi\Gotchi.cs" />
     <Compile Include="gotchi\GotchiCommands.cs" />
@@ -192,6 +193,7 @@
     <Compile Include="utils\LevenshteinDistance.cs" />
     <Compile Include="utils\CommandUtils.cs" />
     <Compile Include="utils\GraphicsUtils.cs" />
+    <Compile Include="utils\PaginatedEmbedBuilder.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\Tree.cs" />
   </ItemGroup>

@@ -930,19 +930,15 @@ namespace OurFoodChain {
         }
 
         [Command("+zone"), Alias("+zones")]
-        public async Task PlusZone(string genus, string species, string zone = "") {
+        public async Task PlusZone(string species, string zone) {
+            await PlusZone("", species, zone);
+        }
+        [Command("+zone"), Alias("+zones")]
+        public async Task PlusZone(string genus, string species, string zone) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
                 return;
-
-            // If the zone argument is empty, assume the user omitted the genus.
-
-            if (string.IsNullOrEmpty(zone)) {
-                zone = species;
-                species = genus;
-                genus = string.Empty;
-            }
 
             // Get the specified species.
 
@@ -956,19 +952,15 @@ namespace OurFoodChain {
 
         }
         [Command("-zone"), Alias("-zones")]
-        public async Task MinusZone(string genus, string species, string zone = "") {
+        public async Task MinusZone(string species, string zone) {
+            await MinusZone("", species, zone);
+        }
+        [Command("-zone"), Alias("-zones")]
+        public async Task MinusZone(string genus, string species, string zone) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
                 return;
-
-            // If the zone argument is empty, assume the user omitted the genus.
-
-            if (string.IsNullOrEmpty(zone)) {
-                zone = species;
-                species = genus;
-                genus = string.Empty;
-            }
 
             // Get the specified species.
 
@@ -977,20 +969,45 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
+            // Get the zones that the species currently resides in.
+            // These will be used to show warning messages (e.g., doesn't exist in the given zone).
+
+            long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.id)).Select(x => x.id).ToArray();
+
             // Remove the zone information for the species.
             // #todo This can be done in a single query.
 
-            List<string> removed_from_zones_list = new List<string>();
+            List<string> valid_zones_list = new List<string>(); // List of all zones the species was successfully removed from
+            List<string> invalid_zones_list = new List<string>(); // List of all zones given that don't exist
+            List<string> not_in_zones_list = new List<string>(); // List of all zones given that the species did not exist in
 
             foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
 
                 Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
 
-                // If the given zone does not exist, silently skip it.
-                if (zone_info is null)
+                // If the given zone does not exist, skip it. We'll show a warning later.
+
+                if (zone_info is null) {
+
+                    invalid_zones_list.Add(string.Format("**{0}**", OurFoodChain.Zone.GetFullName(zoneName)));
+
                     continue;
 
-                removed_from_zones_list.Add(StringUtils.ToTitleCase(zone_info.name));
+                }
+
+                // If the species was never in the given zone, skip it. We'll show a warning later.
+
+                if (!current_zone_ids.Contains(zone_info.id)) {
+
+                    not_in_zones_list.Add(string.Format("**{0}**", OurFoodChain.Zone.GetFullName(zoneName)));
+
+                    continue;
+
+                }
+
+                // The zone exists and the species resides within it, so remove the species from this zone.
+
+                valid_zones_list.Add(string.Format("**{0}**", StringUtils.ToTitleCase(zone_info.name)));
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
 
@@ -1003,7 +1020,15 @@ namespace OurFoodChain {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits **{1}**.", sp.GetShortName(), StringUtils.DisjunctiveJoin(", ", removed_from_zones_list)));
+            if (invalid_zones_list.Count() > 0)
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.", StringUtils.ConjunctiveJoin(", ", invalid_zones_list),
+                    invalid_zones_list.Count() == 1 ? "does" : "do"));
+
+            if (not_in_zones_list.Count() > 0)
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.", sp.GetShortName(), StringUtils.ConjunctiveJoin(", ", not_in_zones_list)));
+
+            if (valid_zones_list.Count() > 0)
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.", sp.GetShortName(), StringUtils.DisjunctiveJoin(", ", valid_zones_list)));
 
         }
 

@@ -1280,7 +1280,7 @@ namespace OurFoodChain {
 
                 if (zone_info is null) {
 
-                    invalid_zones.Add(StringUtils.ToTitleCase(Zone.GetFullName(zoneName)));
+                    invalid_zones.Add(string.Format("**{0}**", StringUtils.ToTitleCase(Zone.GetFullName(zoneName))));
 
                     continue;
 
@@ -1297,19 +1297,19 @@ namespace OurFoodChain {
 
                 }
 
-                valid_zones.Add(zone_info.GetFullName());
+                valid_zones.Add(string.Format("**{0}**", zone_info.GetFullName()));
 
             }
 
             if (invalid_zones.Count() > 0)
-                await ReplyAsync_Warning(context, string.Format("The following zones could not be added (because they don't exist): **{0}**", string.Join(", ", invalid_zones)));
+                await ReplyAsync_Warning(context, string.Format("{0} {1} not exist.", StringUtils.ConjunctiveJoin(", ", invalid_zones),
+                    invalid_zones.Count() == 1 ? "does" : "do"));
 
             if (valid_zones.Count() > 0 && !showErrorsOnly) {
 
-                await ReplyAsync_Success(context, string.Format("**{0}** now inhabits {2} **{1}**.",
+                await ReplyAsync_Success(context, string.Format("**{0}** now inhabits {1}.",
                       sp.GetShortName(),
-                      StringUtils.ConjunctiveJoin(", ", valid_zones),
-                      valid_zones.Count() > 1 ? "zones" : "zone"));
+                      StringUtils.ConjunctiveJoin(", ", valid_zones)));
 
             }
 
@@ -1531,11 +1531,11 @@ namespace OurFoodChain {
 
         }
         public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
-        
+
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
                 return;
-         
+
             // Make sure that the taxon does not already exist before trying to add it.
 
             Taxon taxon = await GetTaxonFromDb(name, type);

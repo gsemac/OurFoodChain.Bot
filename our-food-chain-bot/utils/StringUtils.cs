@@ -70,6 +70,9 @@ namespace OurFoodChain {
             if (values.Count() == 1)
                 return values.First();
 
+            if (values.Count() == 2)
+                return string.Join(endSeparator, values);
+
             StringBuilder sb = new StringBuilder();
 
             for (int i = 0; i + 1 < values.Count(); ++i) {

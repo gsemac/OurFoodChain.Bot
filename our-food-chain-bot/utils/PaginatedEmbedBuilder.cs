@@ -32,6 +32,15 @@ namespace OurFoodChain {
                 page.WithDescription(description);
 
         }
+        public void SetThumbnailUrl(string thumbnailUrl) {
+
+            if (_pages.Count <= 0)
+                _pages.Add(new EmbedBuilder());
+
+            foreach (EmbedBuilder page in _pages)
+                page.WithThumbnailUrl(thumbnailUrl);
+
+        }
         public void AppendFooter(string footer) {
 
             if (_pages.Count <= 0)

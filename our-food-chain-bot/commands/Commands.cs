@@ -1772,7 +1772,7 @@ namespace OurFoodChain {
 
             // Create embed pages.
 
-            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("**Species in this {0} ({1}):**", taxon.GetTypeName(), species.Count()));
+            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("Species in this {0} ({1}):", taxon.GetTypeName(), species.Count()));
 
             if (pages.Count <= 0)
                 pages.Add(new EmbedBuilder());
@@ -1782,12 +1782,20 @@ namespace OurFoodChain {
             StringBuilder description_builder = new StringBuilder();
             description_builder.AppendLine(taxon.GetDescriptionOrDefault());
 
+            if (species.Count() <= 0) {
+
+                description_builder.AppendLine();
+                description_builder.AppendLine(string.Format("This {0} contains no species.", Taxon.TypeToName(taxon.type)));
+
+            }
+
             // Add title to all pages.
 
             foreach (EmbedBuilder page in pages) {
 
                 page.WithTitle(string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
                 page.WithDescription(description_builder.ToString());
+                page.WithThumbnailUrl(taxon.pics);
 
             }
 

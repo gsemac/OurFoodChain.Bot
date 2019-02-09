@@ -1414,48 +1414,51 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type, string name) {
+        public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type) {
 
             // If no taxon name was provided, list everything under the taxon.
 
-            if (string.IsNullOrEmpty(name)) {
+            Taxon[] all_taxa = await GetTaxaFromDb(type);
+            List<string> items = new List<string>();
+            int taxon_count = 0;
 
-                Taxon[] all_taxa = await GetTaxaFromDb(type);
-                List<string> items = new List<string>();
-                int taxon_count = 0;
+            foreach (Taxon taxon in all_taxa) {
 
-                foreach (Taxon taxon in all_taxa) {
+                // Count the number of items under this taxon.
 
-                    // Count the number of items under this taxon.
+                int sub_taxa_count = (await GetSubTaxaFromDb(taxon)).Count();
 
-                    int sub_taxa_count = (await GetSubTaxaFromDb(taxon)).Count();
+                if (sub_taxa_count <= 0)
+                    continue;
 
-                    if (sub_taxa_count <= 0)
-                        continue;
+                items.Add(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
 
-                    items.Add(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
-
-                    ++taxon_count;
-
-                }
-
-                string title = string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count);
-                List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: title);
-
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
-
-                if (embed_pages.Count <= 0) {
-
-                    embed.SetTitle(title);
-                    embed.SetDescription(string.Format("No {0} have been added yet.", Taxon.TypeToName(type, plural: true)));
-
-                }
-                else
-                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
-
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
+                ++taxon_count;
 
             }
+
+            string title = string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count);
+            List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: title);
+
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
+
+            if (embed_pages.Count <= 0) {
+
+                embed.SetTitle(title);
+                embed.SetDescription(string.Format("No {0} have been added yet.", Taxon.TypeToName(type, plural: true)));
+
+            }
+            else
+                embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
+
+        }
+        public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type, string name) {
+
+            if (string.IsNullOrEmpty(name))
+                await Command_ShowTaxon(context, type);
+
             else {
 
                 // Get the specified taxon.
@@ -1465,67 +1468,71 @@ namespace OurFoodChain {
                 if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
                     return;
 
-                // Get all sub-taxa under this taxon.
+                // Get all subtaxa under this taxon.
+                Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
+                List<string> items = new List<string>();
 
-                Taxon[] sub_taxa = await GetSubTaxaFromDb(taxon);
+                // Add all subtaxa to the list.
 
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.WithTitle(string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
-                embed.WithThumbnailUrl(taxon.pics);
+                foreach (Taxon t in subtaxa) {
 
-                StringBuilder description = new StringBuilder();
-                description.AppendLine(taxon.GetDescriptionOrDefault());
-                description.AppendLine();
+                    if (t.type == TaxonType.Species)
+                        // Do not attempt to count sub-taxa for species.
+                        items.Add(t.GetName());
 
-                if (sub_taxa.Count() > 0) {
+                    else {
 
-                    description.AppendLine(string.Format("**{0} in this {1} ({2}):**",
-                        StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)),
-                        Taxon.TypeToName(type),
-                        sub_taxa.Count()));
+                        // Count the sub-taxa under this taxon.
 
-                    foreach (Taxon t in sub_taxa) {
+                        long subtaxa_count = 0;
 
-                        if (t.type == TaxonType.Species) {
+                        using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
+                            Taxon.TypeToDatabaseTableName(t.GetChildType()),
+                            Taxon.TypeToDatabaseColumnName(t.type)
+                            ))) {
 
-                            // Do not attempt to count sub-taxa for species.
+                            cmd.Parameters.AddWithValue("$parent_id", t.id);
 
-                            description.AppendLine(t.GetName());
-
-                        }
-                        else {
-
-                            // Count the sub-taxa under this taxon.
-                            long sub_taxa_count = 0;
-
-                            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
-                                Taxon.TypeToDatabaseTableName(t.GetChildType()),
-                                Taxon.TypeToDatabaseColumnName(t.type)
-                                ))) {
-
-                                cmd.Parameters.AddWithValue("$parent_id", t.id);
-
-                                sub_taxa_count = await Database.GetScalar<long>(cmd);
-
-                            }
-
-                            description.AppendLine(string.Format("{0} ({1})",
-                                t.GetName(),
-                                sub_taxa_count));
+                            subtaxa_count = await Database.GetScalar<long>(cmd);
 
                         }
+
+                        // Add the taxon to the list.
+
+                        if (subtaxa_count > 0)
+                            items.Add(string.Format("{0} ({1})", t.GetName(), subtaxa_count));
 
                     }
 
                 }
-                else
-                    description.AppendLine(string.Format("This {0} contains no {1}.",
-                        Taxon.TypeToName(type),
-                        Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)));
 
-                embed.WithDescription(description.ToString());
+                // Generate embed pages.
 
-                await context.Channel.SendMessageAsync("", false, embed.Build());
+                string title = string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
+                string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)), Taxon.TypeToName(type), subtaxa.Count());
+                string thumbnail_url = taxon.pics;
+
+                StringBuilder description = new StringBuilder();
+                description.AppendLine(taxon.GetDescriptionOrDefault());
+
+                if (items.Count() <= 0) {
+
+                    description.AppendLine();
+                    description.AppendLine(string.Format("This {0} contains no {1}.", Taxon.TypeToName(type), Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)));
+
+                }
+
+                List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: field_title);
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
+
+                embed.SetTitle(title);
+                embed.SetThumbnailUrl(thumbnail_url);
+                embed.SetDescription(description.ToString());
+
+                if (items.Count() > 0 && taxon.type != TaxonType.Genus)
+                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(taxon.GetChildType(), plural: true)));
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
 
             }
 

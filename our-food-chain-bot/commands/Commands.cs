@@ -1857,6 +1857,33 @@ namespace OurFoodChain {
             }
 
         }
+        [Command("random"), Alias("rand")]
+        public async Task Random(string taxonName) {
+
+            // Get the taxon.
+
+            Taxon taxon = await BotUtils.GetTaxonFromDb(taxonName);
+
+            if (taxon is null) {
+
+                await BotUtils.ReplyAsync_Error(Context, "No such taxon exists.");
+
+                return;
+
+            }
+
+            // Get all species under that taxon.
+
+            List<Species> species = new List<Species>();
+            species.AddRange(await BotUtils.GetSpeciesInTaxonFromDb(taxon));
+            species.RemoveAll(x => x.isExtinct);
+
+            if (species.Count() <= 0)
+                await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtils.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
+            else
+                await GetSpecies(species[_random_generator.Next(species.Count())]);
+
+        }
 
     }
 

@@ -1478,7 +1478,7 @@ namespace OurFoodChain {
 
                     if (t.type == TaxonType.Species)
                         // Do not attempt to count sub-taxa for species.
-                        items.Add(t.GetName());
+                        items.Add(t.GetName().ToLower());
 
                     else {
 

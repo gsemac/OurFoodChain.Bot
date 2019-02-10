@@ -6,6 +6,8 @@
   "category": "fun",
   "description": "Displays information on a random extant species.",
   "examples": [
-    "random"
+    "random",
+    "random <taxon>",
+    "random helix"
   ]
 }

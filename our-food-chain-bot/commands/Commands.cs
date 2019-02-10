@@ -22,9 +22,12 @@ namespace OurFoodChain {
 
             Species[] species = await BotUtils.GetSpeciesFromDb("", name);
 
-            if (species.Count() > 0 && await BotUtils.ReplyAsync_ValidateSpecies(Context, species))
-                await GetSpecies(species[0]);
+            if (species.Count() > 0) {
 
+                if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species))
+                    await GetSpecies(species[0]);
+
+            }
             else {
 
                 // Otherwise, show other taxon.

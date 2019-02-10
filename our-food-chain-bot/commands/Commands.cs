@@ -15,22 +15,52 @@ namespace OurFoodChain {
     public class Commands :
         ModuleBase {
 
-        [Command("info"), Alias("i", "species", "sp", "s")]
-        public async Task Info(string species) {
-            await Info("", species);
+        [Command("info"), Alias("i")]
+        public async Task GetInfo(string name) {
+
+            // Prioritize species first.
+
+            Species[] species = await BotUtils.GetSpeciesFromDb("", name);
+
+            if (species.Count() > 0 && await BotUtils.ReplyAsync_ValidateSpecies(Context, species))
+                await GetSpecies(species[0]);
+
+            else {
+
+                // Otherwise, show other taxon.
+
+                Taxon taxon = await BotUtils.GetTaxonFromDb(name);
+
+                if (taxon is null)
+                    // For now, call the regular "GetSpecies" command so this command still shows species suggestions.
+                    await GetSpecies(name);
+                else
+                    await BotUtils.Command_ShowTaxon(Context, taxon.type, name);
+
+            }
+
         }
-        [Command("info"), Alias("i", "species", "sp", "s")]
-        public async Task Info(string genus, string species) {
+        [Command("info"), Alias("i")]
+        public async Task GetInfo(string genus, string species) {
+            await GetSpecies(genus, species);
+        }
+
+        [Command("species"), Alias("sp", "s")]
+        public async Task GetSpecies(string species) {
+            await GetSpecies("", species);
+        }
+        [Command("species"), Alias("sp", "s")]
+        public async Task GetSpecies(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
             if (sp is null)
                 return;
 
-            await Info(sp);
+            await GetSpecies(sp);
 
         }
-        public async Task Info(Species sp) {
+        public async Task GetSpecies(Species sp) {
 
             EmbedBuilder embed = new EmbedBuilder();
             StringBuilder description_builder = new StringBuilder();
@@ -1822,7 +1852,7 @@ namespace OurFoodChain {
                 if (row is null)
                     await BotUtils.ReplyAsync_Info(Context, "There are currently no extant species.");
                 else
-                    await Info(await Species.FromDataRow(row));
+                    await GetSpecies(await Species.FromDataRow(row));
 
             }
 

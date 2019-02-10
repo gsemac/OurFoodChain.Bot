@@ -1,0 +1,13 @@
+﻿{
+  "name": "info",
+  "aliases": [
+    "i"
+  ],
+  "category": "info",
+  "description": "Shows information about the given taxon.",
+  "examples": [
+    "info <taxon>",
+    "info quattuorus",
+    "info musculata"
+  ]
+}

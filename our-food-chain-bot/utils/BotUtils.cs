@@ -384,7 +384,7 @@ namespace OurFoodChain {
 
             if (string.IsNullOrEmpty(genus) || Regex.Match(genus, @"[a-z]\.?$").Success) {
 
-                selection_str = "SELECT * FROM Species WHERE name=$species;";
+                selection_str = "SELECT * FROM Species WHERE name=$species OR common_name=$species;";
                 genus_is_abbrev = true;
 
             }

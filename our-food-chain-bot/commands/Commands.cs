@@ -423,6 +423,7 @@ namespace OurFoodChain {
                 p.type = TwoPartCommandWaitParamsType.Description;
                 p.args = new string[] { speciesOrGenus, descriptionOrSpecies };
                 p.timestamp = DateTime.Now;
+                p.channelId = Context.Channel.Id;
 
                 BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
 

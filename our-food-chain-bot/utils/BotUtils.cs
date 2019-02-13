@@ -29,6 +29,7 @@ namespace OurFoodChain {
         public ICommandContext context;
         public string[] args;
         public DateTime timestamp;
+        public ulong channelId = 0;
 
     }
 
@@ -1100,6 +1101,10 @@ namespace OurFoodChain {
                 return;
 
             TwoPartCommandWaitParams p = TWO_PART_COMMAND_WAIT_PARAMS[message.Author.Id];
+
+            // The second half of a two-part message must be sent in the same channel as the first part.
+            if (message.Channel.Id != p.channelId)
+                return;
 
             switch (p.type) {
 

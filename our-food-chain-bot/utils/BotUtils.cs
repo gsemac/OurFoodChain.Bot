@@ -1473,39 +1473,60 @@ namespace OurFoodChain {
                 if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
                     return;
 
-                // Get all subtaxa under this taxon.
-                Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
                 List<string> items = new List<string>();
 
-                // Add all subtaxa to the list.
+                if (taxon.type == TaxonType.Genus) {
 
-                foreach (Taxon t in subtaxa) {
+                    // For genera, get all species underneath it.
+                    // This will let us check if the species is extinct, and cross it out if that's the case.
 
-                    if (t.type == TaxonType.Species)
-                        // Do not attempt to count sub-taxa for species.
-                        items.Add(t.GetName().ToLower());
+                    Species[] species = await GetSpeciesInTaxonFromDb(taxon);
 
-                    else {
+                    Array.Sort(species, (lhs, rhs) => lhs.name.ToLower().CompareTo(rhs.name.ToLower()));
 
-                        // Count the sub-taxa under this taxon.
+                    foreach (Species s in species)
+                        if (s.isExtinct)
+                            items.Add(string.Format("~~{0}~~", s.name.ToLower()));
+                        else
+                            items.Add(s.name.ToLower());
 
-                        long subtaxa_count = 0;
+                }
+                else {
 
-                        using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
-                            Taxon.TypeToDatabaseTableName(t.GetChildType()),
-                            Taxon.TypeToDatabaseColumnName(t.type)
-                            ))) {
+                    // Get all subtaxa under this taxon.
+                    Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
 
-                            cmd.Parameters.AddWithValue("$parent_id", t.id);
+                    // Add all subtaxa to the list.
 
-                            subtaxa_count = await Database.GetScalar<long>(cmd);
+                    foreach (Taxon t in subtaxa) {
+
+                        if (t.type == TaxonType.Species)
+                            // Do not attempt to count sub-taxa for species.
+                            items.Add(t.GetName().ToLower());
+
+                        else {
+
+                            // Count the sub-taxa under this taxon.
+
+                            long subtaxa_count = 0;
+
+                            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
+                                Taxon.TypeToDatabaseTableName(t.GetChildType()),
+                                Taxon.TypeToDatabaseColumnName(t.type)
+                                ))) {
+
+                                cmd.Parameters.AddWithValue("$parent_id", t.id);
+
+                                subtaxa_count = await Database.GetScalar<long>(cmd);
+
+                            }
+
+                            // Add the taxon to the list.
+
+                            if (subtaxa_count > 0)
+                                items.Add(string.Format("{0} ({1})", t.GetName(), subtaxa_count));
 
                         }
-
-                        // Add the taxon to the list.
-
-                        if (subtaxa_count > 0)
-                            items.Add(string.Format("{0} ({1})", t.GetName(), subtaxa_count));
 
                     }
 
@@ -1514,7 +1535,7 @@ namespace OurFoodChain {
                 // Generate embed pages.
 
                 string title = string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
-                string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)), Taxon.TypeToName(type), subtaxa.Count());
+                string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)), Taxon.TypeToName(type), items.Count());
                 string thumbnail_url = taxon.pics;
 
                 StringBuilder description = new StringBuilder();

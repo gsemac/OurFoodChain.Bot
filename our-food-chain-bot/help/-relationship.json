@@ -1,0 +1,9 @@
+﻿{
+  "name": "-relationship",
+  "aliases": [ "-relation" ],
+  "category": "update",
+  "description": "Removes the given relationship from the two given species. The relationship is removed regardless of the direction (e.g., if SpeciesA parasitizes SpeciesB or SpeciesB parasitizes SpeciesA).",
+  "examples": [
+    "-relationship SpeciesA SpeciesB parasitism"
+  ]
+}

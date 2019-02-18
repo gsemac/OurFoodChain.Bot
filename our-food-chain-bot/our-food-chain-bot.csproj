@@ -167,6 +167,7 @@
   <ItemGroup>
     <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\PeriodCommands.cs" />
+    <Compile Include="commands\RelationshipCommands.cs" />
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Gallery.cs" />
@@ -176,6 +177,7 @@
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Period.cs" />
     <Compile Include="Picture.cs" />
+    <Compile Include="Relationship.cs" />
     <Compile Include="Taxon.cs" />
     <Compile Include="commands\TrophyCommands.cs" />
     <Compile Include="trophies\Trophy.cs" />
@@ -201,9 +203,11 @@
     <None Include="App.config" />
     <None Include="config.json" />
     <None Include="help\+pic.json" />
+    <None Include="help\+relationship.json" />
     <None Include="help\+zone.json" />
     <None Include="help\-extinct.json" />
     <None Include="help\-prey.json" />
+    <None Include="help\-relationship.json" />
     <None Include="help\-zone.json" />
     <None Include="help\addclass.json" />
     <None Include="help\adddomain.json" />
@@ -231,6 +235,7 @@
     <None Include="help\family.json" />
     <None Include="help\genus.json" />
     <None Include="help\help.json" />
+    <None Include="help\relationships.json" />
     <None Include="help\setfamilycommonname.json" />
     <None Include="help\setgenus.json" />
     <None Include="help\setgenuspic.json" />

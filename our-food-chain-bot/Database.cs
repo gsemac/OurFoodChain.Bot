@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 16;
+        public const int DATABASE_VERSION = 17;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -261,6 +261,10 @@ namespace OurFoodChain {
                     await _update016(conn);
                     break;
 
+                case 17:
+                    await _update017(conn);
+                    break;
+
             }
 
             await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", updateNumber));
@@ -481,6 +485,30 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 16);
+
+        }
+        private static async Task _update017(SQLiteConnection conn) {
+
+            // Adds support for Relationships.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Relationships(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, UNIQUE(name));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesRelationships(species1_id INTEGER, species2_id INTEGER, relationship_id INTEGER, FOREIGN KEY(species1_id) REFERENCES Species(id), FOREIGN KEY(species2_id) REFERENCES Species(id), FOREIGN KEY(relationship_id) REFERENCES Relationships(id), UNIQUE(species1_id, species2_id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            // Insert default relationships.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Relationships(name, description) VALUES(\"parasitism\", \"A relationship where one organism lives in or on another, receiving benefits at the expense of the host.\")", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Relationships(name, description) VALUES(\"mutualism\", \"A relationship where both organisms benefit from interacting with the other.\")", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Relationships(name, description) VALUES(\"commensalism\", \"A relationship where one organism benefits from interacting with another, while the other organism is unaffected.\")", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 17);
 
         }
 

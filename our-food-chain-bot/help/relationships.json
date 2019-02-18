@@ -1,0 +1,13 @@
+﻿{
+  "name": "relationships",
+  "aliases": [
+    "relations",
+    "related"
+  ],
+  "category": "info",
+  "description": "Lists all species that have a relationship with the given species. If no species is provided, lists all relationship types.",
+  "examples": [
+    "relationships",
+    "related H. quattuorus"
+  ]
+}

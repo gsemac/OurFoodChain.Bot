@@ -1,0 +1,9 @@
+﻿{
+  "name": "+relationship",
+  "aliases": [ "+relation" ],
+  "category": "update",
+  "description": "Adds a new relationship between the two given species. The relationship is added from the perspective of the first species. For example, if SpeciesB is a parasite of SpeciesA, one would use \"?+relationship SpeciesA SpeciesB parasitism\"",
+  "examples": [
+    "+relationship SpeciesA SpeciesB parasitism"
+  ]
+}

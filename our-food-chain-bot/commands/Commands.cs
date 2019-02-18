@@ -1780,6 +1780,44 @@ namespace OurFoodChain {
         }
 
         [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
+        public async Task ListSpecies() {
+
+            // Get all species.
+
+            List<Species> species = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species;"))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows)
+                    species.Add(await Species.FromDataRow(row));
+
+            // If there are no species, state so.
+
+            if (species.Count <= 0) {
+
+                await BotUtils.ReplyAsync_Info(Context, "No species have been added yet.");
+
+                return;
+
+            }
+
+            // Create embed pages.
+
+            species.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("All species ({0}):", species.Count()));
+
+            // Send the result.
+
+            CommandUtils.PaginatedMessage reply = new CommandUtils.PaginatedMessage();
+
+            foreach (EmbedBuilder page in pages)
+                reply.pages.Add(page.Build());
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, reply);
+
+        }
+        [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
         public async Task ListSpecies(string taxonName) {
 
             // Get the taxon.

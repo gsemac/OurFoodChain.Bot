@@ -50,6 +50,24 @@ namespace OurFoodChain {
                 page.WithFooter(page.Footer is null ? footer : page.Footer.Text + footer);
 
         }
+        public void SetColor(Color color) {
+
+            foreach (EmbedBuilder page in _pages)
+                page.WithColor(color);
+
+        }
+
+        public void SetCallback(Action<CommandUtils.PaginatedMessageCallbackArgs> callback) {
+
+            _callback = callback;
+
+        }
+
+        public void AddReaction(string reaction) {
+
+            _reactions.Add(reaction);
+
+        }
 
         public CommandUtils.PaginatedMessage Build() {
 
@@ -58,12 +76,19 @@ namespace OurFoodChain {
             foreach (EmbedBuilder page in _pages)
                 message.pages.Add(page.Build());
 
+            message.callback = _callback;
+
+            // In the future, all reactions should be added.
+            if (_reactions.Count() > 0)
+                message.emojiToggle = _reactions[0];
+
             return message;
 
         }
 
         private List<EmbedBuilder> _pages = new List<EmbedBuilder>();
-
+        private Action<CommandUtils.PaginatedMessageCallbackArgs> _callback;
+        private List<string> _reactions = new List<string>();
 
     }
 

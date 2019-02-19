@@ -20,6 +20,15 @@ namespace OurFoodChain {
 
         private const int MAX_PAGINATED_MESSAGES = 50;
 
+        public class PaginatedMessageCallbackArgs {
+
+            public IUserMessage discordMessage = null;
+            public PaginatedMessage paginatedMessage = null;
+            public bool on = false;
+            public string reaction = "";
+
+        }
+
         public class PaginatedMessage {
 
             public List<Embed> pages = new List<Embed>();
@@ -28,6 +37,8 @@ namespace OurFoodChain {
             public string emojiPrev = "◀";
             public string emojiNext = "▶";
             public string emojiToggle;
+            public bool paginationEnabled = true;
+            public Action<PaginatedMessageCallbackArgs> callback;
 
         }
 
@@ -92,6 +103,18 @@ namespace OurFoodChain {
 
             string emote = reaction.Emote.Name;
             int index_prev = message.index;
+            bool pagination_enabled = message.paginationEnabled;
+
+            if (!(message.callback is null))
+                message.callback(new PaginatedMessageCallbackArgs {
+                    discordMessage = (await cached.DownloadAsync()),
+                    paginatedMessage = message,
+                    on = added,
+                    reaction = emote
+                });
+
+            if (!pagination_enabled || !message.paginationEnabled)
+                return;
 
             if (emote == message.emojiNext || (emote == message.emojiToggle && added)) {
 

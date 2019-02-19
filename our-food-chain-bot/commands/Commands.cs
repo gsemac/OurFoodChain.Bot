@@ -591,110 +591,109 @@ namespace OurFoodChain {
                         break;
                 }
 
-                // Page #1 will contain a simple list of organisms.
-
-                EmbedBuilder embed1 = new EmbedBuilder();
-
-                embed1.WithTitle(title);
-                embed1.WithDescription(description);
-                embed1.WithColor(color);
-                embed1.WithThumbnailUrl(zone.pics);
-
                 // Get all species living in this zone.
 
                 List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByZone(zone));
 
                 species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                if (species_list.Count() > 0) {
+                // Starting building a paginated message.
+                // The message will have a paginated species list, and a toggle button to display the species sorted by role.
 
-                    StringBuilder lines = new StringBuilder();
+                List<EmbedBuilder> embed_pages = EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: (string.Format("Extant species in this zone ({0}):", species_list.Count())));
+                PaginatedEmbedBuilder paginated = new PaginatedEmbedBuilder(embed_pages);
 
-                    foreach (Species sp in species_list)
-                        lines.AppendLine(sp.GetShortName());
+                if (embed_pages.Count() <= 0)
+                    embed_pages.Add(new EmbedBuilder());
 
-                    embed1.AddField(string.Format("Extant species in this zone ({0}):", species_list.Count()), lines.ToString());
+                // Add title, decription, etc., to all pages.
 
-                }
+                paginated.SetTitle(title);
+                paginated.SetDescription(description);
+                paginated.SetThumbnailUrl(zone.pics);
+                paginated.SetColor(color);
 
-                pages.Add(embed1.Build());
-
-                // Page 2 will contain the organisms organized by role.
-
-                EmbedBuilder embed2 = new EmbedBuilder();
-
-                embed2.WithTitle(title);
-                embed2.WithDescription(description);
-                embed2.WithColor(color);
-                embed1.WithThumbnailUrl(zone.pics);
-
-                Dictionary<string, List<Species>> roles_map = new Dictionary<string, List<Species>>();
-
-                foreach (Species sp in species_list) {
-
-                    Role[] roles_list = await BotUtils.GetRolesFromDbBySpecies(sp);
-
-                    if (roles_list.Count() <= 0) {
-
-                        if (!roles_map.ContainsKey("no role"))
-                            roles_map["no role"] = new List<Species>();
-
-                        roles_map["no role"].Add(sp);
-
-                        continue;
-
-                    }
-
-                    foreach (Role role in roles_list) {
-
-                        if (!roles_map.ContainsKey(role.name))
-                            roles_map[role.name] = new List<Species>();
-
-                        roles_map[role.name].Add(sp);
-
-                    }
-
-                }
-
-                // Sort the list of species belonging to each role.
-                foreach (List<Species> i in roles_map.Values)
-                    i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
-
-                // Create a sorted list of keys so that the roles are in order.
-                List<string> sorted_keys = new List<string>(roles_map.Keys);
-                sorted_keys.Sort();
-
-                foreach (string i in sorted_keys) {
-
-                    StringBuilder lines = new StringBuilder();
-
-                    foreach (Species j in roles_map[i])
-                        lines.AppendLine(j.GetShortName());
-
-                    embed2.AddField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
-
-                }
-
-                pages.Add(embed2.Build());
-
-                // 
-
-                IUserMessage message = await ReplyAsync("", false, pages[0]);
-
-                // Only bother with pagination if the zone actually contains species.
+                // This page will have species organized by role.
+                // Only bother with the role page if species actually exist in this zone.
 
                 if (species_list.Count() > 0) {
 
-                    CommandUtils.PaginatedMessage paginated = new CommandUtils.PaginatedMessage {
-                        pages = pages
-                    };
+                    EmbedBuilder role_page = new EmbedBuilder();
 
-                    paginated.emojiToggle = "🇷";
-                    await message.AddReactionAsync(new Emoji("🇷"));
+                    role_page.WithTitle(title);
+                    role_page.WithDescription(description);
+                    //role_page.WithThumbnailUrl(zone.pics);
+                    role_page.WithColor(color);
 
-                    CommandUtils.PAGINATED_MESSAGES.Add(message.Id, paginated);
+                    Dictionary<string, List<Species>> roles_map = new Dictionary<string, List<Species>>();
+
+                    foreach (Species sp in species_list) {
+
+                        Role[] roles_list = await BotUtils.GetRolesFromDbBySpecies(sp);
+
+                        if (roles_list.Count() <= 0) {
+
+                            if (!roles_map.ContainsKey("no role"))
+                                roles_map["no role"] = new List<Species>();
+
+                            roles_map["no role"].Add(sp);
+
+                            continue;
+
+                        }
+
+                        foreach (Role role in roles_list) {
+
+                            if (!roles_map.ContainsKey(role.name))
+                                roles_map[role.name] = new List<Species>();
+
+                            roles_map[role.name].Add(sp);
+
+                        }
+
+                    }
+
+                    // Sort the list of species belonging to each role.
+
+                    foreach (List<Species> i in roles_map.Values)
+                        i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+                    // Create a sorted list of keys so that the roles are in order.
+
+                    List<string> sorted_keys = new List<string>(roles_map.Keys);
+                    sorted_keys.Sort();
+
+                    foreach (string i in sorted_keys) {
+
+                        StringBuilder lines = new StringBuilder();
+
+                        foreach (Species j in roles_map[i])
+                            lines.AppendLine(j.GetShortName());
+
+                        role_page.AddField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
+
+                    }
+
+                    // Add the page to the builder.
+
+                    paginated.AddReaction("🇷");
+                    paginated.SetCallback(async (CommandUtils.PaginatedMessageCallbackArgs args) => {
+
+                        if (args.reaction != "🇷")
+                            return;
+
+                        args.paginatedMessage.paginationEnabled = !args.on;
+
+                        if (args.on)
+                            await args.discordMessage.ModifyAsync(msg => msg.Embed = role_page.Build());
+                        else
+                            await args.discordMessage.ModifyAsync(msg => msg.Embed = args.paginatedMessage.pages[args.paginatedMessage.index]);
+
+                    });
 
                 }
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, paginated.Build());
 
             }
 

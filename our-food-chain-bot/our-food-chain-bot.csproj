@@ -165,6 +165,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commands\IdeasCommands.cs" />
     <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\PeriodCommands.cs" />
     <Compile Include="commands\RelationshipCommands.cs" />

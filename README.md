@@ -1,6 +1,6 @@
 # OurFoodChain Bot
 
-OurFoodChain Bot is a bot for the OurFoodChain Discord server. It acts as a queryable encyclopedia of user-submitted species.
+OurFoodChain Bot is a bot for the [speculative evolution](https://en.wikipedia.org/wiki/Speculative_evolution) (spec-evo) Discord server, OurFoodChain. It offers facilities for storing, organizing, and querying user-submitted species, along with some other fun stuff.
 
 ## Getting started
 

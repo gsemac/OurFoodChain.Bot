@@ -55,12 +55,12 @@ namespace OurFoodChain {
 
             // Only add reactions if there's more than one page.
 
-            if (message.pages.Count() > 1) {
+            if (message.pages.Count() > 1 || !(message.callback is null)) {
 
-                if (!string.IsNullOrEmpty(message.emojiPrev))
+                if (message.pages.Count() > 1 && !string.IsNullOrEmpty(message.emojiPrev))
                     await msg.AddReactionAsync(new Emoji(message.emojiPrev));
 
-                if (!string.IsNullOrEmpty(message.emojiNext))
+                if (message.pages.Count() > 1 && !string.IsNullOrEmpty(message.emojiNext))
                     await msg.AddReactionAsync(new Emoji(message.emojiNext));
 
                 if (!string.IsNullOrEmpty(message.emojiToggle))

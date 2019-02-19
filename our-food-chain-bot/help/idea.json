@@ -1,0 +1,9 @@
+﻿{
+  "name": "idea",
+  "aliases": [],
+  "category": "fun",
+  "description": "If you're having trouble coming up with a new species and don't know what to do next, the `idea` command has you covered.",
+  "examples": [
+    "idea"
+  ]
+}

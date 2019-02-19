@@ -220,6 +220,7 @@
     <None Include="help\evolution.json" />
     <None Include="help\extinct.json" />
     <None Include="help\gotchi.json" />
+    <None Include="help\idea.json" />
     <None Include="help\info.json" />
     <None Include="help\pic.json" />
     <None Include="help\random.json" />

@@ -1971,17 +1971,31 @@ namespace OurFoodChain {
             int user_rank = 1;
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, COUNT(id) AS count FROM Species GROUP BY owner ORDER BY count DESC;"))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
+            using (DataTable table = await Database.GetRowsAsync(cmd)) {
+
+                long last_count = long.MaxValue;
+
                 foreach (DataRow row in table.Rows) {
 
                     string owner = row.Field<string>("owner");
+                    long count = row.Field<long>("count");
+
+                    if (last_count == long.MaxValue)
+                        last_count = count;
+
+                    else if (count < last_count) {
+
+                        user_rank += 1;
+                        last_count = count;
+
+                    }
 
                     if (owner == user.Username)
                         break;
 
-                    user_rank += 1;
-
                 }
+
+            }
 
             // Get the user's most active genus.
 
@@ -2030,7 +2044,7 @@ namespace OurFoodChain {
 
             trophies.UnlockedTrophyInfo[] unlocked = await trophies.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
 
-            if(unlocked.Count() > 0) {
+            if (unlocked.Count() > 0) {
 
                 Array.Sort(unlocked, (lhs, rhs) => lhs.timesUnlocked.CompareTo(rhs.timesUnlocked));
 

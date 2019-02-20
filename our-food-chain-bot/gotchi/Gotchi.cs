@@ -62,7 +62,7 @@ namespace OurFoodChain.gotchi {
         }
         public bool IsDead() {
 
-            return HoursSinceFed() > 48;
+            return HoursSinceFed() > 72; // 3 days of no feeding
 
         }
         public long HoursSinceBirth() {

@@ -2,7 +2,7 @@
   "name": "gotchi",
   "aliases": [],
   "category": "fun",
-  "description": "Make a pet out of your favorite species. You must feed it once a day, and it will evolve once a week.",
+  "description": "Make a pet out of your favorite species. Keep it alive by feeding it at least once every 3 days, and it will evolve once a week.",
   "examples": [
     "gotchi",
     "gotchi get <species>",

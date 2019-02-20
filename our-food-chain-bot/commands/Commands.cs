@@ -1926,6 +1926,148 @@ namespace OurFoodChain {
 
         }
 
+        [Command("profile")]
+        public async Task Profile() {
+            await Profile(Context.User);
+        }
+        [Command("profile")]
+        public async Task Profile(IUser user) {
+
+            long species_count = 0;
+
+            // Get the total number of species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species;"))
+                species_count = await Database.GetScalar<long>(cmd);
+
+            // Get this user's species count, first timestamp, and last timestamp.
+
+            long user_species_count = 0;
+            long timestamp_min = 0;
+            long timestamp_max = 0;
+            long timestamp_diff_days = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) AS count, MIN(timestamp) AS timestamp_min, MAX(timestamp) AS timestamp_max FROM Species WHERE owner=$owner OR user_id=$user_id;")) {
+
+                cmd.Parameters.AddWithValue("$owner", user.Username);
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null) && !row.IsNull("timestamp_min")) {
+
+                    user_species_count = row.Field<long>("count");
+                    timestamp_min = row.Field<long>("timestamp_min");
+                    timestamp_max = row.Field<long>("timestamp_max");
+
+                    timestamp_diff_days = (timestamp_max - timestamp_min) / 60 / 60 / 24;
+
+                }
+
+            }
+
+            // Get the user rankings according to the number of submitted species.
+
+            int user_rank = 1;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, COUNT(id) AS count FROM Species GROUP BY owner ORDER BY count DESC;"))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows) {
+
+                    string owner = row.Field<string>("owner");
+
+                    if (owner == user.Username)
+                        break;
+
+                    user_rank += 1;
+
+                }
+
+            // Get the user's most active genus.
+
+            string favorite_genus = "N/A";
+            long genus_count = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT genus_id, COUNT(genus_id) AS count FROM Species WHERE owner=$owner OR user_id=$user_id GROUP BY genus_id ORDER BY count DESC LIMIT 1;")) {
+
+                cmd.Parameters.AddWithValue("$owner", user.Username);
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null)) {
+
+                    long genus_id = row.Field<long>("genus_id");
+                    genus_count = row.Field<long>("count");
+
+                    Genus genus = await BotUtils.GetGenusFromDb(genus_id);
+
+                    favorite_genus = genus.name;
+
+                }
+
+            }
+
+            // Get the user's trophy count.
+
+            long trophy_count = (await trophies.TrophyRegistry.GetTrophiesAsync()).Count;
+            long user_trophy_count = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT user_id, COUNT(trophy_name) AS trophy_count FROM Trophies WHERE user_id=$user_id GROUP BY user_id;")) {
+
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null))
+                    user_trophy_count = row.Field<long>("trophy_count");
+
+            }
+
+            // Get the user's rarest trophy.
+
+            string rarest_trophy = "N/A";
+
+            trophies.UnlockedTrophyInfo[] unlocked = await trophies.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
+
+            if(unlocked.Count() > 0) {
+
+                Array.Sort(unlocked, (lhs, rhs) => lhs.timesUnlocked.CompareTo(rhs.timesUnlocked));
+
+                trophies.Trophy trophy = await trophies.TrophyRegistry.GetTrophyByIdentifierAsync(unlocked[0].identifier);
+
+                rarest_trophy = trophy.GetName();
+
+            }
+
+            // Put together the user's profile.
+
+            EmbedBuilder embed = new EmbedBuilder();
+
+            embed.WithTitle(string.Format("{0}'s profile", user.Username));
+            embed.WithThumbnailUrl(user.GetAvatarUrl(size: 64));
+
+            if (user_species_count > 0) {
+
+                embed.WithDescription(string.Format("{1} made their first species on **{2}**.{0}Since then, they have submitted **{3:0.0}** species per day.{0}{0}Their submissions make up **{4:0.0}%** of all species.",
+                    Environment.NewLine,
+                    user.Username,
+                    BotUtils.GetTimeStampAsDateString(timestamp_min, "MMMM dd, yyyy"),
+                    timestamp_diff_days == 0 ? 0 : (double)user_species_count / timestamp_diff_days,
+                    ((double)user_species_count / species_count) * 100.0));
+                embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);
+                embed.AddField("Favorite genus", string.Format("{0} ({1} submissions)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
+                embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)", user_trophy_count, ((double)user_trophy_count / trophy_count) * 100.0), inline: true);
+                embed.AddField("Rarest trophy", rarest_trophy, inline: true);
+
+            }
+            else
+                embed.WithDescription(string.Format("{0} has not submitted any species.", user.Username));
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
+
     }
 
 }

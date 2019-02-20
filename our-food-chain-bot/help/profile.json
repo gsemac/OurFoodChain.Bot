@@ -1,0 +1,10 @@
+﻿{
+  "name": "profile",
+  "aliases": [],
+  "category": "fun",
+  "description": "Shows a user's species submission and trophy stats.",
+  "examples": [
+    "profile",
+    "profile <user>"
+  ]
+}

@@ -2070,7 +2070,7 @@ namespace OurFoodChain {
                     timestamp_diff_days == 0 ? 0 : (double)user_species_count / timestamp_diff_days,
                     ((double)user_species_count / species_count) * 100.0));
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);
-                embed.AddField("Favorite genus", string.Format("{0} ({1} submissions)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
+                embed.AddField("Favorite genus", string.Format("{0} ({1} sp.)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
                 embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)", user_trophy_count, ((double)user_trophy_count / trophy_count) * 100.0), inline: true);
                 embed.AddField("Rarest trophy", rarest_trophy, inline: true);
 

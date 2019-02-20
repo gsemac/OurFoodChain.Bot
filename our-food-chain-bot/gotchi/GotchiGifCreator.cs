@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
-    enum GotchiState {
+    public enum GotchiState {
         Happy,
         Hungry,
         Eating,
@@ -164,11 +164,9 @@ namespace OurFoodChain.gotchi {
 
             // Public properties
 
-            public Bitmap Bitmap
-            {
+            public Bitmap Bitmap {
                 get { return _bitmap; }
-                set
-                {
+                set {
 
                     _disposeBitmap();
 

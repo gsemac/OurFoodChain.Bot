@@ -175,6 +175,8 @@
     <Compile Include="gotchi\Gotchi.cs" />
     <Compile Include="commands\GotchiCommands.cs" />
     <Compile Include="gotchi\GotchiGifCreator.cs" />
+    <Compile Include="gotchi\GotchiMoveset.cs" />
+    <Compile Include="gotchi\GotchiStats.cs" />
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Period.cs" />
     <Compile Include="Picture.cs" />

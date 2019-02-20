@@ -581,6 +581,36 @@ namespace OurFoodChain {
             return null;
 
         }
+        public static async Task<Species[]> GetAncestorsFromDb(long speciesId) {
+
+            List<Species> ancestors = new List<Species>();
+
+            while (true) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                    DataRow row = await Database.GetRowAsync(cmd);
+
+                    if (row is null)
+                        break;
+
+                    speciesId = row.Field<long>("ancestor_id");
+
+                    Species ancestor = await GetSpeciesFromDb(speciesId);
+
+                    ancestors.Add(ancestor);
+
+                }
+
+            }
+
+            ancestors.Reverse();
+
+            return ancestors.ToArray();
+
+        }
 
         public static async Task<Zone> GetZoneFromDb(long zoneId) {
 
@@ -1204,6 +1234,19 @@ namespace OurFoodChain {
             embed.WithDescription(string.Join(Environment.NewLine, lines));
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species species) {
+
+            if (species is null || species.id < 0) {
+
+                await ReplyAsync_NoSuchSpeciesExists(context);
+
+                return false;
+
+            }
+
+            return true;
 
         }
         public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {

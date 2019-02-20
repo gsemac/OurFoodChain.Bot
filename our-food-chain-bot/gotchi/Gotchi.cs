@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
-    class Gotchi {
+    public class Gotchi {
 
         private const long HOURS_OF_SLEEP_PER_DAY = 8;
         private const long HOURS_PER_DAY = 24;
@@ -20,6 +20,10 @@ namespace OurFoodChain.gotchi {
         public long born_ts = 0;
         public long died_ts = 0;
         public long evolved_ts = 0;
+
+        // gotchimon members
+        public long level = 100;
+        public long exp = 0;
 
         public bool IsSleeping() {
 

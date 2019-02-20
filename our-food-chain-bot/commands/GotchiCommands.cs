@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
@@ -134,6 +135,7 @@ namespace OurFoodChain.gotchi {
             await ReplyAsync("", false, embed.Build());
 
         }
+
         [Command("get")]
         public async Task Get(string species) {
             await Get("", species);
@@ -195,6 +197,7 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Success(Context, string.Format("All right **{0}**, take care of your new **{1}**!", Context.User.Username, sp.GetShortName()));
 
         }
+
         [Command("name")]
         public async Task Name(string name) {
 
@@ -215,6 +218,7 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Sucessfully set {0}'s name to **{1}**.", StringUtils.ToTitleCase(gotchi.name), StringUtils.ToTitleCase(name)));
 
         }
+
         [Command("feed")]
         public async Task Feed() {
 
@@ -248,6 +252,60 @@ namespace OurFoodChain.gotchi {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtils.ToTitleCase(gotchi.name)));
+
+        }
+
+        [Command("stats")]
+        public async Task Stats() {
+
+            // Get this user's gotchi.
+
+            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+
+            if (!await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi))
+                return;
+
+            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
+
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp))
+                return;
+
+            // Calculate stats for this gotchi.
+
+            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
+
+            // Get moveset for this gotchi.
+
+            GotchiMoveset set = await GotchiMoveset.GetMoveset(gotchi);
+
+            // Create the embed.
+
+            StringBuilder description_builder = new StringBuilder();
+            description_builder.AppendLine(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, gotchi.level, sp.GetShortName(), gotchi.Age()));
+            description_builder.AppendLine(string.Format("{0} experience points until next level", gotchi.exp));
+
+            EmbedBuilder stats_page = new EmbedBuilder();
+            stats_page.WithTitle(string.Format("{0}'s stats", gotchi.name));
+            stats_page.AddField("❤ Hit points", (int)stats.hp, inline: true);
+            stats_page.AddField("💥 Attack", (int)stats.atk, inline: true);
+            stats_page.AddField("🛡 Defense", (int)stats.def, inline: true);
+            stats_page.AddField("💨 Speed", (int)stats.spd, inline: true);
+
+            EmbedBuilder set_page = new EmbedBuilder();
+
+            set_page.WithTitle(string.Format("{0}'s moveset", gotchi.name));
+
+            int move_index = 1;
+
+            foreach (GotchiMove move in set.moves)
+                set_page.AddField(string.Format("{0}. {1}", move_index++, StringUtils.ToTitleCase(move.name)), move.description);
+
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(new List<EmbedBuilder>(new EmbedBuilder []{ stats_page, set_page }));
+
+            embed.SetThumbnailUrl(sp.pics);
+            embed.SetDescription(description_builder.ToString());
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
         }
 

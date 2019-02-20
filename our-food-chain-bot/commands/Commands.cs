@@ -896,7 +896,7 @@ namespace OurFoodChain {
 
             List<string> entries = new List<string>();
 
-            entries.Add(string.Format("**{0} - {1}**", sp.GetTimeStampAsDateString(), sp.GetShortName()));
+            entries.Add(string.Format("{0} - {1}", sp.GetTimeStampAsDateString(), sp.GetShortName()));
 
             long species_id = sp.id;
 
@@ -923,7 +923,7 @@ namespace OurFoodChain {
 
             entries.Reverse();
 
-            await ReplyAsync(string.Join(Environment.NewLine, entries));
+            await ReplyAsync(string.Format("```{0}```", string.Join(Environment.NewLine, entries)));
 
         }
         [Command("ancestry2"), Alias("lineage2")]

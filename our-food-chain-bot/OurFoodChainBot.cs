@@ -38,13 +38,19 @@ namespace OurFoodChain {
 
         }
 
-        public void LoadSettings(string filePath) {
+        public async Task LoadSettings(string filePath) {
 
-            Debug.Assert(System.IO.File.Exists(filePath));
+            if (!System.IO.File.Exists(filePath)) {
+                await Log(LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
+                Environment.Exit(-1);
+            }
 
             _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(filePath));
 
-            Debug.Assert(!string.IsNullOrEmpty(_config.token));
+            if (string.IsNullOrEmpty(_config.token)) {
+                await Log(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
+                Environment.Exit(-1);
+            }
 
             if (string.IsNullOrEmpty(_config.prefix))
                 _config.token = DEFAULT_PREFIX;

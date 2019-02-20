@@ -3,7 +3,7 @@
   "mod_role_ids": [],
   "playing": "",
   "prefix": "?",
-  "scratch_channel": -1,
-  "scratch_server": -1,
+  "scratch_channel": 0,
+  "scratch_server": 0,
   "token": ""
 }

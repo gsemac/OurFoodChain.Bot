@@ -15,7 +15,7 @@ namespace OurFoodChain {
 
             OurFoodChainBot bot = new OurFoodChainBot();
 
-            bot.LoadSettings("config.json");
+            await bot.LoadSettings("config.json");
 
             await bot.Connect();
 

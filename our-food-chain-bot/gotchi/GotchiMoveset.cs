@@ -39,7 +39,7 @@ namespace OurFoodChain.gotchi {
 
             set.moves.Add(new GotchiMove {
                 name = "Hit",
-                description = "A basic attack.",
+                description = "A simple attack where the user collides with the opponent.",
                 target = MoveTarget.Other
             });
 
@@ -58,8 +58,8 @@ namespace OurFoodChain.gotchi {
                         case "detritvore":
 
                             set.moves.Add(new GotchiMove {
-                                name = "Decompose",
-                                description = "Attack by decomposing the opponent. Effective against producers.",
+                                name = "Enzymes",
+                                description = "Attacks by coating the opponent with enzymes encouraging decomposition. This move is highly effective against Producers.",
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Other
                             });
@@ -70,7 +70,7 @@ namespace OurFoodChain.gotchi {
 
                             set.moves.Add(new GotchiMove {
                                 name = "Infest",
-                                description = "Attack by parasitizing the opponent. Effective against consumers.",
+                                description = "Attack by parasitizing the opponent. This move is highly effective against Consumers.",
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Other
                             });
@@ -81,7 +81,7 @@ namespace OurFoodChain.gotchi {
 
                             set.moves.Add(new GotchiMove {
                                 name = "Bite",
-                                description = "Attack by biting the opponent. Effective against consumers, but ineffective against producers.",
+                                description = "Attacks the opponent with mouthparts. Effective against Consumers, but ineffective against Producers.",
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Other
                             });
@@ -92,14 +92,14 @@ namespace OurFoodChain.gotchi {
 
                             set.moves.Add(new GotchiMove {
                                 name = "Grow",
-                                description = "Ups stats by a small amount.",
+                                description = "Grows larger and raises stats by a small amount.",
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Other
                             });
 
                             set.moves.Add(new GotchiMove {
-                                name = "Photosynthesis",
-                                description = "Restores HP.",
+                                name = "Photosynthesize",
+                                description = "Regenerates with the help of sunlight and restores Hit Points.",
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Self
                             });

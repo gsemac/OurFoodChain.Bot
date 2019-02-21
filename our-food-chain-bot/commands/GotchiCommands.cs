@@ -274,38 +274,79 @@ namespace OurFoodChain.gotchi {
 
             GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
 
+            // Create the embed.
+
+            EmbedBuilder stats_page = new EmbedBuilder();
+
+            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, gotchi.level, sp.GetShortName(), gotchi.Age()));
+            stats_page.WithThumbnailUrl(sp.pics);
+            stats_page.WithFooter(string.Format("{0} experience points until next level", gotchi.exp));
+
+            stats_page.AddField("❤ Hit points", (int)stats.hp, inline: true);
+            stats_page.AddField("💥 Attack", (int)stats.atk, inline: true);
+            stats_page.AddField("🛡 Defense", (int)stats.def, inline: true);
+            stats_page.AddField("💨 Speed", (int)stats.spd, inline: true);
+
+            await ReplyAsync("", false, stats_page.Build());
+
+
+
+        }
+
+        [Command("moves"), Alias("moveset")]
+        public async Task Moves() {
+
+            // Get this user's gotchi.
+
+            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+
+            if (!await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi))
+                return;
+
+            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
+
+            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp))
+                return;
+
             // Get moveset for this gotchi.
 
             GotchiMoveset set = await GotchiMoveset.GetMoveset(gotchi);
 
             // Create the embed.
 
-            StringBuilder description_builder = new StringBuilder();
-            description_builder.AppendLine(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, gotchi.level, sp.GetShortName(), gotchi.Age()));
-            description_builder.AppendLine(string.Format("{0} experience points until next level", gotchi.exp));
-
-            EmbedBuilder stats_page = new EmbedBuilder();
-            stats_page.WithTitle(string.Format("{0}'s stats", gotchi.name));
-            stats_page.AddField("❤ Hit points", (int)stats.hp, inline: true);
-            stats_page.AddField("💥 Attack", (int)stats.atk, inline: true);
-            stats_page.AddField("🛡 Defense", (int)stats.def, inline: true);
-            stats_page.AddField("💨 Speed", (int)stats.spd, inline: true);
-
             EmbedBuilder set_page = new EmbedBuilder();
 
-            set_page.WithTitle(string.Format("{0}'s moveset", gotchi.name));
+            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, gotchi.level, sp.GetShortName(), gotchi.Age()));
+            set_page.WithThumbnailUrl(sp.pics);
+            set_page.WithFooter(string.Format("{0} experience points until next level", gotchi.exp));
 
             int move_index = 1;
 
             foreach (GotchiMove move in set.moves)
-                set_page.AddField(string.Format("{0}. {1}", move_index++, StringUtils.ToTitleCase(move.name)), move.description);
+                set_page.AddField(string.Format("Move {0}: **{1}**", move_index++, StringUtils.ToTitleCase(move.name)), move.description);
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(new List<EmbedBuilder>(new EmbedBuilder []{ stats_page, set_page }));
+            await ReplyAsync("", false, set_page.Build());
 
-            embed.SetThumbnailUrl(sp.pics);
-            embed.SetDescription(description_builder.ToString());
+        }
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+        [Command("battle")]
+        public async Task Battle(IUser user) {
+
+
+
+        }
+
+        [Command("accept")]
+        public async Task Accept() {
+
+
+
+        }
+
+        [Command("deny")]
+        public async Task Deny() {
+
+
 
         }
 

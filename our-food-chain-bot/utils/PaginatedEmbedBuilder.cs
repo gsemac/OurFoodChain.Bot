@@ -66,6 +66,22 @@ namespace OurFoodChain {
 
         }
 
+        public void AddPageNumbers() {
+
+            int num = 1;
+
+            foreach (EmbedBuilder page in _pages) {
+
+                string num_string = string.Format("Page {0} of {1}", num, _pages.Count());
+
+                page.WithFooter(page.Footer is null ? num_string : num_string + " — " + page.Footer.Text);
+
+                ++num;
+
+            }
+
+        }
+
         public void SetCallback(Action<CommandUtils.PaginatedMessageCallbackArgs> callback) {
 
             _callback = callback;
@@ -77,7 +93,7 @@ namespace OurFoodChain {
             _reactions.Add(reaction);
 
         }
-
+        
         public CommandUtils.PaginatedMessage Build() {
 
             CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();

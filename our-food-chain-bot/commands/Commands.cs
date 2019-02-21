@@ -15,6 +15,8 @@ namespace OurFoodChain {
     public class Commands :
         ModuleBase {
 
+        private const int MAX_EMBED_LENGTH = 2048;
+
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
 
@@ -120,10 +122,46 @@ namespace OurFoodChain {
             description_builder.Append(sp.GetDescriptionOrDefault());
 
             embed.WithTitle(embed_title);
-            embed.WithDescription(description_builder.ToString());
             embed.WithThumbnailUrl(sp.pics);
 
-            await ReplyAsync("", false, embed.Build());
+            // If the description puts us over the character limit, we'll paginate.
+
+            if (embed.Length + description_builder.Length > MAX_EMBED_LENGTH) {
+
+                List<EmbedBuilder> pages = new List<EmbedBuilder>();
+
+                int chunk_size = (description_builder.Length - ((embed.Length + description_builder.Length) - MAX_EMBED_LENGTH)) - 3;
+                int written_size = 0;
+                string desc = description_builder.ToString();
+
+                while (written_size < desc.Length) {
+
+                    EmbedBuilder page = new EmbedBuilder();
+
+                    page.WithTitle(embed.Title);
+                    page.WithThumbnailUrl(embed.ThumbnailUrl);
+                    page.WithFields(embed.Fields);
+                    page.WithDescription(desc.Substring(written_size, Math.Min(chunk_size, desc.Length - written_size - 1)) + (written_size + chunk_size < desc.Length ? "..." : ""));
+
+                    written_size += chunk_size;
+
+                    pages.Add(page);
+
+                }
+
+                PaginatedEmbedBuilder builder = new PaginatedEmbedBuilder(pages);
+                builder.AddPageNumbers();
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, builder.Build());
+
+            }
+            else {
+
+                embed.WithDescription(description_builder.ToString());
+
+                await ReplyAsync("", false, embed.Build());
+
+            }
 
         }
 
@@ -445,6 +483,51 @@ namespace OurFoodChain {
                 return;
 
             await BotUtils.UpdateSpeciesDescription(genus, species, description);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
+
+        }
+
+        [Command("appenddescription"), Alias("appenddesc")]
+        public async Task AppendDescription(string species, string description) {
+
+            await AppendDescription("", species, description);
+
+        }
+        [Command("appenddescription"), Alias("appenddesc")]
+        public async Task AppendDescription(string genus, string species, string description) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+                return;
+
+            // Ensure the decription is of a reasonable size.
+
+            const int MAX_DESCRIPTION_LENGTH = 10000;
+
+            if (sp.description.Length + description.Length > MAX_DESCRIPTION_LENGTH) {
+
+                await BotUtils.ReplyAsync_Error(Context, string.Format("The description length exceeds the maximum allowed length ({0} characters).", MAX_DESCRIPTION_LENGTH));
+
+                return;
+
+            }
+
+            // Append text to the existing description.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$id", sp.id);
+                cmd.Parameters.AddWithValue("$description", sp.description + description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
 

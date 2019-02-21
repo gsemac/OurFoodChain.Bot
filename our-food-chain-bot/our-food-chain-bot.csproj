@@ -218,6 +218,7 @@
     <None Include="help\addkingdom.json" />
     <None Include="help\addorder.json" />
     <None Include="help\addphylum.json" />
+    <None Include="help\appenddesc.json" />
     <None Include="help\awardtrophy.json" />
     <None Include="help\evolution.json" />
     <None Include="help\extinct.json" />

@@ -24,7 +24,7 @@ namespace OurFoodChain.gotchi {
 
         public List<GotchiMove> moves = new List<GotchiMove>();
 
-        public static async Task<GotchiMoveset> GetMoveset(Gotchi gotchi) {
+        public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi) {
 
             GotchiMoveset set = new GotchiMoveset();
 

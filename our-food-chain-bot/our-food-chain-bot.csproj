@@ -172,6 +172,7 @@
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Gallery.cs" />
+    <Compile Include="gotchi\GotchiBattleState.cs" />
     <Compile Include="gotchi\Gotchi.cs" />
     <Compile Include="commands\GotchiCommands.cs" />
     <Compile Include="gotchi\GotchiGifCreator.cs" />

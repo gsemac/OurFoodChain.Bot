@@ -62,9 +62,17 @@ namespace OurFoodChain.gotchi {
 
         }
 
+        static public bool ValidateGotchi(Gotchi gotchi) {
+
+            if (gotchi is null)
+                return false;
+
+            return true;
+
+        }
         static public async Task<bool> Reply_ValidateGotchiAsync(ICommandContext context, Gotchi gotchi) {
 
-            if (gotchi is null) {
+            if (!ValidateGotchi(gotchi)) {
 
                 await BotUtils.ReplyAsync_Info(context, "You don't have a gotchi yet! Get one with `gotchi get <species>`.");
 

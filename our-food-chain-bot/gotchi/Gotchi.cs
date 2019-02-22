@@ -22,7 +22,7 @@ namespace OurFoodChain.gotchi {
         public long evolved_ts = 0;
 
         // gotchimon members
-        public long level = 100;
+        public long level = 1;
         public long exp = 0;
 
         public bool IsSleeping() {

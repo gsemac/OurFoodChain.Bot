@@ -2043,7 +2043,7 @@ namespace OurFoodChain {
                     timestamp_min = row.Field<long>("timestamp_min");
                     timestamp_max = row.Field<long>("timestamp_max");
 
-                    timestamp_diff_days = (timestamp_max - timestamp_min) / 60 / 60 / 24;
+                    timestamp_diff_days = (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - timestamp_min) / 60 / 60 / 24;
 
                 }
 
@@ -2150,7 +2150,7 @@ namespace OurFoodChain {
                     Environment.NewLine,
                     user.Username,
                     BotUtils.GetTimeStampAsDateString(timestamp_min, "MMMM dd, yyyy"),
-                    timestamp_diff_days == 0 ? 0 : (double)user_species_count / timestamp_diff_days,
+                    timestamp_diff_days == 0 ? user_species_count : (double)user_species_count / timestamp_diff_days,
                     ((double)user_species_count / species_count) * 100.0));
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);
                 embed.AddField("Favorite genus", string.Format("{0} ({1} sp.)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);

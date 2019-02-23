@@ -27,7 +27,7 @@ namespace OurFoodChain.gotchi {
         public MoveTarget target = MoveTarget.Other;
         public MoveType type = MoveType.Attack;
         public double factor = 1.0;
-        public Func<GotchiStats, GotchiStats, double, GotchiMoveResult> callback;
+        public Func<GotchiBattleState, GotchiStats, GotchiStats, double, Task<GotchiMoveResult>> callback;
 
     }
 
@@ -176,7 +176,7 @@ namespace OurFoodChain.gotchi {
                     name = "Leech",
                     description = "Leeches some hit points from the opponent, healing the user.",
                     type = MoveType.Attack,
-                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+                    callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
 
                         user.hp = Math.Min(user.hp + (value / 2.0), user.maxHp);
 
@@ -194,7 +194,7 @@ namespace OurFoodChain.gotchi {
                     description = "Boosts defense by a small amount.",
                     type = MoveType.StatBoost,
                     factor = 1.2,
-                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+                    callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
 
                         user.def *= value;
 
@@ -211,7 +211,7 @@ namespace OurFoodChain.gotchi {
                     name = "Tail Slap",
                     description = "Deals more damage the faster the user is compared to the opponent.",
                     type = MoveType.Attack,
-                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+                    callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
 
                         return new GotchiMoveResult { value = Math.Max(1.0, user.spd - opponent.spd) };
 
@@ -226,9 +226,26 @@ namespace OurFoodChain.gotchi {
                     name = "Wrap",
                     description = "Tightly wraps tentacles around the opponent. Deals more damage the faster the opponent is compared to the user.",
                     type = MoveType.Attack,
-                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+                    callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
 
                         return new GotchiMoveResult { value = Math.Max(1.0, opponent.spd - user.spd) };
+
+                    }
+                });
+
+            }
+
+            if (Regex.IsMatch(sp.description, "spike|")) {
+
+                set.moves.Add(new GotchiMove {
+                    name = "Spike Attack",
+                    description = "Attacks the opponent with a spike. Effective against flying opponents.",
+                    type = MoveType.Attack,
+                    callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+
+                        Species opponent_sp = await BotUtils.GetSpeciesFromDb(state.currentTurn == 2 ? state.gotchi1.species_id : state.gotchi2.species_id);
+
+                        return new GotchiMoveResult { value = Regex.IsMatch(opponent_sp.description, "fly|flies") ? value * 1.2 : value };
 
                     }
                 });

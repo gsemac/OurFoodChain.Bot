@@ -141,10 +141,10 @@ namespace OurFoodChain.gotchi {
             if (Regex.IsMatch(sp.description, "photosynthesi(s|izes)", RegexOptions.IgnoreCase))
                 stats.hp += 0.2;
 
-            if (Regex.IsMatch(sp.description, "spikes?|claws?", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(sp.description, "spikes?|claws?|teeth|jaws|fangs", RegexOptions.IgnoreCase))
                 stats.atk += 0.2;
 
-            if (Regex.IsMatch(sp.description, "shell|exoskeleton", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(sp.description, "shell|carapace|exoskeleton", RegexOptions.IgnoreCase))
                 stats.def += 0.2;
 
             if (Regex.IsMatch(sp.description, "flies|can fly|quick|fast|agile", RegexOptions.IgnoreCase))

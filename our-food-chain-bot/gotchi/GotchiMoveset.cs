@@ -36,9 +36,6 @@ namespace OurFoodChain.gotchi {
 
         public GotchiMove GetMove(string identifier) {
 
-            if (int.TryParse(identifier, out int r))
-                Console.WriteLine(r);
-
             if (int.TryParse(identifier, out int result) && result > 0 && result <= moves.Count())
                 return moves[result - 1];
 

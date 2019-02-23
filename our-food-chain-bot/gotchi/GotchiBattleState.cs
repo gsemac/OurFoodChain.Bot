@@ -115,11 +115,37 @@ namespace OurFoodChain.gotchi {
 
                 reply.AppendLine();
 
-                if (stats1.LeveUp(exp1) > 0)
+                long levels1 = stats1.LeveUp(exp1);
+                long levels2 = stats2.LeveUp(exp1);
+
+                if (levels1 > 0)
                     reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi1.name), stats1.level));
 
-                if (stats2.LeveUp(exp2) > 0)
+                if (levels2 > 0)
                     reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi2.name), stats2.level));
+
+                // If the gotchi has leveled up to multiple 10, evolve randomly.
+                // If multiple sets of 10 are passed, it will still only evolve once.
+
+                reply.AppendLine();
+
+                if (((stats1.level - levels1) / 10) < (stats1.level / 10))
+                    if (await GotchiUtils.EvolveGotchiAsync(gotchi1)) {
+
+                        Species sp = await BotUtils.GetSpeciesFromDb(gotchi1.species_id);
+
+                        reply.AppendLine(string.Format("Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(gotchi1.name), sp.GetShortName()));
+
+                    }
+
+                if (((stats2.level - levels2) / 10) < (stats2.level / 10))
+                    if (await GotchiUtils.EvolveGotchiAsync(gotchi2)) {
+
+                        Species sp = await BotUtils.GetSpeciesFromDb(gotchi2.species_id);
+
+                        reply.AppendLine(string.Format("Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(gotchi2.name), sp.GetShortName()));
+
+                    }
 
                 // Update level/exp in the database.
 

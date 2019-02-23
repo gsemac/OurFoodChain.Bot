@@ -1928,6 +1928,11 @@ namespace OurFoodChain {
 
         }
 
+        public static int RandomInteger(int max) {
+
+            return RANDOM.Next(max);
+
+        }
         public static int RandomInteger(int min, int max) {
 
             return RANDOM.Next(min, max);

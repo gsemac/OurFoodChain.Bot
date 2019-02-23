@@ -29,46 +29,8 @@ namespace OurFoodChain.gotchi {
 
             bool evolved = false;
 
-            if (!gotchi.IsDead() && gotchi.IsReadyToEvolve()) {
-
-                // Find all descendatants of this species.
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT species_id FROM Ancestors WHERE ancestor_id=$ancestor_id;")) {
-
-                    List<long> descendant_ids = new List<long>();
-
-                    cmd.Parameters.AddWithValue("$ancestor_id", gotchi.species_id);
-
-                    using (DataTable rows = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in rows.Rows)
-                            descendant_ids.Add(row.Field<long>("species_id"));
-
-                    // Pick an ID at random.
-
-                    if (descendant_ids.Count > 0) {
-
-                        gotchi.species_id = descendant_ids[_rng.Next(descendant_ids.Count)];
-
-                        evolved = true;
-
-                    }
-
-                }
-
-                // Update the gotchi.
-                // Update the evolution timestamp, even if it didn't evolve (in case it has an evolution available next week).
-
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts WHERE id=$id;")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", gotchi.species_id);
-                    cmd.Parameters.AddWithValue("$evolved_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                    cmd.Parameters.AddWithValue("$id", gotchi.id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-            }
+            if (!gotchi.IsDead() && gotchi.IsReadyToEvolve())
+                evolved = await GotchiUtils.EvolveGotchiAsync(gotchi);
 
             // If the gotchi tried to evolve but failed, update its evolution timestamp so that we get a valid state (i.e., not "ready to evolve").
             // (Note that it will have already been updated in the database by this point.)

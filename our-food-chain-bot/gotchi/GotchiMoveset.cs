@@ -111,6 +111,17 @@ namespace OurFoodChain.gotchi {
 
                             break;
 
+                        case "base-consumer":
+
+                            set.moves.Add(new GotchiMove {
+                                name = "Leaf-Bite",
+                                description = "Attacks the opponent with mouthparts. Effective against Producers.",
+                                role = role.name.ToLower(),
+                                target = MoveTarget.Other
+                            });
+
+                            break;
+
                         case "producer":
 
                             set.moves.Add(new GotchiMove {

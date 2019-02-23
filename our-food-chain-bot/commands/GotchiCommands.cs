@@ -479,6 +479,8 @@ namespace OurFoodChain.gotchi {
             message_builder.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
                 OurFoodChainBot.GetInstance().GetConfig().prefix));
 
+            state.message = message_builder.ToString();
+
             await ReplyAsync(string.Format("{0}, **{1}** has accepted your challenge!",
                (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
                Context.User.Username));

@@ -282,6 +282,7 @@ namespace OurFoodChain.gotchi {
              parasite -> predators, base-consumers
              decomposer, scavenger, detritvore -> producers
              predator -> predator, base-conumers; -/> producers
+             base-consumer -> producer
              */
 
             foreach (Role role in target_roles) {
@@ -305,6 +306,11 @@ namespace OurFoodChain.gotchi {
                             mult *= 1.2;
                         else if (role.name.ToLower() == "producers")
                             mult *= 0.8;
+                        break;
+
+                    case "base-consumer":
+                        if (role.name.ToLower() == "producer")
+                            mult *= 1.2;
                         break;
 
                 }

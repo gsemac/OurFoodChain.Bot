@@ -20,9 +20,6 @@ namespace OurFoodChain.gotchi {
         public GotchiStats stats1;
         public GotchiStats stats2;
 
-        public double maxHp1 = 0;
-        public double maxHp2 = 0;
-
         public bool accepted = false;
         public string message = "";
         public int turnCount = 1;
@@ -205,9 +202,6 @@ namespace OurFoodChain.gotchi {
             else
                 state.currentTurn = BotUtils.RandomInteger(1, 3);
 
-            state.maxHp1 = state.stats1.hp;
-            state.maxHp2 = state.stats2.hp;
-
             BATTLE_STATES[gotchi1.owner_id] = state;
             BATTLE_STATES[gotchi2.owner_id] = state;
 
@@ -265,8 +259,8 @@ namespace OurFoodChain.gotchi {
 
                     // Draw health bars.
 
-                    _drawHealthBar(gfx, p1.x, 180, state.stats1.hp / state.maxHp1);
-                    _drawHealthBar(gfx, p2.x, 180, state.stats2.hp / state.maxHp2);
+                    _drawHealthBar(gfx, p1.x, 180, state.stats1.hp / state.stats1.maxHp);
+                    _drawHealthBar(gfx, p2.x, 180, state.stats2.hp / state.stats2.maxHp);
 
                 }
             });
@@ -294,6 +288,7 @@ namespace OurFoodChain.gotchi {
 
             Role[] target_roles = await BotUtils.GetRolesFromDbBySpecies(target.species_id);
             double type_multiplier = _getTypeMultiplier(move.role, target_roles);
+            string message_end = "";
 
             switch (move.type) {
 
@@ -316,8 +311,6 @@ namespace OurFoodChain.gotchi {
                         if (critical)
                             damage *= 1.5;
 
-                        target_stats.hp -= damage;
-
                         string bonus_messages = "";
 
                         if (type_multiplier > 1.0)
@@ -326,11 +319,28 @@ namespace OurFoodChain.gotchi {
                         if (critical)
                             bonus_messages += " Critical hit!";
 
-                        message = string.Format("💥 **{0}** used **{1}**, dealing {2:0.0} damage!{3}",
+                        if (!(move.callback is null)) {
+
+                            GotchiMoveResult result = move.callback(user_stats, target_stats, damage);
+
+                            message_end = result.messageFormat;
+                            damage = result.value;
+
+                        }
+
+                        target_stats.hp -= damage;
+
+                        if (string.IsNullOrEmpty(message_end))
+                            message_end = "dealing {0:0.0} damage";
+
+                        message_end = string.Format(message_end, damage);
+
+                        message = string.Format("💥 **{0}** used **{1}**, {4}!{3}",
                             StringUtils.ToTitleCase(user.name),
                             StringUtils.ToTitleCase(move.name),
                             damage,
-                            bonus_messages);
+                            bonus_messages,
+                            message_end);
 
                     }
 
@@ -339,10 +349,9 @@ namespace OurFoodChain.gotchi {
                 case MoveType.Recovery:
 
                     double recovered = Math.Max(1, user_stats.atk * move.factor) * type_multiplier;
-                    target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? maxHp1 : maxHp2);
+                    target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? stats1.maxHp : stats2.maxHp);
 
                     message = string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
-
                         StringUtils.ToTitleCase(user.name),
                         StringUtils.ToTitleCase(move.name),
                         recovered,
@@ -352,12 +361,20 @@ namespace OurFoodChain.gotchi {
 
                 case MoveType.StatBoost:
 
-                    target_stats.BoostByFactor(move.factor);
+                    if (!(move.callback is null))
+                        message_end = move.callback(user_stats, target_stats, move.factor).messageFormat;
+                    else
+                        target_stats.BoostByFactor(move.factor);
 
-                    message = string.Format("🛡 **{0}** used **{1}**, boosting their stats by {2}%!",
+                    if (string.IsNullOrEmpty(message_end))
+                        message_end = "boosting their stats by {0}";
+
+                    message_end = string.Format(message_end, (move.factor - 1.0) * 100.0);
+
+                    message = string.Format("🛡 **{0}** used **{1}**, {2}%!",
                         StringUtils.ToTitleCase(user.name),
                         StringUtils.ToTitleCase(move.name),
-                        (move.factor - 1.0) * 100.0);
+                        message_end);
 
                     break;
 

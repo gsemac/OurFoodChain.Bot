@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
@@ -14,7 +15,8 @@ namespace OurFoodChain.gotchi {
     public enum MoveType {
         Attack,
         Recovery,
-        StatBoost
+        StatBoost,
+        Custom
     }
 
     public class GotchiMove {
@@ -25,6 +27,14 @@ namespace OurFoodChain.gotchi {
         public MoveTarget target = MoveTarget.Other;
         public MoveType type = MoveType.Attack;
         public double factor = 1.0;
+        public Func<GotchiStats, GotchiStats, double, GotchiMoveResult> callback;
+
+    }
+
+    public class GotchiMoveResult {
+
+        public string messageFormat = "";
+        public double value = 0.0;
 
     }
 
@@ -58,6 +68,10 @@ namespace OurFoodChain.gotchi {
             if (sp is null)
                 return set;
 
+            // Get stats.
+
+            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
+
             // Add basic move that all species have access to.
 
             set.moves.Add(new GotchiMove {
@@ -65,6 +79,15 @@ namespace OurFoodChain.gotchi {
                 description = "A simple attack where the user collides with the opponent.",
                 target = MoveTarget.Other
             });
+
+            // Some moves can be detected for multiple reasons, so just instantiate them once here.
+
+            GotchiMove move_bite = new GotchiMove {
+                name = "Bite",
+                description = "Attacks the opponent with mouthparts. Effective against Consumers, but ineffective against Producers.",
+                role = "predator",
+                target = MoveTarget.Other
+            };
 
             // Get roles, which determine the moves available.
 
@@ -102,12 +125,7 @@ namespace OurFoodChain.gotchi {
 
                         case "predator":
 
-                            set.moves.Add(new GotchiMove {
-                                name = "Bite",
-                                description = "Attacks the opponent with mouthparts. Effective against Consumers, but ineffective against Producers.",
-                                role = role.name.ToLower(),
-                                target = MoveTarget.Other
-                            });
+                            set.moves.Add(move_bite);
 
                             break;
 
@@ -149,6 +167,76 @@ namespace OurFoodChain.gotchi {
                 }
 
             }
+
+            // Add moves depending on species description.
+
+            if (Regex.IsMatch(sp.description, "leech|suck|sap")) {
+
+                set.moves.Add(new GotchiMove {
+                    name = "Leech",
+                    description = "Leeches some hit points from the opponent, healing the user.",
+                    type = MoveType.Attack,
+                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+
+                        user.hp = Math.Min(user.hp + (value / 2.0), user.maxHp);
+
+                        return new GotchiMoveResult { messageFormat = "sapping {0:0.0} hit points", value = value };
+
+                    }
+                });
+
+            }
+
+            if (Regex.IsMatch(sp.description, "shell|carapace")) {
+
+                set.moves.Add(new GotchiMove {
+                    name = "Withdraw",
+                    description = "Boosts defense by a small amount.",
+                    type = MoveType.StatBoost,
+                    factor = 1.2,
+                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+
+                        user.def *= value;
+
+                        return new GotchiMoveResult { messageFormat = "boosting its defense by {0}", value = value };
+
+                    }
+                });
+
+            }
+
+            if (Regex.IsMatch(sp.description, "tail")) {
+
+                set.moves.Add(new GotchiMove {
+                    name = "Tail Slap",
+                    description = "Deals more damage the faster the user is compared to the opponent.",
+                    type = MoveType.Attack,
+                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+
+                        return new GotchiMoveResult { value = Math.Max(1.0, user.spd - opponent.spd) };
+
+                    }
+                });
+
+            }
+
+            if (Regex.IsMatch(sp.description, "tentacle")) {
+
+                set.moves.Add(new GotchiMove {
+                    name = "Wrap",
+                    description = "Tightly wraps tentacles around the opponent. Deals more damage the faster the opponent is compared to the user.",
+                    type = MoveType.Attack,
+                    callback = (GotchiStats user, GotchiStats opponent, double value) => {
+
+                        return new GotchiMoveResult { value = Math.Max(1.0, opponent.spd - user.spd) };
+
+                    }
+                });
+
+            }
+
+            if (Regex.IsMatch(sp.description, "teeth|jaws|bite"))
+                set.moves.Add(move_bite);
 
             // If move count is over the limit, keep the last ones.
 

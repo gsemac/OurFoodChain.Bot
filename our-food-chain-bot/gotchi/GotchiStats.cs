@@ -16,6 +16,8 @@ namespace OurFoodChain.gotchi {
         public double def = 0.5;
         public double spd = 0.5;
 
+        public double maxHp = 2.0;
+
         public long level = 1;
         public double exp = 0;
 
@@ -25,6 +27,8 @@ namespace OurFoodChain.gotchi {
             atk *= factor;
             def *= factor;
             spd *= factor;
+
+            maxHp *= factor;
 
         }
 
@@ -168,6 +172,8 @@ namespace OurFoodChain.gotchi {
 
             stats.hp = Math.Max(1.0, stats.hp);
             stats.atk = Math.Max(1.0, stats.atk);
+
+            stats.maxHp = stats.hp;
 
             return stats;
 

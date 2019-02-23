@@ -395,7 +395,7 @@ namespace OurFoodChain.gotchi {
             using (Brush brush = new SolidBrush(System.Drawing.Color.White))
                 gfx.FillRectangle(brush, new RectangleF(x - hp_bar_width / 2, y, hp_bar_width, 10));
 
-            using (Brush brush = new SolidBrush(amount < 0.5 ? System.Drawing.Color.Red : System.Drawing.Color.Green))
+            using (Brush brush = new SolidBrush(amount < 0.5 ? (amount < 0.2 ? System.Drawing.Color.Red : System.Drawing.Color.Orange) : System.Drawing.Color.Green))
                 gfx.FillRectangle(brush, new RectangleF(x - hp_bar_width / 2, y, hp_bar_width * (float)amount, 10));
 
             using (Brush brush = new SolidBrush(System.Drawing.Color.Black))

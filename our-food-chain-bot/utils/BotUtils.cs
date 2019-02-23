@@ -682,7 +682,7 @@ namespace OurFoodChain {
             return roles.ToArray();
 
         }
-        public static async Task<Role[]> GetRolesFromDbBySpecies(Species species) {
+        public static async Task<Role[]> GetRolesFromDbBySpecies(long speciesId) {
 
             // Return all roles assigned to the given species.
 
@@ -690,7 +690,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE id IN (SELECT role_id FROM SpeciesRoles WHERE species_id=$species_id) ORDER BY name ASC;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
@@ -703,7 +703,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesRoles WHERE species_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows) {
@@ -722,6 +722,11 @@ namespace OurFoodChain {
             }
 
             return roles.ToArray();
+
+        }
+        public static async Task<Role[]> GetRolesFromDbBySpecies(Species species) {
+
+            return await GetRolesFromDbBySpecies(species.id);
 
         }
         public static async Task<Role> GetRoleFromDb(string roleName) {

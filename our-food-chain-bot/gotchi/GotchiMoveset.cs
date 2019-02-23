@@ -11,18 +11,41 @@ namespace OurFoodChain.gotchi {
         Other
     }
 
+    public enum MoveType {
+        Attack,
+        Recovery,
+        StatBoost
+    }
+
     public class GotchiMove {
 
         public string name;
-        public string description;
-        public string role;
-        public MoveTarget target;
+        public string description = BotUtils.DEFAULT_DESCRIPTION;
+        public string role = "";
+        public MoveTarget target = MoveTarget.Other;
+        public MoveType type = MoveType.Attack;
+        public double factor = 1.0;
 
     }
 
     public class GotchiMoveset {
 
+        public const int MOVE_LIMIT = 4;
+
         public List<GotchiMove> moves = new List<GotchiMove>();
+
+        public GotchiMove GetMove(string identifier) {
+
+            if (int.TryParse(identifier, out int result) && result >= 0 && result < moves.Count())
+                return moves[result];
+
+            foreach (GotchiMove move in moves)
+                if (move.name.ToLower() == identifier.ToLower())
+                    return move;
+
+            return null;
+
+        }
 
         public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi) {
 
@@ -36,6 +59,18 @@ namespace OurFoodChain.gotchi {
                 return set;
 
             // Add basic move that all species have access to.
+
+            set.moves.Add(new GotchiMove {
+                name = "Hit",
+                description = "A simple attack where the user collides with the opponent.",
+                target = MoveTarget.Other
+            });
+
+            set.moves.Add(new GotchiMove {
+                name = "Hit",
+                description = "A simple attack where the user collides with the opponent.",
+                target = MoveTarget.Other
+            });
 
             set.moves.Add(new GotchiMove {
                 name = "Hit",
@@ -94,14 +129,18 @@ namespace OurFoodChain.gotchi {
                                 name = "Grow",
                                 description = "Grows larger and raises stats by a small amount.",
                                 role = role.name.ToLower(),
-                                target = MoveTarget.Other
+                                target = MoveTarget.Self,
+                                type = MoveType.StatBoost,
+                                factor = 1.1
                             });
 
                             set.moves.Add(new GotchiMove {
                                 name = "Photosynthesize",
                                 description = "Regenerates with the help of sunlight and restores Hit Points.",
                                 role = role.name.ToLower(),
-                                target = MoveTarget.Self
+                                target = MoveTarget.Self,
+                                type = MoveType.Recovery,
+                                factor = .25
                             });
 
                             break;
@@ -111,6 +150,13 @@ namespace OurFoodChain.gotchi {
                 }
 
             }
+
+            // If move count is over the limit, keep the last ones.
+
+            if (set.moves.Count() > 4)
+                set.moves = set.moves.GetRange(set.moves.Count() - 4, 4);
+
+            set.moves.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
             return set;
 

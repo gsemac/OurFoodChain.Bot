@@ -271,8 +271,16 @@ namespace OurFoodChain.gotchi {
                 return;
 
             // Calculate stats for this gotchi.
+            // If the user is currently in battle, show their battle stats instead.
 
-            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
+            GotchiStats stats;
+
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+
+            if (!(battle_state is null))
+                stats = battle_state.GetStats(gotchi);
+            else
+                stats = await GotchiStats.CalculateStats(gotchi);
 
             // Create the embed.
 
@@ -445,6 +453,8 @@ namespace OurFoodChain.gotchi {
 
             await GotchiBattleState.ShowBattleStateAsync(Context, state);
 
+            await BotUtils.ReplyAsync_Info(Context, state.message);
+
         }
 
         [Command("deny")]
@@ -485,7 +495,7 @@ namespace OurFoodChain.gotchi {
         }
 
         [Command("move")]
-        public async Task Move(string move) {
+        public async Task Move(string moveIdentifier) {
 
             // Get the battle state that the user is involved with.
 
@@ -495,7 +505,7 @@ namespace OurFoodChain.gotchi {
 
             if (state is null || (await state.GetOtherUserAsync(Context, Context.User.Id)) is null) {
 
-                await BotUtils.ReplyAsync_Info(Context, "You have not been challenged to a battle.");
+                await BotUtils.ReplyAsync_Error(Context, "You have not been challenged to a battle.");
 
                 return;
 
@@ -505,7 +515,7 @@ namespace OurFoodChain.gotchi {
 
             if (!state.IsTurn(Context.User.Id)) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("It is currently {0}'s turn.", (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
+                await BotUtils.ReplyAsync_Error(Context, string.Format("It is currently {0}'s turn.", (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
 
                 return;
 
@@ -514,8 +524,19 @@ namespace OurFoodChain.gotchi {
             // Get the move that was used.
 
             GotchiMoveset moves = await GotchiMoveset.GetMovesetAsync(state.GetGotchi(Context.User.Id));
+            GotchiMove move = moves.GetMove(moveIdentifier);
 
-            // ...
+            if (move is null) {
+
+                await BotUtils.ReplyAsync_Error(Context, "The move you have selected is invalid. Please select a valid move.");
+
+                return;
+
+            }
+
+            // Use the move/update the battle state.
+
+            await state.UseMoveAsync(Context, move);
 
         }
 

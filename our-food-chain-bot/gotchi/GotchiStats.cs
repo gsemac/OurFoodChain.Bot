@@ -11,8 +11,17 @@ namespace OurFoodChain.gotchi {
 
         public double hp = 1.0;
         public double atk = 1.0;
-        public double def = 1.0;
+        public double def = 0.5;
         public double spd = 1.0;
+
+        public void BoostByFactor(double factor) {
+
+            hp *= factor;
+            atk *= factor;
+            def *= factor;
+            spd *= factor;
+
+        }
 
         public static async Task<GotchiStats> CalculateStats(Gotchi gotchi) {
 

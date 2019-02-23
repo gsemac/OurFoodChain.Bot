@@ -78,14 +78,13 @@ namespace OurFoodChain.gotchi {
             Gotchi user = currentTurn == 1 ? gotchi1 : gotchi2;
             Gotchi other = currentTurn == 1 ? gotchi2 : gotchi1;
 
+            ++turnCount;
+            currentTurn = currentTurn == 1 ? 2 : 1;
+
             if (move.target == MoveTarget.Self)
                 await _useMoveOnGotchiAsync(context, move, user, user);
             else
                 await _useMoveOnGotchiAsync(context, move, user, other);
-
-            ++turnCount;
-
-            currentTurn = currentTurn == 1 ? 2 : 1;
 
             StringBuilder reply = new StringBuilder();
 

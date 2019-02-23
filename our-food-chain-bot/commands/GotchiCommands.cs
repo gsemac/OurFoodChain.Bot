@@ -358,7 +358,7 @@ namespace OurFoodChain.gotchi {
 
             if (opposing_gotchi.IsDead()) {
 
-                await BotUtils.ReplyAsync_Info(Context, "Your opponent's has died, and is unable to battle.");
+                await BotUtils.ReplyAsync_Info(Context, "Your opponent's gotchi has died, and is unable to battle.");
 
                 return;
 

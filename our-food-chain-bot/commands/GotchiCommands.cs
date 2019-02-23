@@ -458,10 +458,26 @@ namespace OurFoodChain.gotchi {
             // Accept the battle.
 
             state.accepted = true;
-            state.message = string.Format("The battle has begun! **{1}** is faster, so {2} goes first.\n\nPick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
-                OurFoodChainBot.GetInstance().GetConfig().prefix,
+
+            StringBuilder message_builder = new StringBuilder();
+
+            if (state.stats1.spd != state.stats2.spd) {
+
+                message_builder.AppendLine(string.Format("The battle has begun! **{0}** is faster, so {1} goes first.",
                 StringUtils.ToTitleCase(state.stats1.spd > state.stats2.spd ? state.gotchi1.name : state.gotchi2.name),
-                state.stats1.spd > state.stats2.spd ? (await state.GetUser1Async(Context)).Mention : (await state.GetUser2Async(Context)).Mention);
+                state.stats1.spd > state.stats2.spd ? (await state.GetUser1Async(Context)).Mention : (await state.GetUser2Async(Context)).Mention));
+
+            }
+            else {
+
+                message_builder.AppendLine(string.Format("The battle has begun! {0} has been randomly selected to go first.",
+                state.IsTurn(Context.User.Id) ? Context.User.Mention : (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
+
+            }
+
+            message_builder.AppendLine();
+            message_builder.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
+                OurFoodChainBot.GetInstance().GetConfig().prefix));
 
             await ReplyAsync(string.Format("{0}, **{1}** has accepted your challenge!",
                (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention,

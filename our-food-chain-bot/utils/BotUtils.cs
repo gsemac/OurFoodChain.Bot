@@ -306,6 +306,7 @@ namespace OurFoodChain {
         public const string DEFAULT_GENUS_DESCRIPTION = "No description provided.";
         public const string DEFAULT_ZONE_DESCRIPTION = "No description provided.";
         public const string DEFAULT_DESCRIPTION = "No description provided.";
+        private static Random RANDOM = new Random();
 
         public static Dictionary<ulong, TwoPartCommandWaitParams> TWO_PART_COMMAND_WAIT_PARAMS = new Dictionary<ulong, TwoPartCommandWaitParams>();
 
@@ -1924,6 +1925,12 @@ namespace OurFoodChain {
             string url = enumerator.Current.Url;
 
             return url;
+
+        }
+
+        public static int RandomInteger(int min, int max) {
+
+            return RANDOM.Next(min, max);
 
         }
 

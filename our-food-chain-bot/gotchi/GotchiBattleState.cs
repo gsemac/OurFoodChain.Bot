@@ -134,7 +134,11 @@ namespace OurFoodChain.gotchi {
                 stats2 = await GotchiStats.CalculateStats(gotchi2)
             };
 
-            state.currentTurn = state.stats1.spd > state.stats2.spd ? 1 : 2;
+            if (state.stats1.spd != state.stats2.spd)
+                state.currentTurn = state.stats1.spd > state.stats2.spd ? 1 : 2;
+            else
+                state.currentTurn = BotUtils.RandomInteger(1, 3);
+
             state.maxHp1 = state.stats1.hp;
             state.maxHp2 = state.stats2.hp;
 

@@ -98,8 +98,13 @@ namespace OurFoodChain.gotchi {
                 Gotchi winner = stats1.hp <= 0.0 ? gotchi2 : gotchi1;
                 Gotchi loser = stats1.hp <= 0.0 ? gotchi1 : gotchi2;
 
-                double exp1 = _getExpEarned(gotchi1, gotchi2, stats2.hp <= 0.0);
-                double exp2 = _getExpEarned(gotchi2, gotchi1, stats1.hp <= 0.0);
+                // Calculate the amount of EXP awarded to the winner.
+                // The loser will get 50% of the winner's EXP.
+
+                double exp = _getExpEarned(winner, loser, won: true);
+
+                double exp1 = stats2.hp <= 0.0 ? exp : exp * .5;
+                double exp2 = stats1.hp <= 0.0 ? exp : exp * .5;
 
                 reply.AppendLine(string.Format("**{0}** won the battle! Earned **{1} EXP**.\n**{2}** earned **{3} EXP**.",
                     StringUtils.ToTitleCase(winner.name),
@@ -108,8 +113,13 @@ namespace OurFoodChain.gotchi {
                      loser.id == gotchi1.id ? exp1 : exp2
                     ));
 
-                stats1.LeveUp(exp1);
-                stats2.LeveUp(exp2);
+                reply.AppendLine();
+
+                if (stats1.LeveUp(exp1) > 0)
+                    reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi1.name), stats1.level));
+
+                if (stats2.LeveUp(exp2) > 0)
+                    reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi2.name), stats2.level));
 
                 // Update level/exp in the database.
 

@@ -30,9 +30,14 @@ namespace OurFoodChain.gotchi {
 
         public double ExperienceRequired() {
 
+            return ExperienceToNextLevel() - exp;
+
+        }
+        public double ExperienceToNextLevel() {
+
             // level * 10 * 3 EXP required per level
 
-            return (level * 10 * 3) - exp;
+            return (level * 10 * 3);
 
         }
         public long LeveUp(double experience) {
@@ -41,9 +46,9 @@ namespace OurFoodChain.gotchi {
 
             long levels = 0;
 
-            while (exp >= ExperienceRequired()) {
+            while (exp >= ExperienceToNextLevel()) {
 
-                exp -= ExperienceRequired();
+                exp -= ExperienceToNextLevel();
 
                 ++level;
                 ++levels;

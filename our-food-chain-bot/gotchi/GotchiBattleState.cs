@@ -264,14 +264,40 @@ namespace OurFoodChain.gotchi {
 
                 case MoveType.Attack:
 
-                    double damage = Math.Max(1, (user_stats.atk * move.factor) - target_stats.def) * type_multiplier;
-                    target_stats.hp -= damage;
+                    // Have a chance of missing.
 
-                    message = string.Format("💥 **{0}** used **{1}**, dealing {2:0.0} damage!{3}",
-                        StringUtils.ToTitleCase(user.name),
-                        StringUtils.ToTitleCase(move.name),
-                        damage,
-                        type_multiplier > 1.0 ? " It's super effective!" : "");
+                    if (BotUtils.RandomInteger(0, 10) == 0) {
+
+                        message = string.Format("💥 **{0}** used **{1}**, but it missed!",
+                          StringUtils.ToTitleCase(user.name),
+                          StringUtils.ToTitleCase(move.name));
+
+                    }
+                    else {
+
+                        bool critical = BotUtils.RandomInteger(0, 10) == 0;
+                        double damage = Math.Max(1, (user_stats.atk * move.factor) - target_stats.def) * type_multiplier;
+
+                        if (critical)
+                            damage *= 1.5;
+
+                        target_stats.hp -= damage;
+
+                        string bonus_messages = "";
+
+                        if (type_multiplier > 1.0)
+                            bonus_messages += " It's super effective!";
+
+                        if (critical)
+                            bonus_messages += " Critical hit!";
+
+                        message = string.Format("💥 **{0}** used **{1}**, dealing {2:0.0} damage!{3}",
+                            StringUtils.ToTitleCase(user.name),
+                            StringUtils.ToTitleCase(move.name),
+                            damage,
+                            bonus_messages);
+
+                    }
 
                     break;
 

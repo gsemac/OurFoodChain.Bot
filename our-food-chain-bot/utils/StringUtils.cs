@@ -42,6 +42,16 @@ namespace OurFoodChain {
                 return sb.ToString();
             }
         }
+        public static int SumStringChars(string value) {
+
+            int sum = 0;
+
+            for (int i = 0; i < value.Length; ++i)
+                sum += value[i];
+
+            return sum;
+
+        }
 
         public static string TimeSpanToString(TimeSpan span) {
 

@@ -127,10 +127,10 @@ namespace OurFoodChain.gotchi {
 
             Species[] ancestors = await BotUtils.GetAncestorsFromDb(sp.id);
 
-            stats.hp += ancestors.Count() * 0.1;
-            stats.atk += ancestors.Count() * 0.1;
-            stats.def += ancestors.Count() * 0.1;
-            stats.spd += ancestors.Count() * 0.1;
+            stats.hp += ancestors.Count() * 0.2;
+            stats.atk += ancestors.Count() * 0.2;
+            stats.def += ancestors.Count() * 0.2;
+            stats.spd += ancestors.Count() * 0.2;
 
             // Add bonus multipliers depending on characteristics mentioned in the species' description.
 
@@ -145,6 +145,15 @@ namespace OurFoodChain.gotchi {
 
             if (Regex.IsMatch(sp.description, "flies|can fly|quick|fast|agile", RegexOptions.IgnoreCase))
                 stats.spd += 0.2;
+
+            // For additional variation, assign bonus multipliers randomly according to the species name.
+
+            Random random = new Random(StringUtils.SumStringChars(sp.name + gotchi.born_ts.ToString()));
+
+            stats.hp += random.Next(0, 3) / 10.0;
+            stats.atk += random.Next(0, 3) / 10.0;
+            stats.def += random.Next(0, 3) / 10.0;
+            stats.spd += random.Next(0, 3) / 10.0;
 
             // Multiply stats by the gotchi's level + age.
 

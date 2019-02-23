@@ -143,18 +143,6 @@ namespace OurFoodChain.gotchi {
         [Command("get")]
         public async Task Get(string genus, string species) {
 
-            // If the user already has a gotchi (and it's still alive!), don't let them make a new one.
-
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
-
-            if (!(gotchi is null) && !gotchi.IsDead()) {
-
-                await BotUtils.ReplyAsync_Error(Context, "You already have a gotchi!");
-
-                return;
-
-            }
-
             // Delete the user's old gotchi if already existed.
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE owner_id=$owner_id;")) {
@@ -375,7 +363,7 @@ namespace OurFoodChain.gotchi {
                 return;
 
             }
-  
+
             // If the user is involved in an existing battle (in progress), do not permit them to start another.
 
             GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);

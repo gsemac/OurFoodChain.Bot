@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 17;
+        public const int DATABASE_VERSION = 18;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -265,6 +265,10 @@ namespace OurFoodChain {
                     await _update017(conn);
                     break;
 
+                case 18:
+                    await _update018(conn);
+                    break;
+
             }
 
             await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", updateNumber));
@@ -509,6 +513,19 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 17);
+
+        }
+        private static async Task _update018(SQLiteConnection conn) {
+
+            // Adds fields required for gotchi battles.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Gotchi ADD COLUMN level INTEGER;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Gotchi ADD COLUMN exp REAL;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 18);
 
         }
 

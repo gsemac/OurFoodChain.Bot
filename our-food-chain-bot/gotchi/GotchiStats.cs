@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,12 +16,41 @@ namespace OurFoodChain.gotchi {
         public double def = 0.5;
         public double spd = 0.5;
 
+        public long level = 1;
+        public double exp = 0;
+
         public void BoostByFactor(double factor) {
 
             hp *= factor;
             atk *= factor;
             def *= factor;
             spd *= factor;
+
+        }
+
+        public double ExperienceRequired() {
+
+            // level * 10 * 3 EXP required per level
+
+            return (level * 10 * 3) - exp;
+
+        }
+        public long LeveUp(double experience) {
+
+            exp += experience;
+
+            long levels = 0;
+
+            while (exp >= ExperienceRequired()) {
+
+                exp -= ExperienceRequired();
+
+                ++level;
+                ++levels;
+
+            }
+
+            return levels;
 
         }
 
@@ -31,6 +62,23 @@ namespace OurFoodChain.gotchi {
 
             if (sp is null)
                 return stats;
+
+            // Get level and EXP from the database.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT level, exp FROM Gotchi WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$id", gotchi.id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null)) {
+
+                    stats.exp = row.IsNull("exp") ? 0.0 : row.Field<double>("exp");
+                    stats.level = row.IsNull("level") ? 1 : Math.Max(1, row.Field<long>("level"));
+
+                }
+
+            }
 
             // Calculate base stat multipliers, which depend on the species' role(s).
 
@@ -97,10 +145,15 @@ namespace OurFoodChain.gotchi {
 
             long age = gotchi.Age();
 
-            stats.hp *= gotchi.level + age;
-            stats.atk *= gotchi.level + age;
-            stats.def *= gotchi.level + age;
-            stats.spd *= gotchi.level + age;
+            stats.hp *= stats.level + age;
+            stats.atk *= stats.level + age;
+            stats.def *= stats.level + age;
+            stats.spd *= stats.level + age;
+
+            // Make sure required stats are >= 1.
+
+            stats.hp = Math.Max(1.0, stats.hp);
+            stats.atk = Math.Max(1.0, stats.atk);
 
             return stats;
 

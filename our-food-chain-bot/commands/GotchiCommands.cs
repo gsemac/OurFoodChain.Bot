@@ -286,9 +286,9 @@ namespace OurFoodChain.gotchi {
 
             EmbedBuilder stats_page = new EmbedBuilder();
 
-            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, gotchi.level, sp.GetShortName(), gotchi.Age()));
+            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age()));
             stats_page.WithThumbnailUrl(sp.pics);
-            stats_page.WithFooter(string.Format("{0} experience points until next level", gotchi.exp));
+            stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceRequired()));
 
             stats_page.AddField("❤ Hit points", (int)stats.hp, inline: true);
             stats_page.AddField("💥 Attack", (int)stats.atk, inline: true);
@@ -319,14 +319,15 @@ namespace OurFoodChain.gotchi {
             // Get moveset for this gotchi.
 
             GotchiMoveset set = await GotchiMoveset.GetMovesetAsync(gotchi);
+            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
 
             // Create the embed.
 
             EmbedBuilder set_page = new EmbedBuilder();
 
-            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, gotchi.level, sp.GetShortName(), gotchi.Age()));
+            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age()));
             set_page.WithThumbnailUrl(sp.pics);
-            set_page.WithFooter(string.Format("{0} experience points until next level", gotchi.exp));
+            set_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceRequired()));
 
             int move_index = 1;
 
@@ -374,7 +375,7 @@ namespace OurFoodChain.gotchi {
                 return;
 
             }
-
+  
             // If the user is involved in an existing battle (in progress), do not permit them to start another.
 
             GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);

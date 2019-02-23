@@ -3,6 +3,7 @@ using Discord.Commands;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -95,15 +96,45 @@ namespace OurFoodChain.gotchi {
 
             if (stats1.hp <= 0.0 || stats2.hp <= 0.0) {
 
-                Gotchi winner = stats1.hp <= 0.0 ? gotchi1 : gotchi2;
-                Gotchi loser = stats1.hp <= 0.0 ? gotchi2 : gotchi1;
+                Gotchi winner = stats1.hp <= 0.0 ? gotchi2 : gotchi1;
+                Gotchi loser = stats1.hp <= 0.0 ? gotchi1 : gotchi2;
+
+                double exp1 = _getExpEarned(gotchi1, gotchi2, stats2.hp <= 0.0);
+                double exp2 = _getExpEarned(gotchi2, gotchi1, stats1.hp <= 0.0);
 
                 reply.AppendLine(string.Format("**{0}** won the battle! Earned **{1} EXP**.\n**{2}** earned **{3} EXP**.",
                     StringUtils.ToTitleCase(winner.name),
-                    _getExpEarned(winner, loser, true),
+                    winner.id == gotchi1.id ? exp1 : exp2,
                      StringUtils.ToTitleCase(loser.name),
-                    _getExpEarned(loser, winner, false)
+                     loser.id == gotchi1.id ? exp1 : exp2
                     ));
+
+                stats1.LeveUp(exp1);
+                stats2.LeveUp(exp2);
+
+                // Update level/exp in the database.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
+
+                    cmd.Parameters.AddWithValue("$id", gotchi1.id);
+                    cmd.Parameters.AddWithValue("$level", stats1.level);
+                    cmd.Parameters.AddWithValue("$exp", stats1.exp);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
+
+                    cmd.Parameters.AddWithValue("$id", gotchi2.id);
+                    cmd.Parameters.AddWithValue("$level", stats2.level);
+                    cmd.Parameters.AddWithValue("$exp", stats2.exp);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+                // Deregister the battle state.
 
                 DeregisterBattle(context.User.Id);
 
@@ -119,7 +150,7 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Info(context, reply.ToString());
 
         }
-        public bool BattleIsOver() {
+        public bool IsBattleOver() {
 
             return stats1.hp <= 0.0 || stats2.hp <= 0.0;
 
@@ -210,7 +241,7 @@ namespace OurFoodChain.gotchi {
             embed.WithTitle(string.Format("**{0}** vs. **{1}** (Turn {2})", StringUtils.ToTitleCase(state.gotchi1.name), StringUtils.ToTitleCase(state.gotchi2.name), state.turnCount));
             embed.WithImageUrl(gif_url);
             //embed.WithDescription(state.message);
-            if (!state.BattleIsOver())
+            if (!state.IsBattleOver())
                 embed.WithFooter(string.Format("It is now {0}'s turn.", state.currentTurn == 1 ? (await state.GetUser1Async(context)).Username : (await state.GetUser2Async(context)).Username));
             else
                 embed.WithFooter("The battle has ended!");
@@ -324,7 +355,7 @@ namespace OurFoodChain.gotchi {
 
             double exp = 0.0;
 
-            exp = opponent.level * 10.0;
+            exp = (opponent.id == gotchi1.id ? stats1.level : stats2.level) * 10.0;
 
             if (!won)
                 exp *= .25;

@@ -21,10 +21,6 @@ namespace OurFoodChain.gotchi {
         public long died_ts = 0;
         public long evolved_ts = 0;
 
-        // gotchimon members
-        public long level = 1;
-        public long exp = 0;
-
         public bool IsSleeping() {
 
             return (HoursSinceBirth() % HOURS_PER_DAY) >= (HOURS_PER_DAY - HOURS_OF_SLEEP_PER_DAY);

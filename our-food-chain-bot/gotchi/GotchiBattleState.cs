@@ -358,7 +358,7 @@ namespace OurFoodChain.gotchi {
             exp = (opponent.id == gotchi1.id ? stats1.level : stats2.level) * 10.0;
 
             if (!won)
-                exp *= .25;
+                exp *= .5;
 
             return exp;
 

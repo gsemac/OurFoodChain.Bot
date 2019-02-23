@@ -347,6 +347,14 @@ namespace OurFoodChain.gotchi {
             if (!await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi))
                 return;
 
+            if (gotchi.IsDead()) {
+
+                await BotUtils.ReplyAsync_Info(Context, "Your gotchi has died, and is unable to battle.");
+
+                return;
+
+            }
+
             // Get the opponent's gotchi.
 
             Gotchi opposing_gotchi = await GotchiUtils.GetGotchiAsync(user);
@@ -354,6 +362,14 @@ namespace OurFoodChain.gotchi {
             if (!GotchiUtils.ValidateGotchi(opposing_gotchi)) {
 
                 await BotUtils.ReplyAsync_Info(Context, "Your opponent doesn't have a gotchi yet.");
+
+                return;
+
+            }
+
+            if (opposing_gotchi.IsDead()) {
+
+                await BotUtils.ReplyAsync_Info(Context, "Your opponent's has died, and is unable to battle.");
 
                 return;
 
@@ -405,7 +421,7 @@ namespace OurFoodChain.gotchi {
 
             await GotchiBattleState.RegisterBattleAsync(gotchi, opposing_gotchi);
 
-            await ReplyAsync(string.Format("{0}, **{1}** is challenging you to a battle! Use \"{2}gotchi accept\" or \"{2}gotchi deny\" to respond to their challenge.",
+            await ReplyAsync(string.Format("{0}, **{1}** is challenging you to a battle! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their challenge.",
                 user.Mention,
                 Context.User.Username,
                 OurFoodChainBot.GetInstance().GetConfig().prefix));

@@ -36,8 +36,11 @@ namespace OurFoodChain.gotchi {
 
         public GotchiMove GetMove(string identifier) {
 
-            if (int.TryParse(identifier, out int result) && result >= 0 && result < moves.Count())
-                return moves[result];
+            if (int.TryParse(identifier, out int r))
+                Console.WriteLine(r);
+
+            if (int.TryParse(identifier, out int result) && result > 0 && result <= moves.Count())
+                return moves[result - 1];
 
             foreach (GotchiMove move in moves)
                 if (move.name.ToLower() == identifier.ToLower())
@@ -59,18 +62,6 @@ namespace OurFoodChain.gotchi {
                 return set;
 
             // Add basic move that all species have access to.
-
-            set.moves.Add(new GotchiMove {
-                name = "Hit",
-                description = "A simple attack where the user collides with the opponent.",
-                target = MoveTarget.Other
-            });
-
-            set.moves.Add(new GotchiMove {
-                name = "Hit",
-                description = "A simple attack where the user collides with the opponent.",
-                target = MoveTarget.Other
-            });
 
             set.moves.Add(new GotchiMove {
                 name = "Hit",
@@ -131,7 +122,7 @@ namespace OurFoodChain.gotchi {
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Self,
                                 type = MoveType.StatBoost,
-                                factor = 1.1
+                                factor = 1.2
                             });
 
                             set.moves.Add(new GotchiMove {
@@ -140,7 +131,7 @@ namespace OurFoodChain.gotchi {
                                 role = role.name.ToLower(),
                                 target = MoveTarget.Self,
                                 type = MoveType.Recovery,
-                                factor = .25
+                                factor = .5
                             });
 
                             break;

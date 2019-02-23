@@ -95,7 +95,7 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        public void Save(string filePath) {
+        public void Save(string filePath, Action<Graphics> overlay = null) {
 
             // Set GIF parameters.
 
@@ -129,6 +129,10 @@ namespace OurFoodChain.gotchi {
                     if (_gotchi_params.Any(x => x.Type == GotchiState.Sleeping))
                         using (Brush brush = new SolidBrush(Color.FromArgb(100, Color.DarkBlue)))
                             gfx.FillRectangle(brush, new Rectangle(0, 0, _screen_size.Width, _screen_size.Height));
+
+                    // Draw the overlay if one has been provided.
+                    if (!(overlay is null))
+                        overlay(gfx);
 
                     // Add the frame to the GIF.
                     gif.AddFrame(frame, -1, quality);

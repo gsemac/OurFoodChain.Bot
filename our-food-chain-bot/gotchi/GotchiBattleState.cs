@@ -3,6 +3,7 @@ using Discord.Commands;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,9 +19,12 @@ namespace OurFoodChain.gotchi {
         public GotchiStats stats1;
         public GotchiStats stats2;
 
+        public double maxHp1 = 0;
+        public double maxHp2 = 0;
+
         public bool accepted = false;
         public string message = "";
-        public int turn = 1;
+        public int turnCount = 1;
         public int currentTurn = 1;
 
         public async Task<IUser> GetUser1Async(ICommandContext context) {
@@ -70,15 +74,15 @@ namespace OurFoodChain.gotchi {
         }
         public async Task UseMoveAsync(ICommandContext context, GotchiMove move) {
 
-            Gotchi user = turn == 1 ? gotchi1 : gotchi2;
-            Gotchi other = turn == 1 ? gotchi2 : gotchi1;
+            Gotchi user = currentTurn == 1 ? gotchi1 : gotchi2;
+            Gotchi other = currentTurn == 1 ? gotchi2 : gotchi1;
 
             if (move.target == MoveTarget.Self)
                 await _useMoveOnGotchiAsync(context, move, user, user);
             else
                 await _useMoveOnGotchiAsync(context, move, user, other);
 
-            ++turn;
+            ++turnCount;
 
             currentTurn = currentTurn == 1 ? 2 : 1;
 
@@ -101,6 +105,8 @@ namespace OurFoodChain.gotchi {
                     _getExpEarned(loser, winner, false)
                     ));
 
+                DeregisterBattle(context.User.Id);
+
             }
             else {
 
@@ -113,6 +119,11 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Info(context, reply.ToString());
 
         }
+        public bool BattleIsOver() {
+
+            return stats1.hp <= 0.0 || stats2.hp <= 0.0;
+
+        }
 
         public static async Task RegisterBattleAsync(Gotchi gotchi1, Gotchi gotchi2) {
 
@@ -120,10 +131,12 @@ namespace OurFoodChain.gotchi {
                 gotchi1 = gotchi1,
                 gotchi2 = gotchi2,
                 stats1 = await GotchiStats.CalculateStats(gotchi1),
-                stats2 = await GotchiStats.CalculateStats(gotchi2),
+                stats2 = await GotchiStats.CalculateStats(gotchi2)
             };
 
             state.currentTurn = state.stats1.spd > state.stats2.spd ? 1 : 2;
+            state.maxHp1 = state.stats1.hp;
+            state.maxHp2 = state.stats2.hp;
 
             BATTLE_STATES[gotchi1.owner_id] = state;
             BATTLE_STATES[gotchi2.owner_id] = state;
@@ -156,12 +169,47 @@ namespace OurFoodChain.gotchi {
         }
         public static async Task ShowBattleStateAsync(ICommandContext context, GotchiBattleState state) {
 
+            // Get an image of the battle.
+
+            string gif_url = "";
+
+            GotchiUtils.GotchiGifCreatorParams p1 = new GotchiUtils.GotchiGifCreatorParams {
+                gotchi = state.gotchi1,
+                x = 50,
+                y = 150,
+                state = state.stats1.hp > 0 ? (state.stats2.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                auto = false
+            };
+
+            GotchiUtils.GotchiGifCreatorParams p2 = new GotchiUtils.GotchiGifCreatorParams {
+                gotchi = state.gotchi2,
+                x = 250,
+                y = 150,
+                state = state.stats2.hp > 0 ? (state.stats1.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                auto = false
+            };
+
+            gif_url = await GotchiUtils.Reply_GenerateAndUploadGotchiGifAsync(context, new GotchiUtils.GotchiGifCreatorParams[] { p1, p2 }, new GotchiUtils.GotchiGifCreatorExtraParams {
+                backgroundFileName = "home_battle.png",
+                overlay = (Graphics gfx) => {
+
+                    // Draw health bars.
+
+                    _drawHealthBar(gfx, p1.x, 180, state.stats1.hp / state.maxHp1);
+                    _drawHealthBar(gfx, p2.x, 180, state.stats2.hp / state.maxHp2);
+
+                }
+            });
+
             EmbedBuilder embed = new EmbedBuilder();
 
-            embed.WithTitle(string.Format("**{0}** vs. **{1}**", StringUtils.ToTitleCase(state.gotchi1.name), StringUtils.ToTitleCase(state.gotchi2.name)));
-            embed.WithImageUrl("https://via.placeholder.com/300");
+            embed.WithTitle(string.Format("**{0}** vs. **{1}** (Turn {2})", StringUtils.ToTitleCase(state.gotchi1.name), StringUtils.ToTitleCase(state.gotchi2.name), state.turnCount));
+            embed.WithImageUrl(gif_url);
             //embed.WithDescription(state.message);
-            embed.WithFooter(string.Format("Awaiting {0}'s move.", state.currentTurn == 1 ? (await state.GetUser1Async(context)).Username : (await state.GetUser2Async(context)).Username));
+            if (!state.BattleIsOver())
+                embed.WithFooter(string.Format("It is now {0}'s turn.", state.currentTurn == 1 ? (await state.GetUser1Async(context)).Username : (await state.GetUser2Async(context)).Username));
+            else
+                embed.WithFooter("The battle has ended!");
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -195,7 +243,7 @@ namespace OurFoodChain.gotchi {
                 case MoveType.Recovery:
 
                     double recovered = Math.Max(1, user_stats.atk * move.factor) * type_multiplier;
-                    target_stats.hp += recovered;
+                    target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? maxHp1 : maxHp2);
 
                     message = string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
 
@@ -272,6 +320,21 @@ namespace OurFoodChain.gotchi {
                 exp *= .25;
 
             return exp;
+
+        }
+        private static void _drawHealthBar(Graphics gfx, float x, float y, double amount) {
+
+            float hp_bar_width = 50;
+
+            using (Brush brush = new SolidBrush(System.Drawing.Color.White))
+                gfx.FillRectangle(brush, new RectangleF(x - hp_bar_width / 2, y, hp_bar_width, 10));
+
+            using (Brush brush = new SolidBrush(amount < 0.5 ? System.Drawing.Color.Red : System.Drawing.Color.Green))
+                gfx.FillRectangle(brush, new RectangleF(x - hp_bar_width / 2, y, hp_bar_width * (float)amount, 10));
+
+            using (Brush brush = new SolidBrush(System.Drawing.Color.Black))
+            using (Pen pen = new Pen(brush))
+                gfx.DrawRectangle(pen, new Rectangle((int)(x - hp_bar_width / 2), (int)y, (int)hp_bar_width, 10));
 
         }
 

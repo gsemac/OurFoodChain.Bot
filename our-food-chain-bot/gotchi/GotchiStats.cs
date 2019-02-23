@@ -9,10 +9,10 @@ namespace OurFoodChain.gotchi {
 
     public class GotchiStats {
 
-        public double hp = 1.0;
+        public double hp = 2.0;
         public double atk = 1.0;
         public double def = 0.5;
-        public double spd = 1.0;
+        public double spd = 0.5;
 
         public void BoostByFactor(double factor) {
 

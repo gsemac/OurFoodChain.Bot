@@ -235,7 +235,7 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            if (Regex.IsMatch(sp.description, "spike|")) {
+            if (Regex.IsMatch(sp.description, "spike")) {
 
                 set.moves.Add(new GotchiMove {
                     name = "Spike Attack",

@@ -305,8 +305,21 @@ namespace OurFoodChain.gotchi {
                     }
                     else {
 
+                        double damage = 0.0;
+
+                        if (!(move.callback is null)) {
+
+                            GotchiMoveResult result = move.callback(user_stats, target_stats, damage);
+
+                            message_end = result.messageFormat;
+                            damage = result.value;
+
+                        }
+                        else
+                            damage = user_stats.atk;
+
                         bool critical = BotUtils.RandomInteger(0, 10) == 0;
-                        double damage = Math.Max(1, (user_stats.atk * move.factor) - target_stats.def) * type_multiplier;
+                        damage = Math.Max(1.0, (damage * move.factor) - target_stats.def) * type_multiplier;
 
                         if (critical)
                             damage *= 1.5;
@@ -318,15 +331,6 @@ namespace OurFoodChain.gotchi {
 
                         if (critical)
                             bonus_messages += " Critical hit!";
-
-                        if (!(move.callback is null)) {
-
-                            GotchiMoveResult result = move.callback(user_stats, target_stats, damage);
-
-                            message_end = result.messageFormat;
-                            damage = result.value;
-
-                        }
 
                         target_stats.hp -= damage;
 

@@ -1376,6 +1376,7 @@ namespace OurFoodChain {
                 builder.WithTitle("Commands list");
                 builder.WithDescription(string.Format("Want to know more about a command? Use `{0}help <command>` (e.g. `{0}help setpic`).",
                     OurFoodChainBot.GetInstance().GetConfig().prefix));
+                builder.WithFooter("Source: github.com/gsemac/ourfoodchain-bot");
 
                 foreach (string cat in commands_lists.Keys) {
 

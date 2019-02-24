@@ -387,8 +387,11 @@ namespace OurFoodChain.gotchi {
             GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
 
             // If the state is null, the user has not been challenged to a battle.
+            // Make sure that the user accepting the battle is not the one who initiated it.
 
-            if (state is null || (await state.GetOtherUserAsync(Context, Context.User.Id)) is null) {
+            if (state is null ||
+                (await state.GetOtherUserAsync(Context, Context.User.Id)) is null ||
+                (await state.GetUser1Async(Context)).Id == Context.User.Id) {
 
                 await BotUtils.ReplyAsync_Info(Context, "You have not been challenged to a battle.");
 

@@ -21,11 +21,21 @@ namespace OurFoodChain {
 
             // Set up a default configuration.
 
-            _config = new Config();
-            _config.prefix = DEFAULT_PREFIX;
-            _config.playing = DEFAULT_PLAYING;
+            _config = new Config {
+                prefix = DEFAULT_PREFIX,
+                playing = DEFAULT_PLAYING
+            };
 
-            _discord_client = new DiscordSocketClient();
+            _discord_client = new DiscordSocketClient(
+                new DiscordSocketConfig() {
+
+                    LogLevel = LogSeverity.Info,
+
+                    // Allows the bot to run on Windows 7.
+                    WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance
+
+                });
+
             _command_service = new CommandService();
             _service_provider = new ServiceCollection().BuildServiceProvider();
 

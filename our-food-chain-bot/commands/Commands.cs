@@ -1374,7 +1374,7 @@ namespace OurFoodChain {
                 EmbedBuilder builder = new EmbedBuilder();
 
                 builder.WithTitle("Commands list");
-                builder.WithFooter(string.Format("Want to know more about a command? Use \"{0}help <command>\", e.g.: \"{0}help setpic\"",
+                builder.WithDescription(string.Format("Want to know more about a command? Use `{0}help <command>` (e.g. `{0}help setpic`).",
                     OurFoodChainBot.GetInstance().GetConfig().prefix));
 
                 foreach (string cat in commands_lists.Keys) {

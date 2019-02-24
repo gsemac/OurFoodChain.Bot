@@ -1720,69 +1720,11 @@ namespace OurFoodChain {
 
         }
 
-        private static int _getSpeciesTreeWidth(Tree<Species>.TreeNode root, Font font) {
-
-            int width = (int)GraphicsUtils.MeasureString(root.value.GetShortName(), font).Width;
-            int max_child_width = 0;
-
-            foreach (Tree<Species>.TreeNode i in root.childNodes)
-                max_child_width = Math.Max(max_child_width, _getSpeciesTreeWidth(i, font));
-
-            return Math.Max(width, max_child_width * root.childNodes.Count());
-
-        }
-        private static void _drawSpeciesTree(Tree<Species>.TreeNode root, Font font, Graphics gfx, Species highlightSpecies, int x, int y, int w) {
-
-            // Draw the tree using DFS.
-
-            SizeF size = GraphicsUtils.MeasureString(root.value.GetShortName(), font);
-            int dx = x + (w / 2) - ((int)size.Width / 2);
-            int dy = y;
-
-            if (root.value.isExtinct && System.IO.File.Exists("res/x.png"))
-                using (Bitmap extinctIcon = new Bitmap("res/x.png")) {
-
-                    float icon_scale = size.Height / extinctIcon.Height;
-                    int icon_w = (int)(extinctIcon.Width * icon_scale);
-                    int icon_h = (int)(extinctIcon.Height * icon_scale);
-                    int icon_x = x + (w / 2) - (icon_w / 2);
-                    int icon_y = dy + ((int)size.Height / 2) - (icon_h / 2);
-
-                    gfx.DrawImage(extinctIcon, new Rectangle(icon_x, icon_y, icon_w, icon_h));
-
-                }
-
-            using (Brush brush = new SolidBrush(root.value.id == highlightSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.White))
-                gfx.DrawString(root.value.GetShortName(), font, brush, new Point(dx, dy));
-
-            int cx = x;
-            int cy = y + (int)size.Height * 3;
-            int cw = root.childNodes.Count() > 0 ? w / root.childNodes.Count() : w;
-
-            foreach (Tree<Species>.TreeNode n in root.childNodes) {
-
-                using (Brush brush = new SolidBrush(System.Drawing.Color.FromArgb(162, 164, 171)))
-                using (Pen pen = new Pen(brush, 2.0f)) {
-
-                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
-
-                    gfx.DrawLine(pen, new Point(x + (w / 2), y + (int)size.Height), new Point(cx + (cw / 2), cy));
-
-                }
-
-                _drawSpeciesTree(n, font, gfx, highlightSpecies, cx, cy, cw);
-
-                cx += cw;
-
-            }
-
-        }
-
-        public static async Task<string> GenerateEvolutionTreeImage(Species sp, bool descendantsOnly = false) {
+        private static async Task<TreeNode<Species>> _generateAncestryTree(Species species, bool descendantsOnly = false) {
 
             // Start by finding the earliest ancestor of this species.
 
-            long id = sp.id;
+            long id = species.id;
 
             if (!descendantsOnly) {
 
@@ -1807,10 +1749,11 @@ namespace OurFoodChain {
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
-            Tree<Species>.TreeNode root = new Tree<Species>.TreeNode();
-            root.value = await BotUtils.GetSpeciesFromDb(id);
+            TreeNode<Species> root = new TreeNode<Species> {
+                value = await GetSpeciesFromDb(id)
+            };
 
-            Queue<Tree<Species>.TreeNode> queue = new Queue<Tree<Species>.TreeNode>();
+            Queue<TreeNode<Species>> queue = new Queue<TreeNode<Species>>();
             queue.Enqueue(root);
 
             while (queue.Count() > 0) {
@@ -1825,10 +1768,11 @@ namespace OurFoodChain {
 
                         foreach (DataRow row in rows.Rows) {
 
-                            Tree<Species>.TreeNode node = new Tree<Species>.TreeNode();
-                            node.value = await Species.FromDataRow(row);
+                            TreeNode<Species> node = new TreeNode<Species> {
+                                value = await Species.FromDataRow(row)
+                            };
 
-                            queue.First().childNodes.Add(node);
+                            queue.First().children.Add(node);
                             queue.Enqueue(node);
 
                         }
@@ -1841,28 +1785,96 @@ namespace OurFoodChain {
 
             }
 
+            return root;
+
+        }
+        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<Species> node, Species selectedSpecies, Font font) {
+
+            // Cross-out the species if it's extinct.
+
+            if (node.value.isExtinct)
+                using (Brush brush = new SolidBrush(System.Drawing.Color.White))
+                using (Pen pen = new Pen(brush, 1.0f))
+                    gfx.DrawLine(pen,
+                        new PointF(node.bounds.X, node.bounds.Y + node.bounds.Height / 2.0f),
+                        new PointF(node.bounds.X + node.bounds.Width - 5.0f, node.bounds.Y + node.bounds.Height / 2.0f));
+
+            using (Brush brush = new SolidBrush(node.value.id == selectedSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.White))
+                gfx.DrawString(node.value.GetShortName(), font, brush, new PointF(node.bounds.X, node.bounds.Y));
+
+            foreach (TreeNode<Species> child in node.children) {
+
+                using (Brush brush = new SolidBrush(System.Drawing.Color.FromArgb(162, 164, 171)))
+                using (Pen pen = new Pen(brush, 2.0f)) {
+
+                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+
+                    gfx.DrawLine(pen,
+                        new PointF(node.bounds.X + (node.bounds.Width / 2.0f), node.bounds.Y + node.bounds.Height),
+                        new PointF(child.bounds.X + (child.bounds.Width / 2.0f), child.bounds.Y));
+
+                }
+
+                _drawSpeciesTreeNode(gfx, child, selectedSpecies, font);
+
+            }
+
+        }
+
+        public static async Task<string> GenerateEvolutionTreeImage(Species sp, bool descendantsOnly = false) {
+
+            // Generate the ancestry tree.
+
+            TreeNode<Species> root = await _generateAncestryTree(sp, descendantsOnly);
+
             // Generate the evolution tree image.
 
             using (Font font = new Font("Calibri", 12)) {
 
-                // Determine the dimensions of the image.
+                // Calculate the size of each node.
 
-                int padding = 30;
-                int width = _getSpeciesTreeWidth(root, font) + padding;
-                int depth = Tree<Species>.Depth(root);
-                int line_height = (int)GraphicsUtils.MeasureString("test", font).Height;
-                int height = (depth - 1) * (line_height * 3) + line_height;
+                float horizontal_padding = 5.0f;
+
+                TreeUtils.PostOrderTraverse(root, (node) => {
+
+                    SizeF size = GraphicsUtils.MeasureString(node.value.GetShortName(), font);
+
+                    node.bounds.Width = size.Width + horizontal_padding;
+                    node.bounds.Height = size.Height;
+
+                });
+
+                // Calculate node placements.
+
+                TreeUtils.CalculateNodePlacements(root);
+
+                // Calculate the size of the tree.
+
+                RectangleF bounds = TreeUtils.CalculateTreeBounds(root);
+
+                // Shift the tree so that the entire thing is visible.
+
+                float min_x = 0.0f;
+
+                TreeUtils.PostOrderTraverse(root, (node) => {
+
+                    if (node.bounds.X < min_x)
+                        min_x = bounds.X;
+
+                });
+
+                TreeUtils.ShiftTree(root, -min_x, 0.0f);
 
                 // Create the bitmap.
 
-                using (Bitmap bmp = new Bitmap(width, height))
+                using (Bitmap bmp = new Bitmap((int)bounds.Width, (int)bounds.Height))
                 using (Graphics gfx = Graphics.FromImage(bmp)) {
 
                     gfx.Clear(System.Drawing.Color.FromArgb(54, 57, 63));
                     gfx.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
                     gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                    _drawSpeciesTree(root, font, gfx, sp, 0, 0, width);
+                    _drawSpeciesTreeNode(gfx, root, sp, font);
 
                     // Save the result.
 

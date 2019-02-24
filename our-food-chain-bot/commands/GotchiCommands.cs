@@ -288,8 +288,18 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        [Command("battle"), Alias("challenge")]
+        [Command("battle"), Alias("challenge", "duel")]
         public async Task Battle(IUser user) {
+
+            // Cannot challenge oneself.
+
+            if(user.Id == Context.User.Id) {
+
+                await BotUtils.ReplyAsync_Error(Context, "You cannot challenge yourself.");
+
+                return;
+
+            }
 
             // Get this user's gotchi.
 

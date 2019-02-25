@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 18;
+        public const int DATABASE_VERSION = 19;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -267,6 +267,10 @@ namespace OurFoodChain {
 
                 case 18:
                     await _update018(conn);
+                    break;
+
+                case 19:
+                    await _update019(conn);
                     break;
 
             }
@@ -526,6 +530,19 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 18);
+
+        }
+        private static async Task _update019(SQLiteConnection conn) {
+
+            // Adds fields related to gotchi training.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Gotchi ADD COLUMN training_ts INTEGER;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE Gotchi ADD COLUMN training_left INTEGER;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 19);
 
         }
 

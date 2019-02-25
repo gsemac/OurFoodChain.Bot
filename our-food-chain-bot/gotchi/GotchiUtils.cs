@@ -105,7 +105,7 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            // Update the gotchi.
+            // Update the gotchi in the database.
             // Update the evolution timestamp, even if it didn't evolve (in case it has an evolution available next week).
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts WHERE id=$id;")) {

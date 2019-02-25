@@ -56,6 +56,11 @@ namespace OurFoodChain.gotchi {
             return null;
 
         }
+        public GotchiMove GetRandomMove() {
+
+            return moves[BotUtils.RandomInteger(moves.Count())];
+
+        }
 
         public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi) {
 

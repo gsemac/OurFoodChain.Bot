@@ -13,7 +13,7 @@ namespace OurFoodChain.gotchi {
 
         public double hp = 2.0;
         public double atk = 1.0;
-        public double def = 0.5;
+        public double def = 0.2;
         public double spd = 0.5;
 
         public double maxHp = 2.0;
@@ -68,11 +68,6 @@ namespace OurFoodChain.gotchi {
 
             GotchiStats stats = new GotchiStats();
 
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
-
-            if (sp is null)
-                return stats;
-
             // Get level and EXP from the database.
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT level, exp FROM Gotchi WHERE id=$id;")) {
@@ -90,6 +85,16 @@ namespace OurFoodChain.gotchi {
 
             }
 
+            return await CalculateStats(gotchi, stats);
+
+        }
+        public static async Task<GotchiStats> CalculateStats(Gotchi gotchi, GotchiStats stats) {
+
+            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
+
+            if (sp is null)
+                return stats;
+
             // Calculate base stat multipliers, which depend on the species' role(s).
 
             Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp);
@@ -98,30 +103,42 @@ namespace OurFoodChain.gotchi {
 
                 switch (roles[0].name.ToLower()) {
 
+                    // Balanced, but does not excel anywhere.
+                    case "base-consumer":
+                        stats.hp *= 1.1;
+                        stats.atk *= 1.1;
+                        stats.def *= 1.1;
+                        stats.spd *= 1.1;
+                        break;
+
+                    // decent HP, subpar attack and speed.
                     case "decomposer":
                     case "scavenger":
                     case "detritvore":
-                        stats.hp = 1.2;
-                        stats.atk = 0.8;
-                        stats.spd = 0.5;
+                        stats.hp *= 1.2;
+                        stats.atk *= 0.8;
+                        stats.spd *= 0.5;
                         break;
 
+                    // Good attack and defense, but subpar speed and HP.
                     case "parasite":
-                        stats.hp = 0.8;
-                        stats.atk = 1.5;
-                        stats.def = 1.5;
-                        stats.spd = 0.8;
+                        stats.hp *= 0.8;
+                        stats.atk *= 1.5;
+                        stats.def *= 1.5;
+                        stats.spd *= 0.8;
                         break;
 
+                    // Fast attacker, but poor defender.
                     case "predator":
-                        stats.atk = 1.8;
-                        stats.spd = 1.5;
-                        stats.def = 0.3;
+                        stats.atk *= 1.8;
+                        stats.spd *= 1.5;
+                        stats.def *= 0.3;
                         break;
 
+                    // Good health and recovery, but slow.
                     case "producer":
-                        stats.hp = 3.0;
-                        stats.spd = 0.5;
+                        stats.hp *= 3.0;
+                        stats.spd *= 0.5;
                         break;
 
                 }
@@ -155,10 +172,10 @@ namespace OurFoodChain.gotchi {
 
             Random random = new Random(StringUtils.SumStringChars(sp.name + gotchi.born_ts.ToString()));
 
-            stats.hp += random.Next(0, 3) / 10.0;
-            stats.atk += random.Next(0, 3) / 10.0;
-            stats.def += random.Next(0, 3) / 10.0;
-            stats.spd += random.Next(0, 3) / 10.0;
+            stats.hp += random.Next(0, 5) / 10.0;
+            stats.atk += random.Next(0, 5) / 10.0;
+            stats.def += random.Next(0, 5) / 10.0;
+            stats.spd += random.Next(0, 5) / 10.0;
 
             // Multiply stats by the gotchi's level + age.
 

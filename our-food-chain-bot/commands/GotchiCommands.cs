@@ -293,13 +293,65 @@ namespace OurFoodChain.gotchi {
 
             // Cannot challenge oneself.
 
-            if(user.Id == Context.User.Id) {
+            //if (!(user is null) && user.Id == Context.User.Id) {
 
-                await BotUtils.ReplyAsync_Error(Context, "You cannot challenge yourself.");
+            //    await BotUtils.ReplyAsync_Error(Context, "You cannot challenge yourself.");
 
+            //    return;
+
+            //}
+
+            // Get this user's gotchi.
+
+            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+
+            if (!await _replyValidateChallengerGotchiForBattleAsync(Context, gotchi))
                 return;
 
+            // Get the opponent's gotchi.
+            // If the opponent is null, assume the user is training. A random gotchi will be generated for them to battle against.
+
+            Gotchi opposing_gotchi = null;
+
+            if (!(user is null)) {
+
+                opposing_gotchi = await GotchiUtils.GetGotchiAsync(user);
+
+                if (!await _replyValidateOpponentGotchiForBattleAsync(Context, opposing_gotchi))
+                    return;
+
             }
+
+            // If the user is involved in an existing battle (in progress), do not permit them to start another.
+
+            if (!await _replyVerifyChallengerAvailableForBattleAsync(Context))
+                return;
+
+            // If the other user is involved in a battle, do not permit them to start another.
+
+            if (!(user is null) && !await _replyVerifyOpponentAvailableForBattleAsync(Context, user))
+                return;
+
+            // Challenge the user to a battle.
+
+            await GotchiBattleState.RegisterBattleAsync(Context, gotchi, opposing_gotchi);
+
+            if (!(user is null)) {
+
+                // If the user is battling another user, show a message challenging them to battle.
+                // Otherwise, the battle state will be shown automatically when calling RegisterBattleAsync.
+
+                await ReplyAsync(string.Format("{0}, **{1}** is challenging you to a battle! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their challenge.",
+                    user.Mention,
+                    Context.User.Username,
+                    OurFoodChainBot.GetInstance().GetConfig().prefix));
+
+            }
+
+        }
+
+        [Command("train")]
+        public async Task Train() {
 
             // Get this user's gotchi.
 
@@ -308,84 +360,67 @@ namespace OurFoodChain.gotchi {
             if (!await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi))
                 return;
 
-            if (gotchi.IsDead()) {
+            // Users can train their gotchi by battling random gotchis 3 times every 15 minutes.
 
-                await BotUtils.ReplyAsync_Info(Context, "Your gotchi has died, and is unable to battle.");
+            long training_left = 0;
+            long training_ts = 0;
 
-                return;
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT training_left, training_ts FROM Gotchi WHERE id=$id;")) {
 
-            }
+                cmd.Parameters.AddWithValue("$id", gotchi.id);
 
-            // Get the opponent's gotchi.
+                DataRow row = await Database.GetRowAsync(cmd);
 
-            Gotchi opposing_gotchi = await GotchiUtils.GetGotchiAsync(user);
+                if (!(row is null)) {
 
-            if (!GotchiUtils.ValidateGotchi(opposing_gotchi)) {
-
-                await BotUtils.ReplyAsync_Info(Context, "Your opponent doesn't have a gotchi yet.");
-
-                return;
-
-            }
-
-            if (opposing_gotchi.IsDead()) {
-
-                await BotUtils.ReplyAsync_Info(Context, "Your opponent's gotchi has died, and is unable to battle.");
-
-                return;
-
-            }
-
-            // If the user is involved in an existing battle (in progress), do not permit them to start another.
-
-            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
-
-            if (!(state is null) && state.accepted) {
-
-                ulong other_user_id = state.gotchi1.owner_id == Context.User.Id ? state.gotchi2.owner_id : state.gotchi1.owner_id;
-                IUser other_user = await Context.Guild.GetUserAsync(other_user_id);
-
-                // We won't lock them into the battle if the other user has left the server.
-
-                if (!(other_user is null)) {
-
-                    await BotUtils.ReplyAsync_Info(Context, string.Format("You are already battling **{0}**. You must finish the battle (or forfeit) before beginning a new one.", other_user.Mention));
-
-                    return;
+                    training_left = row.IsNull("training_left") ? 0 : row.Field<long>("training_left");
+                    training_ts = row.IsNull("training_ts") ? 0 : row.Field<long>("training_ts");
 
                 }
 
             }
 
-            // If the other user is involved in a battle, do not permit them to start another.
+            // If it's been more than 15 minutes since the training timestamp was updated, reset the training count.
 
-            state = GotchiBattleState.GetBattleStateByUser(user.Id);
+            long minutes_elapsed = (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - training_ts) / 60;
 
-            if (!(state is null) && state.accepted) {
+            if (minutes_elapsed >= 15) {
 
-                ulong other_user_id = state.gotchi1.owner_id == Context.User.Id ? state.gotchi2.owner_id : state.gotchi1.owner_id;
-                IUser other_user = await Context.Guild.GetUserAsync(other_user_id);
-
-                // We won't lock them into the battle if the other user has left the server.
-
-                if (!(other_user is null)) {
-
-                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is currently battling someone else. Challenge them again later when they have finished.", other_user.Mention));
-
-                    return;
-
-                }
+                training_left = 3;
+                training_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             }
 
-            // Challenge the user to a battle.
+            // If the user has no more training attempts left, exit. 
 
-            await GotchiBattleState.RegisterBattleAsync(gotchi, opposing_gotchi);
+            if (training_left <= 0) {
 
-            await ReplyAsync(string.Format("{0}, **{1}** is challenging you to a battle! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their challenge.",
-                user.Mention,
-                Context.User.Username,
-                OurFoodChainBot.GetInstance().GetConfig().prefix));
+                long minutes_left = (15 - minutes_elapsed);
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
+                    StringUtils.ToTitleCase(gotchi.name),
+                    minutes_left <= 1 ? "a" : minutes_left.ToString(),
+                    minutes_left > 1 ? "s" : ""));
+
+                return;
+
+            }
+
+            // Update the user's training data.
+
+            --training_left;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET training_left=$training_left, training_ts=$training_ts WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$id", gotchi.id);
+                cmd.Parameters.AddWithValue("$training_left", training_left);
+                cmd.Parameters.AddWithValue("$training_ts", training_ts);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await Battle(null);
 
         }
 
@@ -401,7 +436,7 @@ namespace OurFoodChain.gotchi {
 
             if (state is null ||
                 (await state.GetOtherUserAsync(Context, Context.User.Id)) is null ||
-                (await state.GetUser1Async(Context)).Id == Context.User.Id) {
+                (await state.GetUser2Async(Context)).Id != Context.User.Id) {
 
                 await BotUtils.ReplyAsync_Info(Context, "You have not been challenged to a battle.");
 
@@ -423,35 +458,13 @@ namespace OurFoodChain.gotchi {
 
             state.accepted = true;
 
-            StringBuilder message_builder = new StringBuilder();
-
-            if (state.stats1.spd != state.stats2.spd) {
-
-                message_builder.AppendLine(string.Format("The battle has begun! **{0}** is faster, so {1} goes first.",
-                StringUtils.ToTitleCase(state.stats1.spd > state.stats2.spd ? state.gotchi1.name : state.gotchi2.name),
-                state.stats1.spd > state.stats2.spd ? (await state.GetUser1Async(Context)).Mention : (await state.GetUser2Async(Context)).Mention));
-
-            }
-            else {
-
-                message_builder.AppendLine(string.Format("The battle has begun! {0} has been randomly selected to go first.",
-                state.IsTurn(Context.User.Id) ? Context.User.Mention : (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
-
-            }
-
-            message_builder.AppendLine();
-            message_builder.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
-                OurFoodChainBot.GetInstance().GetConfig().prefix));
-
-            state.message = message_builder.ToString();
-
             await ReplyAsync(string.Format("{0}, **{1}** has accepted your challenge!",
                (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
                Context.User.Username));
 
             await GotchiBattleState.ShowBattleStateAsync(Context, state);
 
-            await BotUtils.ReplyAsync_Info(Context, state.message);
+            // await BotUtils.ReplyAsync_Info(Context, state.message);
 
         }
 
@@ -501,7 +514,7 @@ namespace OurFoodChain.gotchi {
 
             // If the state is null, the user has not been challenged to a battle.
 
-            if (state is null || (await state.GetOtherUserAsync(Context, Context.User.Id)) is null) {
+            if (state is null || (!state.IsBattlingCpu() && (await state.GetOtherUserAsync(Context, Context.User.Id)) is null)) {
 
                 await BotUtils.ReplyAsync_Error(Context, "You have not been challenged to a battle.");
 
@@ -513,7 +526,8 @@ namespace OurFoodChain.gotchi {
 
             if (!state.IsTurn(Context.User.Id)) {
 
-                await BotUtils.ReplyAsync_Error(Context, string.Format("It is currently {0}'s turn.", (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
+                await BotUtils.ReplyAsync_Error(Context, string.Format("It is currently {0}'s turn.",
+                    state.IsBattlingCpu() ? await state.GetUsername2Async(Context) : (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
 
                 return;
 
@@ -535,6 +549,93 @@ namespace OurFoodChain.gotchi {
             // Use the move/update the battle state.
 
             await state.UseMoveAsync(Context, move);
+
+        }
+
+        private static async Task<bool> _replyValidateChallengerGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
+
+            if (!await GotchiUtils.Reply_ValidateGotchiAsync(context, gotchi))
+                return false;
+
+            if (gotchi.IsDead()) {
+
+                await BotUtils.ReplyAsync_Info(context, "Your gotchi has died, and is unable to battle.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        private static async Task<bool> _replyValidateOpponentGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
+
+            if (!GotchiUtils.ValidateGotchi(gotchi)) {
+
+                await BotUtils.ReplyAsync_Info(context, "Your opponent doesn't have a gotchi yet.");
+
+                return false;
+
+            }
+
+            if (gotchi.IsDead()) {
+
+                await BotUtils.ReplyAsync_Info(context, "Your opponent's gotchi has died, and is unable to battle.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        private static async Task<bool> _replyVerifyChallengerAvailableForBattleAsync(ICommandContext context) {
+
+            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(context.User.Id);
+
+            if (!(state is null) && state.accepted) {
+
+                ulong other_user_id = state.gotchi1.owner_id == context.User.Id ? state.gotchi2.owner_id : state.gotchi1.owner_id;
+                IUser other_user = await context.Guild.GetUserAsync(other_user_id);
+
+                // We won't lock them into the battle if the other user has left the server.
+
+                if (!(other_user is null) || state.IsBattlingCpu()) {
+
+                    await BotUtils.ReplyAsync_Info(context, string.Format("You are already battling **{0}**. You must finish the battle (or forfeit) before beginning a new one.",
+                        state.IsBattlingCpu() ? await state.GetUsername2Async(context) : other_user.Mention));
+
+                    return false;
+
+                }
+
+            }
+
+            return true;
+
+        }
+        private static async Task<bool> _replyVerifyOpponentAvailableForBattleAsync(ICommandContext context, IUser user) {
+
+            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(user.Id);
+
+            if (!(state is null) && state.accepted) {
+
+                ulong other_user_id = state.gotchi1.owner_id == context.User.Id ? state.gotchi2.owner_id : state.gotchi1.owner_id;
+                IUser other_user = await context.Guild.GetUserAsync(other_user_id);
+
+                // We won't lock them into the battle if the other user has left the server.
+
+                if (!(other_user is null)) {
+
+                    await BotUtils.ReplyAsync_Info(context, string.Format("**{0}** is currently battling someone else. Challenge them again later when they have finished.", other_user.Mention));
+
+                    return false;
+
+                }
+
+            }
+
+            return true;
 
         }
 

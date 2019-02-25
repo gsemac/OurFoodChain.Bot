@@ -113,7 +113,7 @@ namespace OurFoodChain.gotchi {
                 reply.AppendLine();
 
                 long levels1 = stats1.LeveUp(exp1);
-                long levels2 = stats2.LeveUp(exp1);
+                long levels2 = stats2.LeveUp(exp2);
 
                 if (levels1 > 0)
                     reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi1.name), stats1.level));

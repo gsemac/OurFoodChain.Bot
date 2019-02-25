@@ -23,6 +23,15 @@ namespace OurFoodChain {
                 page.WithTitle(title);
 
         }
+        public void PrependDescription(string description) {
+
+            if (_pages.Count <= 0)
+                _pages.Add(new EmbedBuilder());
+
+            foreach (EmbedBuilder page in _pages)
+                page.WithDescription(string.IsNullOrEmpty(page.Description) ? description : description + page.Description);
+
+        }
         public void SetDescription(string description) {
 
             if (_pages.Count <= 0)
@@ -93,7 +102,7 @@ namespace OurFoodChain {
             _reactions.Add(reaction);
 
         }
-        
+
         public CommandUtils.PaginatedMessage Build() {
 
             CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();

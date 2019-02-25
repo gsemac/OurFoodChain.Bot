@@ -91,7 +91,7 @@ namespace OurFoodChain {
         }
 
         public string GetShortDescription() {
-            return GetShortDescription(description);
+            return GetShortDescription(GetDescriptionOrDefault());
         }
         public string GetDescriptionOrDefault() {
 

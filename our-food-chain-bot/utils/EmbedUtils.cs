@@ -71,6 +71,45 @@ namespace OurFoodChain {
             return pages;
 
         }
+        public static List<EmbedBuilder> FieldsToEmbedPages(List<EmbedFieldBuilder> items, int itemsPerPage = 10) {
+
+            List<EmbedBuilder> pages = new List<EmbedBuilder>();
+
+            foreach (EmbedFieldBuilder field in items) {
+
+                if (pages.Count() <= 0 || pages.Last().Fields.Count() >= itemsPerPage)
+                    pages.Add(new EmbedBuilder());
+
+                pages.Last().Fields.Add(field);
+
+            }
+
+            return pages;
+
+        }
+        public static List<EmbedBuilder> LinesToEmbedPages(List<string> items, int linesPerPage = 20) {
+
+            List<EmbedBuilder> pages = new List<EmbedBuilder>();
+
+            int line_index = 0;
+
+            do {
+
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = line_index; i < items.Count() && (i < line_index + linesPerPage); ++i)
+                    sb.AppendLine(items[i]);
+
+                line_index += linesPerPage;
+
+                pages.Add(new EmbedBuilder());
+                pages.Last().WithDescription(sb.ToString());
+
+            } while (line_index < items.Count());
+
+            return pages;
+
+        }
 
         public static List<List<Species>> SpeciesListToColumns(List<Species> items, int speciesPerColumn) {
 

@@ -597,9 +597,12 @@ namespace OurFoodChain {
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string name = "") {
 
-            // If no zone was provided, list all zones.
-
             if (string.IsNullOrEmpty(name) || name == "aquatic" || name == "terrestrial") {
+
+                // If no zone was provided, list all zones.
+
+                // Get the zones from the datbase.
+                // If the user provided a zone type, get all zones of that type. Otherwise, get all zones.
 
                 string cmd_str = "SELECT * FROM Zones;";
 
@@ -616,38 +619,38 @@ namespace OurFoodChain {
 
                 zone_list.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.name, rhs.name));
 
-                EmbedBuilder embed = new EmbedBuilder();
+                if (zone_list.Count() > 0) {
 
-                embed.WithFooter(string.Format("For detailed information, use \"{0}zone <zone>\", e.g.: \"{0}zone 1\"",
-                    OurFoodChainBot.GetInstance().GetConfig().prefix));
+                    // Create a line describing each zone.
 
-                StringBuilder sb = new StringBuilder();
+                    List<string> lines = new List<string>();
 
-                foreach (Zone zone_info in zone_list) {
+                    foreach (Zone zone in zone_list)
+                        lines.Add(string.Format("{1} **{0}** - {2}", StringUtils.ToTitleCase(zone.name), zone.type == ZoneType.Aquatic ? "🌊" : "🌳", zone.GetShortDescription()));
 
-                    string description = zone_info.description;
+                    // Build paginated message.
 
-                    if (string.IsNullOrEmpty(description))
-                        description = BotUtils.DEFAULT_ZONE_DESCRIPTION;
+                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.LinesToEmbedPages(lines, 20));
+                    embed.AddPageNumbers();
 
-                    sb.Append(string.Format("{1} **{0}**: ", StringUtils.ToTitleCase(zone_info.name), zone_info.type == ZoneType.Aquatic ? "🌊" : "🌳"));
-                    sb.Append(OurFoodChain.Zone.GetShortDescription(description));
+                    if (string.IsNullOrEmpty(name))
+                        name = "all";
+                    else if (name == "aquatic")
+                        embed.SetColor(Color.Blue);
+                    else if (name == "terrestrial")
+                        embed.SetColor(Color.DarkGreen);
 
-                    sb.AppendLine();
+                    embed.SetTitle(StringUtils.ToTitleCase(string.Format("{0} zones ({1})", name, zone_list.Count())));
+                    embed.PrependDescription(string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.GetInstance().GetConfig().prefix));
+
+                    await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
                 }
+                else {
 
-                if (string.IsNullOrEmpty(name))
-                    name = "all";
-                else if (name == "aquatic")
-                    embed.WithColor(Color.Blue);
-                else if (name == "terrestrial")
-                    embed.WithColor(Color.DarkGreen);
+                    await BotUtils.ReplyAsync_Info(Context, "No zones have been added yet.");
 
-                embed.WithTitle(StringUtils.ToTitleCase(string.Format("{0} zones", name)));
-                embed.WithDescription(sb.ToString());
-
-                await ReplyAsync("", false, embed.Build());
+                }
 
                 return;
 

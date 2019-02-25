@@ -39,9 +39,10 @@ namespace OurFoodChain.gotchi {
         }
         public double ExperienceToNextLevel() {
 
-            // level * 10 * 3 EXP required per level
+            // level * 10 * 2 EXP required per level
+            // This means, to get to Level 10, a minimum of 15 battles are required.
 
-            return (level * 10 * 3);
+            return (level * 10 * 1.5);
 
         }
         public long LeveUp(double experience) {

@@ -98,6 +98,11 @@ namespace OurFoodChain {
 
         }
 
+        private class NodeBoundsPair<T> {
+            public TreeNode<T> node;
+            public RectangleF bounds;
+        }
+
         private static void _initializeNodePlacements<T>(TreeNode<T> node) {
 
             // Get the widths of this node's children, and space them out evenly.
@@ -136,14 +141,17 @@ namespace OurFoodChain {
                     return;
 
                 bool has_overlapping = false;
-                List<Tuple<TreeNode<T>, RectangleF>> bounds = new List<Tuple<TreeNode<T>, RectangleF>>();
+                List<NodeBoundsPair<T>> bounds = new List<NodeBoundsPair<T>>();
 
                 foreach (TreeNode<T> child in node.children)
-                    bounds.Add(new Tuple<TreeNode<T>, RectangleF>(child, CalculateTreeBounds(child)));
+                    bounds.Add(new NodeBoundsPair<T> {
+                        node = child,
+                        bounds = CalculateTreeBounds(child)
+                    });
 
                 for (int i = 1; i < bounds.Count(); ++i) {
 
-                    if (bounds[i].Item2.Left < bounds[i - 1].Item2.Right) {
+                    if (bounds[i].bounds.Left < bounds[i - 1].bounds.Right) {
                         has_overlapping = true;
 
                         break;
@@ -176,7 +184,7 @@ namespace OurFoodChain {
 
                     for (int i = left; i >= 0; --i) {
 
-                        float overlap = bounds[i].Item2.Right - bounds[i + 1].Item2.Left;
+                        float overlap = bounds[i].bounds.Right - bounds[i + 1].bounds.Left;
 
                         if (overlap <= 0.0f)
                             continue;
@@ -184,13 +192,14 @@ namespace OurFoodChain {
                         if (i == left)
                             overlap /= 2.0f;
 
-                        ShiftTree(bounds[i].Item1, -overlap, 0.0f);
+                        bounds[i].bounds.X -= overlap;
+                        ShiftTree(bounds[i].node, -overlap, 0.0f);
 
                     }
 
                     for (int i = right; i < bounds.Count(); ++i) {
 
-                        float overlap = bounds[i - 1].Item2.Right - bounds[i].Item2.Left;
+                        float overlap = bounds[i - 1].bounds.Right - bounds[i].bounds.Left;
 
                         if (overlap <= 0.0f)
                             continue;
@@ -198,7 +207,8 @@ namespace OurFoodChain {
                         if (i == right)
                             overlap /= 2.0f;
 
-                        ShiftTree(bounds[i].Item1, overlap, 0.0f);
+                        bounds[i].bounds.X += overlap;
+                        ShiftTree(bounds[i].node, overlap, 0.0f);
 
                     }
 

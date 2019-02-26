@@ -265,6 +265,97 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Domain, name, commonName);
         }
 
+        [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
+        public async Task SetSpeciesDescription(string species) {
+            await SetSpeciesDescription("", species);
+        }
+        [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
+        public async Task SetSpeciesDescription(string speciesOrGenus, string descriptionOrSpecies) {
+
+            // Either the user provided a species and a description, or they provided a genus and species and want to use the two-part command.
+            // If the species exists, we'll use the two-part command version. If it doesn't, we'll assume the user was providing a description directly.
+
+            Species[] species_list = await BotUtils.GetSpeciesFromDb(speciesOrGenus, descriptionOrSpecies);
+
+            if (species_list.Count() <= 0) {
+
+                // No such species exists for the given genus/species, so look for the species instead and update its description directly.
+
+                await SetSpeciesDescription("", speciesOrGenus, descriptionOrSpecies);
+
+            }
+            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {
+
+                // A species exists with the given genus/species, so initiate a two-part command.
+
+                // Ensure that the user has necessary privileges to use this command.
+                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_list[0]))
+                    return;
+
+                TwoPartCommandWaitParams p = new TwoPartCommandWaitParams(Context);
+                p.type = TwoPartCommandWaitParamsType.Description;
+                p.args = new string[] { speciesOrGenus, descriptionOrSpecies };
+                p.timestamp = DateTime.Now;
+                p.channelId = Context.Channel.Id;
+
+                BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
+
+                await ReplyAsync(string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
+
+            }
+
+        }
+        [Command("setdescription"), Alias("setdesc", "setspeciesdesc", "setsdesc")]
+        public async Task SetSpeciesDescription(string genus, string species, string description) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+                return;
+
+            await BotUtils.UpdateSpeciesDescription(genus, species, description);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
+
+        }
+
+        /*
+
+        [Command("setdescription"), Alias("setdesc")]
+        public async Task SetDescription(string taxonName) {
+
+            // Initiates a two-part command sequence to update the description for the given taxon.
+
+            // Get the requested taxon.
+            // We need to make sure that there is only one matching taxon to ensure we update the correct one.
+
+            Taxon[] taxa = await BotUtils.GetTaxaFromDb(taxonName);
+
+            // If we didn't get any matches, show the user species suggestions.
+
+            if (taxa.Count() <= 0) {
+
+                await BotUtils.ReplyAsync_FindSpecies(Context, "", taxonName);
+
+                return;
+
+            }
+
+            // Make sure we have one, and only one taxon to update.
+
+            if (!await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
+                return;
+
+            Taxon taxon = taxa[0];
+
+        }
+
+    */
+
     }
 
 }

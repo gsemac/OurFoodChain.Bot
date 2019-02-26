@@ -751,27 +751,25 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Taxon> GetTaxonFromDb(string name, TaxonType type) {
+        public static async Task<Taxon[]> GetTaxaFromDb(string name, TaxonType type) {
 
+            List<Taxon> taxa = new List<Taxon>();
             string table_name = Taxon.TypeToDatabaseTableName(type);
 
             if (string.IsNullOrEmpty(table_name))
                 return null;
 
-            Taxon taxon_info = null;
-
             using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name=$name;", table_name))) {
 
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
 
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    taxon_info = Taxon.FromDataRow(row, type);
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows)
+                        taxa.Add(Taxon.FromDataRow(row, type));
 
             }
 
-            return taxon_info;
+            return taxa.ToArray();
 
         }
         public static async Task<Taxon> GetTaxonFromDb(long id, TaxonType type) {
@@ -801,12 +799,22 @@ namespace OurFoodChain {
 
             foreach (TaxonType type in new TaxonType[] { TaxonType.Domain, TaxonType.Kingdom, TaxonType.Phylum, TaxonType.Class, TaxonType.Order, TaxonType.Family, TaxonType.Genus, TaxonType.Species }) {
 
-                Taxon taxon = await GetTaxonFromDb(name, type);
+                Taxon[] taxa = await GetTaxaFromDb(name, type);
 
-                if (!(taxon is null))
-                    return taxon;
+                if (taxa.Count() > 0)
+                    return taxa[0];
 
             }
+
+            return null;
+
+        }
+        public static async Task<Taxon> GetTaxonFromDb(string name, TaxonType type) {
+
+            Taxon[] taxa = await GetTaxaFromDb(name, type);
+
+            if (taxa.Count() > 0)
+                return taxa[0];
 
             return null;
 
@@ -831,6 +839,18 @@ namespace OurFoodChain {
 
             // Sort taxa alphabetically by name.
             result.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+
+            return result.ToArray();
+
+        }
+        public static async Task<Taxon[]> GetTaxaFromDb(string name) {
+
+            // Return all taxa that have the given name.
+
+            List<Taxon> result = new List<Taxon>();
+
+            foreach (TaxonType type in new TaxonType[] { TaxonType.Domain, TaxonType.Kingdom, TaxonType.Phylum, TaxonType.Class, TaxonType.Order, TaxonType.Family, TaxonType.Genus, TaxonType.Species })
+                result.AddRange(await GetTaxaFromDb(name, type));
 
             return result.ToArray();
 
@@ -1308,11 +1328,68 @@ namespace OurFoodChain {
             return true;
 
         }
+        public static async Task<bool> ReplyAsync_ValidateTaxon(ICommandContext context, Taxon taxon) {
+
+            return await ReplyAsync_ValidateTaxon(context, taxon.type, taxon);
+
+        }
         public static async Task<bool> ReplyAsync_ValidateTaxon(ICommandContext context, TaxonType type, Taxon taxon) {
 
             if (taxon is null || taxon.id <= 0) {
 
                 await context.Channel.SendMessageAsync(string.Format("No such {0} exists.", Taxon.TypeToName(type)));
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateTaxa(ICommandContext context, Taxon[] taxa) {
+
+            if (taxa is null || taxa.Count() <= 0) {
+
+                // There must be at least one taxon in the list.
+
+                await context.Channel.SendMessageAsync("No such taxon exists.");
+
+                return false;
+
+            }
+
+            if (taxa.Count() > 1) {
+
+                // There must be exactly one taxon in the list.
+
+                SortedDictionary<TaxonType, List<Taxon>> taxa_dict = new SortedDictionary<TaxonType, List<Taxon>>();
+
+                foreach (Taxon taxon in taxa) {
+
+                    if (!taxa_dict.ContainsKey(taxon.type))
+                        taxa_dict[taxon.type] = new List<Taxon>();
+
+                    taxa_dict[taxon.type].Add(taxon);
+
+                }
+
+                EmbedBuilder embed = new EmbedBuilder();
+                embed.WithTitle(string.Format("Matching taxa ({0})", taxa.Count()));
+
+                foreach (TaxonType type in taxa_dict.Keys) {
+
+                    taxa_dict[type].Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+
+                    StringBuilder field_content = new StringBuilder();
+
+                    foreach (Taxon taxon in taxa_dict[type])
+                        field_content.AppendLine(taxon.GetName());
+
+                    embed.AddField(Taxon.TypeToName(type, true), field_content.ToString());
+
+                }
+
+                await context.Channel.SendMessageAsync("", false, embed.Build());
 
                 return false;
 

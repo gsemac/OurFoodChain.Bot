@@ -411,7 +411,7 @@ namespace OurFoodChain.gotchi {
 
                     // Have a chance of missing.
 
-                    if (BotUtils.RandomInteger(0, 10) == 0) {
+                    if (BotUtils.RandomInteger(0, (int)(10 * move.hitRate)) == 0) {
 
                         message_builder.Append(string.Format("💥 **{0}** used **{1}**, but it missed!",
                           StringUtils.ToTitleCase(user.name),
@@ -431,8 +431,8 @@ namespace OurFoodChain.gotchi {
 
                         }
 
-                        bool critical = BotUtils.RandomInteger(0, 10) == 0;
-                        damage = Math.Max(1.0, (damage * move.factor) - target_stats.def) * type_multiplier;
+                        bool critical = BotUtils.RandomInteger(0, (int)(10 / move.criticalRate)) == 0;
+                        damage = Math.Max(1.0, (damage * move.multiplier) - target_stats.def) * type_multiplier;
 
                         if (critical)
                             damage *= 1.5;
@@ -465,7 +465,7 @@ namespace OurFoodChain.gotchi {
 
                 case MoveType.Recovery:
 
-                    double recovered = Math.Max(1, user_stats.atk * move.factor) * type_multiplier;
+                    double recovered = Math.Max(1, user_stats.atk * move.multiplier) * type_multiplier;
                     target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? stats1.maxHp : stats2.maxHp);
 
                     message_builder.Append(string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
@@ -479,14 +479,16 @@ namespace OurFoodChain.gotchi {
                 case MoveType.StatBoost:
 
                     if (!(move.callback is null))
-                        message_end = (await move.callback(this, user_stats, target_stats, move.factor)).messageFormat;
+                        message_end = (await move.callback(this, user_stats, target_stats, move.multiplier)).messageFormat;
                     else
-                        target_stats.BoostByFactor(move.factor);
+                        target_stats.BoostByFactor(move.multiplier);
 
                     if (string.IsNullOrEmpty(message_end))
-                        message_end = "boosting their stats by {0}";
+                        message_end = string.Format("{0} its {1}stats by ",
+                            move.multiplier > 1.0 ? "boosting" : "lowering",
+                            move.target == MoveTarget.Self ? "" : "opponent's") + "{0}";
 
-                    message_end = string.Format(message_end, (move.factor - 1.0) * 100.0);
+                    message_end = string.Format(message_end, (move.multiplier - 1.0) * 100.0);
 
                     message_builder.Append(string.Format("🛡 **{0}** used **{1}**, {2}%!",
                         StringUtils.ToTitleCase(user.name),

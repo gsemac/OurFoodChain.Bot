@@ -21,6 +21,8 @@ namespace OurFoodChain.gotchi {
         public long level = 1;
         public double exp = 0;
 
+        public double boostFactor = 1.0;
+
         public void BoostByFactor(double factor) {
 
             hp *= factor;
@@ -29,6 +31,8 @@ namespace OurFoodChain.gotchi {
             spd *= factor;
 
             maxHp *= factor;
+
+            boostFactor *= factor;
 
         }
 
@@ -138,7 +142,14 @@ namespace OurFoodChain.gotchi {
                     // Good health and recovery, but slow.
                     case "producer":
                         stats.hp *= 3.0;
-                        stats.spd *= 0.5;
+                        stats.spd *= 0.1;
+                        stats.atk *= 0.3;
+                        break;
+
+                    // Fast, but not defensive.
+                    case "pollinator":
+                        stats.spd *= 1.5;
+                        stats.def *= 0.5;
                         break;
 
                 }

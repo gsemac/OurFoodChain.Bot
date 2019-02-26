@@ -1613,7 +1613,6 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
-                    EmbedBuilder embed = new EmbedBuilder();
                     List<Species> species_list = new List<Species>();
 
                     foreach (DataRow row in rows.Rows)
@@ -1621,16 +1620,12 @@ namespace OurFoodChain {
 
                     species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                    StringBuilder description = new StringBuilder();
+                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list, 
+                        fieldName: string.Format("Species owned by {0} ({1})", username, species_list.Count)));
 
-                    foreach (Species sp in species_list)
-                        description.AppendLine(sp.isExtinct ? BotUtils.Strikeout(sp.GetShortName()) : sp.GetShortName());
+                    embed.SetThumbnailUrl(user.GetAvatarUrl(size: 32));
 
-                    embed.WithTitle(string.Format("Species owned by {0} ({1})", username, species_list.Count));
-                    embed.WithDescription(description.ToString());
-                    embed.WithThumbnailUrl(user.GetAvatarUrl(size: 32));
-
-                    await ReplyAsync("", false, embed.Build());
+                    await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
                 }
 

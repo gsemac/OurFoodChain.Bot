@@ -248,7 +248,7 @@ namespace OurFoodChain.gotchi {
                 role = "producer",
                 target = MoveTarget.Self,
                 type = MoveType.StatBoost,
-                multiplier = 1.1
+                multiplier = 1.15
             });
 
             _addMoveToRegistry(new GotchiMove {

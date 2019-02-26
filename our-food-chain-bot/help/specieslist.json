@@ -3,11 +3,13 @@
   "aliases": [
     "splist",
     "listspecies",
-    "listsp"
+    "listsp",
+    "s"
   ],
   "category": "info",
   "description": "Lists all species under the given taxon.",
   "examples": [
+    "specieslist",
     "specieslist <taxon>",
     "specieslist helidae"
   ]

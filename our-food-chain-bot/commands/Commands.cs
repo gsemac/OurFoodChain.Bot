@@ -50,6 +50,11 @@ namespace OurFoodChain {
             await GetSpecies(genus, species);
         }
 
+
+        [Command("species"), Alias("sp", "s")]
+        public async Task GetSpecies() {
+            await ListSpecies();
+        }
         [Command("species"), Alias("sp", "s")]
         public async Task GetSpecies(string species) {
             await GetSpecies("", species);
@@ -1620,7 +1625,7 @@ namespace OurFoodChain {
 
                     species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list, 
+                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
                         fieldName: string.Format("Species owned by {0} ({1})", username, species_list.Count)));
 
                     embed.SetThumbnailUrl(user.GetAvatarUrl(size: 32));

@@ -283,12 +283,10 @@
     <None Include="help\search.json" />
     <None Include="help\setcommonname.json" />
     <None Include="help\setfamily.json" />
-    <None Include="help\setfamilydesc.json" />
-    <None Include="help\setgenusdesc.json" />
     <None Include="help\setowner.json" />
     <None Include="help\setpic.json" />
     <None Include="help\setroledesc.json" />
-    <None Include="help\setspeciesdesc.json" />
+    <None Include="help\setdesc.json" />
     <None Include="help\specieslist.json" />
     <None Include="help\trophies.json" />
     <None Include="help\trophy.json" />

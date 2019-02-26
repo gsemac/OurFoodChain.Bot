@@ -1134,6 +1134,18 @@ namespace OurFoodChain {
             return string.Format("~~{0}~~", str);
 
         }
+        public static async Task UpdateSpeciesDescription(Species species, string description) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$description", description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
         public static async Task UpdateSpeciesDescription(string genus, string species, string description) {
 
             Species[] sp_list = await GetSpeciesFromDb(genus, species);
@@ -1141,14 +1153,7 @@ namespace OurFoodChain {
             if (sp_list.Count() <= 0)
                 return;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", sp_list[0].id);
-                cmd.Parameters.AddWithValue("$description", description);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
+            await UpdateSpeciesDescription(sp_list[0], description);
 
         }
         public static async Task HandleTwoPartCommandResponse(SocketMessage message) {
@@ -1374,7 +1379,9 @@ namespace OurFoodChain {
                 }
 
                 EmbedBuilder embed = new EmbedBuilder();
-                embed.WithTitle(string.Format("Matching taxa ({0})", taxa.Count()));
+
+                if (taxa_dict.Keys.Count() > 1)
+                    embed.WithTitle(string.Format("Matching taxa ({0})", taxa.Count()));
 
                 foreach (TaxonType type in taxa_dict.Keys) {
 
@@ -1383,9 +1390,12 @@ namespace OurFoodChain {
                     StringBuilder field_content = new StringBuilder();
 
                     foreach (Taxon taxon in taxa_dict[type])
-                        field_content.AppendLine(taxon.GetName());
+                        field_content.AppendLine(type == TaxonType.Species ? (await GetSpeciesFromDb(taxon.id)).GetShortName() : taxon.GetName());
 
-                    embed.AddField(Taxon.TypeToName(type, true), field_content.ToString());
+                    embed.AddField(string.Format("{0}{1} ({2})",
+                        taxa_dict.Keys.Count() == 1 ? "Matching " : "",
+                        taxa_dict.Keys.Count() == 1 ? Taxon.TypeToName(type, true).ToLower() : StringUtils.ToTitleCase(Taxon.TypeToName(type, true)), taxa_dict[type].Count()),
+                        field_content.ToString());
 
                 }
 
@@ -1753,6 +1763,22 @@ namespace OurFoodChain {
                 ));
 
         }
+        public static async Task Command_SetTaxonDescription(ICommandContext context, Taxon taxon, string description) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            taxon.description = description;
+
+            await UpdateTaxonInDb(taxon, taxon.type);
+
+            string success_message = string.Format("Successfully updated description for {0} **{1}**.", Taxon.TypeToName(taxon.type), taxon.GetName());
+
+            await ReplyAsync_Success(context, success_message);
+
+
+        }
         public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
@@ -1764,14 +1790,7 @@ namespace OurFoodChain {
             if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
                 return;
 
-            taxon.description = description;
-
-            await UpdateTaxonInDb(taxon, type);
-
-            await ReplyAsync_Success(context, string.Format("Successfully updated description for {0} **{1}**.",
-                Taxon.TypeToName(type),
-                taxon.GetName()
-                ));
+            await Command_SetTaxonDescription(context, taxon, description);
 
         }
         public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonType type, string name, string commonName) {

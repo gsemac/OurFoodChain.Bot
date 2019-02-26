@@ -13,6 +13,16 @@ namespace OurFoodChain {
             return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(str.ToLower());
 
         }
+        public static string ToSentenceCase(string str) {
+
+            if (string.IsNullOrEmpty(str) || str.Length < 1)
+                return str;
+
+            str = str.ToLower();
+
+            return str[0].ToString().ToUpper() + str.Substring(1);
+
+        }
         public static bool IsNumeric(string str) {
 
             double num;

@@ -1,0 +1,14 @@
+﻿{
+  "name": "setdescription",
+  "aliases": [
+    "setdesc",
+    "setdescription"
+  ],
+  "category": "update",
+  "description": "Sets the description for the given taxon. If the taxon name is provided without a description, the description can be provided in a separate follow-up message.\n\nSometimes, two different taxa will have the same name. If you need to be more specific, you can use the commands `setspeciesdesc`, `setgenusdesc`, `setfamilydesc`, and so on. These commands all have shorthand equivalents, e.g. `setsdesc`, `setgdesc`, `setfdesc`, etc.",
+  "examples": [
+    "setdesc helix \"they have swirly shells\"",
+    "setdesc H. quattuorus \"my description\"",
+    "setdesc H. quattuorus"
+  ]
+}

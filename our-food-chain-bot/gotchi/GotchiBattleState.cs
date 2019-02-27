@@ -479,33 +479,44 @@ namespace OurFoodChain.gotchi {
 
                 case MoveType.Recovery:
 
-                    double recovered = Math.Max(1, user_stats.maxHp * move.multiplier) * type_multiplier;
+                    if (user_stats.status == GotchiStatusProblem.HealBlock) {
 
-                    if (!(move.callback is null)) {
-
-                        GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
-                            state = this,
-                            user = user,
-                            userStats = user_stats,
-                            target = target,
-                            targetStats = target_stats,
-                            value = recovered,
-                            move = move
-                        };
-
-                        await move.callback(args);
-
-                        recovered = args.value;
+                        message_builder.Append(string.Format("❤ **{0}** used **{1}**, but it failed!",
+                           StringUtils.ToTitleCase(user.name),
+                           StringUtils.ToTitleCase(move.name)));
 
                     }
+                    else {
 
-                    target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? stats1.maxHp : stats2.maxHp);
+                        double recovered = Math.Max(1, user_stats.maxHp * move.multiplier) * type_multiplier;
 
-                    message_builder.Append(string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
-                        StringUtils.ToTitleCase(user.name),
-                        StringUtils.ToTitleCase(move.name),
-                        recovered,
-                        type_multiplier > 1.0 ? " It's super effective!" : ""));
+                        if (!(move.callback is null)) {
+
+                            GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
+                                state = this,
+                                user = user,
+                                userStats = user_stats,
+                                target = target,
+                                targetStats = target_stats,
+                                value = recovered,
+                                move = move
+                            };
+
+                            await move.callback(args);
+
+                            recovered = args.value;
+
+                        }
+
+                        target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? stats1.maxHp : stats2.maxHp);
+
+                        message_builder.Append(string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
+                            StringUtils.ToTitleCase(user.name),
+                            StringUtils.ToTitleCase(move.name),
+                            recovered,
+                            type_multiplier > 1.0 ? " It's super effective!" : ""));
+
+                    }
 
                     break;
 
@@ -544,6 +555,18 @@ namespace OurFoodChain.gotchi {
                         message_end));
 
                     break;
+
+            }
+
+
+
+            if (user_stats.status == GotchiStatusProblem.Poisoned) {
+
+                // If the user is poisoned, apply poison damage (1/16th of max HP).
+
+                user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 16.0));
+
+                message_builder.Append(string.Format("**{0}** is damaged by poison!", StringUtils.ToTitleCase(user.name)));
 
             }
 

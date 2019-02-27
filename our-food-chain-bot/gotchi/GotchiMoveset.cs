@@ -131,6 +131,12 @@ namespace OurFoodChain.gotchi {
                             if (stats.level >= 20)
                                 set.Add("break down");
 
+                            if (stats.level >= 30)
+                                set.Add("break defense");
+
+                            if (stats.level >= 40)
+                                set.Add("digest");
+
                             break;
 
                         case "scavenger":
@@ -168,11 +174,17 @@ namespace OurFoodChain.gotchi {
                             if (stats.level >= 20)
                                 set.Add("all-out attack");
 
+                            if (Regex.IsMatch(sp.description, "poison|venom"))
+                                set.Add("venom bite");
+
                             break;
 
                         case "base-consumer":
 
                             set.Add("leaf-bite");
+
+                            if (stats.level >= 10)
+                                set.Add("uproot");
 
                             break;
 
@@ -222,12 +234,20 @@ namespace OurFoodChain.gotchi {
                 set.Add("zap");
 
             if (Regex.IsMatch(sp.description, "sting"))
-                set.Add("sting");
+                if (stats.level < 10)
+                    set.Add("sting");
+                else
+                    set.Add("nettle");
 
-            // If move count is over the limit, keep the last ones.
+            if (Regex.IsMatch(sp.description, "toxin|poison"))
+                set.Add("toxins");
 
-            if (set.moves.Count() > 4)
+            if (set.moves.Count() > 4) {
+
+                // If move count is over the limit, keep the last ones.
                 set.moves = set.moves.GetRange(set.moves.Count() - 4, 4);
+
+            }
 
             set.moves.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
@@ -432,6 +452,15 @@ namespace OurFoodChain.gotchi {
             });
 
             _addMoveToRegistry(new GotchiMove {
+                name = "Nettle",
+                description = "Attacks the opponent with irritating stingers, decreasing their speed. Does low damage, but never misses.",
+                hitRate = 100.0,
+                multiplier = 0.8,
+                target = MoveTarget.Other,
+                callback = async (args) => { args.targetStats.spd *= 0.8; }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
                 name = "Zap",
                 description = "Shocks the opponent with electricity. Highly effective against aquatic organisms.",
                 target = MoveTarget.Other,
@@ -502,6 +531,79 @@ namespace OurFoodChain.gotchi {
                     }
 
                     args.messageFormat = "swapping a stat with the opponent!";
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Toxins",
+                description = "Poisons the opponent, causing them to take damage every turn.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.targetStats.status = GotchiStatusProblem.Poisoned;
+                    args.messageFormat = "poisoning the opponent!";
+                    args.value = 0.0;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Venom Bite",
+                description = "Bites the opponent, injecting venom into the wound. Has a small chance of poisoning the target.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                role = "predator",
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    if (BotUtils.RandomInteger(0, 10) == 0)
+                        args.targetStats.status = GotchiStatusProblem.Poisoned;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Break Defense",
+                description = "Breaks down the opponent's defense, allowing them to go-all out. Reducing the opponent's Defense to 0, but ups their Attack.",
+                type = MoveType.StatBoost,
+                target = MoveTarget.Other,
+                role = "decomposer",
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.targetStats.atk += args.targetStats.def;
+                    args.targetStats.def = 0.0;
+
+                    args.messageFormat = "breaking the opponent's defense!";
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Digest",
+                description = "Attacks the opponent with digestive fluids. Has the chance to decrease all of the opponent's stats.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                multiplier = 0.9,
+                role = "decomposer",
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    if (BotUtils.RandomInteger(0, 10) == 0)
+                        args.targetStats.BoostByFactor(0.9);
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Uproot",
+                description = "Uproots the opponent, eliminating their ability to use recovery moves.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                multiplier = 0.5,
+                role = "base-consumer",
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.targetStats.status = GotchiStatusProblem.HealBlock;
 
                 }
             });

@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
+    public enum GotchiStatusProblem {
+        None,
+        Poisoned,
+        HealBlock
+    }
+
     public class GotchiStats {
 
         public double hp = 2.0;
@@ -22,6 +28,8 @@ namespace OurFoodChain.gotchi {
         public double exp = 0;
 
         public double boostFactor = 1.0;
+
+        public GotchiStatusProblem status = GotchiStatusProblem.None;
 
         public void BoostByFactor(double factor) {
 

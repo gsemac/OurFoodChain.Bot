@@ -226,6 +226,7 @@
     <Compile Include="utils\PaginatedEmbedBuilder.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\Tree.cs" />
+    <Compile Include="utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -272,6 +273,7 @@
     <None Include="help\setgenuspic.json" />
     <None Include="help\setmap.json" />
     <None Include="help\setspecies.json" />
+    <None Include="help\setzonedesc.json" />
     <None Include="help\setzonepic.json" />
     <None Include="help\species.json" />
     <None Include="help\map.json" />

@@ -1,0 +1,12 @@
+﻿{
+  "name": "setzonedesc",
+  "aliases": [
+    "setzdesc"
+  ],
+  "category": "update",
+  "description": "Updates the description of the given zone.",
+  "examples": [
+    "setzonedesc <zone> <description>",
+    "setzonedesc 1 \"deep, cold ocean\""
+  ]
+}

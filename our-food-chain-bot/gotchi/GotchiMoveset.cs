@@ -30,14 +30,22 @@ namespace OurFoodChain.gotchi {
         public double multiplier = 1.0;
         public double criticalRate = 1.0;
         public double hitRate = 1.0;
-        public Func<GotchiBattleState, GotchiStats, GotchiStats, double, Task<GotchiMoveResult>> callback;
+        public Func<GotchiMoveCallbackArgs, Task> callback;
 
     }
 
-    public class GotchiMoveResult {
+    public class GotchiMoveCallbackArgs {
 
-        public string messageFormat = "";
+        public GotchiBattleState state = null;
+
+        public Gotchi user = null;
+        public Gotchi target = null;
+
+        public GotchiStats userStats = null;
+        public GotchiStats targetStats = null;
+
         public double value = 0.0;
+        public string messageFormat = "";
 
     }
 
@@ -131,6 +139,9 @@ namespace OurFoodChain.gotchi {
                             if (stats.level > 10)
                                 set.Add("leech");
 
+                            if (stats.level > 20)
+                                set.Add("skill steal");
+
                             break;
 
                         case "predator":
@@ -155,6 +166,9 @@ namespace OurFoodChain.gotchi {
 
                             set.Add("grow");
                             set.Add("photosynthesize");
+
+                            if (Regex.IsMatch(sp.description, "tree|tall|heavy") && stats.level > 10)
+                                set.Add("topple");
 
                             break;
 
@@ -264,11 +278,10 @@ namespace OurFoodChain.gotchi {
                 name = "Leech",
                 description = "Leeches some hit points from the opponent, healing the user.",
                 type = MoveType.Attack,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
-                    user.hp = Math.Min(user.hp + (value / 2.0), user.maxHp);
-
-                    return new GotchiMoveResult { messageFormat = "sapping {0:0.0} hit points", value = value };
+                    args.userStats.hp = Math.Min(args.userStats.hp + (args.value / 2.0), args.userStats.maxHp);
+                    args.messageFormat = "sapping {0:0.0} hit points";
 
                 }
             });
@@ -279,11 +292,10 @@ namespace OurFoodChain.gotchi {
                 type = MoveType.StatBoost,
                 target = MoveTarget.Self,
                 multiplier = 1.2,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
-                    user.def *= value;
-
-                    return new GotchiMoveResult { messageFormat = "boosting its defense by {0}", value = value };
+                    args.userStats.def *= args.value;
+                    args.messageFormat = "boosting its defense by {0}";
 
                 }
             });
@@ -292,9 +304,9 @@ namespace OurFoodChain.gotchi {
                 name = "Tail Slap",
                 description = "Deals more damage the faster the user is compared to the opponent.",
                 type = MoveType.Attack,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
-                    return new GotchiMoveResult { value = Math.Max(1.0, user.spd - opponent.spd) };
+                    args.value = Math.Max(1.0, args.value * ((args.userStats.spd / args.targetStats.spd) + 1.0));
 
                 }
             });
@@ -303,9 +315,9 @@ namespace OurFoodChain.gotchi {
                 name = "Wrap",
                 description = "Tightly wraps tentacles around the opponent. Deals more damage the faster the opponent is compared to the user.",
                 type = MoveType.Attack,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
-                    return new GotchiMoveResult { value = Math.Max(1.0, opponent.spd - user.spd) };
+                    args.value = Math.Max(1.0, args.value * ((args.targetStats.spd / args.userStats.spd) + 1.0));
 
                 }
             });
@@ -314,11 +326,12 @@ namespace OurFoodChain.gotchi {
                 name = "Spike Attack",
                 description = "Attacks the opponent with a spike. Effective against flying opponents.",
                 type = MoveType.Attack,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
-                    Species opponent_sp = await BotUtils.GetSpeciesFromDb(state.currentTurn == 2 ? state.gotchi1.species_id : state.gotchi2.species_id);
+                    Species opponent_sp = await BotUtils.GetSpeciesFromDb(args.target.species_id);
 
-                    return new GotchiMoveResult { value = Regex.IsMatch(opponent_sp.description, "fly|flies") ? value * 1.2 : value };
+                    if (Regex.IsMatch(opponent_sp.description, "fly|flies"))
+                        args.value *= 1.2;
 
                 }
             });
@@ -363,19 +376,20 @@ namespace OurFoodChain.gotchi {
                 description = "Shocks the opponent with electricity. Highly effective against aquatic organisms.",
                 target = MoveTarget.Other,
                 type = MoveType.Attack,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
                     bool is_aquatic = false;
 
                     using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Zones WHERE type = \"aquatic\" AND id IN (SELECT zone_id FROM SpeciesZones WHERE species_id = $id);")) {
 
-                        cmd.Parameters.AddWithValue("$id", state.currentTurn == 2 ? state.gotchi1.species_id : state.gotchi2.species_id);
+                        cmd.Parameters.AddWithValue("$id", args.target.species_id);
 
                         is_aquatic = await Database.GetScalar<long>(cmd) > 0;
 
                     }
 
-                    return new GotchiMoveResult { value = is_aquatic ? value * 1.2 : value };
+                    if (is_aquatic)
+                        args.value *= 1.2;
 
                 }
             });
@@ -385,11 +399,49 @@ namespace OurFoodChain.gotchi {
                 description = "Resets all of the opponent's stat boosts.",
                 type = MoveType.StatBoost,
                 target = MoveTarget.Other,
-                callback = async (GotchiBattleState state, GotchiStats user, GotchiStats opponent, double value) => {
+                callback = async (GotchiMoveCallbackArgs args) => {
 
-                    opponent.BoostByFactor(1.0 / opponent.boostFactor);
+                    args.targetStats.BoostByFactor(1.0 / args.targetStats.boostFactor);
+                    args.messageFormat = "resetting its opponent's stats";
 
-                    return new GotchiMoveResult { messageFormat = "resetting its opponent's stats!", value = value };
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Topple",
+                description = "Collapses onto the opponent, dealing heavy damage. However, the user is reduced to 1 HP.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                multiplier = 3.0,
+                criticalRate = 2.0,
+                hitRate = 0.5,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.userStats.hp = Math.Min(args.userStats.hp, 1.0);
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Skill Steal",
+                description = "Swaps a random stat with the opponent.",
+                type = MoveType.StatBoost,
+                target = MoveTarget.Other,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    switch (BotUtils.RandomInteger(0, 3)) {
+                        case 0:
+                            Utils.Swap(ref args.userStats.atk, ref args.targetStats.atk);
+                            break;
+                        case 1:
+                            Utils.Swap(ref args.userStats.def, ref args.targetStats.def);
+                            break;
+                        case 2:
+                            Utils.Swap(ref args.userStats.spd, ref args.targetStats.spd);
+                            break;
+                    }
+
+                    args.messageFormat = "swapping a stat with the opponent!";
 
                 }
             });

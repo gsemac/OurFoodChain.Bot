@@ -103,6 +103,16 @@ namespace OurFoodChain {
 
             Gallery gallery = await BotUtils.GetGalleryFromDb(MAP_GALLERY_NAME);
 
+            // Remove existing images from the gallery.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Picture WHERE gallery_id = $gallery_id;")) {
+
+                cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
             // Insert the primary map image.
 
             if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, primaryImageUrl))

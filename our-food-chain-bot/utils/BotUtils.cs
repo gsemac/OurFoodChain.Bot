@@ -111,7 +111,7 @@ namespace OurFoodChain {
         }
 
         public static string GetShortDescription(string description) {
-            return Regex.Match(description, "^[a-zA-Z0-9 ,;:\\-\"]+(?:\\.+|[!\\?])").Value;
+            return Regex.Match(description, "^[a-zA-Z0-9 ,;:\\-\"’']+(?:\\.+|[!\\?])").Value;
         }
         public static string GetFullName(string name) {
 

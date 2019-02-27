@@ -424,10 +424,19 @@ namespace OurFoodChain.gotchi {
 
                         if (!(move.callback is null)) {
 
-                            GotchiMoveResult result = await move.callback(this, user_stats, target_stats, damage);
+                            GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
+                                state = this,
+                                user = user,
+                                userStats = user_stats,
+                                target = target,
+                                targetStats = target_stats,
+                                value = damage
+                            };
 
-                            message_end = result.messageFormat;
-                            damage = result.value;
+                            await move.callback(args);
+
+                            message_end = args.messageFormat;
+                            damage = args.value;
 
                         }
 
@@ -478,8 +487,22 @@ namespace OurFoodChain.gotchi {
 
                 case MoveType.StatBoost:
 
-                    if (!(move.callback is null))
-                        message_end = (await move.callback(this, user_stats, target_stats, move.multiplier)).messageFormat;
+                    if (!(move.callback is null)) {
+
+                        GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
+                            state = this,
+                            user = user,
+                            userStats = user_stats,
+                            target = target,
+                            targetStats = target_stats,
+                            value = move.multiplier
+                        };
+
+                        await move.callback(args);
+
+                        message_end = args.messageFormat;
+
+                    }
                     else
                         target_stats.BoostByFactor(move.multiplier);
 

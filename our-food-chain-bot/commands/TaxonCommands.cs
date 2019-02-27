@@ -313,10 +313,6 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
-                return;
-
             await SetSpeciesDescription(sp, description);
 
         }

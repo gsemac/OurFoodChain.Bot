@@ -1169,6 +1169,35 @@ namespace OurFoodChain {
 
         }
 
+        [Command("setzonedesc"), Alias("setzdesc")]
+        public async Task SetZoneDescription(string zoneName, string description) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            // Get the zone from the database.
+
+            Zone zone = await BotUtils.GetZoneFromDb(zoneName);
+
+            if (!await BotUtils.ReplyAsync_ValidateZone(Context, zone))
+                return;
+
+            // Update the description for the zone.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET description=$description WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$description", description);
+                cmd.Parameters.AddWithValue("$id", zone.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", zone.GetFullName()));
+
+        }
+
         [Command("setcommonname"), Alias("setcommon")]
         public async Task SetCommonName(string genus, string species, string commonName = "") {
 

@@ -30,6 +30,7 @@ namespace OurFoodChain.gotchi {
         public double multiplier = 1.0;
         public double criticalRate = 1.0;
         public double hitRate = 1.0;
+        public int times = 1;
         public Func<GotchiMoveCallbackArgs, Task> callback;
 
     }
@@ -43,6 +44,8 @@ namespace OurFoodChain.gotchi {
 
         public GotchiStats userStats = null;
         public GotchiStats targetStats = null;
+
+        public GotchiMove move = null;
 
         public double value = 0.0;
         public string messageFormat = "";
@@ -119,16 +122,27 @@ namespace OurFoodChain.gotchi {
                     switch (role.name.ToLower()) {
 
                         case "decomposer":
-                        case "scavenger":
-                        case "detritvore":
 
                             set.Add("enzymes");
 
-                            if (stats.level > 10)
+                            if (stats.level >= 10)
                                 set.Add("degrade");
 
-                            if (stats.level > 20)
+                            if (stats.level >= 20)
                                 set.Add("break down");
+
+                            break;
+
+                        case "scavenger":
+
+                            if (stats.level >= 10)
+                                set.Add("scavenge");
+
+                            break;
+
+                        case "detritivore":
+
+                            set.Add("clean-up");
 
                             break;
 
@@ -136,10 +150,10 @@ namespace OurFoodChain.gotchi {
 
                             set.Add("infest");
 
-                            if (stats.level > 10)
+                            if (stats.level >= 10)
                                 set.Add("leech");
 
-                            if (stats.level > 20)
+                            if (stats.level >= 20)
                                 set.Add("skill steal");
 
                             break;
@@ -148,10 +162,10 @@ namespace OurFoodChain.gotchi {
 
                             set.Add("bite");
 
-                            if (stats.level > 10)
+                            if (stats.level >= 10)
                                 set.Add("wild attack");
 
-                            if (stats.level > 20)
+                            if (stats.level >= 20)
                                 set.Add("all-out attack");
 
                             break;
@@ -167,8 +181,14 @@ namespace OurFoodChain.gotchi {
                             set.Add("grow");
                             set.Add("photosynthesize");
 
-                            if (Regex.IsMatch(sp.description, "tree|tall|heavy") && stats.level > 10)
+                            if (Regex.IsMatch(sp.description, "tree|tall|heavy") && stats.level >= 10)
                                 set.Add("topple");
+
+                            if (Regex.IsMatch(sp.description, "vine"))
+                                set.Add("tangle");
+
+                            if (Regex.IsMatch(sp.description, "seed") && stats.level >= 20)
+                                set.Add("seed drop");
 
                             break;
 
@@ -234,12 +254,29 @@ namespace OurFoodChain.gotchi {
                 target = MoveTarget.Other
             });
 
-
             _addMoveToRegistry(new GotchiMove {
                 name = "Enzymes",
                 description = "Attacks by coating the opponent with enzymes encouraging decomposition. This move is highly effective against Producers.",
                 role = "decomposer",
                 target = MoveTarget.Other
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Scavenge",
+                description = "Scavenges for something to eat, restoring a random amount of HP.",
+                role = "scavenger",
+                target = MoveTarget.Self,
+                type = MoveType.Recovery,
+                callback = async (args) => { args.value = args.userStats.maxHp * (BotUtils.RandomInteger(0, 6) / 10.0); }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Clean-Up",
+                description = "Nibbles on detritus, restoring a small amount of HP.",
+                role = "detritivore",
+                target = MoveTarget.Self,
+                type = MoveType.Recovery,
+                multiplier = 0.1
             });
 
             _addMoveToRegistry(new GotchiMove {
@@ -271,7 +308,30 @@ namespace OurFoodChain.gotchi {
                 role = "producer",
                 target = MoveTarget.Self,
                 type = MoveType.Recovery,
-                multiplier = .5
+                multiplier = 0.2
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "tangle",
+                description = "Tangles the opponent in vines, lowering their speed.",
+                role = "producer",
+                type = MoveType.StatBoost,
+                multiplier = 0.8,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.targetStats.def *= args.value;
+                    args.messageFormat = "lowering the opponent's speed by {0}";
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Seed Drop",
+                description = "Drops 1-5 seeds onto the opponent, dealing minor damage repeatedly.",
+                multiplier = 1.0 / 5.0,
+                hitRate = 0.9,
+                target = MoveTarget.Other,
+                callback = async (args) => { args.move.times = BotUtils.RandomInteger(1, 6); }
             });
 
             _addMoveToRegistry(new GotchiMove {

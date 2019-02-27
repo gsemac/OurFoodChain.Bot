@@ -430,7 +430,8 @@ namespace OurFoodChain.gotchi {
                                 userStats = user_stats,
                                 target = target,
                                 targetStats = target_stats,
-                                value = damage
+                                value = damage,
+                                move = move
                             };
 
                             await move.callback(args);
@@ -440,33 +441,37 @@ namespace OurFoodChain.gotchi {
 
                         }
 
-                        bool critical = BotUtils.RandomInteger(0, (int)(10 / move.criticalRate)) == 0;
-                        damage = Math.Max(1.0, (damage * move.multiplier) - target_stats.def) * type_multiplier;
+                        for (int i = 0; i < move.times; ++i) {
 
-                        if (critical)
-                            damage *= 1.5;
+                            bool critical = BotUtils.RandomInteger(0, (int)(10 / move.criticalRate)) == 0;
+                            damage = Math.Max(1.0, (damage * move.multiplier) - target_stats.def) * type_multiplier;
 
-                        string bonus_messages = "";
+                            if (critical)
+                                damage *= 1.5;
 
-                        if (type_multiplier > 1.0)
-                            bonus_messages += " It's super effective!";
+                            string bonus_messages = "";
 
-                        if (critical)
-                            bonus_messages += " Critical hit!";
+                            if (type_multiplier > 1.0)
+                                bonus_messages += " It's super effective!";
 
-                        target_stats.hp -= damage;
+                            if (critical)
+                                bonus_messages += " Critical hit!";
 
-                        if (string.IsNullOrEmpty(message_end))
-                            message_end = "dealing {0:0.0} damage";
+                            target_stats.hp -= damage;
 
-                        message_end = string.Format(message_end, damage);
+                            if (string.IsNullOrEmpty(message_end))
+                                message_end = "dealing {0:0.0} damage";
 
-                        message_builder.Append(string.Format("💥 **{0}** used **{1}**, {4}!{3}",
-                            StringUtils.ToTitleCase(user.name),
-                            StringUtils.ToTitleCase(move.name),
-                            damage,
-                            bonus_messages,
-                            message_end));
+                            message_end = string.Format(message_end, damage);
+
+                            message_builder.Append(string.Format("💥 **{0}** used **{1}**, {4}!{3}",
+                                StringUtils.ToTitleCase(user.name),
+                                StringUtils.ToTitleCase(move.name),
+                                damage,
+                                bonus_messages,
+                                message_end));
+
+                        }
 
                     }
 
@@ -474,7 +479,26 @@ namespace OurFoodChain.gotchi {
 
                 case MoveType.Recovery:
 
-                    double recovered = Math.Max(1, user_stats.atk * move.multiplier) * type_multiplier;
+                    double recovered = Math.Max(1, user_stats.maxHp * move.multiplier) * type_multiplier;
+
+                    if (!(move.callback is null)) {
+
+                        GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
+                            state = this,
+                            user = user,
+                            userStats = user_stats,
+                            target = target,
+                            targetStats = target_stats,
+                            value = recovered,
+                            move = move
+                        };
+
+                        await move.callback(args);
+
+                        recovered = args.value;
+
+                    }
+
                     target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? stats1.maxHp : stats2.maxHp);
 
                     message_builder.Append(string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
@@ -495,7 +519,8 @@ namespace OurFoodChain.gotchi {
                             userStats = user_stats,
                             target = target,
                             targetStats = target_stats,
-                            value = move.multiplier
+                            value = move.multiplier,
+                            move = move
                         };
 
                         await move.callback(args);
@@ -509,9 +534,9 @@ namespace OurFoodChain.gotchi {
                     if (string.IsNullOrEmpty(message_end))
                         message_end = string.Format("{0} its {1}stats by ",
                             move.multiplier > 1.0 ? "boosting" : "lowering",
-                            move.target == MoveTarget.Self ? "" : "opponent's") + "{0}";
+                            move.target == MoveTarget.Self ? "" : "opponent's ") + "{0}";
 
-                    message_end = string.Format(message_end, (move.multiplier - 1.0) * 100.0);
+                    message_end = string.Format(message_end, Math.Abs((move.multiplier - 1.0) * 100.0));
 
                     message_builder.Append(string.Format("🛡 **{0}** used **{1}**, {2}%!",
                         StringUtils.ToTitleCase(user.name),

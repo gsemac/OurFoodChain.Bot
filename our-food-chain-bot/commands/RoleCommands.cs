@@ -117,7 +117,7 @@ namespace OurFoodChain {
 
                 long count = 0;
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE role_id=$role_id;")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE species_id NOT IN (SELECT species_id FROM Extinctions) AND role_id = $role_id;")) {
 
                     cmd.Parameters.AddWithValue("$role_id", role.id);
 
@@ -151,9 +151,12 @@ namespace OurFoodChain {
                 Species[] matching_species = await BotUtils.GetSpeciesFromDb("", nameOrSpecies);
 
                 if (matching_species.Count() == 1)
+
                     // If only one species was returned, show the roles assigned to that species.
                     await Roles(matching_species[0]);
+
                 else if (matching_species.Count() > 1)
+
                     // If multiple species were returned, provide a list of matching species for the user to choose from.
                     await BotUtils.ReplyAsync_ValidateSpecies(Context, matching_species);
 
@@ -168,10 +171,6 @@ namespace OurFoodChain {
             if (!await BotUtils.ReplyAsync_ValidateRole(Context, role))
                 return;
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
-            embed.WithDescription(role.GetDescriptionOrDefault());
-
             // List all extant species with this role.
 
             List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByRole(role));
@@ -179,19 +178,13 @@ namespace OurFoodChain {
             species_list.RemoveAll(x => x.isExtinct);
             species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-            if (species_list.Count() > 0) {
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
+                fieldName: string.Format("Extant species with this role ({0}):", species_list.Count())));
 
-                StringBuilder lines = new StringBuilder();
+            embed.SetTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
+            embed.SetDescription(role.GetDescriptionOrDefault());
 
-                foreach (Species sp in species_list)
-                    lines.AppendLine(sp.GetShortName());
-
-                embed.WithDescription(string.Format("{2}\n\n**Extant species with this role ({1}):**\n{0}", lines.ToString(), species_list.Count(), role.GetDescriptionOrDefault()));
-
-            }
-
-            await ReplyAsync("", false, embed.Build());
-
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
         }
         [Command("roles"), Alias("role")]

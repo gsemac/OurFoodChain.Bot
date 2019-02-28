@@ -1596,12 +1596,21 @@ namespace OurFoodChain {
 
                     species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
-                        fieldName: string.Format("Species owned by {0} ({1})", username, species_list.Count)));
+                    if (species_list.Count() <= 0) {
 
-                    embed.SetThumbnailUrl(user.GetAvatarUrl(size: 32));
+                        await BotUtils.ReplyAsync_Info(Context, "**{0}** has not submitted any species yet.");
 
-                    await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                    }
+                    else {
+
+                        PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
+                            fieldName: string.Format("Species owned by {0} ({1})", username, species_list.Count)));
+
+                        embed.SetThumbnailUrl(user.GetAvatarUrl(size: 32));
+
+                        await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+
+                    }
 
                 }
 

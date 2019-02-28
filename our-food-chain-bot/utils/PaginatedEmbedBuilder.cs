@@ -9,6 +9,7 @@ namespace OurFoodChain {
 
     public class PaginatedEmbedBuilder {
 
+        public PaginatedEmbedBuilder() { }
         public PaginatedEmbedBuilder(List<EmbedBuilder> pages) {
 
             _pages.AddRange(pages);
@@ -75,6 +76,11 @@ namespace OurFoodChain {
 
         }
 
+        public void AddPages(IEnumerable<EmbedBuilder> pages) {
+
+            _pages.AddRange(pages);
+
+        }
         public void AddPageNumbers() {
 
             int num = 1;
@@ -83,7 +89,7 @@ namespace OurFoodChain {
 
                 string num_string = string.Format("Page {0} of {1}", num, _pages.Count());
 
-                page.WithFooter(page.Footer is null ? num_string : num_string + " — " + page.Footer.Text);
+                page.WithFooter(page.Footer is null || string.IsNullOrEmpty(page.Footer.Text) ? num_string : num_string + " — " + page.Footer.Text);
 
                 ++num;
 

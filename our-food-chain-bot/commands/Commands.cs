@@ -1814,34 +1814,39 @@ namespace OurFoodChain {
 
             // Build embed.
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("Recent events ({0} hours)", hours));
-
-            StringBuilder description = new StringBuilder();
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            List<EmbedBuilder> pages = new List<EmbedBuilder>();
+            List<string> field_lines = new List<string>();
 
             if (new_species.Count() > 0) {
 
                 foreach (Species sp in new_species)
-                    description.AppendLine(sp.GetFullName());
+                    field_lines.Add(sp.GetFullName());
 
-                embed.AddField(string.Format("New species ({0})", new_species.Count()), description.ToString(), inline: true);
+                EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
 
-                description.Clear();
+                field_lines.Clear();
 
             }
 
             if (extinct_species.Count() > 0) {
 
                 foreach (Species sp in extinct_species)
-                    description.AppendLine(sp.GetFullName());
+                    field_lines.Add(sp.GetFullName());
 
-                embed.AddField(string.Format("Extinctions ({0})", extinct_species.Count()), description.ToString(), inline: true);
+                EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
 
-                description.Clear();
+                field_lines.Clear();
 
             }
 
-            await ReplyAsync("", false, embed.Build());
+            embed.AddPages(pages);
+
+            embed.SetTitle(string.Format("Recent events ({0} hours)", hours));
+            embed.SetFooter(string.Empty); // remove page numbers added automatically
+            embed.AddPageNumbers();
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
         }
 

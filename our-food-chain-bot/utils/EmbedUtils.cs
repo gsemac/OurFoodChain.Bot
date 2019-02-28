@@ -111,6 +111,31 @@ namespace OurFoodChain {
 
         }
 
+        public static void AddLongFieldToEmbedPages(List<EmbedBuilder> pages, List<string> items, int itemsPerPage = 40, string fieldName = "\u200B") {
+
+            // If no pages have been added yet, we can just generate embed pages directly.
+            // This also applies if there's no room to add more fields to the last page.
+
+            if (pages.Count <= 0 || pages.Last().Fields.Count() >= 2)
+                pages.AddRange(ListToEmbedPages(items, fieldName: fieldName));
+
+            else {
+
+                // Otherwise, we'll start with the second field, and then continue with additional pages from thereon.
+
+                List<List<string>> columns = ListToColumns(items, itemsPerPage / 2);
+
+                if (columns.Count() <= 0)
+                    return;
+
+                pages.Last().AddField(fieldName, string.Join(Environment.NewLine, columns[0]), inline: true);
+
+                pages.AddRange(ListToEmbedPages(items.Skip(itemsPerPage / 2).ToList(), fieldName: fieldName));
+
+            }
+
+        }
+
         public static List<List<Species>> SpeciesListToColumns(List<Species> items, int speciesPerColumn) {
 
             List<List<Species>> columns = new List<List<Species>>();

@@ -149,10 +149,11 @@ namespace OurFoodChain.trophies {
 
             int total_users = (await Context.Guild.GetUsersAsync()).Count;
             long times_unlocked = await TrophyRegistry.GetTimesUnlocked(trophy);
+            bool hide_description = trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0;
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle(string.Format("{0} {1} ({2:0.##}%)", trophy.GetIcon(), trophy.GetName(), 100.0 * times_unlocked / total_users));
-            embed.WithDescription(trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0 ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
+            embed.WithDescription(hide_description ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 
             await ReplyAsync("", false, embed.Build());

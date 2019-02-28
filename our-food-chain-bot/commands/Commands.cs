@@ -81,7 +81,7 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(sp.commonName))
                 embed_title += string.Format(" ({0})", StringUtils.ToTitleCase(sp.commonName));
 
-            embed.AddField("Owner", string.IsNullOrEmpty(sp.owner) ? "?" : sp.owner, inline: true);
+            embed.AddField("Owner", await sp.GetOwnerOrDefault(Context), inline: true);
 
             List<string> zone_names = new List<string>();
 

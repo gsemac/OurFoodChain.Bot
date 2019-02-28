@@ -262,6 +262,25 @@ namespace OurFoodChain {
             return description;
 
         }
+        public async Task<string> GetOwnerOrDefault(ICommandContext context) {
+
+            string result = owner;
+
+            if (user_id > 0) {
+
+                IUser user = await context.Guild.GetUserAsync((ulong)user_id);
+
+                if (!(user is null))
+                    result = user.Username;
+
+            }
+
+            if (string.IsNullOrEmpty(result))
+                result = "?";
+
+            return result;
+
+        }
 
         public int CompareTo(Species other) {
 

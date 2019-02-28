@@ -1598,7 +1598,7 @@ namespace OurFoodChain {
 
                     if (species_list.Count() <= 0) {
 
-                        await BotUtils.ReplyAsync_Info(Context, "**{0}** has not submitted any species yet.");
+                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not submitted any species yet.", username));
 
                     }
                     else {

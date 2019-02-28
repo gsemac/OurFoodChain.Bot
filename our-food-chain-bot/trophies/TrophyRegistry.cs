@@ -248,7 +248,7 @@ namespace OurFoodChain.trophies {
         private static async Task<bool> _checkTrophy_liftOff(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
-                @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND description LIKE ""%can fly%"" OR description LIKE ""%flies%""");
+                @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND (description LIKE ""%can fly%"" OR description LIKE ""%flies%"")");
 
         }
         private static async Task<bool> _checkTrophy_trademarked(TrophyScanner.ScannerQueueItem item) {

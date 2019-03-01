@@ -2049,7 +2049,6 @@ namespace OurFoodChain {
 
                 foreach (DataRow row in table.Rows) {
 
-                    string owner = row.Field<string>("owner");
                     long count = row.Field<long>("count");
 
                     if (last_count == long.MaxValue)
@@ -2062,7 +2061,7 @@ namespace OurFoodChain {
 
                     }
 
-                    if (owner == user.Username)
+                    if (count == user_species_count)
                         break;
 
                 }

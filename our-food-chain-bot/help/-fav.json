@@ -1,0 +1,9 @@
+﻿{
+  "name": "-fav",
+  "aliases": [ ],
+  "category": "fun",
+  "description": "Removes the given species from the current user's favorites list.",
+  "examples": [
+    "-fav aspersum"
+  ]
+}

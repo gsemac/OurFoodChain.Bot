@@ -2229,6 +2229,109 @@ namespace OurFoodChain {
 
         }
 
+        [Command("+fav"), Alias("addfav")]
+        public async Task AddFav(string species) {
+
+            await AddFav("", species);
+
+        }
+        [Command("+fav"), Alias("addfav")]
+        public async Task AddFav(string genus, string species) {
+
+            // Get the requested species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Add this species to the user's favorites list.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Favorites(user_id, species_id) VALUES($user_id, $species_id);")) {
+
+                cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added **{0}** to **{1}**'s favorites list.", sp.GetShortName(), Context.User.Username));
+
+        }
+        [Command("-fav")]
+        public async Task MinusFav(string species) {
+
+            await MinusFav("", species);
+
+        }
+        [Command("-fav")]
+        public async Task MinusFav(string genus, string species) {
+
+            // Get the requested species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Remove this species from the user's favorites list.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Favorites WHERE user_id = $user_id AND species_id = $species_id;")) {
+
+                cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed **{0}** from **{1}**'s favorites list.", sp.GetShortName(), Context.User.Username));
+
+        }
+        [Command("favs"), Alias("fav", "favorites", "favourites")]
+        public async Task Favs() {
+
+            // Get all species fav'd by this user.
+
+            List<Species> species_list = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Favorites WHERE user_id = $user_id);")) {
+
+                cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+
+                    foreach (DataRow row in rows.Rows)
+                        species_list.Add(await Species.FromDataRow(row));
+
+                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+                }
+
+            }
+
+            // Display the species list.
+
+            if (species_list.Count() <= 0) {
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not favorited any species.", Context.User.Username));
+
+            }
+            else {
+
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
+                    fieldName: string.Format("Species favorited by {0} ({1})", Context.User.Username, species_list.Count())));
+
+                embed.SetThumbnailUrl(Context.User.GetAvatarUrl(size: 32));
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+
+            }
+
+        }
+
+
     }
 
 }

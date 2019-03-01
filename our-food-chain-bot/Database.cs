@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 19;
+        public const int DATABASE_VERSION = 20;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -271,6 +271,10 @@ namespace OurFoodChain {
 
                 case 19:
                     await _update019(conn);
+                    break;
+
+                case 20:
+                    await _update020(conn);
                     break;
 
             }
@@ -543,6 +547,16 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 19);
+
+        }
+        private static async Task _update020(SQLiteConnection conn) {
+
+            // Add support for Favorites.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Favorites(user_id INTEGER, species_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), UNIQUE(user_id, species_id));", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _updateDatabaseVersion(conn, 20);
 
         }
 

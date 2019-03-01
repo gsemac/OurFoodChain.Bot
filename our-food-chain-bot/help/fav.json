@@ -1,0 +1,13 @@
+﻿{
+  "name": "fav",
+  "aliases": [
+    "favs",
+    "favorites",
+    "favourites"
+  ],
+  "category": "fun",
+  "description": "Displays the current user's favorites list.",
+  "examples": [
+    "favorites"
+  ]
+}

@@ -231,10 +231,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="help\+fav.json" />
     <None Include="help\+pic.json" />
     <None Include="help\+relationship.json" />
     <None Include="help\+zone.json" />
     <None Include="help\-extinct.json" />
+    <None Include="help\-fav.json" />
     <None Include="help\-prey.json" />
     <None Include="help\-relationship.json" />
     <None Include="help\-zone.json" />
@@ -248,6 +250,7 @@
     <None Include="help\awardtrophy.json" />
     <None Include="help\evolution.json" />
     <None Include="help\extinct.json" />
+    <None Include="help\fav.json" />
     <None Include="help\gotchi.json" />
     <None Include="help\idea.json" />
     <None Include="help\info.json" />

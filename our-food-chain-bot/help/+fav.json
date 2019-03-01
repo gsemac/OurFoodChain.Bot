@@ -1,0 +1,11 @@
+﻿{
+  "name": "+fav",
+  "aliases": [
+    "addfav"
+  ],
+  "category": "fun",
+  "description": "Adds the given species to the current user's favorites list.",
+  "examples": [
+    "+fav aspersum"
+  ]
+}

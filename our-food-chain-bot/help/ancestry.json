@@ -3,7 +3,8 @@
   "aliases": [
     "ancestry",
     "ancestors",
-    "lineage"
+    "lineage",
+    "anc"
   ],
   "category": "info",
   "description": "Lists ancestors of the given species.",

@@ -915,11 +915,11 @@ namespace OurFoodChain {
 
         }
 
-        [Command("ancestry"), Alias("lineage", "ancestors")]
+        [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
         public async Task Lineage(string species) {
             await Lineage("", species);
         }
-        [Command("ancestry"), Alias("lineage", "ancestors")]
+        [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
         public async Task Lineage(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -959,11 +959,11 @@ namespace OurFoodChain {
             await ReplyAsync(string.Format("```{0}```", string.Join(Environment.NewLine, entries)));
 
         }
-        [Command("ancestry2"), Alias("lineage2")]
+        [Command("ancestry2"), Alias("lineage2", "anc2")]
         public async Task Lineage2(string species) {
             await Lineage2("", species);
         }
-        [Command("ancestry2"), Alias("lineage2")]
+        [Command("ancestry2"), Alias("lineage2", "anc2")]
         public async Task Lineage2(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -1708,11 +1708,11 @@ namespace OurFoodChain {
 
         }
 
-        [Command("taxonomy")]
+        [Command("taxonomy"), Alias("taxon")]
         public async Task Taxonomy(string species) {
             await Taxonomy("", species);
         }
-        [Command("taxonomy")]
+        [Command("taxonomy"), Alias("taxon")]
         public async Task Taxonomy(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);

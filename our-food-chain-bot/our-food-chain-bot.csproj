@@ -290,6 +290,7 @@
     <None Include="help\setroledesc.json" />
     <None Include="help\setdesc.json" />
     <None Include="help\specieslist.json" />
+    <None Include="help\taxonomy.json" />
     <None Include="help\trophies.json" />
     <None Include="help\trophy.json" />
     <None Include="help\trophylist.json" />

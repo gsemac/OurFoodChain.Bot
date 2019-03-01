@@ -1,7 +1,8 @@
 ﻿{
   "name": "ancestry2",
   "aliases": [
-    "lineage2"
+    "lineage2",
+    "anc2"
   ],
   "category": "info",
   "description": "Displays an evolution chart for the given species.",

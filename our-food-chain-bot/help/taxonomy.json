@@ -1,0 +1,12 @@
+﻿{
+  "name": "taxonomy",
+  "aliases": [
+    "taxon"
+  ],
+  "category": "info",
+  "description": "Displays the taxonomical hierarchy of the given species.",
+  "examples": [
+    "taxonomy <species>",
+    "taxonomy H. quattuorus"
+  ]
+}

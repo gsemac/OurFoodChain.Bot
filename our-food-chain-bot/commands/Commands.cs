@@ -1573,46 +1573,122 @@ namespace OurFoodChain {
         }
 
         [Command("addedby"), Alias("ownedby", "own")]
-        public async Task AddedBy(IUser user = null) {
+        public async Task AddedBy() {
+            await AddedBy(Context.User);
+        }
+        [Command("addedby"), Alias("ownedby", "own")]
+        public async Task AddedBy(IUser user) {
 
             if (user is null)
                 user = Context.User;
 
-            string username = user.Username;
+            // Get all species belonging to this user.
 
-            // List all species owned by the given user.
+            List<Species> species_list = new List<Species>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner = $owner OR user_id = $user_id;")) {
 
-                cmd.Parameters.AddWithValue("$owner", username);
+                cmd.Parameters.AddWithValue("$owner", user.Username);
                 cmd.Parameters.AddWithValue("$user_id", user.Id);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
-
-                    List<Species> species_list = new List<Species>();
 
                     foreach (DataRow row in rows.Rows)
                         species_list.Add(await Species.FromDataRow(row));
 
                     species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-                    if (species_list.Count() <= 0) {
+                }
 
-                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not submitted any species yet.", username));
+            }
 
-                    }
-                    else {
+            // Display the species belonging to this user.
 
-                        PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
-                            fieldName: string.Format("Species owned by {0} ({1})", username, species_list.Count)));
+            await _displaySpeciesAddedBy(user.Username, user.GetAvatarUrl(size: 32), species_list);
 
-                        embed.SetThumbnailUrl(user.GetAvatarUrl(size: 32));
+        }
+        [Command("addedby"), Alias("ownedby", "own")]
+        public async Task AddedBy(string owner) {
 
-                        await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+            // If we get this overload, then the requested user does not currently exist in the guild.
 
-                    }
+            // Get all species belonging to this user.
+
+            // First, see if we can find a user ID belong to this user in the database. 
+            // This allows us to find all species they have made even if their username had changed at some point.
+
+            List<Species> species_list = new List<Species>();
+            long user_id = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, user_id FROM Species WHERE owner = $owner COLLATE NOCASE AND user_id IS NOT NULL LIMIT 1;")) {
+
+                cmd.Parameters.AddWithValue("$owner", owner);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (!(row is null)) {
+
+                    owner = row.Field<string>("owner");
+                    user_id = row.Field<long>("user_id");
 
                 }
+
+            }
+
+            // Generate a list of species belonging to this username or user ID.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner = $owner COLLATE NOCASE OR user_id = $user_id;")) {
+
+                cmd.Parameters.AddWithValue("$owner", owner);
+                cmd.Parameters.AddWithValue("$user_id", user_id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+
+                    foreach (DataRow row in rows.Rows) {
+
+                        Species sp = await Species.FromDataRow(row);
+                        owner = sp.owner;
+
+                        species_list.Add(sp);
+
+                    }
+
+                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+                }
+
+            }
+
+            // If no species were found, then no such user exists.
+
+            if (species_list.Count() <= 0) {
+
+                await BotUtils.ReplyAsync_Error(Context, "No such user exists.");
+
+                return;
+
+            }
+
+            // Display the species belonging to this user.
+
+            await _displaySpeciesAddedBy(owner, string.Empty, species_list);
+
+        }
+        private async Task _displaySpeciesAddedBy(string username, string thumbnailUrl, List<Species> speciesList) {
+
+            if (speciesList.Count() <= 0) {
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not submitted any species yet.", username));
+
+            }
+            else {
+
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList,
+                    fieldName: string.Format("Species owned by {0} ({1})", username, speciesList.Count())));
+
+                embed.SetThumbnailUrl(thumbnailUrl);
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
             }
 

@@ -146,7 +146,7 @@ namespace OurFoodChain {
                     page.WithTitle(embed.Title);
                     page.WithThumbnailUrl(embed.ThumbnailUrl);
                     page.WithFields(embed.Fields);
-                    page.WithDescription(desc.Substring(written_size, Math.Min(chunk_size, desc.Length - written_size - 1)) + (written_size + chunk_size < desc.Length ? "..." : ""));
+                    page.WithDescription(desc.Substring(written_size, Math.Min(chunk_size, desc.Length - written_size)) + (written_size + chunk_size < desc.Length ? "..." : ""));
 
                     written_size += chunk_size;
 

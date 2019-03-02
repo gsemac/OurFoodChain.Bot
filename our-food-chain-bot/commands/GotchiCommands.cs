@@ -505,7 +505,7 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        [Command("move")]
+        [Command("move"), Alias("use")]
         public async Task Move(string moveIdentifier) {
 
             // Get the battle state that the user is involved with.

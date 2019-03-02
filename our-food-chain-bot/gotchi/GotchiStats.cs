@@ -18,8 +18,8 @@ namespace OurFoodChain.gotchi {
     public class GotchiStats {
 
         public double hp = 2.0;
-        public double atk = 1.0;
-        public double def = 0.2;
+        public double atk = 0.8;
+        public double def = 0.1;
         public double spd = 0.5;
 
         public double maxHp = 2.0;
@@ -168,10 +168,10 @@ namespace OurFoodChain.gotchi {
 
             Species[] ancestors = await BotUtils.GetAncestorsFromDb(sp.id);
 
-            stats.hp += ancestors.Count() * 0.2;
-            stats.atk += ancestors.Count() * 0.2;
-            stats.def += ancestors.Count() * 0.2;
-            stats.spd += ancestors.Count() * 0.2;
+            stats.hp += ancestors.Count() * 0.1;
+            stats.atk += ancestors.Count() * 0.1;
+            stats.def += ancestors.Count() * 0.1;
+            stats.spd += ancestors.Count() * 0.1;
 
             // Add bonus multipliers depending on characteristics mentioned in the species' description.
 
@@ -196,14 +196,15 @@ namespace OurFoodChain.gotchi {
             stats.def += random.Next(0, 5) / 10.0;
             stats.spd += random.Next(0, 5) / 10.0;
 
-            // Multiply stats by the gotchi's level + age.
+            // The gotchi's final stats depend on its level/age.
 
-            long age = gotchi.Age();
+            double age = gotchi.Age();
+            double multiplier = stats.level + (age / 10.0);
 
-            stats.hp *= stats.level + age;
-            stats.atk *= stats.level + age;
-            stats.def *= stats.level + age;
-            stats.spd *= stats.level + age;
+            stats.hp *= multiplier;
+            stats.atk *= multiplier;
+            stats.def *= multiplier;
+            stats.spd *= multiplier;
 
             // Make sure required stats are >= 1.
 

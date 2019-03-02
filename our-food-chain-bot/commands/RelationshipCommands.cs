@@ -354,7 +354,7 @@ namespace OurFoodChain {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** and **{1}** no longer have a {2} relationship between them.", sp1.GetShortName(), sp2.GetShortName(), relation.DescriptorName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** and **{1}** no longer have a {2} relationship.", sp1.GetShortName(), sp2.GetShortName(), relation.DescriptorName()));
 
         }
 

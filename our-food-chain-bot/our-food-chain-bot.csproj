@@ -282,7 +282,7 @@
     <None Include="help\map.json" />
     <None Include="help\setancestor.json" />
     <None Include="help\ownedby.json" />
-    <None Include="help\predates.json" />
+    <None Include="help\predators.json" />
     <None Include="help\prey.json" />
     <None Include="help\role.json" />
     <None Include="help\search.json" />

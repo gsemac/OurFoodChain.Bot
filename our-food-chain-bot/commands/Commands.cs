@@ -1447,7 +1447,7 @@ namespace OurFoodChain {
 
         }
 
-        [Command("predates"), Alias("eats")]
+        [Command("predates"), Alias("eats", "pred", "predators")]
         public async Task Predates(string genus, string species = "") {
 
             // If the species parameter was not provided, assume the user only provided the species.

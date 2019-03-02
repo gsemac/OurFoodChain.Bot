@@ -150,6 +150,9 @@ namespace OurFoodChain.gotchi {
 
                             set.Add("clean-up");
 
+                            if (stats.level >= 10)
+                                set.Add("filter");
+
                             break;
 
                         case "parasite":
@@ -193,14 +196,21 @@ namespace OurFoodChain.gotchi {
                             set.Add("grow");
                             set.Add("photosynthesize");
 
-                            if (Regex.IsMatch(sp.description, "tree|tall|heavy") && stats.level >= 10)
+                            if (Regex.IsMatch(sp.description, "tree|tall|heavy") && stats.level >= 10) {
+
                                 set.Add("topple");
+                                set.Add("cast shade");
+
+                            }
 
                             if (Regex.IsMatch(sp.description, "vine"))
                                 set.Add("tangle");
 
                             if (Regex.IsMatch(sp.description, "seed") && stats.level >= 20)
                                 set.Add("seed drop");
+
+                            if (Regex.IsMatch(sp.description, "root") && stats.level >= 30)
+                                set.Add("take root");
 
                             break;
 
@@ -244,7 +254,12 @@ namespace OurFoodChain.gotchi {
 
             if (set.moves.Count() > 4) {
 
-                // If move count is over the limit, keep the last ones.
+                // If move count is over the limit, randomize by the species ID, and keep the last four moves.
+                // This means members of the same species will have consistent movesets, and won't be biased by later moves.
+
+                Random rng = new Random((int)sp.id);
+                set.moves.OrderBy(x => rng.Next());
+
                 set.moves = set.moves.GetRange(set.moves.Count() - 4, 4);
 
             }
@@ -300,6 +315,15 @@ namespace OurFoodChain.gotchi {
             });
 
             _addMoveToRegistry(new GotchiMove {
+                name = "Filter",
+                description = "Filters through detritus for food, restoring a moderate amount of HP.",
+                role = "detritivore",
+                target = MoveTarget.Self,
+                type = MoveType.Recovery,
+                multiplier = 0.2
+            });
+
+            _addMoveToRegistry(new GotchiMove {
                 name = "Infest",
                 description = "Attack by parasitizing the opponent. This move is highly effective against Consumers.",
                 role = "parasite",
@@ -319,16 +343,53 @@ namespace OurFoodChain.gotchi {
                 role = "producer",
                 target = MoveTarget.Self,
                 type = MoveType.StatBoost,
-                multiplier = 1.15
+                multiplier = 1.15,
+                callback = async (args) => {
+
+                    if (args.userStats.status == GotchiStatusProblem.Shaded)
+                        args.value = 0.0;
+
+                }
             });
 
             _addMoveToRegistry(new GotchiMove {
                 name = "Photosynthesize",
-                description = "Regenerates with the help of sunlight and restores Hit Points.",
+                description = "Regenerates with the help of sunlight, restoring HP.",
                 role = "producer",
                 target = MoveTarget.Self,
                 type = MoveType.Recovery,
-                multiplier = 0.2
+                multiplier = 0.2,
+                callback = async (args) => {
+
+                    if (args.userStats.status == GotchiStatusProblem.Shaded)
+                        args.value = 0.0;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Take Root",
+                description = "Takes root and draws nutrients from the substrate, restoring HP each turn.",
+                role = "producer",
+                target = MoveTarget.Self,
+                type = MoveType.Recovery,
+                multiplier = 0.1,
+                callback = async (args) => { args.userStats.status = GotchiStatusProblem.Rooted; }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Cast Shade",
+                description = "Casts shade over the opponent, preventing them from using Grow or Photosynthesis.",
+                role = "producer",
+                target = MoveTarget.Other,
+                type = MoveType.Attack,
+                callback = async (args) => {
+
+                    args.value = 0.0;
+                    args.messageFormat = "casting shade on the opponent";
+                    args.targetStats.status = GotchiStatusProblem.Shaded;
+
+                }
             });
 
             _addMoveToRegistry(new GotchiMove {
@@ -530,7 +591,7 @@ namespace OurFoodChain.gotchi {
                             break;
                     }
 
-                    args.messageFormat = "swapping a stat with the opponent!";
+                    args.messageFormat = "swapping a stat with the opponent";
 
                 }
             });
@@ -543,7 +604,7 @@ namespace OurFoodChain.gotchi {
                 callback = async (GotchiMoveCallbackArgs args) => {
 
                     args.targetStats.status = GotchiStatusProblem.Poisoned;
-                    args.messageFormat = "poisoning the opponent!";
+                    args.messageFormat = "poisoning the opponent";
                     args.value = 0.0;
 
                 }
@@ -574,7 +635,7 @@ namespace OurFoodChain.gotchi {
                     args.targetStats.atk += args.targetStats.def;
                     args.targetStats.def = 0.0;
 
-                    args.messageFormat = "breaking the opponent's defense!";
+                    args.messageFormat = "breaking the opponent's defense";
 
                 }
             });
@@ -596,15 +657,32 @@ namespace OurFoodChain.gotchi {
 
             _addMoveToRegistry(new GotchiMove {
                 name = "Uproot",
-                description = "Uproots the opponent, eliminating their ability to use recovery moves.",
+                description = "Uproots the opponent, eliminating their ability to use recovery moves. Only works on Producers.",
                 type = MoveType.Attack,
                 target = MoveTarget.Other,
                 multiplier = 0.5,
                 role = "base-consumer",
                 callback = async (GotchiMoveCallbackArgs args) => {
 
-                    args.targetStats.status = GotchiStatusProblem.HealBlock;
+                    bool is_producer = false;
 
+                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesRoles WHERE species_id = $id AND role_id IN (SELECT id FROM Roles WHERE name = \"producer\" COLLATE NOCASE);")) {
+
+                        cmd.Parameters.AddWithValue("$id", args.target.species_id);
+
+
+                        is_producer = await Database.GetScalar<long>(cmd) > 0;
+
+                    }
+
+                    if (is_producer)
+                        args.targetStats.status = GotchiStatusProblem.HealBlock; // also removes "Rooted" status
+                    else {
+
+                        args.value = 0.0;
+                        args.messageFormat = "but it failed";
+
+                    }
                 }
             });
 

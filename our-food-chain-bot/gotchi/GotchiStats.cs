@@ -12,7 +12,9 @@ namespace OurFoodChain.gotchi {
     public enum GotchiStatusProblem {
         None,
         Poisoned,
-        HealBlock
+        HealBlock,
+        Rooted,
+        Shaded
     }
 
     public class GotchiStats {

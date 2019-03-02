@@ -471,7 +471,13 @@ namespace OurFoodChain.gotchi {
                                 bonus_messages,
                                 message_end));
 
+                            if (i + 1 < move.times)
+                                message_builder.AppendLine();
+
                         }
+
+                        if (move.times > 1)
+                            message_builder.Append(string.Format(" Hit {0} times!", move.times));
 
                     }
 
@@ -566,7 +572,16 @@ namespace OurFoodChain.gotchi {
 
                 user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 16.0));
 
-                message_builder.Append(string.Format("**{0}** is damaged by poison!", StringUtils.ToTitleCase(user.name)));
+                message_builder.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.name)));
+
+            }
+            else if (user_stats.status == GotchiStatusProblem.Rooted) {
+
+                // If the user is rooted, heal some HP (1/10th of max HP).
+
+                user_stats.hp = Math.Min(user_stats.maxHp, user_stats.hp + (user_stats.maxHp / 10.0));
+
+                message_builder.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.name)));
 
             }
 

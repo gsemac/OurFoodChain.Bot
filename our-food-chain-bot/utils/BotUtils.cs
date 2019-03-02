@@ -1835,11 +1835,19 @@ namespace OurFoodChain {
 
         }
 
-        private static async Task<TreeNode<Species>> _generateAncestryTree(Species species, bool descendantsOnly = false) {
+        private class SpeciesInfo {
+            public Species species = null;
+            public bool isAncestor = false;
+        }
+
+        private static async Task<TreeNode<SpeciesInfo>> _generateAncestryTree(Species species, bool descendantsOnly = false) {
 
             // Start by finding the earliest ancestor of this species.
 
             long id = species.id;
+            List<long> ancestor_ids = new List<long>();
+
+            ancestor_ids.Add(id);
 
             if (!descendantsOnly) {
 
@@ -1851,8 +1859,13 @@ namespace OurFoodChain {
 
                         DataRow row = await Database.GetRowAsync(cmd);
 
-                        if (!(row is null))
+                        if (!(row is null)) {
+
                             id = row.Field<long>("ancestor_id");
+
+                            ancestor_ids.Add(id);
+
+                        }
                         else
                             break;
 
@@ -1864,18 +1877,21 @@ namespace OurFoodChain {
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
-            TreeNode<Species> root = new TreeNode<Species> {
-                value = await GetSpeciesFromDb(id)
+            TreeNode<SpeciesInfo> root = new TreeNode<SpeciesInfo> {
+                value = new SpeciesInfo {
+                    species = await GetSpeciesFromDb(id),
+                    isAncestor = true
+                }
             };
 
-            Queue<TreeNode<Species>> queue = new Queue<TreeNode<Species>>();
+            Queue<TreeNode<SpeciesInfo>> queue = new Queue<TreeNode<SpeciesInfo>>();
             queue.Enqueue(root);
 
             while (queue.Count() > 0) {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id);")) {
 
-                    cmd.Parameters.AddWithValue("$ancestor_id", queue.First().value.id);
+                    cmd.Parameters.AddWithValue("$ancestor_id", queue.First().value.species.id);
 
                     using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
@@ -1883,8 +1899,13 @@ namespace OurFoodChain {
 
                         foreach (DataRow row in rows.Rows) {
 
-                            TreeNode<Species> node = new TreeNode<Species> {
-                                value = await Species.FromDataRow(row)
+                            Species sp = await Species.FromDataRow(row);
+
+                            TreeNode<SpeciesInfo> node = new TreeNode<SpeciesInfo> {
+                                value = new SpeciesInfo {
+                                    species = sp,
+                                    isAncestor = ancestor_ids.Contains(sp.id)
+                                }
                             };
 
                             queue.First().children.Add(node);
@@ -1903,23 +1924,27 @@ namespace OurFoodChain {
             return root;
 
         }
-        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<Species> node, Species selectedSpecies, Font font) {
+        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<SpeciesInfo> node, Species selectedSpecies, Font font) {
 
             // Cross-out the species if it's extinct.
 
-            if (node.value.isExtinct)
+            if (node.value.species.isExtinct)
                 using (Brush brush = new SolidBrush(System.Drawing.Color.White))
                 using (Pen pen = new Pen(brush, 1.0f))
                     gfx.DrawLine(pen,
                         new PointF(node.bounds.X, node.bounds.Y + node.bounds.Height / 2.0f),
                         new PointF(node.bounds.X + node.bounds.Width - 5.0f, node.bounds.Y + node.bounds.Height / 2.0f));
 
-            using (Brush brush = new SolidBrush(node.value.id == selectedSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.White))
-                gfx.DrawString(node.value.GetShortName(), font, brush, new PointF(node.bounds.X, node.bounds.Y));
+            // Draw the name of the species.
 
-            foreach (TreeNode<Species> child in node.children) {
+            using (Brush brush = new SolidBrush(node.value.species.id == selectedSpecies.id ? System.Drawing.Color.Yellow : System.Drawing.Color.White))
+                gfx.DrawString(node.value.species.GetShortName(), font, brush, new PointF(node.bounds.X, node.bounds.Y));
 
-                using (Brush brush = new SolidBrush(System.Drawing.Color.FromArgb(162, 164, 171)))
+            // Draw child nodes.
+
+            foreach (TreeNode<SpeciesInfo> child in node.children) {
+
+                using (Brush brush = new SolidBrush(child.value.isAncestor ? System.Drawing.Color.Yellow : System.Drawing.Color.FromArgb(162, 164, 171)))
                 using (Pen pen = new Pen(brush, 2.0f)) {
 
                     pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
@@ -1940,7 +1965,7 @@ namespace OurFoodChain {
 
             // Generate the ancestry tree.
 
-            TreeNode<Species> root = await _generateAncestryTree(sp, descendantsOnly);
+            TreeNode<SpeciesInfo> root = await _generateAncestryTree(sp, descendantsOnly);
 
             // Generate the evolution tree image.
 
@@ -1952,7 +1977,7 @@ namespace OurFoodChain {
 
                 TreeUtils.PostOrderTraverse(root, (node) => {
 
-                    SizeF size = GraphicsUtils.MeasureString(node.value.GetShortName(), font);
+                    SizeF size = GraphicsUtils.MeasureString(node.value.species.GetShortName(), font);
 
                     node.bounds.Width = size.Width + horizontal_padding;
                     node.bounds.Height = size.Height;

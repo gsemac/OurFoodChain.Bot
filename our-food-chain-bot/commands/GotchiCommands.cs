@@ -552,10 +552,16 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        [Command("help")]
+        [Command("help"), Alias("h")]
         public async Task Help() {
 
-            await HelpCommands.ShowHelp(Context, "help/gotchi", "gotchi");
+            await HelpCommands.ShowHelpCategory(Context, "help/gotchi", "gotchi");
+
+        }
+        [Command("help"), Alias("h")]
+        public async Task Help(string command) {
+
+            await HelpCommands.ShowHelp(Context, "gotchi", command);
 
         }
 

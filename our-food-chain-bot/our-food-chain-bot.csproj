@@ -258,6 +258,7 @@
     <None Include="help\gotchi\deny.json" />
     <None Include="help\gotchi\feed.json" />
     <None Include="help\gotchi\get.json" />
+    <None Include="help\gotchi\help.json" />
     <None Include="help\gotchi\moves.json" />
     <None Include="help\gotchi\name.json" />
     <None Include="help\gotchi\stats.json" />

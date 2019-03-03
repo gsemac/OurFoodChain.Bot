@@ -4,6 +4,6 @@
   "category": "battle",
   "description": "Displays your gotchi's stats, which dictate its performance in battle. Stats can be improved by aging, leveling up, and evolving.",
   "examples": [
-    "stats <name>"
+    "stats"
   ]
 }

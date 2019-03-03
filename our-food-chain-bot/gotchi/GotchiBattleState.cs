@@ -218,7 +218,7 @@ namespace OurFoodChain.gotchi {
 
             // If battling the CPU, have them retaliate before showing the battle state.
             if (IsBattlingCpu() && user.owner_id != WILD_GOTCHI_USER_ID && !IsBattleOver())
-                await UseMoveAsync(context, (await GotchiMoveset.GetMovesetAsync(gotchi2)).GetRandomMove());
+                await UseMoveAsync(context, await _pickCpuMove(gotchi2));
             else
                 await ShowBattleStateAsync(context, this);
 
@@ -712,6 +712,20 @@ namespace OurFoodChain.gotchi {
 
             gotchi2 = opp;
             stats2 = opp_stats;
+
+        }
+        private async Task<GotchiMove> _pickCpuMove(Gotchi cpuGotchi) {
+
+            GotchiMoveset moves = await GotchiMoveset.GetMovesetAsync(cpuGotchi);
+            GotchiMove move = moves.GetRandomMove();
+            GotchiStats stats = GetStats(cpuGotchi);
+
+            // If the CPU is heal-blocked, give it a chance to pick a different move.
+
+            if (stats.status == GotchiStatusProblem.HealBlock && move.type == MoveType.Recovery)
+                move = moves.GetRandomMove();
+
+            return move;
 
         }
 

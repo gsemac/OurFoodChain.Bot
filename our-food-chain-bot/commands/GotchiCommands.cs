@@ -552,6 +552,13 @@ namespace OurFoodChain.gotchi {
 
         }
 
+        [Command("help")]
+        public async Task Help() {
+
+            await HelpCommands.ShowHelp(Context, "help/gotchi", "gotchi");
+
+        }
+
         private static async Task<bool> _replyValidateChallengerGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
 
             if (!await GotchiUtils.Reply_ValidateGotchiAsync(context, gotchi))

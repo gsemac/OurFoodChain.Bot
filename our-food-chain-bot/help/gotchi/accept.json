@@ -1,0 +1,9 @@
+﻿{
+  "name": "accept",
+  "aliases": [],
+  "category": "battle",
+  "description": "Accepts a battle request issued by another user.",
+  "examples": [
+    "accept"
+  ]
+}

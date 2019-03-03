@@ -29,7 +29,7 @@ namespace OurFoodChain.gotchi {
         public MoveType type = MoveType.Attack;
         public double multiplier = 1.0;
         public double criticalRate = 1.0;
-        public double hitRate = 1.0;
+        public double hitRate = 0.9;
         public int times = 1;
         public Func<GotchiMoveCallbackArgs, Task> callback;
 
@@ -447,7 +447,7 @@ namespace OurFoodChain.gotchi {
                 type = MoveType.Attack,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
-                    args.value = Math.Max(1.0, args.value * ((args.userStats.spd / args.targetStats.spd) + 1.0));
+                    args.value = Math.Max(1.0, args.value * (((args.userStats.spd / args.targetStats.spd) / 15.0) + 1.0));
 
                 }
             });
@@ -500,7 +500,7 @@ namespace OurFoodChain.gotchi {
                 description = "Rushes the opponent. Has abysmal accuracy, but deals very high damage.",
                 role = "predator",
                 hitRate = 0.1,
-                multiplier = 2.0,
+                multiplier = 2.5,
                 target = MoveTarget.Other
             });
 
@@ -626,7 +626,7 @@ namespace OurFoodChain.gotchi {
 
             _addMoveToRegistry(new GotchiMove {
                 name = "Break Defense",
-                description = "Breaks down the opponent's defense, allowing them to go-all out. Reducing the opponent's Defense to 0, but ups their Attack.",
+                description = "Breaks down the opponent's defense, allowing them to go all-out. Reducing the opponent's Defense to 0, but ups their Attack.",
                 type = MoveType.StatBoost,
                 target = MoveTarget.Other,
                 role = "decomposer",

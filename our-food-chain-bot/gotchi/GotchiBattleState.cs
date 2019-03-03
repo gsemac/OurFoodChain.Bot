@@ -411,7 +411,9 @@ namespace OurFoodChain.gotchi {
 
                     // Have a chance of missing.
 
-                    if (BotUtils.RandomInteger(0, (int)(10 * move.hitRate)) == 0) {
+                    bool move_hit = BotUtils.RandomInteger(0, 10 + 1) < 10.0 * move.hitRate;
+
+                    if (!move_hit) {
 
                         message_builder.Append(string.Format("💥 **{0}** used **{1}**, but it missed!",
                           StringUtils.ToTitleCase(user.name),

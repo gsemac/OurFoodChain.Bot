@@ -1,0 +1,13 @@
+﻿{
+  "name": "use",
+  "aliases": [
+    "move"
+  ],
+  "category": "battle",
+  "description": "When in battle, selects a move to use. Moves can be selected by their number, or by name.",
+  "examples": [
+    "use <move>",
+    "use 1",
+    "use hit"
+  ]
+}

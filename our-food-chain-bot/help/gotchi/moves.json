@@ -1,0 +1,11 @@
+﻿{
+  "name": "moves",
+  "aliases": [
+    "moveset"
+  ],
+  "category": "battle",
+  "description": "Lists the moves that your gotchi is able to use in battle. As a gotchi levels up and evolves, it will learn new moves.",
+  "examples": [
+    "moves"
+  ]
+}

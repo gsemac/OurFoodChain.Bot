@@ -1,0 +1,10 @@
+﻿{
+  "name": "get",
+  "aliases": [],
+  "category": "general",
+  "description": "Sets the specified species as your gotchi. **If you already have a gotchi, it will be replaced**.",
+  "examples": [
+    "get <species>",
+    "get C. aspersum"
+  ]
+}

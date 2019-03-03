@@ -1,0 +1,12 @@
+﻿{
+  "name": "battle",
+  "aliases": [
+    "challenge",
+    "duel"
+  ],
+  "category": "battle",
+  "description": "Challenges the given user to a gotchi battle. Once they accept, the battle will start.",
+  "examples": [
+    "battle <user>"
+  ]
+}

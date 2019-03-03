@@ -1,0 +1,9 @@
+﻿{
+  "name": "train",
+  "aliases": [],
+  "category": "battle",
+  "description": "Initiates a gotchi battle with a CPU.",
+  "examples": [
+    "train"
+  ]
+}

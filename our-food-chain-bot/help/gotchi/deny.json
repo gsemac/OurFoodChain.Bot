@@ -1,0 +1,9 @@
+﻿{
+  "name": "deny",
+  "aliases": [],
+  "category": "battle",
+  "description": "Denies a battle request issued by another user.",
+  "examples": [
+    "deny"
+  ]
+}

@@ -1,0 +1,9 @@
+﻿{
+  "name": "feed",
+  "aliases": [],
+  "category": "general",
+  "description": "Feeds your gotchi. A gotchi must be fed at least once every 72 hours (3 days), or it will die.",
+  "examples": [
+    "feed"
+  ]
+}

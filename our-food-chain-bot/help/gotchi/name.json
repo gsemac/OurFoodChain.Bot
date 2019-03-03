@@ -1,0 +1,10 @@
+﻿{
+  "name": "name",
+  "aliases": [],
+  "category": "general",
+  "description": "Sets your gotchi's name. If the name consists of more than one word, place it in double-quotes.",
+  "examples": [
+    "name <name>",
+    "name \"Gary\""
+  ]
+}

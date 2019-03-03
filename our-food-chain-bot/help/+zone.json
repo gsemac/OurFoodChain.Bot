@@ -4,7 +4,7 @@
     "+zones"
   ],
   "category": "update",
-  "description": "Adds the species to the given zones. You can specify multiple zones at once.",
+  "description": "Adds the species to the given zones. You can specify multiple zones at once by separating them with commas or forward slashes.",
   "examples": [
     "+zone H. quattuorus 12",
     "+zones H. quattuorus 22/23"

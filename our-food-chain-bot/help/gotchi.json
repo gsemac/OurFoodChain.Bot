@@ -2,11 +2,9 @@
   "name": "gotchi",
   "aliases": [],
   "category": "fun",
-  "description": "Make a pet out of your favorite species. Keep it alive by feeding it at least once every 3 days, and it will evolve once a week.",
+  "description": "Displays your current gotchi, a pet selected from one of the world's species. Keep it alive by feeding it, and make it stronger by participating in battles.\n\nUse the `\\prefixgotchi help` command for more information about how to interact with your gotchi.",
   "examples": [
     "gotchi",
-    "gotchi get <species>",
-    "gotchi name <new name>",
-    "gotchi feed"
+    "gotchi help"
   ]
 }

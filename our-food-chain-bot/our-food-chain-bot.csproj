@@ -189,6 +189,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commands\HelpCommands.cs" />
     <Compile Include="commands\IdeasCommands.cs" />
     <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\PeriodCommands.cs" />
@@ -252,6 +253,16 @@
     <None Include="help\extinct.json" />
     <None Include="help\fav.json" />
     <None Include="help\gotchi.json" />
+    <None Include="help\gotchi\accept.json" />
+    <None Include="help\gotchi\battle.json" />
+    <None Include="help\gotchi\deny.json" />
+    <None Include="help\gotchi\feed.json" />
+    <None Include="help\gotchi\get.json" />
+    <None Include="help\gotchi\moves.json" />
+    <None Include="help\gotchi\name.json" />
+    <None Include="help\gotchi\stats.json" />
+    <None Include="help\gotchi\train.json" />
+    <None Include="help\gotchi\use.json" />
     <None Include="help\idea.json" />
     <None Include="help\info.json" />
     <None Include="help\pic.json" />

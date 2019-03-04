@@ -384,12 +384,18 @@ namespace OurFoodChain.gotchi {
                 description = "Grows larger and raises stats by a small amount.",
                 role = "producer",
                 target = MoveTarget.Self,
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 multiplier = 1.15,
                 callback = async (args) => {
 
                     if (args.userStats.status == GotchiStatusProblem.Shaded)
-                        args.value = 0.0;
+                        args.messageFormat = "but couldn't get any sun";
+                    else {
+
+                        args.userStats.BoostByFactor(args.move.multiplier);
+                        args.messageFormat = string.Format("boosting their stats by {0}%", (args.move.multiplier - 1.0) * 100.0);
+
+                    }
 
                 }
             });
@@ -399,12 +405,18 @@ namespace OurFoodChain.gotchi {
                 description = "Grows and boosts stats with the help of sunlight.",
                 role = "producer",
                 target = MoveTarget.Self,
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 multiplier = 1.20,
                 callback = async (args) => {
 
                     if (args.userStats.status == GotchiStatusProblem.Shaded)
-                        args.value = 0.0;
+                        args.messageFormat = "but couldn't get any sun";
+                    else {
+
+                        args.userStats.BoostByFactor(args.move.multiplier);
+                        args.messageFormat = string.Format("boosting their stats by {0}%", (args.move.multiplier - 1.0) * 100.0);
+
+                    }
 
                 }
             });
@@ -468,12 +480,12 @@ namespace OurFoodChain.gotchi {
                 name = "tangle",
                 description = "Tangles the opponent in vines, lowering their speed.",
                 role = "producer",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 multiplier = 0.8,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
                     args.targetStats.def *= args.value;
-                    args.messageFormat = "lowering the opponent's speed by {0}";
+                    args.messageFormat = string.Format("lowering the opponent's speed by {0}%", (1.0 - args.move.multiplier) * 100.0);
 
                 }
             });
@@ -524,13 +536,13 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "Withdraw",
                 description = "Boosts defense by a small amount.",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 target = MoveTarget.Self,
                 multiplier = 1.2,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
-                    args.userStats.def *= args.value;
-                    args.messageFormat = "boosting its defense by {0}";
+                    args.targetStats.def *= args.value;
+                    args.messageFormat = string.Format("boosting its defense by {0}%", (args.move.multiplier - 1.0) * 100.0);
 
                 }
             });
@@ -538,13 +550,13 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "overgrowth",
                 description = "Accelerates growth, boosting attack by a moderate amount.",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 target = MoveTarget.Self,
                 multiplier = 1.2,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
-                    args.userStats.atk *= args.value;
-                    args.messageFormat = "boosting its attack by {0}";
+                    args.targetStats.atk *= args.value;
+                    args.messageFormat = string.Format("boosting its attack by {0}%", (args.move.multiplier - 1.0) * 100.0);
 
                 }
             });
@@ -655,14 +667,14 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "Bright Glow",
                 description = "Glows brightly, reducing the opponent's accuracy.",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 target = MoveTarget.Other,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
                     double amount = 0.05;
 
                     args.targetStats.accuracy *= 1.0 - amount;
-                    args.messageFormat = string.Format("reducing its opponent's accuracy by {0}", amount * 100.0);
+                    args.messageFormat = string.Format("reducing its opponent's accuracy by {0}%", amount * 100.0);
 
                 }
             });
@@ -670,7 +682,7 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "Break Down",
                 description = "Resets all of the opponent's stat boosts.",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 target = MoveTarget.Other,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
@@ -698,7 +710,7 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "Skill Steal",
                 description = "Swaps a random stat with the opponent.",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 target = MoveTarget.Other,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
@@ -778,7 +790,7 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "Break Defense",
                 description = "Breaks down the opponent's defense, allowing them to go all-out. Reducing the opponent's Defense to 0, but ups their Attack.",
-                type = MoveType.StatBoost,
+                type = MoveType.Custom,
                 target = MoveTarget.Other,
                 role = "decomposer",
                 callback = async (GotchiMoveCallbackArgs args) => {

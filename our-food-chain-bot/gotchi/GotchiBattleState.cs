@@ -546,6 +546,9 @@ namespace OurFoodChain.gotchi {
 
                         message_end = args.messageFormat;
 
+                        if (args.value != 0.0)
+                            target_stats.BoostByFactor(move.multiplier);
+
                     }
                     else
                         target_stats.BoostByFactor(move.multiplier);
@@ -561,6 +564,38 @@ namespace OurFoodChain.gotchi {
                         StringUtils.ToTitleCase(user.name),
                         StringUtils.ToTitleCase(move.name),
                         message_end));
+
+                    break;
+
+                case MoveType.Custom:
+
+                    message_builder.Append(string.Format("🛡 **{0}** used **{1}**", StringUtils.ToTitleCase(user.name), StringUtils.ToTitleCase(move.name)));
+
+                    if (!(move.callback is null)) {
+
+                        GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
+                            state = this,
+                            user = user,
+                            userStats = user_stats,
+                            target = target,
+                            targetStats = target_stats,
+                            value = 0.0,
+                            move = move
+                        };
+
+                        await move.callback(args);
+
+                        if (string.IsNullOrEmpty(args.messageFormat))
+                            message_builder.Append("!");
+                        else
+                            message_builder.Append(", " + args.messageFormat + (args.messageFormat.Last() == '!' ? "" : "!"));
+
+                    }
+                    else {
+
+                        message_builder.Append(", but nothing happened!");
+
+                    }
 
                     break;
 

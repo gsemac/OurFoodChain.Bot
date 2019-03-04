@@ -2,7 +2,8 @@
   "name": "ownedby",
   "aliases": [
     "addedby",
-    "own"
+    "own",
+    "owned"
   ],
   "category": "info",
   "description": "Lists all species owned by the given user. If no username is provided, lists all species owned by the user who used the command.",

@@ -1468,11 +1468,11 @@ namespace OurFoodChain {
 
         }
 
-        [Command("addedby"), Alias("ownedby", "own")]
+        [Command("addedby"), Alias("ownedby", "own", "owned")]
         public async Task AddedBy() {
             await AddedBy(Context.User);
         }
-        [Command("addedby"), Alias("ownedby", "own")]
+        [Command("addedby"), Alias("ownedby", "own", "owned")]
         public async Task AddedBy(IUser user) {
 
             if (user is null)
@@ -1503,7 +1503,7 @@ namespace OurFoodChain {
             await _displaySpeciesAddedBy(user.Username, user.GetAvatarUrl(size: 32), species_list);
 
         }
-        [Command("addedby"), Alias("ownedby", "own")]
+        [Command("addedby"), Alias("ownedby", "own", "owned")]
         public async Task AddedBy(string owner) {
 
             // If we get this overload, then the requested user does not currently exist in the guild.

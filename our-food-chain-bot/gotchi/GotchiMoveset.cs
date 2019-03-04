@@ -662,7 +662,7 @@ namespace OurFoodChain.gotchi {
                     double amount = 0.05;
 
                     args.targetStats.accuracy *= 1.0 - amount;
-                    args.messageFormat = string.Format("reducing its opponent's accuracy by {0}%", amount * 100.0);
+                    args.messageFormat = string.Format("reducing its opponent's accuracy by {0}", amount * 100.0);
 
                 }
             });

@@ -11,7 +11,11 @@ namespace OurFoodChain.gotchi {
 
     public enum GotchiStatusProblem {
         None,
+
         Poisoned,
+        VineWrapped,
+        ThornSurrounded,
+
         HealBlock,
         Rooted,
         Shaded
@@ -32,6 +36,7 @@ namespace OurFoodChain.gotchi {
         public double boostFactor = 1.0;
 
         public GotchiStatusProblem status = GotchiStatusProblem.None;
+        public double accuracy = 1.0;
 
         public void BoostByFactor(double factor) {
 

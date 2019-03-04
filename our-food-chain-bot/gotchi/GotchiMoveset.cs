@@ -20,6 +20,11 @@ namespace OurFoodChain.gotchi {
         Custom
     }
 
+    public enum GotchiAbility {
+        BlindingLight = 1, // lowers opponent's accuracy on entry
+        Photosynthetic // restores health every turn if not shaded
+    }
+
     public class GotchiMove {
 
         public string name;
@@ -57,6 +62,7 @@ namespace OurFoodChain.gotchi {
         public const int MOVE_LIMIT = 4;
 
         public List<GotchiMove> moves = new List<GotchiMove>();
+        public GotchiAbility ability = 0;
 
         public void Add(string name) {
 
@@ -193,8 +199,19 @@ namespace OurFoodChain.gotchi {
 
                         case "producer":
 
-                            set.Add("grow");
-                            set.Add("photosynthesize");
+                            if (stats.level <= 30) {
+
+                                set.Add("grow");
+                                set.Add("photosynthesize");
+
+                            }
+                            else {
+
+                                set.Add("photo-boost");
+                                set.Add("sun power");
+                                set.Add("overgrowth");
+
+                            }
 
                             if (Regex.IsMatch(sp.description, "tree|tall|heavy") && stats.level >= 10) {
 
@@ -203,11 +220,23 @@ namespace OurFoodChain.gotchi {
 
                             }
 
-                            if (Regex.IsMatch(sp.description, "vine"))
+                            if (Regex.IsMatch(sp.description, "vine")) {
+
                                 set.Add("tangle");
+
+                                if (stats.level >= 20)
+                                    set.Add("vine wrap");
+
+                            }
+
+                            if (Regex.IsMatch(sp.description, "thorn") && stats.level >= 20)
+                                set.Add("thorny overgrowth");
 
                             if (Regex.IsMatch(sp.description, "seed") && stats.level >= 20)
                                 set.Add("seed drop");
+
+                            if (Regex.IsMatch(sp.description, "leaf|leaves") && stats.level >= 20)
+                                set.Add("leaf-blade");
 
                             if (Regex.IsMatch(sp.description, "root") && stats.level >= 30)
                                 set.Add("take root");
@@ -251,6 +280,9 @@ namespace OurFoodChain.gotchi {
 
             if (Regex.IsMatch(sp.description, "toxin|poison"))
                 set.Add("toxins");
+
+            if (Regex.IsMatch(sp.description, "glow|light|bioluminescent|bioluminance"))
+                set.Add("bright glow");
 
             if (set.moves.Count() > 4) {
 
@@ -353,12 +385,42 @@ namespace OurFoodChain.gotchi {
             });
 
             _addMoveToRegistry(new GotchiMove {
+                name = "Sun Power",
+                description = "Grows and boosts stats with the help of sunlight.",
+                role = "producer",
+                target = MoveTarget.Self,
+                type = MoveType.StatBoost,
+                multiplier = 1.20,
+                callback = async (args) => {
+
+                    if (args.userStats.status == GotchiStatusProblem.Shaded)
+                        args.value = 0.0;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
                 name = "Photosynthesize",
                 description = "Regenerates with the help of sunlight, restoring HP.",
                 role = "producer",
                 target = MoveTarget.Self,
                 type = MoveType.Recovery,
                 multiplier = 0.2,
+                callback = async (args) => {
+
+                    if (args.userStats.status == GotchiStatusProblem.Shaded)
+                        args.value = 0.0;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "Photo-Boost",
+                description = "Regenerates with the help of sunlight, restoring a moderate amount of HP.",
+                role = "producer",
+                target = MoveTarget.Self,
+                type = MoveType.Recovery,
+                multiplier = 0.4,
                 callback = async (args) => {
 
                     if (args.userStats.status == GotchiStatusProblem.Shaded)
@@ -416,6 +478,28 @@ namespace OurFoodChain.gotchi {
             });
 
             _addMoveToRegistry(new GotchiMove {
+                name = "Leaf-Blade",
+                description = "Slashes the opponent with sharp leaves. Ineffective against Producers.",
+                role = "producer",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                multiplier = 1.1,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    bool is_producer = false;
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesRoles WHERE species_id = $id AND role_id IN (SELECT id FROM Roles WHERE name = \"producer\" COLLATE NOCASE);")) {
+                        cmd.Parameters.AddWithValue("$id", args.target.species_id);
+                        is_producer = await Database.GetScalar<long>(cmd) > 0;
+                    }
+
+                    if (is_producer)
+                        args.move.multiplier = 0.5;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
                 name = "Leech",
                 description = "Leeches some hit points from the opponent, healing the user.",
                 type = MoveType.Attack,
@@ -437,6 +521,20 @@ namespace OurFoodChain.gotchi {
 
                     args.userStats.def *= args.value;
                     args.messageFormat = "boosting its defense by {0}";
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "overgrowth",
+                description = "Accelerates growth, boosting attack by a moderate amount.",
+                type = MoveType.StatBoost,
+                target = MoveTarget.Self,
+                multiplier = 1.2,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.userStats.atk *= args.value;
+                    args.messageFormat = "boosting its attack by {0}";
 
                 }
             });
@@ -545,6 +643,22 @@ namespace OurFoodChain.gotchi {
             });
 
             _addMoveToRegistry(new GotchiMove {
+                name = "Bright Glow",
+                description = "Glows brightly, reducing the opponent's accuracy.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    double amount = 0.05;
+
+                    args.value = 0.0;
+                    args.targetStats.accuracy *= 1.0 - amount;
+                    args.messageFormat = string.Format("reducing its opponent's accuracy by {0}%", amount * 100.0);
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
                 name = "Break Down",
                 description = "Resets all of the opponent's stat boosts.",
                 type = MoveType.StatBoost,
@@ -605,6 +719,34 @@ namespace OurFoodChain.gotchi {
 
                     args.targetStats.status = GotchiStatusProblem.Poisoned;
                     args.messageFormat = "poisoning the opponent";
+                    args.value = 0.0;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "vine wrap",
+                description = "Tightly wraps vines around the opponent, causing them to take damage every turn.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.targetStats.status = GotchiStatusProblem.VineWrapped;
+                    args.messageFormat = "wrapping the opponent in vines";
+                    args.value = 0.0;
+
+                }
+            });
+
+            _addMoveToRegistry(new GotchiMove {
+                name = "thorny overgrowth",
+                description = "Grows thorny structures surrounding the opponent, causing them to take damage every time they attack.",
+                type = MoveType.Attack,
+                target = MoveTarget.Other,
+                callback = async (GotchiMoveCallbackArgs args) => {
+
+                    args.targetStats.status = GotchiStatusProblem.ThornSurrounded;
+                    args.messageFormat = "surrounding the opponent with thorns";
                     args.value = 0.0;
 
                 }
@@ -683,6 +825,7 @@ namespace OurFoodChain.gotchi {
                         args.messageFormat = "but it failed";
 
                     }
+
                 }
             });
 

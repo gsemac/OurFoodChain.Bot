@@ -411,7 +411,7 @@ namespace OurFoodChain.gotchi {
 
                     // Have a chance of missing.
 
-                    bool move_hit = BotUtils.RandomInteger(0, 10 + 1) < 10.0 * move.hitRate;
+                    bool move_hit = BotUtils.RandomInteger(0, 10 + 1) < 10.0 * move.hitRate * user_stats.accuracy;
 
                     if (!move_hit) {
 
@@ -584,6 +584,25 @@ namespace OurFoodChain.gotchi {
                 user_stats.hp = Math.Min(user_stats.maxHp, user_stats.hp + (user_stats.maxHp / 10.0));
 
                 message_builder.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.name)));
+
+            }
+            else if (user_stats.status == GotchiStatusProblem.VineWrapped) {
+
+                // If the user is wrapped in vines, apply poison damage (1/16th of max HP).
+
+                user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 16.0));
+
+                message_builder.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.name)));
+
+            }
+            else if (user_stats.status == GotchiStatusProblem.ThornSurrounded && move.type == MoveType.Attack) {
+
+                // If the user is surrounded by thorns, apply thorn damage (1/10th of max HP).
+                // Only damages the user if they are attacking the opponent.
+
+                user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 10.0));
+
+                message_builder.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.name)));
 
             }
 

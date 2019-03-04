@@ -2190,7 +2190,7 @@ namespace OurFoodChain {
 
             // Get all species fav'd by this user.
 
-            List<Species> species_list = new List<Species>();
+            List<string> lines = new List<string>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Favorites WHERE user_id = $user_id);")) {
 
@@ -2198,10 +2198,26 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
-                    foreach (DataRow row in rows.Rows)
-                        species_list.Add(await Species.FromDataRow(row));
+                    foreach (DataRow row in rows.Rows) {
 
-                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                        Species sp = await Species.FromDataRow(row);
+                        long fav_count = 0;
+
+                        // Get the number of times this species has been favorited.
+
+                        using (SQLiteCommand cmd2 = new SQLiteCommand("SELECT COUNT(*) FROM Favorites WHERE species_id = $species_id;")) {
+
+                            cmd2.Parameters.AddWithValue("$species_id", sp.id);
+
+                            fav_count = await Database.GetScalar<long>(cmd2);
+
+                        }
+
+                        lines.Add(sp.GetShortName() + (fav_count > 1 ? string.Format(" ({0} favs)", fav_count) : ""));
+
+                    }
+
+                    lines.Sort();
 
                 }
 
@@ -2209,17 +2225,17 @@ namespace OurFoodChain {
 
             // Display the species list.
 
-            if (species_list.Count() <= 0) {
+            if (lines.Count() <= 0) {
 
                 await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not favorited any species.", Context.User.Username));
 
             }
             else {
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
-                    fieldName: string.Format("Species favorited by {0} ({1})", Context.User.Username, species_list.Count())));
-
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.LinesToEmbedPages(lines));
+                embed.SetTitle(string.Format("⭐ Species favorited by {0} ({1})", Context.User.Username, lines.Count()));
                 embed.SetThumbnailUrl(Context.User.GetAvatarUrl(size: 32));
+                embed.AddPageNumbers();
 
                 await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 

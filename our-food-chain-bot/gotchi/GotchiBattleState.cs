@@ -411,7 +411,7 @@ namespace OurFoodChain.gotchi {
 
                     // Have a chance of missing.
 
-                    bool move_hit = BotUtils.RandomInteger(0, 10 + 1) < 10.0 * move.hitRate * user_stats.accuracy;
+                    bool move_hit = BotUtils.RandomInteger(0, 20 + 1) < 20 * move.hitRate * Math.Max(0.1, user_stats.accuracy);
 
                     if (!move_hit) {
 
@@ -735,9 +735,9 @@ namespace OurFoodChain.gotchi {
         }
         private async Task<GotchiMove> _pickCpuMove(Gotchi cpuGotchi) {
 
-            GotchiMoveset moves = await GotchiMoveset.GetMovesetAsync(cpuGotchi);
-            GotchiMove move = moves.GetRandomMove();
             GotchiStats stats = GetStats(cpuGotchi);
+            GotchiMoveset moves = await GotchiMoveset.GetMovesetAsync(cpuGotchi, stats);
+            GotchiMove move = moves.GetRandomMove();
 
             // If the CPU is heal-blocked, give it a chance to pick a different move.
 

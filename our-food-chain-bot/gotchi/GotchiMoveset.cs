@@ -95,6 +95,14 @@ namespace OurFoodChain.gotchi {
 
         public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi) {
 
+            // Get stats.
+            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
+
+            return await GetMovesetAsync(gotchi, stats);
+
+        }
+        public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi, GotchiStats stats) {
+
             // Build the move registry if we haven't done so yet.
 
             if (MOVE_REGISTRY.Count() <= 0)
@@ -108,10 +116,6 @@ namespace OurFoodChain.gotchi {
 
             if (sp is null)
                 return set;
-
-            // Get stats.
-
-            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
 
             // Add basic moves that all gotchis have access to.
 
@@ -154,10 +158,16 @@ namespace OurFoodChain.gotchi {
 
                         case "detritivore":
 
-                            set.Add("clean-up");
+                            if (stats.level <= 10) {
 
-                            if (stats.level >= 10)
+                                set.Add("clean-up");
+
+                            }
+                            else {
+
                                 set.Add("filter");
+
+                            }
 
                             break;
 
@@ -281,7 +291,7 @@ namespace OurFoodChain.gotchi {
             if (Regex.IsMatch(sp.description, "toxin|poison"))
                 set.Add("toxins");
 
-            if (Regex.IsMatch(sp.description, "glow|light|bioluminescent|bioluminance"))
+            if (Regex.IsMatch(sp.description, @"glow|\blight\b|bioluminescen(?:t|ce)"))
                 set.Add("bright glow");
 
             if (set.moves.Count() > 4) {
@@ -483,7 +493,7 @@ namespace OurFoodChain.gotchi {
                 role = "producer",
                 type = MoveType.Attack,
                 target = MoveTarget.Other,
-                multiplier = 1.1,
+                multiplier = 2.0,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
                     bool is_producer = false;
@@ -645,13 +655,12 @@ namespace OurFoodChain.gotchi {
             _addMoveToRegistry(new GotchiMove {
                 name = "Bright Glow",
                 description = "Glows brightly, reducing the opponent's accuracy.",
-                type = MoveType.Attack,
+                type = MoveType.StatBoost,
                 target = MoveTarget.Other,
                 callback = async (GotchiMoveCallbackArgs args) => {
 
                     double amount = 0.05;
 
-                    args.value = 0.0;
                     args.targetStats.accuracy *= 1.0 - amount;
                     args.messageFormat = string.Format("reducing its opponent's accuracy by {0}%", amount * 100.0);
 

@@ -1,0 +1,13 @@
+﻿{
+  "name": "class",
+  "aliases": [
+    "c",
+    "classes"
+  ],
+  "category": "info",
+  "description": "Lists all orders under the given class. If no class is provided, lists all class.",
+  "examples": [
+    "class <class>",
+    "class gastropoda"
+  ]
+}

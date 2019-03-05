@@ -8,6 +8,6 @@
   "description": "Lists all genera under the given family. If no family is provided, lists all families.",
   "examples": [
     "family <family>",
-    "family helidae"
+    "family helicidae"
   ]
 }

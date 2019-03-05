@@ -1,0 +1,13 @@
+﻿{
+  "name": "domain",
+  "aliases": [
+    "d",
+    "domains"
+  ],
+  "category": "info",
+  "description": "Lists all kingdoms under the given domain. If no domain is provided, lists all domains.",
+  "examples": [
+    "domain <domain>",
+    "domain eukaryota"
+  ]
+}

@@ -1,0 +1,13 @@
+﻿{
+  "name": "kingdom",
+  "aliases": [
+    "k",
+    "kingdoms"
+  ],
+  "category": "info",
+  "description": "Lists all phyla under the given kingdom. If no kingdom is provided, lists all kingdoms.",
+  "examples": [
+    "kingdom <kingdom>",
+    "kingdom animalia"
+  ]
+}

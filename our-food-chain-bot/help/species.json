@@ -5,10 +5,10 @@
     "sp"
   ],
   "category": "info",
-  "description": "Shows information about the given species.",
+  "description": "Shows information about the given species. If no genus is provided, lists all species.",
   "examples": [
     "info <genus> <species>",
-    "info H. quattuorus",
-    "info quattuorus"
+    "info cornu aspersum",
+    "info aspersum"
   ]
 }

@@ -1,0 +1,13 @@
+﻿{
+  "name": "order",
+  "aliases": [
+    "o",
+    "orders"
+  ],
+  "category": "info",
+  "description": "Lists all families under the given order. If no order is provided, lists all orders.",
+  "examples": [
+    "order <order>",
+    "order panpulmonata"
+  ]
+}

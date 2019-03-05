@@ -1,0 +1,13 @@
+﻿{
+  "name": "phylum",
+  "aliases": [
+    "p",
+    "phlya"
+  ],
+  "category": "info",
+  "description": "Lists all classes under the given phylum. If no phylum is provided, lists all phyla.",
+  "examples": [
+    "phylum <phylum>",
+    "phylum mollusca"
+  ]
+}

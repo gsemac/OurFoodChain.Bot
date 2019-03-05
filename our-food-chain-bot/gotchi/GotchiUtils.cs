@@ -12,7 +12,141 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
-    class GotchiUtils {
+    public class GotchiTradeRequest {
+
+        public Gotchi requesterGotchi;
+        public Gotchi partnerGotchi;
+        public long timestamp = 0;
+
+        public enum GotchiTradeRequestResult {
+            Success,
+            Invalid,
+            RequestPending
+        }
+
+        public bool IsExpired() {
+
+            long minutes_until_expired = 5;
+
+            return ((DateTimeOffset.UtcNow.ToUnixTimeSeconds() - timestamp) / 60) > minutes_until_expired;
+
+        }
+        public async Task<bool> IsValid(ICommandContext context) {
+
+            // The request is invalid if:
+            // - Either user involved in the trade has gotten a new gotchi since the trade was initiated
+            // - Either gotchi has died since the trade was initiated
+            // - The request has expired
+
+            if (IsExpired() || requesterGotchi is null || partnerGotchi is null)
+                return false;
+
+            IUser user1 = await context.Guild.GetUserAsync(requesterGotchi.owner_id);
+            Gotchi gotchi1 = user1 is null ? null : await GotchiUtils.GetGotchiAsync(user1);
+
+            if (gotchi1 is null || gotchi1.IsDead() || gotchi1.id != requesterGotchi.id)
+                return false;
+
+            IUser user2 = await context.Guild.GetUserAsync(partnerGotchi.owner_id);
+            Gotchi gotchi2 = user2 is null ? null : await GotchiUtils.GetGotchiAsync(user2);
+
+            if (gotchi2 is null || gotchi2.IsDead() || gotchi2.id != partnerGotchi.id)
+                return false;
+
+            return true;
+
+        }
+        public async Task ExecuteRequest(ICommandContext context) {
+
+            // Get both users and their gotchis.
+
+            IUser user1 = await context.Guild.GetUserAsync(requesterGotchi.owner_id);
+            Gotchi gotchi1 = await GotchiUtils.GetGotchiAsync(user1);
+
+            IUser user2 = await context.Guild.GetUserAsync(partnerGotchi.owner_id);
+            Gotchi gotchi2 = await GotchiUtils.GetGotchiAsync(user2);
+
+            // Swap the owners of the gotchis.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET owner_id = $owner_id WHERE id = $id;")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", user1.Id);
+                cmd.Parameters.AddWithValue("$id", gotchi2.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET owner_id = $owner_id WHERE id = $id;")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", user2.Id);
+                cmd.Parameters.AddWithValue("$id", gotchi1.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            // Remove all existing trade requests involving either user.
+            TRADE_REQUESTS.RemoveAll(x => x.requesterGotchi.owner_id == user1.Id || x.partnerGotchi.owner_id == user2.Id);
+
+        }
+
+        public static async Task<GotchiTradeRequestResult> MakeTradeRequest(ICommandContext context, Gotchi requesterGotchi, Gotchi partnerGotchi) {
+
+            // If either gotchi passed in is null, the request is invalid.
+
+            if (requesterGotchi is null || partnerGotchi is null)
+                return GotchiTradeRequestResult.Invalid;
+
+            // If the user has made previous trade requests, remove them.
+            TRADE_REQUESTS.RemoveAll(x => x.requesterGotchi.owner_id == requesterGotchi.owner_id);
+
+            // If their partner already has an open trade request that hasn't been accepted, don't allow a new trade request to be made.
+            // This is so users cannot make a new trade request right before one is accepted and snipe the trade.
+
+            GotchiTradeRequest request = GetTradeRequest(partnerGotchi);
+
+            if (!(request is null)) {
+
+                if (request.IsExpired())
+                    TRADE_REQUESTS.RemoveAll(x => x.partnerGotchi.owner_id == partnerGotchi.owner_id);
+                else
+                    return GotchiTradeRequestResult.RequestPending;
+
+            }
+
+            request = new GotchiTradeRequest {
+                requesterGotchi = requesterGotchi,
+                partnerGotchi = partnerGotchi,
+                timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+
+            if (!await request.IsValid(context))
+                return GotchiTradeRequestResult.Invalid;
+
+            TRADE_REQUESTS.Add(request);
+
+            return GotchiTradeRequestResult.Success;
+
+        }
+        public static GotchiTradeRequest GetTradeRequest(Gotchi partnerGotchi) {
+
+            // Returns the trade request that this user is a partner in.
+            // If the partner has changed gotchis since the request was initiated, the request is invalid and thus not returned.
+
+            foreach (GotchiTradeRequest req in TRADE_REQUESTS)
+                if (req.partnerGotchi.owner_id == partnerGotchi.owner_id && req.partnerGotchi.id == partnerGotchi.id)
+                    return req;
+
+            return null;
+
+        }
+
+        private static List<GotchiTradeRequest> TRADE_REQUESTS = new List<GotchiTradeRequest>();
+
+    }
+
+    public class GotchiUtils {
 
         public class GotchiGifCreatorParams {
 
@@ -30,20 +164,7 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        /// <summary>
-        /// Creates necessarily tables for supporting gotchi-related commands.
-        /// </summary>
-        /// <returns></returns>
-        static public async Task InitializeDatabaseAsync() {
-
-            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Gotchi(id INTEGER PRIMARY KEY AUTOINCREMENT, species_id INTEGER, name TEXT, owner_id INTEGER, fed_ts INTEGER, born_ts INTEGER, died_ts INTEGER, evolved_ts INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id));"))
-                await Database.ExecuteNonQuery(cmd);
-
-        }
-
         static public async Task CreateGotchiAsync(IUser user, Species species) {
-
-            await InitializeDatabaseAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Gotchi(species_id, name, owner_id, fed_ts, born_ts, died_ts, evolved_ts) VALUES($species_id, $name, $owner_id, $fed_ts, $born_ts, $died_ts, $evolved_ts);")) {
 
@@ -63,8 +184,6 @@ namespace OurFoodChain.gotchi {
 
         }
         static public async Task<Gotchi> GetGotchiAsync(IUser user) {
-
-            await InitializeDatabaseAsync();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id=$owner_id;")) {
 

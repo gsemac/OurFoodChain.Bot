@@ -262,6 +262,7 @@
     <None Include="help\gotchi\moves.json" />
     <None Include="help\gotchi\name.json" />
     <None Include="help\gotchi\stats.json" />
+    <None Include="help\gotchi\trade.json" />
     <None Include="help\gotchi\train.json" />
     <None Include="help\gotchi\use.json" />
     <None Include="help\idea.json" />

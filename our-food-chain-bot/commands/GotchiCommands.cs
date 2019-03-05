@@ -13,8 +13,6 @@ namespace OurFoodChain.gotchi {
     public class Commands :
      ModuleBase {
 
-        static Random _rng = new Random();
-
         [Command]
         public async Task Gotchi() {
 
@@ -427,81 +425,116 @@ namespace OurFoodChain.gotchi {
         [Command("accept")]
         public async Task Accept() {
 
-            // Get the battle state that the user is involved with.
+            // This command is used to respond to battle or trade requests.
+            // Battle requests will take priority over trade requests to help prevent users from tricking others into trading their gotchis.
 
-            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            // Get the battle state that the user is involved with (if applicable).
 
-            // If the state is null, the user has not been challenged to a battle.
-            // Make sure that the user accepting the battle is not the one who initiated it.
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            bool battle_state_is_valid = !(battle_state is null ||
+                (await battle_state.GetOtherUserAsync(Context, Context.User.Id)) is null || // user who issued the challenge should still be in server
+                (await battle_state.GetUser2Async(Context)).Id != Context.User.Id); // users cannot respond to challenges directed to others
 
-            if (state is null ||
-                (await state.GetOtherUserAsync(Context, Context.User.Id)) is null ||
-                (await state.GetUser2Async(Context)).Id != Context.User.Id) {
+            if (battle_state_is_valid) {
 
-                await BotUtils.ReplyAsync_Info(Context, "You have not been challenged to a battle.");
+                // Accept the battle.
 
-                return;
+                if (!battle_state.accepted) {
+
+                    battle_state.accepted = true;
+
+                    await ReplyAsync(string.Format("{0}, **{1}** has accepted your challenge!",
+                       (await battle_state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
+                       Context.User.Username));
+
+                    await GotchiBattleState.ShowBattleStateAsync(Context, battle_state);
+
+                    return;
+
+                }
+
+            }
+            else {
+
+                // Get the trade that the user is involved with (if applicable).
+
+                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+                GotchiTradeRequest trade_request = GotchiTradeRequest.GetTradeRequest(gotchi);
+                bool trade_request_is_valid = !(trade_request is null);
+
+                if (trade_request_is_valid) {
+
+                    if (!await trade_request.IsValid(Context))
+                        await BotUtils.ReplyAsync_Info(Context, "The trade request has expired, or is invalid.");
+
+                    else {
+
+                        // The trade is valid, so perform the trade.
+
+                        await trade_request.ExecuteRequest(Context);
+
+                        await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** successfully traded gotchis with **{1}**. Take good care of them!",
+                            Context.User.Username,
+                            (await Context.Guild.GetUserAsync(trade_request.requesterGotchi.owner_id)).Username));
+
+                        return;
+
+                    }
+
+                }
 
             }
 
-            // Check if the battle was already accepted.
-
-            if (state.accepted) {
-
-                await BotUtils.ReplyAsync_Info(Context, "Your battle is already in progress!");
-
-                return;
-
-            }
-
-            // Accept the battle.
-
-            state.accepted = true;
-
-            await ReplyAsync(string.Format("{0}, **{1}** has accepted your challenge!",
-               (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
-               Context.User.Username));
-
-            await GotchiBattleState.ShowBattleStateAsync(Context, state);
-
-            // await BotUtils.ReplyAsync_Info(Context, state.message);
+            // The user has no open requests.
+            await BotUtils.ReplyAsync_Info(Context, "You have no open requests to respond to.");
 
         }
 
         [Command("deny")]
         public async Task Deny() {
 
-            // Get the battle state that the user is involved with.
+            // This command is used to respond to battle or trade requests.
 
-            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            bool battle_state_is_valid = !(battle_state is null ||
+                (await battle_state.GetOtherUserAsync(Context, Context.User.Id)) is null || // user who issued the challenge should still be in server
+                (await battle_state.GetUser2Async(Context)).Id != Context.User.Id); // users cannot respond to challenges directed to others
 
-            // If the state is null, the user has not been challenged to a battle.
+            if (battle_state_is_valid) {
 
-            if (state is null || (await state.GetOtherUserAsync(Context, Context.User.Id)) is null) {
+                // Deny the battle.
 
-                await BotUtils.ReplyAsync_Info(Context, "You have not been challenged to a battle.");
+                GotchiBattleState.DeregisterBattle(Context.User.Id);
 
-                return;
-
-            }
-
-            // Check if the battle was already accepted.
-
-            if (state.accepted) {
-
-                await BotUtils.ReplyAsync_Info(Context, "Your battle is already in progress!");
+                await ReplyAsync(string.Format("{0}, **{1}** has denied your challenge.",
+                   (await battle_state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
+                   Context.User.Username));
 
                 return;
 
             }
+            else {
 
-            // Deny the battle.
+                // Get the trade that the user is involved with (if applicable).
 
-            GotchiBattleState.DeregisterBattle(Context.User.Id);
+                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+                GotchiTradeRequest trade_request = GotchiTradeRequest.GetTradeRequest(gotchi);
+                bool trade_request_is_valid = !(trade_request is null);
 
-            await ReplyAsync(string.Format("{0}, **{1}** has denied your challenge.",
-               (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
-               Context.User.Username));
+                if (trade_request_is_valid && await trade_request.IsValid(Context)) {
+
+                    await ReplyAsync(string.Format("{0}, **{1}** has denied your trade request.",
+                        (await Context.Guild.GetUserAsync(trade_request.requesterGotchi.owner_id)).Mention,
+                        Context.User.Username));
+
+                    return;
+
+                }
+
+            }
+
+            // The user has no open requests.
+            await BotUtils.ReplyAsync_Info(Context, "You have no open requests to respond to.");
 
         }
 
@@ -562,6 +595,53 @@ namespace OurFoodChain.gotchi {
         public async Task Help(string command) {
 
             await HelpCommands.ShowHelp(Context, "gotchi", command);
+
+        }
+
+        [Command("trade")]
+        public async Task Trade(IUser user) {
+
+            // Cannot trade with oneself.
+
+            if (Context.User.Id == user.Id) {
+
+                await BotUtils.ReplyAsync_Info(Context, "You cannot trade with yourself.");
+
+            }
+            else {
+
+                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+                Gotchi partnerGotchi = await GotchiUtils.GetGotchiAsync(user);
+
+                // Submit the trade request.
+
+                switch (await GotchiTradeRequest.MakeTradeRequest(Context, gotchi, partnerGotchi)) {
+
+                    case GotchiTradeRequest.GotchiTradeRequestResult.Success:
+
+                        await ReplyAsync(string.Format("{0}, **{1}** wants to trade gotchis with you! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their trade request.",
+                            user.Mention,
+                            Context.User.Username,
+                            OurFoodChainBot.GetInstance().GetConfig().prefix));
+
+                        break;
+
+                    case GotchiTradeRequest.GotchiTradeRequestResult.RequestPending:
+
+                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** currently has another pending trade request. Please try again later.",
+                            user.Username));
+
+                        break;
+
+                    case GotchiTradeRequest.GotchiTradeRequestResult.Invalid:
+
+                        await BotUtils.ReplyAsync_Info(Context, "Trade request is invalid.");
+
+                        break;
+
+                }
+
+            }
 
         }
 

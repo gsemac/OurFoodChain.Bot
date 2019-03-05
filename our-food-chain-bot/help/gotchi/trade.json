@@ -1,0 +1,9 @@
+﻿{
+  "name": "trade",
+  "aliases": [],
+  "category": "general",
+  "description": "Initiates a trade with the given user.",
+  "examples": [
+    "trade <user>"
+  ]
+}

@@ -276,10 +276,11 @@ namespace OurFoodChain.gotchi {
 
             string gotchi_pic = "res/gotchi/default.png";
 
-            if (!string.IsNullOrEmpty(sp.pics) && Regex.Match(sp.pics, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)$", RegexOptions.IgnoreCase).Success) {
+            if (!string.IsNullOrEmpty(sp.pics) && Regex.Match(sp.pics, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)$", RegexOptions.IgnoreCase).Success) {
 
                 string downloads_dir = "res/gotchi/downloads";
-                string disk_fpath = System.IO.Path.Combine("res/gotchi/downloads", StringUtils.CreateMD5(sp.pics) + System.IO.Path.GetExtension(sp.pics));
+                string ext = Regex.Match(sp.pics, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
+                string disk_fpath = System.IO.Path.Combine("res/gotchi/downloads", StringUtils.CreateMD5(sp.pics) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -294,8 +295,11 @@ namespace OurFoodChain.gotchi {
                         gotchi_pic = disk_fpath;
 
                 }
-                catch (Exception) {
+                catch (Exception ex) {
+
                     // We'll just keep using the default picture if this happens.
+                    await OurFoodChainBot.GetInstance().Log(LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.pics, ex.ToString()));
+
                 }
 
             }

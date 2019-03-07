@@ -298,7 +298,7 @@ namespace OurFoodChain.gotchi {
                 catch (Exception ex) {
 
                     // We'll just keep using the default picture if this happens.
-                    await OurFoodChainBot.GetInstance().Log(LogSeverity.Error, "gotchi", string.Format("Error occured when loading gotchi image: {0}\n{1}", sp.pics, ex.ToString()));
+                    await OurFoodChainBot.GetInstance().Log(LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.pics, ex.ToString()));
 
                 }
 

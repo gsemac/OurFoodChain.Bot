@@ -1593,6 +1593,9 @@ namespace OurFoodChain {
         [Command("search")]
         public async Task Search(params string[] terms) {
 
+            // Make sure the required number of search terms have been provided.
+            // This situation should never actually arise, however.
+
             if (terms.Count() <= 0) {
 
                 await BotUtils.ReplyAsync_Error(Context, "Too few search terms have been provided.");
@@ -1601,18 +1604,22 @@ namespace OurFoodChain {
 
             }
 
-            List<Species> list = new List<Species>();
+            // Build the SQL query using all of the search terms that the user has provided.
 
             List<string> term_query_builder = new List<string>();
 
             for (int i = 0; i < terms.Count(); ++i)
                 term_query_builder.Add(string.Format("(name LIKE {0} OR description LIKE {0} OR common_name LIKE {0})", string.Format("$term{0}", i)));
 
-            string query_str = string.Format("SELECT * FROM Species WHERE {0};", string.Join(" AND ", term_query_builder));
+            string sql_command_str = string.Format("SELECT * FROM Species WHERE {0};", string.Join(" AND ", term_query_builder));
 
-            using (SQLiteCommand cmd = new SQLiteCommand(query_str)) {
+            // Generate a list of all species that match the search terms.
 
-                // Add all terms to the query.
+            List<Species> species_list = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand(sql_command_str)) {
+
+                // Replace all parameters with their respective terms.
 
                 for (int i = 0; i < terms.Count(); ++i) {
 
@@ -1622,25 +1629,21 @@ namespace OurFoodChain {
 
                 }
 
+                // Execute the query, and add all matching species to the list.
+
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        list.Add(await Species.FromDataRow(row));
+                        species_list.Add(await Species.FromDataRow(row));
 
             }
 
-            SortedSet<string> names_list = new SortedSet<string>();
+            species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-            foreach (Species sp in list)
-                if (sp.isExtinct)
-                    names_list.Add(BotUtils.Strikeout(sp.GetShortName()));
-                else
-                    names_list.Add(sp.GetShortName());
+            // Build the embed.
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle("Search results");
-            embed.WithDescription(string.Join(Environment.NewLine, names_list));
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: string.Format("Search results ({0})", species_list.Count())));
 
-            await ReplyAsync("", false, embed.Build());
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
         }
 

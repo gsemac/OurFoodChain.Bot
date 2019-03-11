@@ -1641,9 +1641,19 @@ namespace OurFoodChain {
 
             // Build the embed.
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: string.Format("Search results ({0})", species_list.Count())));
+            if (species_list.Count() <= 0) {
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                await BotUtils.ReplyAsync_Info(Context, "No species matching this query.");
+
+            }
+            else {
+
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: string.Format("Search results ({0})", species_list.Count())));
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+
+            }
+
 
         }
 

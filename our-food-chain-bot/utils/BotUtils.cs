@@ -374,7 +374,20 @@ namespace OurFoodChain {
         }
         public static async Task<Species[]> GetSpeciesFromDb(string genus, string species) {
 
-            // Ignore any stray periods in the genus/species names.
+            // If the genus is empty but the species contains a period, assume everything to the left of the period is the genus.
+            // This allows us to process inputs like "C.aspersum" where the user forgot to put a space between the genus and species names.
+
+            if (string.IsNullOrEmpty(genus) && species.Contains('.')) {
+
+                int split_index = species.IndexOf('.');
+
+                genus = species.Substring(0, split_index);
+                species = species.Substring(split_index, species.Length - split_index);
+
+            }
+
+            // Strip all periods from the genus/species names.
+            // This allows us to process inputs like "c aspersum" and "c. asperum" in the same way.
 
             if (!string.IsNullOrEmpty(genus))
                 genus = genus.Trim('.');
@@ -382,31 +395,32 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(species))
                 species = species.Trim('.');
 
-            // If the genus is empty but the species contains a period, assume everything to the left of the period is the genus.
-
-            if (string.IsNullOrEmpty(genus) && species.Contains('.')) {
-
-                string[] parts = species.Split('.');
-
-                genus = parts[0];
-                species = parts[1];
-
-            }
+            // Convert both names to lowercase, since this is how they're stored in the database.
 
             genus = genus.ToLower();
             species = species.ToLower();
 
             Genus genus_info = null;
-
             List<Species> matches = new List<Species>();
 
-            bool genus_is_abbrev = false;
-            string selection_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND name=$species;";
+            bool genus_is_abbreviated = false;
+            string sql_command_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND name=$species;";
 
-            if (string.IsNullOrEmpty(genus) || Regex.Match(genus, @"[a-z]\.?$").Success) {
+            if (string.IsNullOrEmpty(genus)) {
 
-                selection_str = "SELECT * FROM Species WHERE name=$species OR common_name=$species;";
-                genus_is_abbrev = true;
+                // If the genus is empty, it's possible that the user either omitted the genus or just past in the species name.
+                // In this case, we'll allow for the species to be looked up via its common name as well.
+
+                sql_command_str = "SELECT * FROM Species WHERE name=$species OR common_name=$species;";
+
+            }
+            else if (Regex.IsMatch(genus, @"^[a-zA-Z]\.?$")) {
+
+                // If the genus is abbreviated (e.g. "Cornu" -> "C.") but not null, we'll look for matching species and determine the genus afterwards.
+                // Notice that this case does not allow for looking up the species by common name, which should not occur when the genus is included.
+
+                sql_command_str = "SELECT * FROM Species WHERE name=$species;";
+                genus_is_abbreviated = true;
 
             }
             else {
@@ -416,22 +430,26 @@ namespace OurFoodChain {
 
                 // If the genus doesn't exist, then the species doesn't exist.
 
-                return matches.ToArray();
+                if (genus_info is null)
+                    return matches.ToArray();
 
             }
 
             using (SQLiteConnection conn = await Database.GetConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand(selection_str)) {
+            using (SQLiteCommand cmd = new SQLiteCommand(sql_command_str)) {
 
                 cmd.Parameters.AddWithValue("$species", species);
 
-                if (!genus_is_abbrev)
+                if (!genus_is_abbreviated && !(genus_info is null))
                     cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
 
                 using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
                     foreach (DataRow row in rows.Rows) {
 
-                        if (!string.IsNullOrEmpty(genus) && genus_is_abbrev) {
+                        if (!string.IsNullOrEmpty(genus) && genus_is_abbreviated) {
+
+                            // If the user passed in an abbreviated genus, get the genus for this species and see if matches.
+                            // If so, this species will be added to the list of candidates.
 
                             genus_info = await GetGenusFromDb(row.Field<long>("genus_id"));
 
@@ -440,9 +458,7 @@ namespace OurFoodChain {
 
                         }
 
-                        Species cur_species = await Species.FromDataRow(row);
-
-                        matches.Add(cur_species);
+                        matches.Add(await Species.FromDataRow(row));
 
                     }
 

@@ -289,7 +289,7 @@ namespace OurFoodChain {
         }
     }
 
-    class Role {
+    public class Role {
 
         public long id;
         public string name;

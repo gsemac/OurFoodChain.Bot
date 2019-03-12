@@ -221,14 +221,14 @@ namespace OurFoodChain.gotchi {
             // Calculate stats for this gotchi.
             // If the user is currently in battle, show their battle stats instead.
 
-            GotchiStats stats;
+            LuaGotchiStats stats;
 
-            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
 
             if (!(battle_state is null))
-                stats = battle_state.GetStats(gotchi);
+                stats = battle_state.GetGotchiStats(gotchi);
             else
-                stats = await GotchiStats.CalculateStats(gotchi);
+                stats = await GotchiStatsUtils.CalculateStats(gotchi);
 
             // Create the embed.
 
@@ -236,7 +236,7 @@ namespace OurFoodChain.gotchi {
 
             stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age()));
             stats_page.WithThumbnailUrl(sp.pics);
-            stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceRequired()));
+            stats_page.WithFooter(string.Format("{0} experience points until next level", GotchiStatsUtils.ExperienceRequired(stats)));
 
             stats_page.AddField("❤ Hit points", (int)stats.hp, inline: true);
             stats_page.AddField("💥 Attack", (int)stats.atk, inline: true);
@@ -267,7 +267,7 @@ namespace OurFoodChain.gotchi {
             // Get moveset for this gotchi.
 
             GotchiMoveset set = await GotchiMoveset.GetMovesetAsync(gotchi);
-            GotchiStats stats = await GotchiStats.CalculateStats(gotchi);
+            LuaGotchiStats stats = await GotchiStatsUtils.CalculateStats(gotchi);
 
             // Create the embed.
 
@@ -275,11 +275,11 @@ namespace OurFoodChain.gotchi {
 
             set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age()));
             set_page.WithThumbnailUrl(sp.pics);
-            set_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceRequired()));
+            set_page.WithFooter(string.Format("{0} experience points until next level", GotchiStatsUtils.ExperienceRequired(stats)));
 
             int move_index = 1;
 
-            foreach (GotchiMove move in set.moves)
+            foreach (LuaGotchiMove move in set.moves)
                 set_page.AddField(string.Format("Move {0}: **{1}**", move_index++, StringUtils.ToTitleCase(move.name)), move.description);
 
             await ReplyAsync("", false, set_page.Build());
@@ -291,7 +291,7 @@ namespace OurFoodChain.gotchi {
 
             // Cannot challenge oneself.
 
-            if (!(user is null) && user.Id == Context.User.Id) {
+            if (false && !(user is null) && user.Id == Context.User.Id) {
 
                 await BotUtils.ReplyAsync_Error(Context, "You cannot challenge yourself.");
 
@@ -430,10 +430,10 @@ namespace OurFoodChain.gotchi {
 
             // Get the battle state that the user is involved with (if applicable).
 
-            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
             bool battle_state_is_valid = !(battle_state is null ||
-                (await battle_state.GetOtherUserAsync(Context, Context.User.Id)) is null || // user who issued the challenge should still be in server
-                (await battle_state.GetUser2Async(Context)).Id != Context.User.Id); // users cannot respond to challenges directed to others
+                (await battle_state.GetOtherPlayerAsync(Context, Context.User.Id)) is null || // user who issued the challenge should still be in server
+                (await battle_state.GetPlayer2UserAsync(Context)).Id != Context.User.Id); // users cannot respond to challenges directed to others
 
             if (battle_state_is_valid) {
 
@@ -444,7 +444,7 @@ namespace OurFoodChain.gotchi {
                     battle_state.accepted = true;
 
                     await ReplyAsync(string.Format("{0}, **{1}** has accepted your challenge!",
-                       (await battle_state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
+                       (await battle_state.GetOtherPlayerAsync(Context, Context.User.Id)).Mention,
                        Context.User.Username));
 
                     await GotchiBattleState.ShowBattleStateAsync(Context, battle_state);
@@ -495,10 +495,10 @@ namespace OurFoodChain.gotchi {
 
             // This command is used to respond to battle or trade requests.
 
-            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
             bool battle_state_is_valid = !(battle_state is null ||
-                (await battle_state.GetOtherUserAsync(Context, Context.User.Id)) is null || // user who issued the challenge should still be in server
-                (await battle_state.GetUser2Async(Context)).Id != Context.User.Id); // users cannot respond to challenges directed to others
+                (await battle_state.GetOtherPlayerAsync(Context, Context.User.Id)) is null || // user who issued the challenge should still be in server
+                (await battle_state.GetPlayer2UserAsync(Context)).Id != Context.User.Id); // users cannot respond to challenges directed to others
 
             if (battle_state_is_valid) {
 
@@ -507,7 +507,7 @@ namespace OurFoodChain.gotchi {
                 GotchiBattleState.DeregisterBattle(Context.User.Id);
 
                 await ReplyAsync(string.Format("{0}, **{1}** has denied your challenge.",
-                   (await battle_state.GetOtherUserAsync(Context, Context.User.Id)).Mention,
+                   (await battle_state.GetOtherPlayerAsync(Context, Context.User.Id)).Mention,
                    Context.User.Username));
 
                 return;
@@ -543,11 +543,11 @@ namespace OurFoodChain.gotchi {
 
             // Get the battle state that the user is involved with.
 
-            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(Context.User.Id);
+            GotchiBattleState state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
 
             // If the state is null, the user has not been challenged to a battle.
 
-            if (state is null || (!state.IsBattlingCpu() && (await state.GetOtherUserAsync(Context, Context.User.Id)) is null)) {
+            if (state is null || (!state.IsBattlingCpu() && (await state.GetOtherPlayerAsync(Context, Context.User.Id)) is null)) {
 
                 await BotUtils.ReplyAsync_Error(Context, "You have not been challenged to a battle.");
 
@@ -555,33 +555,20 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            // Make sure that it is this user's turn.
+            // If the other user hasn't accepted the battle yet, don't allow the user to select a move.
 
-            if (!state.IsTurn(Context.User.Id)) {
+            if (!state.accepted) {
 
-                await BotUtils.ReplyAsync_Error(Context, string.Format("It is currently {0}'s turn.",
-                    state.IsBattlingCpu() ? await state.GetUsername2Async(Context) : (await state.GetOtherUserAsync(Context, Context.User.Id)).Mention));
-
-                return;
-
-            }
-
-            // Get the move that was used.
-
-            GotchiMoveset moves = await GotchiMoveset.GetMovesetAsync(state.GetGotchi(Context.User.Id));
-            GotchiMove move = moves.GetMove(moveIdentifier);
-
-            if (move is null) {
-
-                await BotUtils.ReplyAsync_Error(Context, "The move you have selected is invalid. Please select a valid move.");
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not accepted your challenge yet.",
+                    await state.GetPlayer2UsernameAsync(Context)));
 
                 return;
 
             }
 
-            // Use the move/update the battle state.
-
-            await state.UseMoveAsync(Context, move);
+            // Attempt to select the user's chosen move.
+            // If anything goes wrong, the battle state will alert the user.
+            await state.SelectMoveAsync(Context, moveIdentifier);
 
         }
 
@@ -684,11 +671,11 @@ namespace OurFoodChain.gotchi {
         }
         private static async Task<bool> _replyVerifyChallengerAvailableForBattleAsync(ICommandContext context) {
 
-            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(context.User.Id);
+            GotchiBattleState state = GotchiBattleState.GetBattleStateByUserId(context.User.Id);
 
             if (!(state is null) && state.accepted) {
 
-                ulong other_user_id = state.gotchi1.owner_id == context.User.Id ? state.gotchi2.owner_id : state.gotchi1.owner_id;
+                ulong other_user_id = state.player1.gotchi.owner_id == context.User.Id ? state.player2.gotchi.owner_id : state.player1.gotchi.owner_id;
                 IUser other_user = await context.Guild.GetUserAsync(other_user_id);
 
                 // We won't lock them into the battle if the other user has left the server.
@@ -696,7 +683,7 @@ namespace OurFoodChain.gotchi {
                 if (!(other_user is null) || state.IsBattlingCpu()) {
 
                     await BotUtils.ReplyAsync_Info(context, string.Format("You are already battling **{0}**. You must finish the battle (or forfeit) before beginning a new one.",
-                        state.IsBattlingCpu() ? await state.GetUsername2Async(context) : other_user.Mention));
+                        state.IsBattlingCpu() ? await state.GetPlayer2UsernameAsync(context) : other_user.Mention));
 
                     return false;
 
@@ -709,11 +696,11 @@ namespace OurFoodChain.gotchi {
         }
         private static async Task<bool> _replyVerifyOpponentAvailableForBattleAsync(ICommandContext context, IUser user) {
 
-            GotchiBattleState state = GotchiBattleState.GetBattleStateByUser(user.Id);
+            GotchiBattleState state = GotchiBattleState.GetBattleStateByUserId(user.Id);
 
             if (!(state is null) && state.accepted) {
 
-                ulong other_user_id = state.gotchi1.owner_id == context.User.Id ? state.gotchi2.owner_id : state.gotchi1.owner_id;
+                ulong other_user_id = state.player1.gotchi.owner_id == context.User.Id ? state.player2.gotchi.owner_id : state.player1.gotchi.owner_id;
                 IUser other_user = await context.Guild.GetUserAsync(other_user_id);
 
                 // We won't lock them into the battle if the other user has left the server.

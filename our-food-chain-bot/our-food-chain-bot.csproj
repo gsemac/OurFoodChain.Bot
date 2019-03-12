@@ -75,6 +75,9 @@
     <Reference Include="Microsoft.Win32.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Win32.Primitives.4.3.0\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
     </Reference>
+    <Reference Include="MoonSharp.Interpreter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=921e73ce94aa17f8, processorArchitecture=MSIL">
+      <HintPath>..\packages\MoonSharp.2.0.0.0\lib\net40-client\MoonSharp.Interpreter.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -201,8 +204,11 @@
     <Compile Include="gotchi\Gotchi.cs" />
     <Compile Include="commands\GotchiCommands.cs" />
     <Compile Include="gotchi\GotchiGifCreator.cs" />
+    <Compile Include="gotchi\GotchiLua.cs" />
+    <Compile Include="gotchi\GotchiMoveRegistry.cs" />
     <Compile Include="gotchi\GotchiMoveset.cs" />
-    <Compile Include="gotchi\GotchiStats.cs" />
+    <Compile Include="gotchi\GotchiStatsUtils.cs" />
+    <Compile Include="gotchi\GotchiBattleStatus.cs" />
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Period.cs" />
     <Compile Include="Picture.cs" />
@@ -232,6 +238,19 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="res\gotchi\battle\moves\all-out_attack.lua" />
+    <None Include="res\gotchi\battle\moves\bite.lua" />
+    <None Include="res\gotchi\battle\moves\break_defense.lua" />
+    <None Include="res\gotchi\battle\moves\break_down.lua" />
+    <None Include="res\gotchi\battle\moves\bright_glow.lua" />
+    <None Include="res\gotchi\battle\moves\cast_shade.lua" />
+    <None Include="res\gotchi\battle\moves\clean-up.lua" />
+    <None Include="res\gotchi\battle\moves\degrade.lua" />
+    <None Include="res\gotchi\battle\moves\digest.lua" />
+    <None Include="res\gotchi\battle\moves\enzymes.lua" />
+    <None Include="res\gotchi\battle\moves\filter.lua" />
+    <None Include="res\gotchi\battle\moves\grow.lua" />
+    <None Include="res\gotchi\battle\moves\hit.lua" />
     <None Include="help\+fav.json" />
     <None Include="help\+pic.json" />
     <None Include="help\+relationship.json" />
@@ -317,11 +336,50 @@
     <None Include="help\trophylist.json" />
     <None Include="help\zone.json" />
     <None Include="packages.config" />
+    <None Include="res\gotchi\battle\moves\infest.lua" />
+    <None Include="res\gotchi\battle\moves\leaf-bite.lua" />
+    <None Include="res\gotchi\battle\moves\leaf-blade.lua" />
+    <None Include="res\gotchi\battle\moves\leech.lua" />
+    <None Include="res\gotchi\battle\moves\nettle.lua" />
+    <None Include="res\gotchi\battle\moves\overgrowth.lua" />
+    <None Include="res\gotchi\battle\moves\photo-boost.lua" />
+    <None Include="res\gotchi\battle\moves\photosynthesize.lua" />
+    <None Include="res\gotchi\battle\moves\scavenge.lua" />
+    <None Include="res\gotchi\battle\moves\skill_steal.lua" />
+    <None Include="res\gotchi\battle\moves\spike_attack.lua" />
+    <None Include="res\gotchi\battle\moves\sting.lua" />
+    <None Include="res\gotchi\battle\moves\sun_power.lua" />
+    <None Include="res\gotchi\battle\moves\tail_slap.lua" />
+    <None Include="res\gotchi\battle\moves\take_root.lua" />
+    <None Include="res\gotchi\battle\moves\tangle.lua" />
+    <None Include="res\gotchi\battle\moves\thorny_overgrowth.lua" />
+    <None Include="res\gotchi\battle\moves\topple.lua" />
+    <None Include="res\gotchi\battle\moves\toxins.lua" />
+    <None Include="res\gotchi\battle\moves\uproot.lua" />
+    <None Include="res\gotchi\battle\moves\venom_bite.lua" />
+    <None Include="res\gotchi\battle\moves\vine_wrap.lua" />
+    <None Include="res\gotchi\battle\moves\wild_attack.lua" />
+    <None Include="res\gotchi\battle\moves\withdraw.lua" />
+    <None Include="res\gotchi\battle\moves\wrap.lua" />
+    <None Include="res\gotchi\battle\moves\zap.lua" />
   </ItemGroup>
   <ItemGroup>
     <None Include="help\+prey.json" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\gotchi\battle\moves\seed_drop.lua" />
+    <Content Include="res\gotchi\bubble_dead.png" />
+    <Content Include="res\gotchi\bubble_eating.png" />
+    <Content Include="res\gotchi\bubble_energetic.png" />
+    <Content Include="res\gotchi\bubble_evolved.png" />
+    <Content Include="res\gotchi\bubble_happy.png" />
+    <Content Include="res\gotchi\bubble_hungry.png" />
+    <Content Include="res\gotchi\bubble_sleeping.png" />
+    <Content Include="res\gotchi\bubble_tired.png" />
+    <Content Include="res\gotchi\default.png" />
+    <Content Include="res\gotchi\flakes.png" />
+    <Content Include="res\gotchi\home_aquatic.png" />
+    <Content Include="res\gotchi\home_battle.png" />
     <Content Include="res\x.png" />
   </ItemGroup>
   <ItemGroup />

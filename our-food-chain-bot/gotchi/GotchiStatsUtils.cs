@@ -9,72 +9,32 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
-    public enum GotchiStatusProblem {
-        None,
+    public class GotchiStatsUtils {
 
-        Poisoned,
-        VineWrapped,
-        ThornSurrounded,
+        public static double ExperienceRequired(LuaGotchiStats stats) {
 
-        HealBlock,
-        Rooted,
-        Shaded
-    }
-
-    public class GotchiStats {
-
-        public double hp = 2.0;
-        public double atk = 0.8;
-        public double def = 0.1;
-        public double spd = 0.5;
-
-        public double maxHp = 2.0;
-
-        public long level = 1;
-        public double exp = 0;
-
-        public double boostFactor = 1.0;
-
-        public GotchiStatusProblem status = GotchiStatusProblem.None;
-        public double accuracy = 1.0;
-
-        public void BoostByFactor(double factor) {
-
-            hp *= factor;
-            atk *= factor;
-            def *= factor;
-            spd *= factor;
-
-            maxHp *= factor;
-
-            boostFactor *= factor;
+            return ExperienceToNextLevel(stats) - stats.exp;
 
         }
-
-        public double ExperienceRequired() {
-
-            return ExperienceToNextLevel() - exp;
-
-        }
-        public double ExperienceToNextLevel() {
+        public static double ExperienceToNextLevel(LuaGotchiStats stats) {
 
             // level * 10 * 1.5 EXP required per level
             // This means, to get to Level 10, a minimum of 15 battles are required.
 
-            return (level * 10 * 1.5);
+            return (stats.level * 10 * 1.5);
 
         }
-        public long LeveUp(double experience) {
+        public static long LeveUp(LuaGotchiStats stats, double experience) {
 
-            exp += experience;
+            stats.exp += experience;
 
             long levels = 0;
 
-            while (exp >= ExperienceToNextLevel()) {
+            while (stats.exp >= ExperienceToNextLevel(stats)) {
 
-                exp -= ExperienceToNextLevel();
+                stats.exp -= ExperienceToNextLevel(stats);
 
-                ++level;
+                ++stats.level;
                 ++levels;
 
             }
@@ -83,9 +43,9 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        public static async Task<GotchiStats> CalculateStats(Gotchi gotchi) {
+        public static async Task<LuaGotchiStats> CalculateStats(Gotchi gotchi) {
 
-            GotchiStats stats = new GotchiStats();
+            LuaGotchiStats stats = new LuaGotchiStats();
 
             // Get level and EXP from the database.
 
@@ -107,7 +67,7 @@ namespace OurFoodChain.gotchi {
             return await CalculateStats(gotchi, stats);
 
         }
-        public static async Task<GotchiStats> CalculateStats(Gotchi gotchi, GotchiStats stats) {
+        public static async Task<LuaGotchiStats> CalculateStats(Gotchi gotchi, LuaGotchiStats stats) {
 
             Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
 
@@ -156,7 +116,7 @@ namespace OurFoodChain.gotchi {
 
                     // Good health and recovery, but slow.
                     case "producer":
-                        stats.hp *= 3.0;
+                        stats.hp *= 2.5;
                         stats.spd *= 0.1;
                         stats.atk *= 0.3;
                         break;
@@ -218,7 +178,14 @@ namespace OurFoodChain.gotchi {
             stats.hp = Math.Max(1.0, stats.hp);
             stats.atk = Math.Max(1.0, stats.atk);
 
-            stats.maxHp = stats.hp;
+            stats.max_hp = stats.hp;
+
+            // Copy stats over to base stats, so base stats can be referenced later even if they are changed during battle.
+            stats.base_hp = stats.hp;
+            stats.base_max_hp = stats.max_hp;
+            stats.base_atk = stats.atk;
+            stats.base_def = stats.def;
+            stats.base_spd = stats.spd;
 
             return stats;
 

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using MoonSharp.Interpreter;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
@@ -17,221 +19,223 @@ namespace OurFoodChain.gotchi {
         public const ulong WILD_GOTCHI_USER_ID = 0;
         public const long WILD_GOTCHI_ID = -1;
 
-        private static ConcurrentDictionary<ulong, GotchiBattleState> BATTLE_STATES = new ConcurrentDictionary<ulong, GotchiBattleState>();
+        private static ConcurrentDictionary<ulong, GotchiBattleState> _battle_states = new ConcurrentDictionary<ulong, GotchiBattleState>();
 
-        public Gotchi gotchi1;
-        public Gotchi gotchi2;
-        public GotchiStats stats1;
-        public GotchiStats stats2;
+        public class PlayerState {
+            public Gotchi gotchi;
+            public LuaGotchiStats stats;
+            public GotchiMoveset moves;
+            public LuaGotchiMove selectedMove = null;
+        }
+
+        public PlayerState player1;
+        public PlayerState player2;
 
         public bool accepted = false;
-        public string message = "";
-        public int turnCount = 1;
-        public int currentTurn = 1;
+        public int turnCount = 0;
+        public string battleText = "";
 
-        public async Task<IUser> GetUser1Async(ICommandContext context) {
+        public async Task<IUser> GetPlayer1UserAsync(ICommandContext context) {
 
-            return await context.Guild.GetUserAsync(gotchi1.owner_id);
-
-        }
-        public async Task<IUser> GetUser2Async(ICommandContext context) {
-
-            return await context.Guild.GetUserAsync(gotchi2.owner_id);
+            return await context.Guild.GetUserAsync(player1.gotchi.owner_id);
 
         }
-        public async Task<string> GetUsername1Async(ICommandContext context) {
+        public async Task<IUser> GetPlayer2UserAsync(ICommandContext context) {
 
-            if (gotchi1.owner_id == WILD_GOTCHI_USER_ID)
-                return gotchi1.name;
-
-            return (await GetUser1Async(context)).Username;
+            return await context.Guild.GetUserAsync(player2.gotchi.owner_id);
 
         }
-        public async Task<string> GetUsername2Async(ICommandContext context) {
+        public async Task<string> GetPlayer1UsernameAsync(ICommandContext context) {
 
-            if (gotchi2.owner_id == WILD_GOTCHI_USER_ID)
-                return gotchi2.name;
+            if (player1.gotchi.owner_id == WILD_GOTCHI_USER_ID)
+                return player1.gotchi.name;
 
-            return (await GetUser2Async(context)).Username;
+            return (await GetPlayer1UserAsync(context)).Username;
 
         }
-        public async Task<IUser> GetOtherUserAsync(ICommandContext context, ulong userId) {
+        public async Task<string> GetPlayer2UsernameAsync(ICommandContext context) {
 
-            ulong other_user_id = GetOtherUserId(userId);
+            if (player2.gotchi.owner_id == WILD_GOTCHI_USER_ID)
+                return player2.gotchi.name;
+
+            return (await GetPlayer2UserAsync(context)).Username;
+
+        }
+        public async Task<IUser> GetOtherPlayerAsync(ICommandContext context, ulong userId) {
+
+            ulong other_user_id = GetOtherPlayerUserId(userId);
             IUser other_user = await context.Guild.GetUserAsync(other_user_id);
 
             return other_user;
 
         }
-        public ulong GetOtherUserId(ulong userId) {
+        public ulong GetOtherPlayerUserId(ulong userId) {
 
-            ulong other_user_id = gotchi1.owner_id == userId ? gotchi2.owner_id : gotchi1.owner_id;
+            ulong other_user_id = player1.gotchi.owner_id == userId ? player2.gotchi.owner_id : player1.gotchi.owner_id;
 
             return other_user_id;
 
         }
-        public bool IsTurn(ulong userId) {
 
-            return (currentTurn == 1 && userId == gotchi1.owner_id) || (currentTurn == 2 && userId == gotchi2.owner_id);
+        public Gotchi GetPlayersGotchi(ulong userId) {
 
-        }
-        public Gotchi GetGotchi(ulong userId) {
-
-            return userId == gotchi1.owner_id ? gotchi1 : gotchi2;
+            return userId == player1.gotchi.owner_id ? player1.gotchi : player2.gotchi;
 
         }
-        public GotchiStats GetStats(Gotchi gotchi) {
+        public LuaGotchiStats GetGotchiStats(Gotchi gotchi) {
 
-            if (gotchi.id == gotchi1.id)
-                return stats1;
-            else if (gotchi.id == gotchi2.id)
-                return stats2;
+            if (gotchi.id == player1.gotchi.id)
+                return player1.stats;
+            else if (gotchi.id == player2.gotchi.id)
+                return player2.stats;
 
             return null;
 
         }
-        public async Task UseMoveAsync(ICommandContext context, GotchiMove move) {
 
-            Gotchi user = currentTurn == 1 ? gotchi1 : gotchi2;
-            Gotchi other = currentTurn == 1 ? gotchi2 : gotchi1;
+        public async Task SelectMoveAsync(ICommandContext context, string moveIdentifier) {
 
-            ++turnCount;
-            currentTurn = currentTurn == 1 ? 2 : 1;
+            PlayerState player = context.User.Id == player1.gotchi.owner_id ? player1 : player2;
+            PlayerState other_player = context.User.Id == player1.gotchi.owner_id ? player2 : player1;
 
-            if (move.target == MoveTarget.Self)
-                await _useMoveOnGotchiAsync(context, move, user, user);
-            else
-                await _useMoveOnGotchiAsync(context, move, user, other);
+            if (!(player.selectedMove is null)) {
 
-            StringBuilder reply = new StringBuilder();
+                // If the player has already selected a move, don't allow them to change it.
 
-            reply.AppendLine(message);
-            reply.AppendLine();
-
-            // Check if either gotchi has fainted. If so, the battle is over, and EXP will be awarded.
-
-            if (stats1.hp <= 0.0 || stats2.hp <= 0.0) {
-
-                Gotchi winner = stats1.hp <= 0.0 ? gotchi2 : gotchi1;
-                Gotchi loser = stats1.hp <= 0.0 ? gotchi1 : gotchi2;
-
-                // Calculate the amount of EXP awarded to the winner.
-                // The loser will get 50% of the winner's EXP.
-
-                double exp = _getExpEarned(winner, loser, won: true);
-
-                double exp1 = stats2.hp <= 0.0 ? exp : exp * .5;
-                double exp2 = stats1.hp <= 0.0 ? exp : exp * .5;
-
-                if (!IsCpuGotchi(winner))
-                    reply.AppendLine(string.Format("**{0}** won the battle! Earned **{1} EXP**.", StringUtils.ToTitleCase(winner.name), winner.id == gotchi1.id ? exp1 : exp2));
-                else
-                    reply.AppendLine(string.Format("**{0}** lost the battle...", StringUtils.ToTitleCase(loser.name)));
-
-                if (!IsCpuGotchi(loser))
-                    reply.AppendLine(string.Format("**{0}** earned **{1} EXP**.", StringUtils.ToTitleCase(loser.name), loser.id == gotchi1.id ? exp1 : exp2));
-
-                reply.AppendLine();
-
-                long levels1 = stats1.LeveUp(exp1);
-                long levels2 = stats2.LeveUp(exp2);
-
-                if (levels1 > 0)
-                    reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi1.name), stats1.level));
-
-                if (!IsCpuGotchi(gotchi2) && levels2 > 0)
-                    reply.AppendLine(string.Format("**{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(gotchi2.name), stats2.level));
-
-                // If the gotchi has leveled up to multiple 10, evolve randomly.
-                // If multiple sets of 10 are passed, it will still only evolve once.
-
-                reply.AppendLine();
-
-                if (((stats1.level - levels1) / 10) < (stats1.level / 10))
-                    if (await GotchiUtils.EvolveGotchiAsync(gotchi1)) {
-
-                        Species sp = await BotUtils.GetSpeciesFromDb(gotchi1.species_id);
-
-                        reply.AppendLine(string.Format("Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(gotchi1.name), sp.GetShortName()));
-
-                    }
-
-                if (!IsCpuGotchi(gotchi2) && (((stats2.level - levels2) / 10) < (stats2.level / 10)))
-                    if (await GotchiUtils.EvolveGotchiAsync(gotchi2)) {
-
-                        Species sp = await BotUtils.GetSpeciesFromDb(gotchi2.species_id);
-
-                        reply.AppendLine(string.Format("Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(gotchi2.name), sp.GetShortName()));
-
-                    }
-
-                // Update level/exp in the database.
-
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
-
-                    cmd.Parameters.AddWithValue("$id", gotchi1.id);
-                    cmd.Parameters.AddWithValue("$level", stats1.level);
-                    cmd.Parameters.AddWithValue("$exp", stats1.exp);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-                if (!IsCpuGotchi(gotchi2)) {
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
-
-                        cmd.Parameters.AddWithValue("$id", gotchi2.id);
-                        cmd.Parameters.AddWithValue("$level", stats2.level);
-                        cmd.Parameters.AddWithValue("$exp", stats2.exp);
-
-                        await Database.ExecuteNonQuery(cmd);
-
-                    }
-
-                }
-
-                // Deregister the battle state.
-
-                DeregisterBattle(context.User.Id);
+                await BotUtils.ReplyAsync_Info(context, string.Format("You have already selected a move for this turn. Awaiting **{0}**'s move.",
+                    (await GetOtherPlayerAsync(context, context.User.Id)).Username));
 
             }
             else {
 
-                string user_mention = "";
+                LuaGotchiMove move = player.moves.GetMove(moveIdentifier);
 
-                if (currentTurn == 1)
-                    user_mention = (await GetUser1Async(context)).Mention;
-                else if (currentTurn == 2 && !(gotchi2.owner_id == WILD_GOTCHI_USER_ID))
-                    user_mention = (await GetUser2Async(context)).Mention;
+                if (move is null) {
 
-                if (!string.IsNullOrEmpty(user_mention)) {
+                    // Warn the player if they select an invalid move.
+                    await BotUtils.ReplyAsync_Error(context, "The move you have selected is invalid. Please select a valid move.");
 
-                    reply.AppendLine(string.Format("It's {1}'s turn! Pick a move with `{0}gotchi move`. \nSee your gotchi's moveset with `{0}gotchi moveset`.",
-                        OurFoodChainBot.GetInstance().GetConfig().prefix, user_mention));
+                }
+                else {
+
+                    // Lock in the selected move.
+                    player.selectedMove = move;
+
+                    if (!IsBattlingCpu() && (other_player.selectedMove is null)) {
+
+                        // If the other user hasn't locked in a move yet, await their move.
+
+                        await BotUtils.ReplyAsync_Info(context, string.Format("Move locked in! Awaiting **{0}**'s move.",
+                            (await GetOtherPlayerAsync(context, context.User.Id)).Username));
+
+                    }
+                    else {
+
+                        // If the player is battling a CPU, select a move for them now.
+
+                        if (IsBattlingCpu())
+                            _pickCpuMove(player2);
+
+                        // Update the battle state.
+                        await ExecuteTurnAsync(context);
+
+                    }
 
                 }
 
             }
 
-            message = reply.ToString();
+        }
+        public async Task ExecuteTurnAsync(ICommandContext context) {
 
-            // If battling the CPU, have them retaliate before showing the battle state.
-            if (IsBattlingCpu() && user.owner_id != WILD_GOTCHI_USER_ID && !IsBattleOver())
-                await UseMoveAsync(context, await _pickCpuMove(gotchi2));
-            else
-                await ShowBattleStateAsync(context, this);
+            battleText = string.Empty;
+
+            if (turnCount == 0)
+                turnCount = 1;
+
+            // The faster gotchi goes first.
+            // If both gotchis have the same speed, the first attacker is randomly selected.
+
+            PlayerState first, second;
+
+            if (player1.stats.spd > player2.stats.spd) {
+                first = player1;
+                second = player2;
+            }
+            else if (player2.stats.spd > player1.stats.spd) {
+                first = player2;
+                second = player1;
+            }
+            else {
+
+                if (BotUtils.RandomInteger(0, 2) == 0) {
+                    first = player1;
+                    second = player2;
+                }
+                else {
+                    first = player2;
+                    second = player1;
+                }
+
+            }
+
+            // Execute the first player's move.
+            await _useMoveOnAsync(context, first, second);
+
+            if (IsBattleOver())
+                await _endBattle(context);
+            else {
+
+                // Execute the second player's move.
+                await _useMoveOnAsync(context, second, first);
+
+                if (IsBattleOver())
+                    await _endBattle(context);
+
+            }
+
+            // Apply status problems for both users.
+
+            if (!IsBattleOver()) {
+
+                _applyStatusProblems(context, first);
+
+                if (IsBattleOver())
+                    await _endBattle(context);
+
+                else {
+
+                    _applyStatusProblems(context, second);
+
+                    if (IsBattleOver())
+                        await _endBattle(context);
+
+                }
+
+            }
+
+            // Show the battle state.
+            await ShowBattleStateAsync(context, this);
+
+            // Reset the battle text and each user's selected moves.
+
+            battleText = string.Empty;
+            player1.selectedMove = null;
+            player2.selectedMove = null;
+
+            ++turnCount;
 
         }
+
         public bool IsBattleOver() {
 
-            return stats1.hp <= 0.0 || stats2.hp <= 0.0;
+            return player1.stats.hp <= 0.0 || player2.stats.hp <= 0.0;
 
         }
         public bool IsBattlingCpu() {
 
-            if (!(gotchi2 is null))
-                return gotchi2.owner_id == WILD_GOTCHI_USER_ID;
+            if (!(player2 is null))
+                return player2.gotchi.owner_id == WILD_GOTCHI_USER_ID;
 
             return false;
 
@@ -241,110 +245,94 @@ namespace OurFoodChain.gotchi {
             return gotchi.owner_id == WILD_GOTCHI_USER_ID;
 
         }
+        public static bool IsUserCurrentlyBattling(ulong userId) {
 
-        public static async Task RegisterBattleAsync(ICommandContext context, Gotchi gotchi1, Gotchi gotchi2) {
-
-            GotchiBattleState state = new GotchiBattleState {
-                gotchi1 = gotchi1,
-                stats1 = await GotchiStats.CalculateStats(gotchi1)
-            };
-
-            if (!(gotchi2 is null)) {
-
-                // If an opponent was provided, use that opponent.
-
-                state.gotchi2 = gotchi2;
-                state.stats2 = await GotchiStats.CalculateStats(gotchi2);
-
-            }
-            else {
-
-                // Otherwise, generate an opponent for the user.
-
-                await state._generateOpponent();
-
-                state.accepted = true;
-
-            }
-
-            if (state.stats1.spd != state.stats2.spd)
-                state.currentTurn = state.stats1.spd > state.stats2.spd ? 1 : 2;
-            else
-                state.currentTurn = BotUtils.RandomInteger(1, 3);
-
-            BATTLE_STATES[gotchi1.owner_id] = state;
-
-            if (state.gotchi2.owner_id != WILD_GOTCHI_USER_ID)
-                BATTLE_STATES[state.gotchi2.owner_id] = state;
-
-            // Set the initial message displayed when the battle starts.
-
-            StringBuilder message_builder = new StringBuilder();
-
-            if (state.stats1.spd != state.stats2.spd) {
-
-                message_builder.AppendLine(string.Format("The battle has begun! **{0}** is faster, so {1} goes first.",
-                StringUtils.ToTitleCase(state.stats1.spd > state.stats2.spd ? state.gotchi1.name : state.gotchi2.name),
-                state.stats1.spd > state.stats2.spd ? await state.GetUsername1Async(context) : await state.GetUsername2Async(context)));
-
-            }
-            else {
-
-                message_builder.AppendLine(string.Format("The battle has begun! {0} has been randomly selected to go first.",
-                state.currentTurn == 1 ? await state.GetUsername1Async(context) : await state.GetUsername2Async(context)));
-
-            }
-
-            if (!(state.currentTurn == 2 && state.gotchi2.owner_id == WILD_GOTCHI_USER_ID)) {
-
-                // Only show the "pick a move" message if the next move isn't the CPU.
-
-                message_builder.AppendLine();
-                message_builder.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
-                    OurFoodChainBot.GetInstance().GetConfig().prefix));
-
-                state.message = message_builder.ToString();
-
-                if (state.IsBattlingCpu())
-                    await ShowBattleStateAsync(context, state);
-
-            }
-            else {
-
-                message_builder.AppendLine();
-                state.message = message_builder.ToString();
-
-                // Otherwise, have the CPU select and use a move.
-                await state.UseMoveAsync(context, (await GotchiMoveset.GetMovesetAsync(state.gotchi2)).GetRandomMove());
-
-            }
-
-        }
-        public static void DeregisterBattle(ulong userId) {
-
-            GotchiBattleState state;
-
-            if (BATTLE_STATES.TryRemove(userId, out state))
-                BATTLE_STATES.TryRemove(state.GetOtherUserId(userId), out state);
-
-        }
-        public static bool IsCurrentlyBattling(ulong userId) {
-
-            if (BATTLE_STATES.ContainsKey(userId))
+            if (_battle_states.ContainsKey(userId))
                 return true;
 
             return false;
 
 
         }
-        public static GotchiBattleState GetBattleStateByUser(ulong userId) {
 
-            if (!BATTLE_STATES.ContainsKey(userId))
-                return null;
+        public static async Task RegisterBattleAsync(ICommandContext context, Gotchi gotchi1, Gotchi gotchi2) {
 
-            return BATTLE_STATES[userId];
+            // Initialize the battle state.
+
+            GotchiBattleState state = new GotchiBattleState();
+
+            // Initialize both participants.
+
+            // Initialize Player 1 (which must be a human player).
+
+            state.player1 = new PlayerState {
+                gotchi = gotchi1,
+                moves = await GotchiMoveset.GetMovesetAsync(gotchi1),
+                stats = await GotchiStatsUtils.CalculateStats(gotchi1)
+            };
+
+            // Initialize Player 2 (which may be a human player, or a CPU).
+
+            if (!(gotchi2 is null)) {
+
+                // If an opponent was provided, use that opponent.
+
+                state.player2 = new PlayerState {
+                    gotchi = gotchi2,
+                    moves = await GotchiMoveset.GetMovesetAsync(gotchi2),
+                    stats = await GotchiStatsUtils.CalculateStats(gotchi2)
+                };
+
+            }
+            else {
+
+                // Otherwise, generate an opponent for the user.
+                await state._generateOpponentAsync();
+
+                // Since the user is battling a CPU, accept the battle immediately.
+                state.accepted = true;
+
+            }
+
+            // Register the battle state in the battle state collection.
+
+            _battle_states[gotchi1.owner_id] = state;
+
+            if (state.player2.gotchi.owner_id != WILD_GOTCHI_USER_ID)
+                _battle_states[state.player2.gotchi.owner_id] = state;
+
+            // Set the initial message displayed when the battle starts.
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("The battle has begun!");
+            sb.AppendLine();
+            sb.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
+                OurFoodChainBot.GetInstance().GetConfig().prefix));
+
+            state.battleText = sb.ToString();
+
+            // If the user is battling a CPU, show the battle state immediately.
+            // Otherwise, it will be shown when the other user accepts the battle challenge.
+
+            if (state.IsBattlingCpu())
+                await ShowBattleStateAsync(context, state);
 
         }
+        public static void DeregisterBattle(ulong userId) {
+
+            if (_battle_states.TryRemove(userId, out GotchiBattleState state))
+                _battle_states.TryRemove(state.GetOtherPlayerUserId(userId), out state);
+
+        }
+        public static GotchiBattleState GetBattleStateByUserId(ulong userId) {
+
+            if (!_battle_states.ContainsKey(userId))
+                return null;
+
+            return _battle_states[userId];
+
+        }
+
         public static async Task ShowBattleStateAsync(ICommandContext context, GotchiBattleState state) {
 
             // Get an image of the battle.
@@ -352,18 +340,18 @@ namespace OurFoodChain.gotchi {
             string gif_url = "";
 
             GotchiUtils.GotchiGifCreatorParams p1 = new GotchiUtils.GotchiGifCreatorParams {
-                gotchi = state.gotchi1,
+                gotchi = state.player1.gotchi,
                 x = 50,
                 y = 150,
-                state = state.stats1.hp > 0 ? (state.stats2.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                state = state.player1.stats.hp > 0 ? (state.player2.stats.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
                 auto = false
             };
 
             GotchiUtils.GotchiGifCreatorParams p2 = new GotchiUtils.GotchiGifCreatorParams {
-                gotchi = state.gotchi2,
+                gotchi = state.player2.gotchi,
                 x = 250,
                 y = 150,
-                state = state.stats2.hp > 0 ? (state.stats1.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                state = state.player2.stats.hp > 0 ? (state.player1.stats.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
                 auto = false
             };
 
@@ -373,281 +361,311 @@ namespace OurFoodChain.gotchi {
 
                     // Draw health bars.
 
-                    _drawHealthBar(gfx, p1.x, 180, state.stats1.hp / state.stats1.maxHp);
-                    _drawHealthBar(gfx, p2.x, 180, state.stats2.hp / state.stats2.maxHp);
+                    _drawHealthBar(gfx, p1.x, 180, state.player1.stats.hp / state.player1.stats.max_hp);
+                    _drawHealthBar(gfx, p2.x, 180, state.player2.stats.hp / state.player2.stats.max_hp);
 
                 }
             });
 
             EmbedBuilder embed = new EmbedBuilder();
 
-            embed.WithTitle(string.Format("**{0}** vs. **{1}** (Turn {2})", StringUtils.ToTitleCase(state.gotchi1.name), StringUtils.ToTitleCase(state.gotchi2.name), state.turnCount));
+            embed.WithTitle(string.Format("**{0}** vs. **{1}** (Turn {2})",
+                StringUtils.ToTitleCase(state.player1.gotchi.name),
+                StringUtils.ToTitleCase(state.player2.gotchi.name),
+                state.turnCount));
             embed.WithImageUrl(gif_url);
-            embed.WithDescription(state.message);
-            if (!state.IsBattleOver())
-                embed.WithFooter(string.Format("It is now {0}'s turn.", state.currentTurn == 1 ? await state.GetUsername1Async(context) : await state.GetUsername2Async(context)));
-            else
+            embed.WithDescription(state.battleText);
+            if (state.IsBattleOver())
                 embed.WithFooter("The battle has ended!");
+            else if (state.turnCount == 0) {
+                embed.WithFooter("The battle has begun. Pick your move!");
+            }
+            else
+                embed.WithFooter(string.Format("Beginning Turn {0}. Pick your move!", state.turnCount + 1));
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
 
-        private async Task _useMoveOnGotchiAsync(ICommandContext context, GotchiMove move, Gotchi user, Gotchi target) {
+        private async Task _useMoveOnAsync(ICommandContext context, PlayerState user, PlayerState target) {
 
-            GotchiStats user_stats = GetStats(user);
-            GotchiStats target_stats = GetStats(target);
+            // Check role match-up to see if the move is super-effective.
+            // #todo Role match-ups should be defined in an external file.
 
-            // Check roles to see if the move is super-effective.
+            Role[] target_roles = await BotUtils.GetRolesFromDbBySpecies(target.gotchi.species_id);
+            double weakness_multiplier = user.selectedMove.can_matchup ? _getWeaknessMultiplier(user.selectedMove.role, target_roles) : 1.0;
+            Species target_species = await BotUtils.GetSpeciesFromDb(target.gotchi.species_id);
 
-            Role[] target_roles = await BotUtils.GetRolesFromDbBySpecies(target.species_id);
-            double type_multiplier = _getTypeMultiplier(move.role, target_roles);
-            StringBuilder message_builder = new StringBuilder();
-            string message_end = "";
+            // Execute the selected move.
 
-            switch (move.type) {
+            StringBuilder battle_text = new StringBuilder();
+            battle_text.AppendLine(battleText);
+            battle_text.AppendLine();
 
-                case MoveType.Attack:
+            if (!string.IsNullOrEmpty(user.selectedMove.script_path)) {
 
-                    // Have a chance of missing.
+                // Create, initialize, and execute the script associated with this move.
 
-                    bool move_hit = BotUtils.RandomInteger(0, 20 + 1) < 20 * move.hitRate * Math.Max(0.1, user_stats.accuracy);
+                Script script = new Script();
+                LuaUtils.InitializeScript(script);
 
-                    if (!move_hit) {
+                script.DoFile(user.selectedMove.script_path);
 
-                        message_builder.Append(string.Format("💥 **{0}** used **{1}**, but it missed!",
-                          StringUtils.ToTitleCase(user.name),
-                          StringUtils.ToTitleCase(move.name)));
+                // Initialize the callback args.
+
+                LuaGotchiMoveCallbackArgs args = new LuaGotchiMoveCallbackArgs {
+                    user = user.stats,
+                    target = target.stats,
+                    target_roles = target_roles,
+                    target_species = target_species
+                };
+
+                // Initialize the move state (required for only certain moves).
+
+                if (!(script.Globals["init"] is null))
+                    await script.CallAsync(script.Globals["init"], args);
+
+                // It's possible for a move to be used more than once in a turn (e.g., multi-hit moves).
+                // Each time will trigger the callback to be called and display a new message.
+
+                for (int i = 0; i < Math.Max(1, args.times); ++i) {
+
+                    // Check if this was a critical hit, or if the move missed.
+
+                    bool is_hit = !user.selectedMove.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.hit_rate * Math.Max(0.1, user.stats.accuracy));
+                    bool is_critical = user.selectedMove.can_critial && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.critical_rate)) == 0);
+
+                    if (is_hit) {
+
+                        // Set additional parameters in the callback.
+
+                        args.matchup_multiplier = weakness_multiplier;
+                        args.bonus_multiplier = user.selectedMove.multiplier;
+
+                        if (is_critical)
+                            args.bonus_multiplier *= 1.5;
+
+                        // Clone each user's stats before triggering the callback, so we can compare them before and after.
+
+                        LuaGotchiStats user_clone = user.stats.clone();
+                        LuaGotchiStats target_clone = target.stats.clone();
+
+                        // Trigger the callback.
+
+                        try {
+
+                            if (!(script.Globals["callback"] is null))
+                                await script.CallAsync(script.Globals["callback"], args);
+
+                        }
+                        catch (Exception) {
+                            args.text = "but something went wrong";
+                        }
+
+                        // Show the battle text.
+                        // If the move doesn't specify a text, choose one automatically (where possible).
+
+                        string text = args.text;
+
+                        // If the gotchi healed but is heal-blocked, undo the heal and update the message.
+                        if (user.stats.hp > user_clone.hp && user.stats.status == "heal block") {
+
+                            user.stats.hp = user_clone.hp;
+                            text = "but it failed";
+
+                        }
+
+                        if (string.IsNullOrEmpty(text)) {
+
+                            if (target.stats.hp < target_clone.hp) {
+                                text = "dealing {target:damage} damage";
+                                user.selectedMove.Type = GotchiMoveType.Offensive;
+                            }
+
+                            else if (target.stats.atk < target_clone.atk) {
+                                text = "lowering its opponent's ATK by {target:atk%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+                            else if (target.stats.def < target_clone.def) {
+                                text = "lowering its opponent's DEF by {target:def%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+                            else if (target.stats.spd < target_clone.spd) {
+                                text = "lowering its opponent's SPD by {target:spd%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+                            else if (target.stats.accuracy < target_clone.accuracy) {
+                                text = "lowering its opponent's accuracy by {target:acc%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+
+                            else if (user.stats.hp > user_clone.hp) {
+                                text = "recovering {user:recovered} HP";
+                                user.selectedMove.Type = GotchiMoveType.Recovery;
+                            }
+                            else if (user.stats.atk > user_clone.atk) {
+                                text = "boosting its ATK by {user:atk%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+                            else if (user.stats.def > user_clone.def) {
+                                text = "boosting its DEF by {user:def%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+                            else if (user.stats.spd > user_clone.spd) {
+                                text = "boosting its SPD by {user:spd%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+                            else if (user.stats.accuracy > user_clone.accuracy) {
+                                text = "boosting its accuracy by {user:acc%}";
+                                user.selectedMove.Type = GotchiMoveType.Buff;
+                            }
+
+                            else {
+                                text = "but nothing happened?";
+                                is_critical = false;
+                                weakness_multiplier = 1.0;
+                            }
+
+                        }
+
+                        // Various replacements are allowed, which the user can specify in the move's battle text.
+
+                        text = Regex.Replace(text, @"\{([^\}]+)\}", m => {
+
+                            switch (m.Groups[1].Value.ToLower()) {
+
+                                case "damage":
+                                case "target:damage":
+                                    return string.Format("{0:0.0}", target_clone.hp - target.stats.hp);
+
+                                case "target:atk%":
+                                    return string.Format("{0}%", (Math.Abs(target_clone.atk - target.stats.atk) / target_clone.atk) * 100.0);
+                                case "target:def%":
+                                    return string.Format("{0}%", (Math.Abs(target_clone.def - target.stats.def) / target_clone.def) * 100.0);
+                                case "target:spd%":
+                                    return string.Format("{0}%", (Math.Abs(target_clone.spd - target.stats.spd) / target_clone.spd) * 100.0);
+                                case "target:acc%":
+                                    return string.Format("{0}%", (Math.Abs(target_clone.accuracy - target.stats.accuracy) / target_clone.accuracy) * 100.0);
+
+                                case "user:atk%":
+                                    return string.Format("{0}%", (Math.Abs(user_clone.atk - user.stats.atk) / user_clone.atk) * 100.0);
+                                case "user:def%":
+                                    return string.Format("{0}%", (Math.Abs(user_clone.def - user.stats.def) / user_clone.def) * 100.0);
+                                case "user:spd%":
+                                    return string.Format("{0}%", (Math.Abs(user_clone.spd - user.stats.spd) / user_clone.spd) * 100.0);
+                                case "user:acc%":
+                                    return string.Format("{0}%", (Math.Abs(user_clone.accuracy - user.stats.accuracy) / user_clone.accuracy) * 100.0);
+
+                                case "user:recovered":
+                                    return string.Format("{0:0.0}", user.stats.hp - user_clone.hp);
+
+                                default:
+                                    return "???";
+
+                            }
+
+                        });
+
+                        battle_text.Append(string.Format("{0} **{1}** used **{2}**, {3}!",
+                            user.selectedMove.icon(),
+                            StringUtils.ToTitleCase(user.gotchi.name),
+                            StringUtils.ToTitleCase(user.selectedMove.name),
+                            text));
+
+                        if (user.selectedMove.can_matchup && weakness_multiplier > 1.0)
+                            battle_text.Append(" It's super effective!");
+
+                        if (user.selectedMove.can_critial && is_critical)
+                            battle_text.Append(" Critical hit!");
+
+                        if (i + 1 < args.times)
+                            battle_text.AppendLine();
+
+                        // Normalize state changes (i.e. make sure no stats ended up being negative).
+                        // Do this after the message has been shown so things like damage higher than the target's HP can still be shown correctly.
+
+                        user.stats.normalize();
+                        target.stats.normalize();
 
                     }
                     else {
 
-                        double damage = user_stats.atk;
-
-                        if (!(move.callback is null)) {
-
-                            GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
-                                state = this,
-                                user = user,
-                                userStats = user_stats,
-                                target = target,
-                                targetStats = target_stats,
-                                value = damage,
-                                move = move
-                            };
-
-                            await move.callback(args);
-
-                            message_end = args.messageFormat;
-                            damage = args.value;
-
-                        }
-
-                        for (int i = 0; i < move.times; ++i) {
-
-                            bool critical = BotUtils.RandomInteger(0, (int)(10 / move.criticalRate)) == 0;
-                            damage = Math.Max(1.0, (damage * move.multiplier) - target_stats.def) * type_multiplier;
-
-                            if (critical)
-                                damage *= 1.5;
-
-                            string bonus_messages = "";
-
-                            if (type_multiplier > 1.0)
-                                bonus_messages += " It's super effective!";
-
-                            if (critical)
-                                bonus_messages += " Critical hit!";
-
-                            target_stats.hp -= damage;
-
-                            if (string.IsNullOrEmpty(message_end))
-                                message_end = "dealing {0:0.0} damage";
-
-                            message_end = string.Format(message_end, damage);
-
-                            message_builder.Append(string.Format("💥 **{0}** used **{1}**, {4}!{3}",
-                                StringUtils.ToTitleCase(user.name),
-                                StringUtils.ToTitleCase(move.name),
-                                damage,
-                                bonus_messages,
-                                message_end));
-
-                            if (i + 1 < move.times)
-                                message_builder.AppendLine();
-
-                        }
-
-                        if (move.times > 1)
-                            message_builder.Append(string.Format(" Hit {0} times!", move.times));
+                        // If the move missed, so display a failure message.
+                        battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it missed!",
+                            user.selectedMove.icon(),
+                            StringUtils.ToTitleCase(user.gotchi.name),
+                            StringUtils.ToTitleCase(user.selectedMove.name)));
 
                     }
 
-                    break;
+                }
 
-                case MoveType.Recovery:
+                if (args.times > 1)
+                    battle_text.Append(string.Format(" Hit {0} times!", args.times));
 
-                    if (user_stats.status == GotchiStatusProblem.HealBlock) {
+            }
+            else {
 
-                        message_builder.Append(string.Format("❤ **{0}** used **{1}**, but it failed!",
-                           StringUtils.ToTitleCase(user.name),
-                           StringUtils.ToTitleCase(move.name)));
-
-                    }
-                    else {
-
-                        double recovered = Math.Max(1, user_stats.maxHp * move.multiplier) * type_multiplier;
-
-                        if (!(move.callback is null)) {
-
-                            GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
-                                state = this,
-                                user = user,
-                                userStats = user_stats,
-                                target = target,
-                                targetStats = target_stats,
-                                value = recovered,
-                                move = move
-                            };
-
-                            await move.callback(args);
-
-                            recovered = args.value;
-
-                        }
-
-                        target_stats.hp = Math.Min(target_stats.hp + recovered, target.id == gotchi1.id ? stats1.maxHp : stats2.maxHp);
-
-                        message_builder.Append(string.Format("❤ **{0}** used **{1}**, recovering {2:0.0} hit points!",
-                            StringUtils.ToTitleCase(user.name),
-                            StringUtils.ToTitleCase(move.name),
-                            recovered,
-                            type_multiplier > 1.0 ? " It's super effective!" : ""));
-
-                    }
-
-                    break;
-
-                case MoveType.StatBoost:
-
-                    if (!(move.callback is null)) {
-
-                        GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
-                            state = this,
-                            user = user,
-                            userStats = user_stats,
-                            target = target,
-                            targetStats = target_stats,
-                            value = move.multiplier,
-                            move = move
-                        };
-
-                        await move.callback(args);
-
-                        message_end = args.messageFormat;
-
-                        if (args.value != 0.0)
-                            target_stats.BoostByFactor(move.multiplier);
-
-                    }
-                    else
-                        target_stats.BoostByFactor(move.multiplier);
-
-                    if (string.IsNullOrEmpty(message_end))
-                        message_end = string.Format("{0} its {1}stats by ",
-                            move.multiplier > 1.0 ? "boosting" : "lowering",
-                            move.target == MoveTarget.Self ? "" : "opponent's ") + "{0}";
-
-                    message_end = string.Format(message_end, Math.Abs((move.multiplier - 1.0) * 100.0));
-
-                    message_builder.Append(string.Format("🛡 **{0}** used **{1}**, {2}%!",
-                        StringUtils.ToTitleCase(user.name),
-                        StringUtils.ToTitleCase(move.name),
-                        message_end));
-
-                    break;
-
-                case MoveType.Custom:
-
-                    message_builder.Append(string.Format("🛡 **{0}** used **{1}**", StringUtils.ToTitleCase(user.name), StringUtils.ToTitleCase(move.name)));
-
-                    if (!(move.callback is null)) {
-
-                        GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
-                            state = this,
-                            user = user,
-                            userStats = user_stats,
-                            target = target,
-                            targetStats = target_stats,
-                            value = 0.0,
-                            move = move
-                        };
-
-                        await move.callback(args);
-
-                        if (string.IsNullOrEmpty(args.messageFormat))
-                            message_builder.Append("!");
-                        else
-                            message_builder.Append(", " + args.messageFormat + (args.messageFormat.Last() == '!' ? "" : "!"));
-
-                    }
-                    else {
-
-                        message_builder.Append(", but nothing happened!");
-
-                    }
-
-                    break;
+                // If there is no Lua script associated with the given move, display a failure message.
+                battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it forgot how!",
+                    user.selectedMove.icon(),
+                    StringUtils.ToTitleCase(user.gotchi.name),
+                    StringUtils.ToTitleCase(user.selectedMove.name)));
 
             }
 
+            battleText = battle_text.ToString();
 
+        }
+        private void _applyStatusProblems(ICommandContext context, PlayerState user) {
 
-            if (user_stats.status == GotchiStatusProblem.Poisoned) {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat(battleText);
+
+            if (user.stats.status == "poisoned") {
 
                 // If the user is poisoned, apply poison damage (1/16th of max HP).
 
-                user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 16.0));
+                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 16.0));
 
-                message_builder.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.name)));
+                sb.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user_stats.status == GotchiStatusProblem.Rooted) {
+            else if (user.stats.status == "rooted") {
 
                 // If the user is rooted, heal some HP (1/10th of max HP).
 
-                user_stats.hp = Math.Min(user_stats.maxHp, user_stats.hp + (user_stats.maxHp / 10.0));
+                user.stats.hp = Math.Min(user.stats.max_hp, user.stats.hp + (user.stats.max_hp / 10.0));
 
-                message_builder.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.name)));
+                sb.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user_stats.status == GotchiStatusProblem.VineWrapped) {
+            else if (user.stats.status == "vine-wrapped") {
 
                 // If the user is wrapped in vines, apply poison damage (1/16th of max HP).
 
-                user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 16.0));
+                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 16.0));
 
-                message_builder.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.name)));
+                sb.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user_stats.status == GotchiStatusProblem.ThornSurrounded && move.type == MoveType.Attack) {
+            else if (user.stats.status == "thorn-surrounded") {
+
+                // #todo Damage should only be incurred when the user uses a damaging move.
 
                 // If the user is surrounded by thorns, apply thorn damage (1/10th of max HP).
                 // Only damages the user if they are attacking the opponent.
 
-                user_stats.hp = Math.Max(0.0, user_stats.hp - (user_stats.maxHp / 10.0));
+                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 10.0));
 
-                message_builder.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.name)));
+                sb.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
 
-            if (user.owner_id == WILD_GOTCHI_USER_ID)
-                message += message_builder.ToString();
-            else
-                message = message_builder.ToString();
+            battleText = sb.ToString();
 
         }
-        private double _getTypeMultiplier(string moveRole, Role[] target_roles) {
+        private double _getWeaknessMultiplier(string moveRole, Role[] target_roles) {
 
             double mult = 1.0;
 
@@ -697,7 +715,7 @@ namespace OurFoodChain.gotchi {
 
             double exp = 0.0;
 
-            exp = (opponent.id == gotchi1.id ? stats1.level : stats2.level) * 10.0;
+            exp = (opponent.id == player1.gotchi.id ? player1.stats.level : player2.stats.level) * 10.0;
 
             if (!won)
                 exp *= .5;
@@ -720,13 +738,15 @@ namespace OurFoodChain.gotchi {
                 gfx.DrawRectangle(pen, new Rectangle((int)(x - hp_bar_width / 2), (int)y, (int)hp_bar_width, 10));
 
         }
-        private async Task _generateOpponent() {
+        private async Task _generateOpponentAsync() {
+
+            player2 = new PlayerState();
 
             Gotchi opp = new Gotchi {
-                born_ts = gotchi1.born_ts,
-                died_ts = gotchi1.died_ts,
-                evolved_ts = gotchi1.evolved_ts,
-                fed_ts = gotchi1.fed_ts,
+                born_ts = player1.gotchi.born_ts,
+                died_ts = player1.gotchi.died_ts,
+                evolved_ts = player1.gotchi.evolved_ts,
+                fed_ts = player1.gotchi.fed_ts,
                 owner_id = WILD_GOTCHI_USER_ID,
                 id = WILD_GOTCHI_ID
             };
@@ -744,18 +764,18 @@ namespace OurFoodChain.gotchi {
 
             // Evolve it to the same point as the user's gotchi.
 
-            for (int i = 0; i < stats1.level / 10; ++i)
+            for (int i = 0; i < player1.stats.level / 10; ++i)
                 if (!await GotchiUtils.EvolveGotchiAsync(opp))
                     break;
 
             // Calculate stats.
 
-            GotchiStats opp_stats = new GotchiStats {
-                level = Math.Max(1, stats1.level + BotUtils.RandomInteger(-3, 4)), // up to 3 levels in either direction
-                exp = stats1.exp
+            LuaGotchiStats opp_stats = new LuaGotchiStats {
+                level = Math.Max(1, player1.stats.level + BotUtils.RandomInteger(-3, 4)), // up to 3 levels in either direction
+                exp = player1.stats.exp
             };
 
-            opp_stats = await GotchiStats.CalculateStats(opp, opp_stats);
+            opp_stats = await GotchiStatsUtils.CalculateStats(opp, opp_stats);
 
             // Name the gotchi.
 
@@ -764,22 +784,115 @@ namespace OurFoodChain.gotchi {
 
             // Set the opponent.
 
-            gotchi2 = opp;
-            stats2 = opp_stats;
+            player2.gotchi = opp;
+            player2.stats = opp_stats;
+            player2.moves = await GotchiMoveset.GetMovesetAsync(player2.gotchi, player2.stats);
 
         }
-        private async Task<GotchiMove> _pickCpuMove(Gotchi cpuGotchi) {
+        private void _pickCpuMove(PlayerState player) {
 
-            GotchiStats stats = GetStats(cpuGotchi);
-            GotchiMoveset moves = await GotchiMoveset.GetMovesetAsync(cpuGotchi, stats);
-            GotchiMove move = moves.GetRandomMove();
+            LuaGotchiMove move = player.moves.GetRandomMove();
 
-            // If the CPU is heal-blocked, give it a chance to pick a different move.
+            player.selectedMove = move;
 
-            if (stats.status == GotchiStatusProblem.HealBlock && move.type == MoveType.Recovery)
-                move = moves.GetRandomMove();
+        }
+        private async Task _endBattle(ICommandContext context) {
 
-            return move;
+            PlayerState winner = player1.stats.hp <= 0.0 ? player2 : player1;
+            PlayerState loser = player1.stats.hp <= 0.0 ? player1 : player2;
+
+            // Calculate the amount of EXP awarded to the winner.
+            // The loser will get 50% of the winner's EXP.
+
+            double exp = _getExpEarned(winner.gotchi, loser.gotchi, won: true);
+
+            double exp1 = player2.stats.hp <= 0.0 ? exp : exp * .5;
+            double exp2 = player1.stats.hp <= 0.0 ? exp : exp * .5;
+
+            long levels1 = GotchiStatsUtils.LeveUp(player1.stats, exp1);
+            long levels2 = GotchiStatsUtils.LeveUp(player2.stats, exp2);
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(battleText);
+            sb.AppendLine();
+
+            // Show the winner's accomplishments, then the loser's.
+
+            if (!IsCpuGotchi(winner.gotchi)) {
+
+                double winner_exp = winner.gotchi.id == player1.gotchi.id ? exp1 : exp2;
+                long winner_levels = winner.gotchi.id == player1.gotchi.id ? levels1 : levels2;
+
+                sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP**.", StringUtils.ToTitleCase(winner.gotchi.name), winner_exp));
+
+                if (winner_levels > 0)
+                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.gotchi.name), winner.stats.level));
+
+                if (((winner.stats.level - levels1) / 10) < (winner.stats.level / 10))
+                    if (await GotchiUtils.EvolveGotchiAsync(winner.gotchi)) {
+
+                        Species sp = await BotUtils.GetSpeciesFromDb(winner.gotchi.species_id);
+
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(winner.gotchi.name), sp.GetShortName()));
+
+                    }
+
+                sb.AppendLine();
+
+            }
+
+            if (!IsCpuGotchi(loser.gotchi)) {
+
+                double loser_exp = loser.gotchi.id == player1.gotchi.id ? exp1 : exp2;
+                long loser_levels = loser.gotchi.id == player1.gotchi.id ? levels1 : levels2;
+
+                sb.AppendLine(string.Format("💀 **{0}** lost the battle... Earned **{1} EXP**.", StringUtils.ToTitleCase(loser.gotchi.name), loser_exp));
+
+                if (loser_levels > 0)
+                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(loser.gotchi.name), loser.stats.level));
+
+                if (((loser.stats.level - levels1) / 10) < (loser.stats.level / 10))
+                    if (await GotchiUtils.EvolveGotchiAsync(loser.gotchi)) {
+
+                        Species sp = await BotUtils.GetSpeciesFromDb(loser.gotchi.species_id);
+
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(loser.gotchi.name), sp.GetShortName()));
+
+                    }
+
+            }
+
+            // Update level/exp in the database.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$id", player1.gotchi.id);
+                cmd.Parameters.AddWithValue("$level", player1.stats.level);
+                cmd.Parameters.AddWithValue("$exp", player1.stats.exp);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            if (!IsCpuGotchi(player2.gotchi)) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
+
+                    cmd.Parameters.AddWithValue("$id", player2.gotchi.id);
+                    cmd.Parameters.AddWithValue("$level", player2.stats.level);
+                    cmd.Parameters.AddWithValue("$exp", player2.stats.exp);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+            // Deregister the battle state.
+
+            DeregisterBattle(context.User.Id);
+
+            battleText = sb.ToString();
 
         }
 

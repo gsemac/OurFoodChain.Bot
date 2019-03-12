@@ -1,0 +1,17 @@
+﻿function register(move)
+
+	move.name = "tangle";
+	move.description = "Tangles the opponent in vines, lowering their speed.";
+	move.role = "producer";
+
+	move.pp = 10;
+	move.type = type.Buff;
+
+end;
+
+function callback(args) 	
+	
+	args.target.spd = args.target.spd * 0.8;
+	args.target.text = "lowering the opponent's speed by 20%";
+
+end;

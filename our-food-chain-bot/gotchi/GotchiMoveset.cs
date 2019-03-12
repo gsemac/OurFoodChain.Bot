@@ -28,12 +28,27 @@ namespace OurFoodChain.gotchi {
         Photosynthetic // restores health every turn if not shaded
     }
 
+    public class GotchiMove {
+        public LuaGotchiMove info;
+        public int pp = 0;
+    }
+
     public class GotchiMoveset {
 
         public const int MOVE_LIMIT = 4;
 
-        public List<LuaGotchiMove> moves = new List<LuaGotchiMove>();
+        public List<GotchiMove> moves = new List<GotchiMove>();
         public GotchiAbility ability = 0;
+
+        public bool HasPPLeft() {
+
+            foreach (GotchiMove move in moves)
+                if (move.pp > 0)
+                    return true;
+
+            return false;
+
+        }
 
         public async Task AddAsync(string name) {
 
@@ -44,28 +59,44 @@ namespace OurFoodChain.gotchi {
 
             // If the set already contains this move, ignore it.
 
-            foreach (LuaGotchiMove m in moves)
-                if (move.name.ToLower() == m.name.ToLower())
+            foreach (GotchiMove m in moves)
+                if (move.name.ToLower() == m.info.name.ToLower())
                     return;
 
-            moves.Add(move);
+            moves.Add(new GotchiMove {
+                info = move,
+                pp = move.pp
+            });
 
         }
-        public LuaGotchiMove GetMove(string identifier) {
+        public GotchiMove GetMove(string identifier) {
 
             if (int.TryParse(identifier, out int result) && result > 0 && result <= moves.Count())
                 return moves[result - 1];
 
-            foreach (LuaGotchiMove move in moves)
-                if (move.name.ToLower() == identifier.ToLower())
+            foreach (GotchiMove move in moves)
+                if (move.info.name.ToLower() == identifier.ToLower())
                     return move;
 
             return null;
 
         }
-        public LuaGotchiMove GetRandomMove() {
+        public async Task<GotchiMove> GetRandomMoveAsync() {
 
-            return moves[BotUtils.RandomInteger(moves.Count())];
+            // Select randomly from all moves that currently have PP.
+
+            List<GotchiMove> options = new List<GotchiMove>();
+
+            foreach (GotchiMove move in moves)
+                if (move.pp > 0)
+                    options.Add(move);
+
+            if (options.Count() > 0)
+                return moves[BotUtils.RandomInteger(moves.Count())];
+            else
+                return new GotchiMove {
+                    info = await GotchiMoveRegistry.GetMoveByNameAsync("desperation")
+                };
 
         }
 
@@ -124,7 +155,7 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            set.moves.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+            set.moves.Sort((lhs, rhs) => lhs.info.name.CompareTo(rhs.info.name));
 
             return set;
 

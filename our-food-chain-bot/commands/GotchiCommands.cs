@@ -265,13 +265,21 @@ namespace OurFoodChain.gotchi {
                 return;
 
             // Get moveset for this gotchi.
+            // If the user is currently in battle, get their moveset from the battle state instead.
 
-            GotchiMoveset set = await GotchiMoveset.GetMovesetAsync(gotchi);
-            LuaGotchiStats stats = await GotchiStatsUtils.CalculateStats(gotchi);
+            GotchiMoveset set;
+            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
+
+            if (!(battle_state is null))
+                set = battle_state.GetGotchiMoveset(gotchi);
+            else
+                set = await GotchiMoveset.GetMovesetAsync(gotchi);
+
 
             // Create the embed.
 
             EmbedBuilder set_page = new EmbedBuilder();
+            LuaGotchiStats stats = await GotchiStatsUtils.CalculateStats(gotchi);
 
             set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age()));
             set_page.WithThumbnailUrl(sp.pics);
@@ -279,8 +287,8 @@ namespace OurFoodChain.gotchi {
 
             int move_index = 1;
 
-            foreach (LuaGotchiMove move in set.moves)
-                set_page.AddField(string.Format("Move {0}: **{1}**", move_index++, StringUtils.ToTitleCase(move.name)), move.description);
+            foreach (GotchiMove move in set.moves)
+                set_page.AddField(string.Format("Move {0}: **{1}** ({2}/{3} PP)", move_index++, StringUtils.ToTitleCase(move.info.name), move.pp, move.info.pp), move.info.description);
 
             await ReplyAsync("", false, set_page.Build());
 

@@ -248,6 +248,7 @@
     <None Include="res\gotchi\battle\moves\degrade.lua" />
     <None Include="res\gotchi\battle\moves\digest.lua" />
     <None Include="res\gotchi\battle\moves\enzymes.lua" />
+    <None Include="res\gotchi\battle\moves\desperation.lua" />
     <None Include="res\gotchi\battle\moves\filter.lua" />
     <None Include="res\gotchi\battle\moves\grow.lua" />
     <None Include="res\gotchi\battle\moves\hit.lua" />

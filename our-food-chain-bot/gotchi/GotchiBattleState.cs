@@ -25,7 +25,7 @@ namespace OurFoodChain.gotchi {
             public Gotchi gotchi;
             public LuaGotchiStats stats;
             public GotchiMoveset moves;
-            public LuaGotchiMove selectedMove = null;
+            public GotchiMove selectedMove = null;
         }
 
         public PlayerState player1;
@@ -92,6 +92,16 @@ namespace OurFoodChain.gotchi {
             return null;
 
         }
+        public GotchiMoveset GetGotchiMoveset(Gotchi gotchi) {
+
+            if (gotchi.id == player1.gotchi.id)
+                return player1.moves;
+            else if (gotchi.id == player2.gotchi.id)
+                return player2.moves;
+
+            return null;
+
+        }
 
         public async Task SelectMoveAsync(ICommandContext context, string moveIdentifier) {
 
@@ -108,7 +118,7 @@ namespace OurFoodChain.gotchi {
             }
             else {
 
-                LuaGotchiMove move = player.moves.GetMove(moveIdentifier);
+                GotchiMove move = player.moves.GetMove(moveIdentifier);
 
                 if (move is null) {
 
@@ -116,10 +126,20 @@ namespace OurFoodChain.gotchi {
                     await BotUtils.ReplyAsync_Error(context, "The move you have selected is invalid. Please select a valid move.");
 
                 }
+                else if (move.pp <= 0 && player.moves.HasPPLeft()) {
+
+                    // The selected move cannot be used because it is out of PP.
+                    await BotUtils.ReplyAsync_Error(context, "The selected move has no PP left. Please select a different move.");
+
+                }
                 else {
 
                     // Lock in the selected move.
                     player.selectedMove = move;
+
+                    // If the selected move does not have any PP, silently select the "struggle" move (used when no moves have any PP).
+                    if (player.selectedMove.pp <= 0)
+                        player.selectedMove = new GotchiMove { info = await GotchiMoveRegistry.GetMoveByNameAsync("desperation") };
 
                     if (!IsBattlingCpu() && (other_player.selectedMove is null)) {
 
@@ -134,7 +154,7 @@ namespace OurFoodChain.gotchi {
                         // If the player is battling a CPU, select a move for them now.
 
                         if (IsBattlingCpu())
-                            _pickCpuMove(player2);
+                            await _pickCpuMoveAsync(player2);
 
                         // Update the battle state.
                         await ExecuteTurnAsync(context);
@@ -220,6 +240,8 @@ namespace OurFoodChain.gotchi {
             // Reset the battle text and each user's selected moves.
 
             battleText = string.Empty;
+            player1.selectedMove.pp -= 1;
+            player2.selectedMove.pp -= 1;
             player1.selectedMove = null;
             player2.selectedMove = null;
 
@@ -393,7 +415,7 @@ namespace OurFoodChain.gotchi {
             // #todo Role match-ups should be defined in an external file.
 
             Role[] target_roles = await BotUtils.GetRolesFromDbBySpecies(target.gotchi.species_id);
-            double weakness_multiplier = user.selectedMove.can_matchup ? _getWeaknessMultiplier(user.selectedMove.role, target_roles) : 1.0;
+            double weakness_multiplier = user.selectedMove.info.can_matchup ? _getWeaknessMultiplier(user.selectedMove.info.role, target_roles) : 1.0;
             Species target_species = await BotUtils.GetSpeciesFromDb(target.gotchi.species_id);
 
             // Execute the selected move.
@@ -402,14 +424,14 @@ namespace OurFoodChain.gotchi {
             battle_text.AppendLine(battleText);
             battle_text.AppendLine();
 
-            if (!string.IsNullOrEmpty(user.selectedMove.script_path)) {
+            if (!string.IsNullOrEmpty(user.selectedMove.info.script_path)) {
 
                 // Create, initialize, and execute the script associated with this move.
 
                 Script script = new Script();
                 LuaUtils.InitializeScript(script);
 
-                script.DoFile(user.selectedMove.script_path);
+                script.DoFile(user.selectedMove.info.script_path);
 
                 // Initialize the callback args.
 
@@ -432,15 +454,15 @@ namespace OurFoodChain.gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = !user.selectedMove.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.hit_rate * Math.Max(0.1, user.stats.accuracy));
-                    bool is_critical = user.selectedMove.can_critial && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.critical_rate)) == 0);
+                    bool is_hit = !user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy));
+                    bool is_critical = user.selectedMove.info.can_critial && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.critical_rate)) == 0);
 
                     if (is_hit) {
 
                         // Set additional parameters in the callback.
 
                         args.matchup_multiplier = weakness_multiplier;
-                        args.bonus_multiplier = user.selectedMove.multiplier;
+                        args.bonus_multiplier = user.selectedMove.info.multiplier;
 
                         if (is_critical)
                             args.bonus_multiplier *= 1.5;
@@ -454,8 +476,17 @@ namespace OurFoodChain.gotchi {
 
                         try {
 
-                            if (!(script.Globals["callback"] is null))
-                                await script.CallAsync(script.Globals["callback"], args);
+                            if (user.selectedMove.info.type == GotchiMoveType.Recovery && user.stats.status == "heal block") {
+
+                                args.text = "but it failed";
+
+                            }
+                            else {
+
+                                if (!(script.Globals["callback"] is null))
+                                    await script.CallAsync(script.Globals["callback"], args);
+
+                            }
 
                         }
                         catch (Exception) {
@@ -467,57 +498,49 @@ namespace OurFoodChain.gotchi {
 
                         string text = args.text;
 
-                        // If the gotchi healed but is heal-blocked, undo the heal and update the message.
-                        if (user.stats.hp > user_clone.hp && user.stats.status == "heal block") {
-
-                            user.stats.hp = user_clone.hp;
-                            text = "but it failed";
-
-                        }
-
                         if (string.IsNullOrEmpty(text)) {
 
                             if (target.stats.hp < target_clone.hp) {
                                 text = "dealing {target:damage} damage";
-                                user.selectedMove.Type = GotchiMoveType.Offensive;
+                                user.selectedMove.info.Type = GotchiMoveType.Offensive;
                             }
 
                             else if (target.stats.atk < target_clone.atk) {
                                 text = "lowering its opponent's ATK by {target:atk%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
                             else if (target.stats.def < target_clone.def) {
                                 text = "lowering its opponent's DEF by {target:def%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
                             else if (target.stats.spd < target_clone.spd) {
                                 text = "lowering its opponent's SPD by {target:spd%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
                             else if (target.stats.accuracy < target_clone.accuracy) {
                                 text = "lowering its opponent's accuracy by {target:acc%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
 
                             else if (user.stats.hp > user_clone.hp) {
                                 text = "recovering {user:recovered} HP";
-                                user.selectedMove.Type = GotchiMoveType.Recovery;
+                                user.selectedMove.info.Type = GotchiMoveType.Recovery;
                             }
                             else if (user.stats.atk > user_clone.atk) {
                                 text = "boosting its ATK by {user:atk%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
                             else if (user.stats.def > user_clone.def) {
                                 text = "boosting its DEF by {user:def%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
                             else if (user.stats.spd > user_clone.spd) {
                                 text = "boosting its SPD by {user:spd%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
                             else if (user.stats.accuracy > user_clone.accuracy) {
                                 text = "boosting its accuracy by {user:acc%}";
-                                user.selectedMove.Type = GotchiMoveType.Buff;
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
 
                             else {
@@ -567,15 +590,15 @@ namespace OurFoodChain.gotchi {
                         });
 
                         battle_text.Append(string.Format("{0} **{1}** used **{2}**, {3}!",
-                            user.selectedMove.icon(),
+                            user.selectedMove.info.icon(),
                             StringUtils.ToTitleCase(user.gotchi.name),
-                            StringUtils.ToTitleCase(user.selectedMove.name),
+                            StringUtils.ToTitleCase(user.selectedMove.info.name),
                             text));
 
-                        if (user.selectedMove.can_matchup && weakness_multiplier > 1.0)
+                        if (user.selectedMove.info.can_matchup && weakness_multiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (user.selectedMove.can_critial && is_critical)
+                        if (user.selectedMove.info.can_critial && is_critical)
                             battle_text.Append(" Critical hit!");
 
                         if (i + 1 < args.times)
@@ -592,9 +615,9 @@ namespace OurFoodChain.gotchi {
 
                         // If the move missed, so display a failure message.
                         battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it missed!",
-                            user.selectedMove.icon(),
+                            user.selectedMove.info.icon(),
                             StringUtils.ToTitleCase(user.gotchi.name),
-                            StringUtils.ToTitleCase(user.selectedMove.name)));
+                            StringUtils.ToTitleCase(user.selectedMove.info.name)));
 
                     }
 
@@ -608,9 +631,9 @@ namespace OurFoodChain.gotchi {
 
                 // If there is no Lua script associated with the given move, display a failure message.
                 battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it forgot how!",
-                    user.selectedMove.icon(),
+                    user.selectedMove.info.icon(),
                     StringUtils.ToTitleCase(user.gotchi.name),
-                    StringUtils.ToTitleCase(user.selectedMove.name)));
+                    StringUtils.ToTitleCase(user.selectedMove.info.name)));
 
             }
 
@@ -789,9 +812,9 @@ namespace OurFoodChain.gotchi {
             player2.moves = await GotchiMoveset.GetMovesetAsync(player2.gotchi, player2.stats);
 
         }
-        private void _pickCpuMove(PlayerState player) {
+        private async Task _pickCpuMoveAsync(PlayerState player) {
 
-            LuaGotchiMove move = player.moves.GetRandomMove();
+            GotchiMove move = await player.moves.GetRandomMoveAsync();
 
             player.selectedMove = move;
 

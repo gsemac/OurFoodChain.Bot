@@ -6,6 +6,8 @@
 	move.pp = 20;
 	move.type = type.Offensive;
 
+	move.requires.match = "electric|static";
+
 end;
 
 function callback(args) 

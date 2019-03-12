@@ -6,6 +6,9 @@
 	move.role = "predator";
 	move.pp = 15;
 
+	move.requires.role = "predator";
+	move.requires.match = "poison|venom";
+
 end;
 
 function callback(args) 

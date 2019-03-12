@@ -15,6 +15,8 @@ namespace OurFoodChain.gotchi {
         public string role = "";
         public long min_level = 0;
         public long max_level = long.MaxValue;
+        public string match = "";
+        public string unrestricted_match = "";
 
     }
 

@@ -8,6 +8,9 @@
 	move.can_miss = false;
 	move.multiplier = 0.8;
 
+	move.requires.match = "sting";
+	move.requires.max_level = 10;
+
 end;
 
 function callback(args) 

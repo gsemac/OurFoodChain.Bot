@@ -6,6 +6,9 @@
 	move.pp = 1;
 	move.type = type.Offensive;
 
+	move.requires.role = "decomposer";
+	move.requires.min_level = 20;
+
 end;
 
 function callback(args) 	

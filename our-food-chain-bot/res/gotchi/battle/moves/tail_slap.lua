@@ -6,6 +6,8 @@
 	move.pp = 5;
 	move.type = type.Offensive;
 
+	move.requires.match = "tail";
+
 end;
 
 function callback(args) 

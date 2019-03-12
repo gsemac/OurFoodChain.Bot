@@ -6,6 +6,8 @@
 	move.pp = 5;
 	move.type = type.Offensive;
 
+	move.requires.match = "tentacle";
+
 end;
 
 function callback(args) 

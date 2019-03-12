@@ -7,6 +7,10 @@
 	move.pp = 10;
 	move.type = type.Recovery;
 
+	move.requires.role = "producer";
+	move.requires.min_level = 30;
+	move.requires.match = "root";
+
 end;
 
 function callback(args) 	

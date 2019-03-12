@@ -9,6 +9,9 @@
 	move.multiplier = 0.8;
 	move.type = type.Offensive;
 
+	move.requires.match = "sting";
+	move.requires.min_level = 10;
+
 end;
 
 function callback(args) 

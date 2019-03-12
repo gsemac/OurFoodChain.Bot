@@ -7,6 +7,9 @@
 	move.pp = 25;
 	move.type = type.Buff;
 
+	move.requires.role = "producer";
+	move.requires.min_level = 30;
+
 end;
 
 function callback(args) 	

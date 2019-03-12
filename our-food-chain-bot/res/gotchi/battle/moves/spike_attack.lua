@@ -6,6 +6,8 @@
 	move.pp = 25;
 	move.type = type.Offensive;
 
+	move.requires.match = "spike";
+
 end;
 
 function callback(args) 

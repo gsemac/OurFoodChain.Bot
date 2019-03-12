@@ -6,6 +6,9 @@
 	move.pp = 15;
 	move.type = type.Offensive;
 
+	move.requires.role = "parasite";
+	move.requires.min_level = 20;
+
 end;
 
 function callback(args) 	

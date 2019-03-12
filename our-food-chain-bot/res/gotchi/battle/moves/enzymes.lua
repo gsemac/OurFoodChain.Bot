@@ -6,6 +6,8 @@
 
 	move.pp = 40;
 
+	move.requires.role = "decomposer";
+
 end;
 
 function callback(args) 

@@ -6,6 +6,8 @@
 
 	move.pp = 40;
 
+	move.requires.role = "parasite";
+
 end;
 
 function callback(args) 	

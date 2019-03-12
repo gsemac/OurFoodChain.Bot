@@ -8,6 +8,9 @@
 	move.hit_rate = 0.5;
 	move.critical_rate = 2.0;
 
+	move.requires.role = "predator";
+	move.requires.min_level = 10;
+
 end;
 
 function callback(args) 

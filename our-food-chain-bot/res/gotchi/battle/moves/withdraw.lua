@@ -6,6 +6,8 @@
 	move.pp = 10;
 	move.type = type.Buff;
 
+	move.requires.match = "shell|carapace";
+
 end;
 
 function callback(args) 		

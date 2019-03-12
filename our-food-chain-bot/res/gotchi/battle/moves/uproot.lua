@@ -8,6 +8,9 @@
 	move.type = type.Offensive;
 	move.multiplier = 0.5;
 
+	move.requires.role = "base-consumer";
+	move.requires.min_level = 10;
+
 end;
 
 function callback(args) 

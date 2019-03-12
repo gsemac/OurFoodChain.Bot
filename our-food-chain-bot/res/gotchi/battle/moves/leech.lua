@@ -6,6 +6,10 @@
 	move.pp = 25;
 	move.type = type.Offensive;
 
+	move.requires.role = "parasite";
+	move.requires.min_level = 10;
+	move.requires.unrestricted_match = "leech|suck|sap";
+
 end;
 
 function callback(args) 		

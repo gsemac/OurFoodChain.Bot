@@ -6,6 +6,8 @@
 	move.pp = 10;
 	move.type = type.Offensive;
 
+	move.requires.match = "toxin|poison";
+
 end;
 
 function callback(args) 

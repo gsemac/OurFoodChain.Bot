@@ -5,6 +5,8 @@
 
 	move.pp = 10;
 
+	move.requires.match = "glow|\blight\b|bioluminescen(?:t|ce)";
+
 end;
 
 function callback(args) 	

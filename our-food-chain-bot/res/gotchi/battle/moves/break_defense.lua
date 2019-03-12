@@ -6,6 +6,9 @@
 	move.role = "decomposer";
 	move.pp = 5;
 
+	move.requires.role = "decomposer";
+	move.requires.min_level = 30;
+
 end;
 
 function callback(args) 

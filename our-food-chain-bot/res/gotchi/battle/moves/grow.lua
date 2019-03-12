@@ -6,6 +6,8 @@
 
 	move.pp = 10;
 
+	move.requires.role = "producer";
+
 end;
 
 function callback(args) 	

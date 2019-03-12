@@ -7,6 +7,10 @@
 	move.critical_rate = 1.2;
 	move.pp = 15;
 
+	move.requires.role = "producer";
+	move.requires.min_level = 20;
+	move.requires.match = "leaf|leaves";
+
 end;
 
 function callback(args) 	

@@ -6,6 +6,10 @@
 	move.pp = 10;
 	move.type = type.Offensive;
 
+	move.requires.role = "producer";
+	move.requires.min_level = 20;
+	move.requires.match = "thorn";
+
 end;
 
 function callback(args) 

@@ -7,6 +7,9 @@
 	move.pp = 20;
 	move.type = type.Recovery;
 
+	move.requires.role = "detritivore";
+	move.requires.max_level = 10;
+
 end;
 
 function callback(args) 	

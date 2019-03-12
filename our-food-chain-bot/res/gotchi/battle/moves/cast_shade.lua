@@ -7,6 +7,10 @@
 	move.pp = 25;
 	move.type = type.Offensive;
 
+	move.requires.role = "producer";
+	move.requires.min_level = 10;
+	move.requires.match = "tree|tall|heavy";
+
 end;
 
 function callback(args) 	

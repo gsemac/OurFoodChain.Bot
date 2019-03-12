@@ -7,6 +7,9 @@
 	move.pp = 10;
 	move.type = type.Buff;
 
+	move.requires.role = "producer";
+	move.requires.match = "vine";
+
 end;
 
 function callback(args) 	

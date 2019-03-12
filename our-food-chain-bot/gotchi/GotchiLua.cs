@@ -30,7 +30,7 @@ namespace OurFoodChain.gotchi {
         public double critical_rate = 1.0;
         public double hit_rate = 1.0;
         public bool can_miss = true;
-        public bool can_critial = true;
+        public bool can_critical = true;
         public bool can_matchup = true;
         public int pp = 10;
         public int priority = 1;
@@ -50,7 +50,7 @@ namespace OurFoodChain.gotchi {
 
                 if (type == GotchiMoveType.Recovery || type == GotchiMoveType.Buff) {
                     can_miss = false;
-                    can_critial = false;
+                    can_critical = false;
                     can_matchup = false;
                 }
 

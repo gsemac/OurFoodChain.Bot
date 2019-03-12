@@ -463,7 +463,7 @@ namespace OurFoodChain.gotchi {
                     // Check if this was a critical hit, or if the move missed.
 
                     bool is_hit = !user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion));
-                    bool is_critical = user.selectedMove.info.can_critial && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.critical_rate)) == 0);
+                    bool is_critical = user.selectedMove.info.can_critical && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.critical_rate)) == 0);
 
                     if (is_hit) {
 
@@ -622,10 +622,9 @@ namespace OurFoodChain.gotchi {
                         if (user.selectedMove.info.can_matchup && weakness_multiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (user.selectedMove.info.can_critial && is_critical)
+                        if (user.selectedMove.info.can_critical && is_critical)
                             battle_text.Append(" Critical hit!");
 
-                        if (i + 1 < args.times)
                             battle_text.AppendLine();
 
                         // Normalize state changes (i.e. make sure no stats ended up being negative).
@@ -819,7 +818,10 @@ namespace OurFoodChain.gotchi {
 
             // Evolve it to the same point as the user's gotchi.
 
-            for (int i = 0; i < player1.stats.level / 10; ++i)
+            long evolved_times = 0;
+            long evolved_max = player1.stats.level / 10;
+
+            for (evolved_times = 0; evolved_times < evolved_max; ++evolved_times)
                 if (!await GotchiUtils.EvolveGotchiAsync(opp))
                     break;
 
@@ -829,6 +831,10 @@ namespace OurFoodChain.gotchi {
                 level = Math.Max(1, player1.stats.level + BotUtils.RandomInteger(-3, 4)), // up to 3 levels in either direction
                 exp = player1.stats.exp
             };
+
+            // For each time the species was not able to evolve to match up to its opponent, add a level.
+            if (evolved_times < evolved_max)
+                opp_stats.level += evolved_max - evolved_times;
 
             opp_stats = await GotchiStatsUtils.CalculateStats(opp, opp_stats);
 

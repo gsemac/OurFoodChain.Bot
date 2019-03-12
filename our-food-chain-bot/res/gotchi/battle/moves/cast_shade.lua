@@ -6,6 +6,7 @@
 
 	move.pp = 25;
 	move.type = type.Offensive;
+	move.can_critical = false;
 
 	move.requires.role = "producer";
 	move.requires.min_level = 10;

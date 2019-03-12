@@ -163,7 +163,12 @@ namespace OurFoodChain.gotchi {
 
         public double calculateDamage() {
 
-            double damage = user.atk;
+            return calculateDamage(user.atk);
+
+        }
+        public double calculateDamage(double baseDamage) {
+
+            double damage = baseDamage;
 
             return Math.Max(1.0, (damage * bonus_multiplier) - target.def) * matchup_multiplier;
 

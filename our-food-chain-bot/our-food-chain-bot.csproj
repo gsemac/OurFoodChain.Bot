@@ -247,10 +247,13 @@
     <None Include="res\gotchi\battle\moves\clean-up.lua" />
     <None Include="res\gotchi\battle\moves\degrade.lua" />
     <None Include="res\gotchi\battle\moves\digest.lua" />
+    <None Include="res\gotchi\battle\moves\echolocate.lua" />
     <None Include="res\gotchi\battle\moves\enzymes.lua" />
     <None Include="res\gotchi\battle\moves\desperation.lua" />
     <None Include="res\gotchi\battle\moves\filter.lua" />
+    <None Include="res\gotchi\battle\moves\fin_slash.lua" />
     <None Include="res\gotchi\battle\moves\grow.lua" />
+    <None Include="res\gotchi\battle\moves\helpless_facade.lua" />
     <None Include="res\gotchi\battle\moves\hit.lua" />
     <None Include="help\+fav.json" />
     <None Include="help\+pic.json" />
@@ -341,6 +344,7 @@
     <None Include="res\gotchi\battle\moves\leaf-bite.lua" />
     <None Include="res\gotchi\battle\moves\leaf-blade.lua" />
     <None Include="res\gotchi\battle\moves\leech.lua" />
+    <None Include="res\gotchi\battle\moves\mandi-bite.lua" />
     <None Include="res\gotchi\battle\moves\nettle.lua" />
     <None Include="res\gotchi\battle\moves\overgrowth.lua" />
     <None Include="res\gotchi\battle\moves\photo-boost.lua" />
@@ -348,6 +352,7 @@
     <None Include="res\gotchi\battle\moves\quick_withdraw.lua" />
     <None Include="res\gotchi\battle\moves\scavenge.lua" />
     <None Include="res\gotchi\battle\moves\skill_steal.lua" />
+    <None Include="res\gotchi\battle\moves\spark.lua" />
     <None Include="res\gotchi\battle\moves\spike_attack.lua" />
     <None Include="res\gotchi\battle\moves\sting.lua" />
     <None Include="res\gotchi\battle\moves\sun_power.lua" />
@@ -363,6 +368,7 @@
     <None Include="res\gotchi\battle\moves\wild_attack.lua" />
     <None Include="res\gotchi\battle\moves\withdraw.lua" />
     <None Include="res\gotchi\battle\moves\wrap.lua" />
+    <None Include="res\gotchi\battle\moves\wriggle.lua" />
     <None Include="res\gotchi\battle\moves\zap.lua" />
   </ItemGroup>
   <ItemGroup>

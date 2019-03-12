@@ -11,7 +11,7 @@
 	move.requires.role = "base-consumer";
 	move.requires.min_level = 10;
 
-end;
+end
 
 function callback(args) 
 	
@@ -26,4 +26,4 @@ function callback(args)
 
 	end;
 
-end;
+end

@@ -138,7 +138,7 @@ namespace OurFoodChain.gotchi {
                         continue;
 
                 }
-
+ 
                 set.Add(move);
 
             }

@@ -151,7 +151,7 @@ namespace OurFoodChain.gotchi {
             if (Regex.IsMatch(sp.description, "shell|carapace|exoskeleton", RegexOptions.IgnoreCase))
                 stats.def += 0.2;
 
-            if (Regex.IsMatch(sp.description, "flies|can fly|quick|fast|agile", RegexOptions.IgnoreCase))
+            foreach (Match m in Regex.Matches(sp.description, "flies|fly|quick|fast|agile|nimble", RegexOptions.IgnoreCase))
                 stats.spd += 0.2;
 
             // For additional variation, assign bonus multipliers randomly according to the species name.

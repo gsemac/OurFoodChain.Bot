@@ -173,16 +173,16 @@ namespace OurFoodChain.gotchi {
             if (turnCount == 0)
                 turnCount = 1;
 
-            // The faster gotchi goes first.
+            // The faster gotchi goes first if their selected moves have the priority, otherwise the higher priority move goes first.
             // If both gotchis have the same speed, the first attacker is randomly selected.
 
             PlayerState first, second;
 
-            if (player1.stats.spd > player2.stats.spd) {
+            if (player1.stats.spd > player2.stats.spd || player1.selectedMove.info.priority > player2.selectedMove.info.priority) {
                 first = player1;
                 second = player2;
             }
-            else if (player2.stats.spd > player1.stats.spd) {
+            else if (player2.stats.spd > player1.stats.spd || player2.selectedMove.info.priority > player1.selectedMove.info.priority) {
                 first = player2;
                 second = player1;
             }
@@ -648,6 +648,9 @@ namespace OurFoodChain.gotchi {
 
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat(battleText);
+
+            if (!string.IsNullOrEmpty(user.stats.status))
+                sb.AppendLine();
 
             if (user.stats.status == "poisoned") {
 

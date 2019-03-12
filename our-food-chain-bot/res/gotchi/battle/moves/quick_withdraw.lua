@@ -5,15 +5,16 @@
 
 	move.pp = 5;
 	move.type = type.Buff;
+	move.priority = 2;
 
 	move.requires.match = "shell|carapace";
 	move.requires.min_level = 20;
 
-end;
+end
 
 function callback(args) 		
 	
 	args.text = "quickly withdrawing into its shell";
 	args.user.status = "withdrawn";
 
-end;
+end

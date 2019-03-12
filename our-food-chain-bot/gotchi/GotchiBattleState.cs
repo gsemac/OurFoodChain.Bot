@@ -883,7 +883,7 @@ namespace OurFoodChain.gotchi {
                 if (winner_levels > 0)
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.gotchi.name), winner.stats.level));
 
-                if (((winner.stats.level - levels1) / 10) < (winner.stats.level / 10))
+                if (((winner.stats.level - winner_levels) / 10) < (winner.stats.level / 10))
                     if (await GotchiUtils.EvolveGotchiAsync(winner.gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(winner.gotchi.species_id);
@@ -906,7 +906,7 @@ namespace OurFoodChain.gotchi {
                 if (loser_levels > 0)
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(loser.gotchi.name), loser.stats.level));
 
-                if (((loser.stats.level - levels1) / 10) < (loser.stats.level / 10))
+                if (((loser.stats.level - loser_levels) / 10) < (loser.stats.level / 10))
                     if (await GotchiUtils.EvolveGotchiAsync(loser.gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(loser.gotchi.species_id);

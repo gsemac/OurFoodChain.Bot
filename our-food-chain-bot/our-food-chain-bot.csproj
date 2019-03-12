@@ -345,6 +345,7 @@
     <None Include="res\gotchi\battle\moves\overgrowth.lua" />
     <None Include="res\gotchi\battle\moves\photo-boost.lua" />
     <None Include="res\gotchi\battle\moves\photosynthesize.lua" />
+    <None Include="res\gotchi\battle\moves\quick_withdraw.lua" />
     <None Include="res\gotchi\battle\moves\scavenge.lua" />
     <None Include="res\gotchi\battle\moves\skill_steal.lua" />
     <None Include="res\gotchi\battle\moves\spike_attack.lua" />

@@ -493,6 +493,10 @@ namespace OurFoodChain.gotchi {
                             args.text = "but something went wrong";
                         }
 
+                        // If the target is "withdrawn", allow them to survive the hit with at least 1 HP.
+                        if (target.stats.status == "withdrawn")
+                            target.stats.hp = Math.Max(1.0, target.stats.hp);
+
                         // Show the battle text.
                         // If the move doesn't specify a text, choose one automatically (where possible).
 
@@ -682,6 +686,14 @@ namespace OurFoodChain.gotchi {
                 user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 10.0));
 
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.gotchi.name)));
+
+            }
+            else if (user.stats.status == "withdrawn") {
+
+                // This status only lasts a single turn.
+
+                user.stats.status = "";
+                sb.Append(string.Format("\n⚡ **{0}** came back out of its shell.", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
 

@@ -33,6 +33,7 @@ namespace OurFoodChain.gotchi {
         public bool can_critial = true;
         public bool can_matchup = true;
         public int pp = 10;
+        public int priority = 1;
         public GotchiMoveType type = GotchiMoveType.Unspecified;
 
         public LuaGotchiMoveRequirements requires = new LuaGotchiMoveRequirements();

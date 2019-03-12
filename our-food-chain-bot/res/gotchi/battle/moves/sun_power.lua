@@ -6,6 +6,7 @@
 
 	move.pp = 10;
 
+	move.Type = type.Buff;
 	move.requires.role = "producer";
 	move.requires.min_level = 30;
 

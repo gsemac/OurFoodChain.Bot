@@ -178,11 +178,19 @@ namespace OurFoodChain.gotchi {
 
             PlayerState first, second;
 
-            if (player1.stats.spd > player2.stats.spd || player1.selectedMove.info.priority > player2.selectedMove.info.priority) {
+            if (player1.selectedMove.info.priority > player2.selectedMove.info.priority) {
                 first = player1;
                 second = player2;
             }
-            else if (player2.stats.spd > player1.stats.spd || player2.selectedMove.info.priority > player1.selectedMove.info.priority) {
+            else if (player2.selectedMove.info.priority > player1.selectedMove.info.priority) {
+                first = player2;
+                second = player1;
+            }
+            else if (player1.stats.spd > player2.stats.spd) {
+                first = player1;
+                second = player2;
+            }
+            else if (player2.stats.spd > player1.stats.spd) {
                 first = player2;
                 second = player1;
             }
@@ -454,7 +462,7 @@ namespace OurFoodChain.gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = !user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy));
+                    bool is_hit = !user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion));
                     bool is_critical = user.selectedMove.info.can_critial && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.critical_rate)) == 0);
 
                     if (is_hit) {
@@ -525,6 +533,10 @@ namespace OurFoodChain.gotchi {
                                 text = "lowering its opponent's accuracy by {target:acc%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
+                            else if (target.stats.evasion < target_clone.evasion) {
+                                text = "lowering its opponent's evasion by {target:eva%}";
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
+                            }
 
                             else if (user.stats.hp > user_clone.hp) {
                                 text = "recovering {user:recovered} HP";
@@ -544,6 +556,10 @@ namespace OurFoodChain.gotchi {
                             }
                             else if (user.stats.accuracy > user_clone.accuracy) {
                                 text = "boosting its accuracy by {user:acc%}";
+                                user.selectedMove.info.Type = GotchiMoveType.Buff;
+                            }
+                            else if (user.stats.evasion > user_clone.evasion) {
+                                text = "boosting its evasion by {user:eva%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
 
@@ -573,6 +589,8 @@ namespace OurFoodChain.gotchi {
                                     return string.Format("{0}%", (Math.Abs(target_clone.spd - target.stats.spd) / target_clone.spd) * 100.0);
                                 case "target:acc%":
                                     return string.Format("{0}%", (Math.Abs(target_clone.accuracy - target.stats.accuracy) / target_clone.accuracy) * 100.0);
+                                case "target:eva%":
+                                    return string.Format("{0}%", (Math.Abs(target_clone.evasion - target.stats.evasion) / target_clone.evasion) * 100.0);
 
                                 case "user:atk%":
                                     return string.Format("{0}%", (Math.Abs(user_clone.atk - user.stats.atk) / user_clone.atk) * 100.0);
@@ -582,6 +600,8 @@ namespace OurFoodChain.gotchi {
                                     return string.Format("{0}%", (Math.Abs(user_clone.spd - user.stats.spd) / user_clone.spd) * 100.0);
                                 case "user:acc%":
                                     return string.Format("{0}%", (Math.Abs(user_clone.accuracy - user.stats.accuracy) / user_clone.accuracy) * 100.0);
+                                case "user:eva%":
+                                    return string.Format("{0}%", (Math.Abs(user_clone.evasion - user.stats.evasion) / user_clone.evasion) * 100.0);
 
                                 case "user:recovered":
                                     return string.Format("{0:0.0}", user.stats.hp - user_clone.hp);
@@ -648,9 +668,6 @@ namespace OurFoodChain.gotchi {
 
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat(battleText);
-
-            if (!string.IsNullOrEmpty(user.stats.status))
-                sb.AppendLine();
 
             if (user.stats.status == "poisoned") {
 

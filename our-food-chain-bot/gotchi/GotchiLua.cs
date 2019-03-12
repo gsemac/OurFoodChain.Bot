@@ -105,6 +105,7 @@ namespace OurFoodChain.gotchi {
         public long level = 1;
         public double exp = 0;
         public double accuracy = 1.0;
+        public double evasion = 0.0;
 
         public string status = "none";
 

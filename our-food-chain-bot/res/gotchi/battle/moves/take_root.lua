@@ -15,7 +15,7 @@ end;
 
 function callback(args) 	
 	
-	args.text = "dug its roots into the ground";
+	args.text = "digging its roots into the ground";
 	args.user.status = "rooted";
 
 end;

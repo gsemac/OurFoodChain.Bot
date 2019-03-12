@@ -243,6 +243,7 @@
     <None Include="res\gotchi\battle\moves\break_defense.lua" />
     <None Include="res\gotchi\battle\moves\break_down.lua" />
     <None Include="res\gotchi\battle\moves\bright_glow.lua" />
+    <None Include="res\gotchi\battle\moves\camouflage.lua" />
     <None Include="res\gotchi\battle\moves\cast_shade.lua" />
     <None Include="res\gotchi\battle\moves\clean-up.lua" />
     <None Include="res\gotchi\battle\moves\degrade.lua" />

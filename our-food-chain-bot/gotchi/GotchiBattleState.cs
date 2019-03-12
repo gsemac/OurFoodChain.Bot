@@ -601,7 +601,7 @@ namespace OurFoodChain.gotchi {
                                 case "user:acc%":
                                     return string.Format("{0}%", (Math.Abs(user_clone.accuracy - user.stats.accuracy) / user_clone.accuracy) * 100.0);
                                 case "user:eva%":
-                                    return string.Format("{0}%", (Math.Abs(user_clone.evasion - user.stats.evasion) / user_clone.evasion) * 100.0);
+                                    return string.Format("{0}%", (user.stats.evasion == 0.0 ? user.stats.evasion : (Math.Abs(user_clone.evasion - user.stats.evasion) / user_clone.evasion)) * 100.0);
 
                                 case "user:recovered":
                                     return string.Format("{0:0.0}", user.stats.hp - user_clone.hp);

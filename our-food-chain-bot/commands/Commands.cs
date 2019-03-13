@@ -1522,62 +1522,37 @@ namespace OurFoodChain {
         [Command("search")]
         public async Task Search(params string[] terms) {
 
-            // Make sure the required number of search terms have been provided.
-            // This situation should never actually arise, however.
+            // Create and execute the search query.
 
-            if (terms.Count() <= 0) {
-
-                await BotUtils.ReplyAsync_Error(Context, "Too few search terms have been provided.");
-
-                return;
-
-            }
-
-            // Build the SQL query using all of the search terms that the user has provided.
-
-            List<string> term_query_builder = new List<string>();
-
-            for (int i = 0; i < terms.Count(); ++i)
-                term_query_builder.Add(string.Format("(name LIKE {0} OR description LIKE {0} OR common_name LIKE {0})", string.Format("$term{0}", i)));
-
-            string sql_command_str = string.Format("SELECT * FROM Species WHERE {0};", string.Join(" AND ", term_query_builder));
-
-            // Generate a list of all species that match the search terms.
-
-            List<Species> species_list = new List<Species>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand(sql_command_str)) {
-
-                // Replace all parameters with their respective terms.
-
-                for (int i = 0; i < terms.Count(); ++i) {
-
-                    string term = "%" + terms[i].Trim() + "%";
-
-                    cmd.Parameters.AddWithValue(string.Format("$term{0}", i), term);
-
-                }
-
-                // Execute the query, and add all matching species to the list.
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows)
-                        species_list.Add(await Species.FromDataRow(row));
-
-            }
-
-            species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+            SearchQuery query = new SearchQuery(terms);
+            SearchQuery.FindResult result = await query.FindMatchesAsync();
 
             // Build the embed.
 
-            if (species_list.Count() <= 0) {
+            if (result.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, "No species matching this query.");
+                await BotUtils.ReplyAsync_Info(Context, "No species matching this query could be found.");
 
             }
             else {
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: string.Format("Search results ({0})", species_list.Count())));
+                PaginatedEmbedBuilder embed;
+
+                if (result.groups.ContainsKey(SearchQuery.DEFAULT_GROUP)) {
+
+                    // If there's only one group, just list the species without creating separate fields.
+                    embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(result.groups[SearchQuery.DEFAULT_GROUP].ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+
+                }
+                else {
+
+                    embed = new PaginatedEmbedBuilder();
+                    embed.AddPages(EmbedUtils.SearchQueryResultToEmbedPages(result));
+
+                }
+
+                embed.SetFooter("");
+                embed.AddPageNumbers();
 
                 await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
@@ -1638,42 +1613,16 @@ namespace OurFoodChain {
             embed.WithTitle(string.Format("Taxonomy of {0}", sp.GetShortName()));
             embed.WithThumbnailUrl(sp.pics);
 
-            Taxon genus_info = null,
-                family_info = null,
-                order_info = null,
-                class_info = null,
-                phylum_info = null,
-                kingdom_info = null,
-                domain_info = null;
-
-            genus_info = await BotUtils.GetTaxonFromDb(sp.genusId, TaxonType.Genus);
-
-            if (!(genus_info is null))
-                family_info = await BotUtils.GetTaxonFromDb(genus_info.parent_id, TaxonType.Family);
-
-            if (!(family_info is null))
-                order_info = await BotUtils.GetTaxonFromDb(family_info.parent_id, TaxonType.Order);
-
-            if (!(order_info is null))
-                class_info = await BotUtils.GetTaxonFromDb(order_info.parent_id, TaxonType.Class);
-
-            if (!(class_info is null))
-                phylum_info = await BotUtils.GetTaxonFromDb(class_info.parent_id, TaxonType.Phylum);
-
-            if (!(phylum_info is null))
-                kingdom_info = await BotUtils.GetTaxonFromDb(phylum_info.parent_id, TaxonType.Kingdom);
-
-            if (!(kingdom_info is null))
-                domain_info = await BotUtils.GetTaxonFromDb(kingdom_info.parent_id, TaxonType.Domain);
+            TaxonSet set = await BotUtils.GetFullTaxaFromDb(sp);
 
             string unknown = "Unknown";
-            string genus_name = genus_info is null ? unknown : genus_info.GetName();
-            string family_name = family_info is null ? unknown : family_info.GetName();
-            string order_name = order_info is null ? unknown : order_info.GetName();
-            string class_name = class_info is null ? unknown : class_info.GetName();
-            string phylum_name = phylum_info is null ? unknown : phylum_info.GetName();
-            string kingdom_name = kingdom_info is null ? unknown : kingdom_info.GetName();
-            string domain_name = domain_info is null ? unknown : domain_info.GetName();
+            string genus_name = set.Genus is null ? unknown : set.Genus.GetName();
+            string family_name = set.Family is null ? unknown : set.Family.GetName();
+            string order_name = set.Order is null ? unknown : set.Order.GetName();
+            string class_name = set.Class is null ? unknown : set.Class.GetName();
+            string phylum_name = set.Phylum is null ? unknown : set.Phylum.GetName();
+            string kingdom_name = set.Kingdom is null ? unknown : set.Kingdom.GetName();
+            string domain_name = set.Domain is null ? unknown : set.Domain.GetName();
 
             embed.AddField("Domain", domain_name, inline: true);
             embed.AddField("Kingdom", kingdom_name, inline: true);

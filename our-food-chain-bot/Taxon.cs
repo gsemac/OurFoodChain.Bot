@@ -18,6 +18,63 @@ namespace OurFoodChain {
         Domain
     }
 
+    class TaxonSet {
+
+        public Taxon Domain;
+        public Taxon Kingdom;
+        public Taxon Phylum;
+        public Taxon Class;
+        public Taxon Order;
+        public Taxon Family;
+        public Taxon Genus;
+        public Taxon Species;
+
+        public bool Contains(string name) {
+
+            return Contains(name, TaxonType.Domain) ||
+                Contains(name, TaxonType.Kingdom) ||
+                Contains(name, TaxonType.Phylum) ||
+                Contains(name, TaxonType.Class) ||
+                Contains(name, TaxonType.Order) ||
+                Contains(name, TaxonType.Family) ||
+                Contains(name, TaxonType.Genus) ||
+                Contains(name, TaxonType.Species);
+
+        }
+        public bool Contains(string name, TaxonType type) {
+
+            if (string.IsNullOrEmpty(name))
+                return false;
+
+            name = name.Trim().ToLower();
+
+            switch (type) {
+
+                case TaxonType.Species:
+                    return Species != null && Species.name.ToLower() == name;
+                case TaxonType.Genus:
+                    return Genus != null && Genus.name.ToLower() == name;
+                case TaxonType.Family:
+                    return Family != null && Family.name.ToLower() == name;
+                case TaxonType.Order:
+                    return Order != null && Order.name.ToLower() == name;
+                case TaxonType.Class:
+                    return Class != null && Class.name.ToLower() == name;
+                case TaxonType.Phylum:
+                    return Phylum != null && Phylum.name.ToLower() == name;
+                case TaxonType.Kingdom:
+                    return Kingdom != null && Kingdom.name.ToLower() == name;
+                case TaxonType.Domain:
+                    return Domain != null && Domain.name.ToLower() == name;
+
+            }
+
+            return false;
+
+        }
+
+    }
+
     class Taxon {
 
         public Taxon(TaxonType type) {

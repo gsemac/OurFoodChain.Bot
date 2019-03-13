@@ -232,6 +232,7 @@
     <Compile Include="utils\CommandUtils.cs" />
     <Compile Include="utils\GraphicsUtils.cs" />
     <Compile Include="utils\PaginatedEmbedBuilder.cs" />
+    <Compile Include="utils\SearchQuery.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\Tree.cs" />
     <Compile Include="utils\Utils.cs" />

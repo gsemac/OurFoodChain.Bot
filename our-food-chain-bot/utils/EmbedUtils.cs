@@ -9,6 +9,9 @@ namespace OurFoodChain {
 
     public class EmbedUtils {
 
+        public const int MAX_FIELD_COUNT = 25;
+        public const int MAX_EMBED_LENGTH = 2048;
+
         public static List<List<string>> ListToColumns(List<string> items, int itemsPerColumn) {
 
             List<List<string>> columns = new List<List<string>>();
@@ -81,6 +84,49 @@ namespace OurFoodChain {
                     pages.Add(new EmbedBuilder());
 
                 pages.Last().Fields.Add(field);
+
+            }
+
+            return pages;
+
+        }
+        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(SearchQuery.FindResult result, int itemsPerField = 10) {
+
+            List<EmbedBuilder> pages = new List<EmbedBuilder>();
+            int fields_per_page = 6;
+
+            foreach (string key in result.groups.Keys) {
+
+                SearchQuery.FindResultGroup group = result.groups[key];
+                List<string> items = group.ToList();
+
+                List<List<string>> columns = ListToColumns(items, itemsPerField);
+                int column_index = 1;
+
+                foreach (List<string> column in columns) {
+
+                    // Create the field for this column.
+
+                    string title = key.Length > 25 ? key.Substring(0, 22) + "..." : key;
+
+                    EmbedFieldBuilder field = new EmbedFieldBuilder {
+                        Name = column_index == 1 ? string.Format("{0} ({1})", StringUtils.ToTitleCase(title), items.Count()) : string.Format("...", StringUtils.ToTitleCase(title)),
+                        Value = string.Join(Environment.NewLine, column),
+                        IsInline = true
+                    };
+
+                    ++column_index;
+
+                    // Add the field to the embed, creating a new page if needed.
+
+                    int field_length = field.Name.ToString().Length + field.Value.ToString().Length;
+
+                    if (pages.Count() <= 0 || pages.Last().Fields.Count() >= fields_per_page || pages.Last().Length + field_length > MAX_EMBED_LENGTH)
+                        pages.Add(new EmbedBuilder());
+
+                    pages.Last().Fields.Add(field);
+
+                }
 
             }
 

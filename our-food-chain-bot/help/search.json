@@ -2,8 +2,10 @@
   "name": "search",
   "aliases": [],
   "category": "info",
-  "description": "Lists species that have names or descriptions matching the search terms.",
+  "description": "Lists species that have names or descriptions matching the search terms.\n\nVarious modifiers are supported for filtering results: `group`, `zone`, `role`, `name`, `owner`, `status`, and `taxon`, as well as `genus`, `family`, and so on.\n\nThe `group` modifier sorts the results into groupings. For example, to group by zone, use `group:zone`. Supported groupings are `zone`, `genus`, `owner`, `status`, and `role`.",
   "examples": [
-    "search coral"
+    "search coral",
+    "search owner:username zone:f",
+    "search genus:cornu status:extant"
   ]
 }

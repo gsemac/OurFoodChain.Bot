@@ -1037,6 +1037,33 @@ namespace OurFoodChain {
             return species.ToArray();
 
         }
+        public static async Task<TaxonSet> GetFullTaxaFromDb(Species sp) {
+
+            TaxonSet set = new TaxonSet();
+
+            set.Genus = await GetTaxonFromDb(sp.genusId, TaxonType.Genus);
+
+            if (!(set.Genus is null))
+                set.Family = await GetTaxonFromDb(set.Genus.parent_id, TaxonType.Family);
+
+            if (!(set.Family is null))
+                set.Order = await GetTaxonFromDb(set.Family.parent_id, TaxonType.Order);
+
+            if (!(set.Order is null))
+                set.Class = await GetTaxonFromDb(set.Order.parent_id, TaxonType.Class);
+
+            if (!(set.Class is null))
+                set.Phylum = await GetTaxonFromDb(set.Class.parent_id, TaxonType.Phylum);
+
+            if (!(set.Phylum is null))
+                set.Kingdom = await GetTaxonFromDb(set.Phylum.parent_id, TaxonType.Kingdom);
+
+            if (!(set.Kingdom is null))
+                set.Domain = await GetTaxonFromDb(set.Kingdom.parent_id, TaxonType.Domain);
+
+            return set;
+
+        }
 
         public static async Task AddRoleToDb(Role role) {
 

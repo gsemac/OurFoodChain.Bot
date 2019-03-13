@@ -1232,35 +1232,8 @@ namespace OurFoodChain {
 
             if (sp_list.Count() <= 0) {
 
-                // The species could not be find. Check all species to find a suggestion.
-
-                List<Species> sp_list_2 = new List<Species>();
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species;")) {
-
-                    using (DataTable rows = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in rows.Rows)
-                            sp_list_2.Add(await Species.FromDataRow(row));
-
-                }
-
-                sp_list = sp_list_2.ToArray();
-
-                int min_dist = int.MaxValue;
-                string suggestion = string.Empty;
-
-                foreach (Species sp in sp_list) {
-
-                    int dist = LevenshteinDistance.Compute(species, sp.name);
-
-                    if (dist < min_dist) {
-                        min_dist = dist;
-                        suggestion = sp.GetShortName();
-                    }
-
-                }
-
-                await ReplyAsync_NoSuchSpeciesExists(context, suggestion);
+                // The species could not be found. Check all species to find a suggestion.
+                await ReplyAsync_SpeciesSuggestions(context, genus, species);
 
                 return null;
 
@@ -1273,6 +1246,35 @@ namespace OurFoodChain {
             }
 
             return sp_list[0];
+
+        }
+        public static async Task ReplyAsync_SpeciesSuggestions(ICommandContext context, string genus, string species) {
+
+            List<Species> sp_list = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species;")) {
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        sp_list.Add(await Species.FromDataRow(row));
+
+            }
+
+            int min_dist = int.MaxValue;
+            string suggestion = string.Empty;
+
+            foreach (Species sp in sp_list) {
+
+                int dist = LevenshteinDistance.Compute(species, sp.name);
+
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    suggestion = sp.GetShortName();
+                }
+
+            }
+
+            await ReplyAsync_NoSuchSpeciesExists(context, suggestion);
 
         }
         public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context, string suggestion = "") {

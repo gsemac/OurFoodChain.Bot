@@ -192,6 +192,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commands\GalleryCommands.cs" />
     <Compile Include="commands\HelpCommands.cs" />
     <Compile Include="commands\IdeasCommands.cs" />
     <Compile Include="commands\MapCommands.cs" />

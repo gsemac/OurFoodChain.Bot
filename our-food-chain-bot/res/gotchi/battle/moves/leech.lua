@@ -7,16 +7,16 @@
 	move.type = type.Offensive;
 
 	move.requires.role = "parasite";
-	move.requires.min_level = 10;
-	move.requires.unrestricted_match = "leech|suck|sap";
+	move.requires.minLevel = 10;
+	move.requires.unrestrictedMatch = "leech|suck|sap";
 
-end;
+end
 
 function callback(args) 		
 
-	args.applyDamage();
+	args.DoDamage();
 
-	args.user.hp = args.user.hp + (args.calculateDamage() / 2);
+	args.user.hp = args.user.hp + (args.TotalDamage() / 2);
 	args.text = "sapping {damage} hit points";
 
-end;
+end

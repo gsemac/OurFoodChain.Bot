@@ -126,9 +126,9 @@ namespace OurFoodChain.gotchi {
 
             foreach (LuaGotchiMove move in GotchiMoveRegistry.Registry.Values) {
 
-                if (string.IsNullOrEmpty(move.requires.unrestricted_match) || !Regex.Match(sp.description, move.requires.unrestricted_match).Success) {
+                if (string.IsNullOrEmpty(move.requires.unrestrictedMatch) || !Regex.Match(sp.description, move.requires.unrestrictedMatch).Success) {
 
-                    if (stats.level < move.requires.min_level || stats.level > move.requires.max_level)
+                    if (stats.level < move.requires.minLevel || stats.level > move.requires.maxLevel)
                         continue;
 
                     if (!string.IsNullOrEmpty(move.requires.match) && !Regex.Match(sp.description, move.requires.match).Success)

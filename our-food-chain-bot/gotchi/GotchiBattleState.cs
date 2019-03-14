@@ -391,8 +391,8 @@ namespace OurFoodChain.gotchi {
 
                     // Draw health bars.
 
-                    _drawHealthBar(gfx, p1.x, 180, state.player1.stats.hp / state.player1.stats.max_hp);
-                    _drawHealthBar(gfx, p2.x, 180, state.player2.stats.hp / state.player2.stats.max_hp);
+                    _drawHealthBar(gfx, p1.x, 180, state.player1.stats.hp / state.player1.stats.maxHp);
+                    _drawHealthBar(gfx, p2.x, 180, state.player2.stats.hp / state.player2.stats.maxHp);
 
                 }
             });
@@ -423,7 +423,7 @@ namespace OurFoodChain.gotchi {
             // #todo Role match-ups should be defined in an external file.
 
             Role[] target_roles = await BotUtils.GetRolesFromDbBySpecies(target.gotchi.species_id);
-            double weakness_multiplier = user.selectedMove.info.can_matchup ? _getWeaknessMultiplier(user.selectedMove.info.role, target_roles) : 1.0;
+            double weakness_multiplier = user.selectedMove.info.canMatchup ? _getWeaknessMultiplier(user.selectedMove.info.role, target_roles) : 1.0;
             Species target_species = await BotUtils.GetSpeciesFromDb(target.gotchi.species_id);
 
             // Execute the selected move.
@@ -431,22 +431,20 @@ namespace OurFoodChain.gotchi {
             StringBuilder battle_text = new StringBuilder();
             battle_text.AppendLine(battleText);
 
-            if (!string.IsNullOrEmpty(user.selectedMove.info.script_path)) {
+            if (!string.IsNullOrEmpty(user.selectedMove.info.scriptPath)) {
 
                 // Create, initialize, and execute the script associated with this move.
 
                 Script script = new Script();
                 LuaUtils.InitializeScript(script);
 
-                script.DoFile(user.selectedMove.info.script_path);
+                script.DoFile(user.selectedMove.info.scriptPath);
 
                 // Initialize the callback args.
 
                 LuaGotchiMoveCallbackArgs args = new LuaGotchiMoveCallbackArgs {
-                    user = user.stats,
-                    target = target.stats,
-                    target_roles = target_roles,
-                    target_species = target_species
+                    user = new LuaGotchiParameters(user.stats, null, null),
+                    target = new LuaGotchiParameters(target.stats, target_roles, target_species)
                 };
 
                 // Initialize the move state (required for only certain moves).
@@ -461,23 +459,23 @@ namespace OurFoodChain.gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = target.stats.status != "blinding" && (!user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
-                    bool is_critical = user.selectedMove.info.can_critical && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.critical_rate)) == 0);
+                    bool is_hit = target.stats.status != "blinding" && (!user.selectedMove.info.canMiss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hitRate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
+                    bool is_critical = user.selectedMove.info.canCritical && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.criticalRate)) == 0);
 
                     if (is_hit) {
 
                         // Set additional parameters in the callback.
 
-                        args.matchup_multiplier = weakness_multiplier;
-                        args.bonus_multiplier = user.selectedMove.info.multiplier;
+                        args.matchupMultiplier = weakness_multiplier;
+                        args.bonusMultiplier = user.selectedMove.info.multiplier;
 
                         if (is_critical)
-                            args.bonus_multiplier *= 1.5;
+                            args.bonusMultiplier *= 1.5;
 
                         // Clone each user's stats before triggering the callback, so we can compare them before and after.
 
-                        LuaGotchiStats user_clone = user.stats.clone();
-                        LuaGotchiStats target_clone = target.stats.clone();
+                        LuaGotchiStats user_clone = user.stats.Clone();
+                        LuaGotchiStats target_clone = target.stats.Clone();
 
                         // Trigger the callback.
 
@@ -621,15 +619,15 @@ namespace OurFoodChain.gotchi {
                         });
 
                         battle_text.Append(string.Format("{0} **{1}** used **{2}**, {3}!",
-                            user.selectedMove.info.icon(),
+                            user.selectedMove.info.Icon(),
                             StringUtils.ToTitleCase(user.gotchi.name),
                             StringUtils.ToTitleCase(user.selectedMove.info.name),
                             text));
 
-                        if (user.selectedMove.info.can_matchup && weakness_multiplier > 1.0)
+                        if (user.selectedMove.info.canMatchup && weakness_multiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (user.selectedMove.info.can_critical && is_critical && target.stats.hp < target_clone.hp)
+                        if (user.selectedMove.info.canCritical && is_critical && target.stats.hp < target_clone.hp)
                             battle_text.Append(" Critical hit!");
 
                         battle_text.AppendLine();
@@ -637,15 +635,15 @@ namespace OurFoodChain.gotchi {
                         // Normalize state changes (i.e. make sure no stats ended up being negative).
                         // Do this after the message has been shown so things like damage higher than the target's HP can still be shown correctly.
 
-                        user.stats.normalize();
-                        target.stats.normalize();
+                        user.stats.Normalize();
+                        target.stats.Normalize();
 
                     }
                     else {
 
                         // If the move missed, so display a failure message.
                         battle_text.AppendLine(string.Format("{0} **{1}** used **{2}**, but it missed!",
-                            user.selectedMove.info.icon(),
+                            user.selectedMove.info.Icon(),
                             StringUtils.ToTitleCase(user.gotchi.name),
                             StringUtils.ToTitleCase(user.selectedMove.info.name)));
 
@@ -661,7 +659,7 @@ namespace OurFoodChain.gotchi {
 
                 // If there is no Lua script associated with the given move, display a failure message.
                 battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it forgot how!",
-                    user.selectedMove.info.icon(),
+                    user.selectedMove.info.Icon(),
                     StringUtils.ToTitleCase(user.gotchi.name),
                     StringUtils.ToTitleCase(user.selectedMove.info.name)));
 
@@ -679,7 +677,7 @@ namespace OurFoodChain.gotchi {
 
                 // If the user is poisoned, apply poison damage (1/16th of max HP).
 
-                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 16.0));
+                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.maxHp / 16.0));
 
                 sb.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.gotchi.name)));
 
@@ -688,7 +686,7 @@ namespace OurFoodChain.gotchi {
 
                 // If the user is rooted, heal some HP (1/10th of max HP).
 
-                user.stats.hp = Math.Min(user.stats.max_hp, user.stats.hp + (user.stats.max_hp / 10.0));
+                user.stats.hp = Math.Min(user.stats.maxHp, user.stats.hp + (user.stats.maxHp / 10.0));
 
                 sb.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.gotchi.name)));
 
@@ -697,7 +695,7 @@ namespace OurFoodChain.gotchi {
 
                 // If the user is wrapped in vines, apply poison damage (1/16th of max HP).
 
-                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 16.0));
+                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.maxHp / 16.0));
 
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.gotchi.name)));
 
@@ -709,7 +707,7 @@ namespace OurFoodChain.gotchi {
                 // If the user is surrounded by thorns, apply thorn damage (1/10th of max HP).
                 // Only damages the user if they are attacking the opponent.
 
-                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.max_hp / 10.0));
+                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.maxHp / 10.0));
 
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.gotchi.name)));
 

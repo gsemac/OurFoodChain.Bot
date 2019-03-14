@@ -8,11 +8,11 @@
 	move.multiplier = 0.3;
 	move.priority = 2;
 
-	move.requires.min_level = 10;
+	move.requires.minLevel = 10;
 	move.requires.match = "electric|static";
 
 end
 
 function callback(args) 
-	args.applyDamage();
+	args.DoDamage();
 end

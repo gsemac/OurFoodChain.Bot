@@ -8,9 +8,9 @@
 	move.type = type.Recovery;
 
 	move.requires.role = "scavenger";
-	move.requires.min_level = 10;
+	move.requires.minLevel = 10;
 
-end;
+end
 
 function callback(args) 
 	
@@ -20,6 +20,6 @@ function callback(args)
 
 	if(amount == 0) then 
 		args.text = "but couldn't find anything";
-	end;
+	end
 
-end;
+end

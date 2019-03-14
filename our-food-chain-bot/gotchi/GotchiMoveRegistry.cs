@@ -58,19 +58,18 @@ namespace OurFoodChain.gotchi {
                 try {
 
                     LuaGotchiMove move = new LuaGotchiMove {
-                        script_path = file
+                        scriptPath = file
                     };
 
                     script.DoFile(file);
                     script.Call(script.Globals["register"], move);
-
+        
                     // Register the move.
                     _addMoveToRegistry(move);
 
                 }
                 catch (Exception) {
-                    await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Error, "Gotchi", "Failed to register move: " +
-                        System.IO.Path.GetFileName(file));
+                    await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Error, "Gotchi", "Failed to register move: " + System.IO.Path.GetFileName(file));
                 }
 
             }

@@ -5,14 +5,14 @@
 	move.role = "predator";
 
 	move.pp = 10;
-	move.hit_rate = 0.1;
+	move.hitRate = 0.1;
 	move.multiplier = 2.5;
 
 	move.requires.role = "predator";
-	move.requires.min_level = 20;
+	move.requires.minLevel = 20;
 
-end;
+end
 
 function callback(args) 
-	args.applyDamage();
-end;
+	args.DoDamage();
+end

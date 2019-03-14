@@ -8,14 +8,14 @@
 
 	move.requires.match = "spike";
 
-end;
+end
 
 function callback(args) 
 
-	if(args.targetDescriptionMatches("fly|flies")) then
-		args.applyDamage(1.2);
+	if(args.TargetHasDescription("fly|flies")) then
+		args.DoDamage(BaseDamage(), 1.2);
 	else
-		args.applyDamage();
+		args.DoDamage();
 	end;
 
-end;
+end

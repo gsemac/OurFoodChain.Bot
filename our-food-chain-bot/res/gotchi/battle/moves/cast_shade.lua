@@ -6,17 +6,17 @@
 
 	move.pp = 25;
 	move.type = type.Offensive;
-	move.can_critical = false;
+	move.canCritical = false;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 10;
+	move.requires.minLevel = 10;
 	move.requires.match = "tree|tall|heavy";
 
-end;
+end
 
 function callback(args) 	
 	
 	args.text = "casting shade on the opponent";
 	args.target.status = "shaded";
 
-end;
+end

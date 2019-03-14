@@ -12,9 +12,9 @@ end
 
 function callback(args) 
 
-	args.applyDamage();
+	args.DoDamage();
 
-	if(rand(0, 6) == 0) then
+	if(chance(5)) then
 		args.target.def = args.target.def * 0.9;
 	end
 

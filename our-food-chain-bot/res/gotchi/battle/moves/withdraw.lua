@@ -8,8 +8,8 @@
 
 	move.requires.match = "shell|carapace";
 
-end;
+end
 
 function callback(args) 		
 	args.user.def = args.user.def * 1.2;
-end;
+end

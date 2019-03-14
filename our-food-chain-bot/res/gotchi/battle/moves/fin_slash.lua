@@ -9,9 +9,5 @@
 end
 
 function callback(args) 
-
-	damage = args.calculateDamage();
-
-	args.target.hp = args.target.hp - damage;
-
+	args.DoDamage(args.user.spd);
 end

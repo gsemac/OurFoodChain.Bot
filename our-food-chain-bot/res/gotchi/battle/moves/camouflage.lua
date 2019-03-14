@@ -5,10 +5,10 @@
 	move.pp = 5;
 	move.requires.match = "camouflage";
 
-end;
+end
 
 function callback(args) 
 
 	args.user.evasion = args.user.evasion + 0.1;
 
-end;
+end

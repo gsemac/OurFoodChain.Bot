@@ -7,11 +7,11 @@
 
 	move.requires.match = "glow|\blight\b|bioluminescen(?:t|ce)";
 
-end;
+end
 
 function callback(args) 	
 	
 	amount = 0.05;
 	args.target.accuracy = args.target.accuracy * (1.0 - amount);
 
-end;
+end

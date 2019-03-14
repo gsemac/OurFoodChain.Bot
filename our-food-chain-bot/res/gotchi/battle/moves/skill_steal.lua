@@ -7,9 +7,9 @@
 	move.type = type.Offensive;
 
 	move.requires.role = "parasite";
-	move.requires.min_level = 20;
+	move.requires.minLevel = 20;
 
-end;
+end
 
 function callback(args) 	
 	
@@ -25,4 +25,4 @@ function callback(args)
 
 	args.text = "swapping a stat with the opponent";
 
-end;
+end

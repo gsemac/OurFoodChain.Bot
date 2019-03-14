@@ -8,8 +8,8 @@
 
 	move.requires.role = "base-consumer";
 
-end;
+end
 
 function callback(args) 	
-	args.applyDamage();
-end;
+	args.DoDamage();
+end

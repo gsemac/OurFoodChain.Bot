@@ -8,11 +8,11 @@
 
 	move.requires.match = "toxin|poison";
 
-end;
+end
 
 function callback(args) 
 	
 	args.target.status = "poisoned";
 	args.text = "poisoning the opponent";
 
-end;
+end

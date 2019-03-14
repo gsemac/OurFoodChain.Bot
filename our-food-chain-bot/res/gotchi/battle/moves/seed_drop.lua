@@ -10,7 +10,7 @@
 	move.hit_rate = 0.9;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 20;
+	move.requires.minLevel = 20;
 	move.requires.match = "seed";
 
 end
@@ -20,5 +20,5 @@ function init(args)
 end
 
 function callback(args) 	
-	args.applyDamage();
+	args.DoDamage();
 end

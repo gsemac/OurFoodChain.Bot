@@ -7,14 +7,14 @@
 	move.type = type.Offensive;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 20;
+	move.requires.minLevel = 20;
 	move.requires.match = "thorn";
 
-end;
+end
 
 function callback(args) 
 	
 	args.target.status = "thorn-surrounded";
 	args.text = "surrounding the opponent with thorns";
 
-end;
+end

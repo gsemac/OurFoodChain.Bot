@@ -8,17 +8,17 @@
 
 	move.Type = type.Buff;
 	move.requires.role = "producer";
-	move.requires.min_level = 30;
+	move.requires.minLevel = 30;
 
-end;
+end
 
 function callback(args) 	
 	
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.user.boostAll(1.10);
+		args.user.MultiplyAll(1.10);
 		args.text = "boosting their stats by 10%";
 	end;
 
-end;
+end

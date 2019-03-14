@@ -8,14 +8,14 @@
 	move.type = type.Recovery;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 30;
+	move.requires.minLevel = 30;
 	move.requires.match = "root";
 
-end;
+end
 
 function callback(args) 	
 	
 	args.text = "digging its roots into the ground";
 	args.user.status = "rooted";
 
-end;
+end

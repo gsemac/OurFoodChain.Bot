@@ -9,7 +9,5 @@
 end
 
 function callback(args) 
-
 	args.user.accuracy = args.user.accuracy * 10;
-
 end

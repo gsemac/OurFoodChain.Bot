@@ -8,8 +8,8 @@
 
 	move.requires.role = "parasite";
 
-end;
+end
 
 function callback(args) 	
-	args.applyDamage();
-end;
+	args.DoDamage();
+end

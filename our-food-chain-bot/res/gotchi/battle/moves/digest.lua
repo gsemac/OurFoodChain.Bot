@@ -7,16 +7,16 @@
 	move.pp = 15;
 
 	move.requires.role = "decomposer";
-	move.requires.min_level = 40;
+	move.requires.minLevel = 40;
 
-end;
+end
 
 function callback(args) 
 
 	if(rand(0, 10) == 0) then
-		args.target.boostAll(0.9);
+		args.target.MultiplyAll(0.9);
 	end;
 
-	args.applyDamage();
+	args.DoDamage();
 
-end;
+end

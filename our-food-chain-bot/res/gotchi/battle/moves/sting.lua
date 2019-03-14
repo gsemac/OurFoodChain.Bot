@@ -4,15 +4,15 @@
 	move.description = "Attacks the opponent with stinger(s). Does low damage, but never misses.";
 
 	move.pp = 40;
-	move.hit_rate = 1.0;
-	move.can_miss = false;
+	move.hitRate = 1.0;
+	move.canMiss = false;
 	move.multiplier = 0.8;
 
 	move.requires.match = "sting";
-	move.requires.max_level = 10;
+	move.requires.maxLevel = 10;
 
-end;
+end
 
 function callback(args) 
-	args.applyDamage();
-end;
+	args.DoDamage();
+end

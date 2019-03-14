@@ -7,10 +7,10 @@
 	move.pp = 40;
 
 	move.requires.role = "predator";
-	move.requires.unrestricted_match = "teeth|jaws|bite";
+	move.requires.unrestrictedMatch = "teeth|jaws|bite";
 
-end;
+end
 
 function callback(args) 
-	args.applyDamage();
-end;
+	args.DoDamage();
+end

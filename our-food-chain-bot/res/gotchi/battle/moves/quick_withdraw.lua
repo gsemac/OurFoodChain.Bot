@@ -8,7 +8,7 @@
 	move.priority = 2;
 
 	move.requires.match = "shell|carapace";
-	move.requires.min_level = 20;
+	move.requires.minLevel = 20;
 
 end
 

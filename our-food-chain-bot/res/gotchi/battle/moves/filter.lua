@@ -8,10 +8,10 @@
 	move.type = type.Recovery;
 
 	move.requires.role = "detritivore";
-	move.requires.min_level = 10;
+	move.requires.minLevel = 10;
 
-end;
+end
 
 function callback(args) 	
-	args.recoverPercent(0.2);
-end;
+	args.DoRecoverPercent(0.2);
+end

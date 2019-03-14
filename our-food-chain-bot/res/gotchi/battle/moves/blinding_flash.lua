@@ -7,11 +7,11 @@
 	move.priority = 2;
 	move.requires.match = "flash|bright light";
 
-end;
+end
 
 function callback(args) 	
 	
 	args.user.status = "blinding";
 	args.text = "emitting a blinding bright light!";
 
-end;
+end

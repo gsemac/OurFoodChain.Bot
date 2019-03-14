@@ -13,10 +13,10 @@ namespace OurFoodChain.gotchi {
     public class LuaGotchiMoveRequirements {
 
         public string role = "";
-        public long min_level = 0;
-        public long max_level = long.MaxValue;
+        public long minLevel = 0;
+        public long maxLevel = long.MaxValue;
         public string match = "";
-        public string unrestricted_match = "";
+        public string unrestrictedMatch = "";
 
     }
 
@@ -27,19 +27,19 @@ namespace OurFoodChain.gotchi {
         public string description = BotUtils.DEFAULT_DESCRIPTION;
         public string role = "";
         public double multiplier = 1.0;
-        public double critical_rate = 1.0;
-        public double hit_rate = 1.0;
-        public bool can_miss = true;
-        public bool can_critical = true;
-        public bool can_matchup = true;
+        public double criticalRate = 1.0;
+        public double hitRate = 1.0;
+        public bool canMiss = true;
+        public bool canCritical = true;
+        public bool canMatchup = true;
         public int pp = 10;
         public int priority = 1;
         public GotchiMoveType type = GotchiMoveType.Unspecified;
-
         public LuaGotchiMoveRequirements requires = new LuaGotchiMoveRequirements();
-        // Used to load the callback when the script is used
-        public string script_path = "";
 
+        /// <summary>
+        /// Gets or sets the move type of the move, setting additional fields according to the move type (e.g. recovery moves cannot critical).
+        /// </summary>
         public GotchiMoveType Type {
             get {
                 return type;
@@ -49,15 +49,28 @@ namespace OurFoodChain.gotchi {
                 type = value;
 
                 if (type == GotchiMoveType.Recovery || type == GotchiMoveType.Buff) {
-                    can_miss = false;
-                    can_critical = false;
-                    can_matchup = false;
+
+                    canMiss = false;
+                    canCritical = false;
+                    canMatchup = false;
+
                 }
 
             }
         }
 
-        public string icon() {
+        /// <summary>
+        /// The script path is set when the script is loaded so that the callback can be loaded when the move is used.
+        /// </summary>
+        [MoonSharpHidden]
+        public string scriptPath = "";
+
+        /// <summary>
+        /// Returns the emoji associated with the move's move type.
+        /// </summary>
+        /// <returns>A string containing the emoji associated with this move's move type.</returns>
+        [MoonSharpHidden]
+        public string Icon() {
 
             switch (Type) {
 
@@ -81,26 +94,29 @@ namespace OurFoodChain.gotchi {
     public class LuaGotchiStats {
 
         public LuaGotchiStats() {
+            _init();
+        }
+        public LuaGotchiStats(LuaGotchiStats stats) {
 
-            base_hp = hp;
-            base_max_hp = max_hp;
-            base_atk = atk;
-            base_def = def;
-            base_spd = spd;
+            hp = stats.hp;
+            maxHp = stats.maxHp;
+            atk = stats.atk;
+            def = stats.def;
+            spd = stats.spd;
 
         }
 
         public double hp = 1.5;
-        public double max_hp = 1.5;
+        public double maxHp = 1.5;
         public double atk = 0.8;
         public double def = 0.1;
         public double spd = 0.5;
 
-        public double base_hp;
-        public double base_max_hp;
-        public double base_atk;
-        public double base_def;
-        public double base_spd;
+        public double BaseHp;
+        public double BaseMaxHp;
+        public double BaseAtk;
+        public double BaseDef;
+        public double BaseSpd;
 
         public long level = 1;
         public double exp = 0;
@@ -109,75 +125,128 @@ namespace OurFoodChain.gotchi {
 
         public string status = "none";
 
-        public void normalize() {
-
-            max_hp = Math.Max(0.0, max_hp);
-            hp = Math.Min(Math.Max(0.0, hp), max_hp);
-            atk = Math.Max(0.0, atk);
-            def = Math.Max(0.0, def);
-            spd = Math.Max(0.0, spd);
-
-        }
-        public LuaGotchiStats clone() {
-
-            return (LuaGotchiStats)MemberwiseClone();
-
-        }
-        public void boostAll(double multiplier) {
+        /// <summary>
+        /// Multiplies all stats by the given scale factor.
+        /// </summary>
+        /// <param name="multiplier">The scale factor to use.</param>
+        public void MultiplyAll(double multiplier) {
 
             hp *= multiplier;
-            max_hp *= multiplier;
+            maxHp *= multiplier;
             atk *= multiplier;
             def *= multiplier;
             spd *= multiplier;
 
         }
-        public void reset() {
+        /// <summary>
+        /// Resets all stats to their base values, effectively undoing all stat changes.
+        /// </summary>
+        public void Reset() {
 
-            hp = base_hp;
-            max_hp = base_max_hp;
-            atk = base_atk;
-            def = base_def;
-            spd = base_spd;
+            hp = BaseHp;
+            maxHp = BaseMaxHp;
+            atk = BaseAtk;
+            def = BaseDef;
+            spd = BaseSpd;
+
+        }
+
+        /// <summary>
+        /// Ensures that all fields are set to sane values, adjusting them if necessary.
+        /// </summary>
+        [MoonSharpHidden]
+        public void Normalize() {
+
+            maxHp = Math.Max(0.0, maxHp);
+            hp = Math.Min(Math.Max(0.0, hp), maxHp);
+            atk = Math.Max(0.0, atk);
+            def = Math.Max(0.0, def);
+            spd = Math.Max(0.0, spd);
+
+        }
+        /// <summary>
+        /// Clone the object and returns the cloned instance.
+        /// </summary>
+        /// <returns>Returns the cloned instance.</returns>
+        [MoonSharpHidden]
+        public LuaGotchiStats Clone() {
+
+            return (LuaGotchiStats)MemberwiseClone();
+
+        }
+
+        private void _init() {
+
+            BaseHp = hp;
+            BaseMaxHp = maxHp;
+            BaseAtk = atk;
+            BaseDef = def;
+            BaseSpd = spd;
 
         }
 
     }
 
     [MoonSharpUserData]
+    public class LuaGotchiParameters :
+       LuaGotchiStats {
+
+        public LuaGotchiParameters(LuaGotchiStats stats, Role[] roles, Species species) :
+            base(stats) {
+
+            this.roles = roles;
+            this.species = species;
+
+        }
+
+        public Role[] roles;
+        public Species species;
+
+    }
+
+    [MoonSharpUserData]
     public class LuaGotchiMoveCallbackArgs {
 
-        public LuaGotchiStats user = new LuaGotchiStats();
-        public LuaGotchiStats target = new LuaGotchiStats();
-        public double bonus_multiplier = 1.0;
-        public double matchup_multiplier = 1.0;
+        public LuaGotchiParameters user = null;
+        public LuaGotchiParameters target = null;
+        public double bonusMultiplier = 1.0;
+        public double matchupMultiplier = 1.0;
         public int times = 1;
         public string text = "";
-        public Role[] target_roles;
-        public Species target_species;
 
-        public double totalMultiplier() {
-
-            return bonus_multiplier * matchup_multiplier;
-
+        /// <summary>
+        /// Returns the total scaling applied to this move's effect, including critical and match-up damage (e.g. damage scaling). 
+        /// </summary>
+        /// <returns>The total scaling applied to this move's effect.</returns>
+        public double TotalMultiplier() {
+            return bonusMultiplier * matchupMultiplier;
         }
 
-        public double getBaseDamage() {
-
+        /// <summary>
+        /// For offensive moves, returns the move's base damage.
+        /// </summary>
+        /// <returns>The move's base damage.</returns>
+        public double BaseDamage() {
             return user.atk;
-
         }
-        public double calculateDamage() {
-
-            return calculateDamage(user.atk);
-
+        /// <summary>
+        /// For offensive moves, returns the total damage dealt to the opponent, with all scaling and defensive stats taken into account.
+        /// </summary>
+        /// <returns>The total damage dealt to the opponent.</returns>
+        public double TotalDamage() {
+            return TotalDamage(BaseDamage());
         }
-        public double calculateDamage(double baseDamage) {
+        /// <summary>
+        /// For offensive moves, returns the total damage dealt to the opponent, with all scaling and defensive stats taken into account.
+        /// </summary>
+        /// <param name="baseDamage">The move's base damage, before scaling and defensive calculations.</param>
+        /// <returns>The total damage dealt to the opponent.</returns>
+        public double TotalDamage(double baseDamage) {
 
             //double damage = baseDamage;
             //return Math.Max(1.0, (damage * bonus_multiplier) - target.def) * matchup_multiplier;
 
-            double multiplier = bonus_multiplier * matchup_multiplier * (BotUtils.RandomInteger(85, 100 + 1) / 100.0);
+            double multiplier = bonusMultiplier * matchupMultiplier * (BotUtils.RandomInteger(85, 100 + 1) / 100.0);
             double damage = baseDamage * (user.atk / Math.Max(1.0, target.def)) / 10.0 * multiplier;
 
             damage = Math.Max(1.0, damage);
@@ -185,64 +254,65 @@ namespace OurFoodChain.gotchi {
             return damage;
 
         }
-        public void applyDamage() {
 
-            applyDamage(1.0);
-
+        public void DoDamage() {
+            DoDamage(TotalDamage());
         }
-        public void applyDamage(double multiplier) {
+        public void DoDamage(double baseDamage) {
+            DoDamage(baseDamage, 1.0);
+        }
+        public void DoDamage(double baseDamage, double multiplier) {
 
-            double damage = calculateDamage() * multiplier;
+            double damage = TotalDamage(baseDamage) * multiplier;
 
             target.hp -= damage;
 
         }
 
-        public void recoverPercent(double percent) {
-
-            user.hp += user.max_hp * percent;
-
-        }
-        public void recoverAmount(double amount) {
-
+        public void DoRecover(double amount) {
             user.hp += amount;
-
+        }
+        public void DoRecoverPercent(double percent) {
+            user.hp += user.maxHp * percent;
         }
 
-        public bool targetHasRole(string roleName) {
+        public bool TargetHasRole(string roleName) {
 
-            if (!(target_roles is null))
-                foreach (Role role in target_roles)
+            if (!(target.roles is null))
+                foreach (Role role in target.roles)
                     if (role.name.ToLower() == roleName)
                         return true;
 
             return false;
 
         }
-        public bool targetDescriptionMatches(string pattern) {
+        public bool TargetHasDescription(string pattern) {
 
-            if (target_species is null)
+            if (target.species is null)
                 return false;
 
-            return Regex.Match(target_species.description, pattern).Success;
+            return Regex.Match(target.species.description, pattern).Success;
 
         }
-        public void ifTargetMatchesSqlThen(string sql, DynValue callback) {
+        public bool TargetHasSql(string sql) {
 
             try {
 
                 using (SQLiteCommand cmd = new SQLiteCommand(sql)) {
 
-                    cmd.Parameters.AddWithValue("$id", target_species.id);
+                    cmd.Parameters.AddWithValue("$id", target.species.id);
 
                     bool result = (Database.GetScalar<long>(cmd).Result) > 0;
 
-                    callback.Function.Call(result);
+                    //callback.Function.Call(result);
+                    return true;
+
                 }
 
             }
             catch (Exception) {
-                callback.Function.Call(false);
+                //callback.Function.Call(false);
+                return false;
             }
 
         }
@@ -267,6 +337,7 @@ namespace OurFoodChain.gotchi {
             script.Globals["type"] = UserData.CreateStatic<GotchiMoveType>();
             script.Globals["console"] = (Action<string>)((string x) => Console.WriteLine(x));
             script.Globals["rand"] = (Func<int, int, int>)((int min, int max) => BotUtils.RandomInteger(min, max));
+            script.Globals["chance"] = (Func<int, bool>)((int chance) => BotUtils.RandomInteger(0, chance) == 0);
             script.Globals["max"] = (Func<int, int, int>)((int a, int b) => Math.Max(a, b));
             script.Globals["min"] = (Func<int, int, int>)((int a, int b) => Math.Min(a, b));
             script.Globals["swap"] = (Action<object, object>)((object a, object b) => Utils.Swap(ref a, ref b));

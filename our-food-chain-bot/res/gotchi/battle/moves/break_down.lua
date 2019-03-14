@@ -7,13 +7,13 @@
 	move.type = type.Offensive;
 
 	move.requires.role = "decomposer";
-	move.requires.min_level = 20;
+	move.requires.minLevel = 20;
 
-end;
+end
 
 function callback(args) 	
 	
-	args.target.reset();
+	args.target.Reset();
 	args.text = "resetting its opponent's stats";
 
-end;
+end

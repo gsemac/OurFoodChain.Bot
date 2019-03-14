@@ -7,7 +7,7 @@
 	move.pp = 5;
 
 	move.requires.role = "decomposer";
-	move.requires.min_level = 30;
+	move.requires.minLevel = 30;
 
 end;
 

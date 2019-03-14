@@ -9,14 +9,14 @@
 	move.requires.role = "predator";
 	move.requires.match = "poison|venom";
 
-end;
+end
 
 function callback(args) 
 
-	if(rand(0, 10) == 0) then
+	if(chance(10)) then
 		args.target.status = "poisoned";
 	end;
 
-	args.applyDamage();
+	args.DoDamage();
 
-end;
+end

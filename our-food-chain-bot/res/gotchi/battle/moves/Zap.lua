@@ -8,20 +8,16 @@
 
 	move.requires.match = "electric|static";
 
-end;
+end
 
 function callback(args) 
 
 	sql = "SELECT COUNT(*) FROM Zones WHERE type = \"aquatic\" AND id IN (SELECT zone_id FROM SpeciesZones WHERE species_id = $id);";
 
-	args.ifTargetMatchesSqlThen(sql, function(result)
-		
-		if(result) then
-			args.applyDamage(1.2);
-		else
-			args.applyDamage();
-		end;
+	if(args.TargetHasSql(sql)) then
+		args.DoDamage(args.BaseDamage(), 1.2);
+	else
+		args.DoDamage();
+	end
 
-	end);
-
-end;
+end

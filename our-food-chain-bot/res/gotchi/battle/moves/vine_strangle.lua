@@ -7,15 +7,15 @@
 	move.type = type.Offensive;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 30;
+	move.requires.minLevel = 30;
 	move.requires.match = "vine";
 
-end;
+end
 
 function callback(args) 
 	
-	base_damage = args.getBaseDamage() * (args.user.hp / args.target.hp);
+	base_damage = args.BaseDamage() * (args.user.hp / args.target.hp);
 
-	args.target.hp = args.target.hp - args.calculateDamage(base_damage);
+	args.target.hp = args.target.hp - args.TotalDamage(base_damage);
 
-end;
+end

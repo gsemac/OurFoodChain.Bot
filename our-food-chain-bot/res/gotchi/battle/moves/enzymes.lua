@@ -8,8 +8,8 @@
 
 	move.requires.role = "decomposer";
 
-end;
+end
 
 function callback(args) 
-	args.applyDamage();
-end;
+	args.DoDamage();
+end

@@ -9,21 +9,21 @@
 	move.multiplier = 0.5;
 
 	move.requires.role = "base-consumer";
-	move.requires.min_level = 10;
+	move.requires.minLevel = 10;
 
 end
 
 function callback(args) 
 	
-	if(args.targetHasRole("producer")) then
+	if(args.TargetHasRole("producer")) then
 	
 		args.target.status = "heal block";
-		args.applyDamage();
+		args.DoDamage();
 
 	else
 
 		args.text = "but it failed";
 
-	end;
+	end
 
 end

@@ -8,16 +8,16 @@
 	move.type = type.Recovery;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 30;
+	move.requires.minLevel = 30;
 
-end;
+end
 
 function callback(args) 	
 	
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.recoverPercent(0.15);
+		args.DoRecoverPercent(0.15);
 	end;
 
-end;
+end

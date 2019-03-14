@@ -7,13 +7,13 @@
 	move.pp = 10;
 
 	move.requires.role = "decomposer";
-	move.requires.min_level = 10;
+	move.requires.minLevel = 10;
 
 end;
 
 function callback(args) 	
 	
-	args.target.boostAll(0.8);
+	args.target.MultiplyAll(0.8);
 	args.text = "lowering their opponent's stats by 20%";
 
 end;

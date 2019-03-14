@@ -9,14 +9,14 @@
 
 	move.requires.role = "producer";
 
-end;
+end
 
 function callback(args) 	
 	
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.recoverPercent(0.1);
+		args.DoRecoverPercent(0.1);
 	end;
 
-end;
+end

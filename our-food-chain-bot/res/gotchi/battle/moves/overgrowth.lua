@@ -8,10 +8,10 @@
 	move.type = type.Buff;
 
 	move.requires.role = "producer";
-	move.requires.min_level = 30;
+	move.requires.minLevel = 30;
 
-end;
+end
 
 function callback(args) 	
 	args.user.atk = args.user.atk * 1.2;
-end;
+end

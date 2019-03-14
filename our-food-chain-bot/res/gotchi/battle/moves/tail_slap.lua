@@ -13,8 +13,8 @@ end
 function callback(args) 
 	
 	multiplier = min(2.0, args.user.spd / args.target.spd);
-	base_damage = args.getBaseDamage() * multiplier;
+	base_damage = args.BaseDamage() * multiplier;
 
-	args.target.hp = args.target.hp - args.calculateDamage(base_damage);
+	args.DoDamage(base_damage);
 
 end

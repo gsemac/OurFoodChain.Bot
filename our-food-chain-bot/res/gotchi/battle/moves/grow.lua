@@ -15,7 +15,7 @@ function callback(args)
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.user.boostAll(1.5);
+		args.user.boostAll(1.05);
 		args.text = "boosting their stats by 5%";
 	end;
 

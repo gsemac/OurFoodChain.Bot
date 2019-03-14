@@ -430,7 +430,6 @@ namespace OurFoodChain.gotchi {
 
             StringBuilder battle_text = new StringBuilder();
             battle_text.AppendLine(battleText);
-            battle_text.AppendLine();
 
             if (!string.IsNullOrEmpty(user.selectedMove.info.script_path)) {
 
@@ -875,7 +874,6 @@ namespace OurFoodChain.gotchi {
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(battleText);
-            sb.AppendLine();
 
             // Show the winner's accomplishments, then the loser's.
 

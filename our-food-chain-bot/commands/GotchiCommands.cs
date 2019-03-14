@@ -299,7 +299,7 @@ namespace OurFoodChain.gotchi {
 
             // Cannot challenge oneself.
 
-            if (false && !(user is null) && user.Id == Context.User.Id) {
+            if (!(user is null) && user.Id == Context.User.Id) {
 
                 await BotUtils.ReplyAsync_Error(Context, "You cannot challenge yourself.");
 

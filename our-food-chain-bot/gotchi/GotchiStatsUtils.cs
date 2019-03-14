@@ -116,7 +116,7 @@ namespace OurFoodChain.gotchi {
 
                     // Good health and recovery, but slow.
                     case "producer":
-                        stats.hp *= 1.8;
+                        stats.hp *= 2.0;
                         stats.spd *= 0.1;
                         stats.atk *= 0.3;
                         break;

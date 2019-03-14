@@ -4,7 +4,7 @@
 	move.description = "Regenerates with the help of sunlight, restoring HP.";
 	move.role = "producer";
 
-	move.pp = 10;
+	move.pp = 5;
 	move.type = type.Recovery;
 
 	move.requires.role = "producer";
@@ -16,7 +16,7 @@ function callback(args)
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.recoverPercent(0.2);
+		args.recoverPercent(0.1);
 	end;
 
 end;

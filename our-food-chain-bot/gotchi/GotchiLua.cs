@@ -90,8 +90,8 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        public double hp = 2.0;
-        public double max_hp = 2.0;
+        public double hp = 1.5;
+        public double max_hp = 1.5;
         public double atk = 0.8;
         public double def = 0.1;
         public double spd = 0.5;
@@ -162,6 +162,11 @@ namespace OurFoodChain.gotchi {
 
         }
 
+        public double getBaseDamage() {
+
+            return user.atk;
+
+        }
         public double calculateDamage() {
 
             return calculateDamage(user.atk);
@@ -169,9 +174,15 @@ namespace OurFoodChain.gotchi {
         }
         public double calculateDamage(double baseDamage) {
 
-            double damage = baseDamage;
+            //double damage = baseDamage;
+            //return Math.Max(1.0, (damage * bonus_multiplier) - target.def) * matchup_multiplier;
 
-            return Math.Max(1.0, (damage * bonus_multiplier) - target.def) * matchup_multiplier;
+            double multiplier = bonus_multiplier * matchup_multiplier * (BotUtils.RandomInteger(85, 100 + 1) / 100.0);
+            double damage = baseDamage * (user.atk / Math.Max(1.0, target.def)) / 10.0 * multiplier;
+
+            damage = Math.Max(1.0, damage);
+
+            return damage;
 
         }
         public void applyDamage() {

@@ -17,7 +17,7 @@ function callback(args)
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.recoverPercent(0.4);
+		args.recoverPercent(0.15);
 	end;
 
 end;

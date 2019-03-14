@@ -94,7 +94,7 @@ namespace OurFoodChain.gotchi {
                     case "decomposer":
                     case "scavenger":
                     case "detritvore":
-                        stats.hp *= 1.2;
+                        stats.hp *= 1.1;
                         stats.atk *= 0.8;
                         stats.spd *= 0.5;
                         break;
@@ -109,14 +109,14 @@ namespace OurFoodChain.gotchi {
 
                     // Fast attacker, but poor defender.
                     case "predator":
-                        stats.atk *= 1.8;
+                        stats.atk *= 1.5;
                         stats.spd *= 1.5;
-                        stats.def *= 0.3;
+                        stats.def *= 0.2;
                         break;
 
                     // Good health and recovery, but slow.
                     case "producer":
-                        stats.hp *= 2.5;
+                        stats.hp *= 1.8;
                         stats.spd *= 0.1;
                         stats.atk *= 0.3;
                         break;

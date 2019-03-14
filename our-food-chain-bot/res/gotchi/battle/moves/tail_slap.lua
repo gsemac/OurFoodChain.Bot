@@ -12,8 +12,8 @@ end;
 
 function callback(args) 
 	
-	damage = args.calculateDamage();
+	base_damage = args.getBaseDamage() * (args.user.spd / args.target.spd);
 
-	args.target.hp = args.target.hp - max(1.0, damage * (((args.user.spd / args.target.spd) / 15.0) + 1.0));
+	args.target.hp = args.target.hp - args.calculateDamage(base_damage);
 
 end;

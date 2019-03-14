@@ -461,7 +461,7 @@ namespace OurFoodChain.gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = !user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion));
+                    bool is_hit = target.stats.status != "blinding" && (!user.selectedMove.info.can_miss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hit_rate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
                     bool is_critical = user.selectedMove.info.can_critical && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.critical_rate)) == 0);
 
                     if (is_hit) {
@@ -501,8 +501,16 @@ namespace OurFoodChain.gotchi {
                         }
 
                         // If the target is "withdrawn", allow them to survive the hit with at least 1 HP.
-                        if (target.stats.status == "withdrawn")
+                        if (target.stats.status == "withdrawn") {
+
                             target.stats.hp = Math.Max(1.0, target.stats.hp);
+                            target.stats.status = "";
+
+                        }
+
+                        // If the target is "blinding", remove the status.
+                        if (target.stats.status == "blinding")
+                            target.stats.status = "";
 
                         // Show the battle text.
                         // If the move doesn't specify a text, choose one automatically (where possible).
@@ -621,10 +629,10 @@ namespace OurFoodChain.gotchi {
                         if (user.selectedMove.info.can_matchup && weakness_multiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (user.selectedMove.info.can_critical && is_critical)
+                        if (user.selectedMove.info.can_critical && is_critical && target.stats.hp < target_clone.hp)
                             battle_text.Append(" Critical hit!");
 
-                            battle_text.AppendLine();
+                        battle_text.AppendLine();
 
                         // Normalize state changes (i.e. make sure no stats ended up being negative).
                         // Do this after the message has been shown so things like damage higher than the target's HP can still be shown correctly.
@@ -636,7 +644,7 @@ namespace OurFoodChain.gotchi {
                     else {
 
                         // If the move missed, so display a failure message.
-                        battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it missed!",
+                        battle_text.AppendLine(string.Format("{0} **{1}** used **{2}**, but it missed!",
                             user.selectedMove.info.icon(),
                             StringUtils.ToTitleCase(user.gotchi.name),
                             StringUtils.ToTitleCase(user.selectedMove.info.name)));

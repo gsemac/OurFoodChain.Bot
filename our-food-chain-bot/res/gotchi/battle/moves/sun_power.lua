@@ -4,7 +4,7 @@
 	move.description = "Grows and boosts stats with the help of sunlight.";
 	move.role = "producer";
 
-	move.pp = 10;
+	move.pp = 5;
 
 	move.Type = type.Buff;
 	move.requires.role = "producer";
@@ -17,8 +17,8 @@ function callback(args)
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.user.boostAll(1.20);
-		args.text = "boosting their stats by 20%";
+		args.user.boostAll(1.10);
+		args.text = "boosting their stats by 10%";
 	end;
 
 end;

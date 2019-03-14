@@ -242,6 +242,7 @@
     <None Include="config.json" />
     <None Include="res\gotchi\battle\moves\all-out_attack.lua" />
     <None Include="res\gotchi\battle\moves\bite.lua" />
+    <None Include="res\gotchi\battle\moves\blinding_flash.lua" />
     <None Include="res\gotchi\battle\moves\break_defense.lua" />
     <None Include="res\gotchi\battle\moves\break_down.lua" />
     <None Include="res\gotchi\battle\moves\bright_glow.lua" />
@@ -379,6 +380,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\gotchi\battle\moves\seed_drop.lua" />
+    <None Include="res\gotchi\battle\moves\vine_strangle.lua" />
     <Content Include="res\gotchi\bubble_dead.png" />
     <Content Include="res\gotchi\bubble_eating.png" />
     <Content Include="res\gotchi\bubble_energetic.png" />

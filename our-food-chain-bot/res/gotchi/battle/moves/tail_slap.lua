@@ -8,12 +8,13 @@
 
 	move.requires.match = "tail";
 
-end;
+end
 
 function callback(args) 
 	
-	base_damage = args.getBaseDamage() * (args.user.spd / args.target.spd);
+	multiplier = min(2.0, args.user.spd / args.target.spd);
+	base_damage = args.getBaseDamage() * multiplier;
 
 	args.target.hp = args.target.hp - args.calculateDamage(base_damage);
 
-end;
+end

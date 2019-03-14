@@ -154,6 +154,9 @@ namespace OurFoodChain.gotchi {
             foreach (Match m in Regex.Matches(sp.description, "flies|fly|quick|fast|agile|nimble", RegexOptions.IgnoreCase))
                 stats.spd += 0.2;
 
+            foreach (Match m in Regex.Matches(sp.description, "slow|heavy", RegexOptions.IgnoreCase))
+                stats.spd = Math.Max(0.1, stats.spd - 0.2);
+
             // For additional variation, assign bonus multipliers randomly according to the species name.
 
             Random random = new Random(StringUtils.SumStringChars(sp.name + gotchi.born_ts.ToString()));

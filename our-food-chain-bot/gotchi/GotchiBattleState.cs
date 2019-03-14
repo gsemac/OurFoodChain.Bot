@@ -586,32 +586,32 @@ namespace OurFoodChain.gotchi {
 
                                 case "damage":
                                 case "target:damage":
-                                    return string.Format("{0:0.0}", target_clone.hp - target.stats.hp);
+                                    return string.Format("{0:0.#}", target_clone.hp - target.stats.hp);
 
                                 case "target:atk%":
-                                    return string.Format("{0}%", (Math.Abs(target_clone.atk - target.stats.atk) / target_clone.atk) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.atk - target.stats.atk) / target_clone.atk) * 100.0);
                                 case "target:def%":
-                                    return string.Format("{0}%", (Math.Abs(target_clone.def - target.stats.def) / target_clone.def) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.def - target.stats.def) / target_clone.def) * 100.0);
                                 case "target:spd%":
-                                    return string.Format("{0}%", (Math.Abs(target_clone.spd - target.stats.spd) / target_clone.spd) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.spd - target.stats.spd) / target_clone.spd) * 100.0);
                                 case "target:acc%":
-                                    return string.Format("{0}%", (Math.Abs(target_clone.accuracy - target.stats.accuracy) / target_clone.accuracy) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.accuracy - target.stats.accuracy) / target_clone.accuracy) * 100.0);
                                 case "target:eva%":
-                                    return string.Format("{0}%", (Math.Abs(target_clone.evasion - target.stats.evasion) / target_clone.evasion) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.evasion - target.stats.evasion) / target_clone.evasion) * 100.0);
 
                                 case "user:atk%":
-                                    return string.Format("{0}%", (Math.Abs(user_clone.atk - user.stats.atk) / user_clone.atk) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.atk - user.stats.atk) / user_clone.atk) * 100.0);
                                 case "user:def%":
-                                    return string.Format("{0}%", (Math.Abs(user_clone.def - user.stats.def) / user_clone.def) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.def - user.stats.def) / user_clone.def) * 100.0);
                                 case "user:spd%":
-                                    return string.Format("{0}%", (Math.Abs(user_clone.spd - user.stats.spd) / user_clone.spd) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.spd - user.stats.spd) / user_clone.spd) * 100.0);
                                 case "user:acc%":
-                                    return string.Format("{0}%", (Math.Abs(user_clone.accuracy - user.stats.accuracy) / user_clone.accuracy) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.accuracy - user.stats.accuracy) / user_clone.accuracy) * 100.0);
                                 case "user:eva%":
-                                    return string.Format("{0}%", (user.stats.evasion == 0.0 ? user.stats.evasion : (Math.Abs(user_clone.evasion - user.stats.evasion) / user_clone.evasion)) * 100.0);
+                                    return string.Format("{0:0.#}%", (user_clone.evasion == 0.0 ? user.stats.evasion : (Math.Abs(user_clone.evasion - user.stats.evasion) / user_clone.evasion)) * 100.0);
 
                                 case "user:recovered":
-                                    return string.Format("{0:0.0}", user.stats.hp - user_clone.hp);
+                                    return string.Format("{0:0.#}", user.stats.hp - user_clone.hp);
 
                                 default:
                                     return "???";

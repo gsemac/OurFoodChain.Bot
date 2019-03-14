@@ -8,12 +8,13 @@
 
 	move.requires.match = "tentacle";
 
-end;
+end
 
 function callback(args) 
 	
-	damage = args.calculateDamage();
+	multiplier = min(2.0, args.target.spd / args.user.spd);
+	base_damage = args.getBaseDamage() * multiplier;
 
-	args.target.hp = args.target.hp - max(1.0, damage * ((args.target.spd / args.user.spd) + 1.0));
+	args.target.hp = args.target.hp - args.calculateDamage(base_damage);
 
-end;
+end

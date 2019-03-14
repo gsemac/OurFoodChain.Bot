@@ -15,7 +15,7 @@ end
 
 function callback(args) 	
 
-	if(args.targetHasRole("producer")) then
+	if(args.TargetHasRole("producer")) then
 		args.DoDamage(args.BaseDamage(), 0.5);
 	else
 		args.DoDamage();

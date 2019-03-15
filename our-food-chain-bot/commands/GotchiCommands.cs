@@ -103,16 +103,6 @@ namespace OurFoodChain.gotchi {
         [Command("get")]
         public async Task Get(string genus, string species) {
 
-            // Delete the user's old gotchi if already existed.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE owner_id=$owner_id;")) {
-
-                cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
             // Get the species that the user specified.
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -135,6 +125,16 @@ namespace OurFoodChain.gotchi {
                     return;
 
                 }
+
+            }
+
+            // Delete the user's old gotchi if already existed.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE owner_id=$owner_id;")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
+
+                await Database.ExecuteNonQuery(cmd);
 
             }
 

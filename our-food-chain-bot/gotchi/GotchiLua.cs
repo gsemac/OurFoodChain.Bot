@@ -249,21 +249,21 @@ namespace OurFoodChain.gotchi {
             double multiplier = bonusMultiplier * matchupMultiplier * (BotUtils.RandomInteger(85, 100 + 1) / 100.0);
             double damage = baseDamage * (user.atk / Math.Max(1.0, target.def)) / 10.0 * multiplier;
 
-            damage = Math.Max(1.0, damage);
+            damage = Math.Max(1.0 * bonusMultiplier * matchupMultiplier, damage);
 
             return damage;
 
         }
 
         public void DoDamage() {
-            DoDamage(TotalDamage());
+            DoDamage(BaseDamage());
         }
         public void DoDamage(double baseDamage) {
             DoDamage(baseDamage, 1.0);
         }
         public void DoDamage(double baseDamage, double multiplier) {
 
-            double damage = TotalDamage(baseDamage) * multiplier;
+            double damage = TotalDamage(baseDamage * multiplier);
 
             target.hp -= damage;
 

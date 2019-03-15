@@ -491,6 +491,11 @@ namespace OurFoodChain.gotchi {
                                 if (!(script.Globals["callback"] is null))
                                     await script.CallAsync(script.Globals["callback"], args);
 
+                                // Update the user's stats after the callback.
+
+                                user.stats = args.user.Clone();
+                                target.stats = args.target.Clone();
+
                             }
 
                         }

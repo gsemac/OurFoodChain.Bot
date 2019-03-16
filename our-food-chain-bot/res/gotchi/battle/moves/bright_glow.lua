@@ -12,6 +12,6 @@ end
 function callback(args) 	
 	
 	amount = 0.05;
-	args.target.accuracy = args.target.accuracy * (1.0 - amount);
+	args.target.stats.accuracy = args.target.stats.accuracy * (1.0 - amount);
 
 end

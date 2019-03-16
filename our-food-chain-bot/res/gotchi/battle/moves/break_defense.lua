@@ -13,8 +13,8 @@ end;
 
 function callback(args) 
 
-	args.target.atk = args.target.atk + args.target.def;
-	args.target.def = 0;
+	args.target.stats.atk = args.target.stats.atk + args.target.stats.def;
+	args.target.stats.def = 0;
 	args.text = "breaking the opponent's defense";
 
 end;

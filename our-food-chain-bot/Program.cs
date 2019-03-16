@@ -12,7 +12,7 @@ namespace OurFoodChain {
              => new Program().MainAsync(args).GetAwaiter().GetResult();
 
         public async Task MainAsync(string[] args) {
-          
+
             OurFoodChainBot bot = new OurFoodChainBot();
 
             await bot.LoadSettings("config.json");

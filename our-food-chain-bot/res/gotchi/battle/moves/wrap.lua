@@ -12,7 +12,7 @@ end
 
 function callback(args) 
 	
-	multiplier = min(2.0, args.target.spd / args.user.spd);
+	multiplier = min(2.0, args.target.stats.spd / args.user.stats.spd);
 	base_damage = args.BaseDamage() * multiplier;
 
 	args.DoDamage(base_damage);

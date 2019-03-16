@@ -13,7 +13,7 @@ end
 
 function callback(args) 	
 	
-	args.target.Reset();
+	args.target.stats.Reset();
 	args.text = "resetting its opponent's stats";
 
 end

@@ -11,5 +11,5 @@
 end
 
 function callback(args) 		
-	args.user.def = args.user.def * 1.2;
+	args.user.stats.def = args.user.stats.def * 1.2;
 end

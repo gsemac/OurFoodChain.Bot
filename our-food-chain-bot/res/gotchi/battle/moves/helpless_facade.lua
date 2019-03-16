@@ -10,6 +10,6 @@ end
 
 function callback(args) 
 
-	args.target.def = args.target.def * 0.8;
+	args.target.stats.def = args.target.stats.def * 0.8;
 
 end

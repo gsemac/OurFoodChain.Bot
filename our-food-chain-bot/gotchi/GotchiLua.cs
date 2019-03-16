@@ -96,15 +96,6 @@ namespace OurFoodChain.gotchi {
         public LuaGotchiStats() {
             _init();
         }
-        public LuaGotchiStats(LuaGotchiStats stats) {
-
-            hp = stats.hp;
-            maxHp = stats.maxHp;
-            atk = stats.atk;
-            def = stats.def;
-            spd = stats.spd;
-
-        }
 
         public double hp = 1.5;
         public double maxHp = 1.5;
@@ -112,18 +103,16 @@ namespace OurFoodChain.gotchi {
         public double def = 0.1;
         public double spd = 0.5;
 
-        public double BaseHp;
-        public double BaseMaxHp;
-        public double BaseAtk;
-        public double BaseDef;
-        public double BaseSpd;
+        public double baseHp;
+        public double baseMaxHp;
+        public double baseAtk;
+        public double baseDef;
+        public double baseSpd;
 
         public long level = 1;
         public double exp = 0;
         public double accuracy = 1.0;
         public double evasion = 0.0;
-
-        public string status = "none";
 
         /// <summary>
         /// Multiplies all stats by the given scale factor.
@@ -143,11 +132,11 @@ namespace OurFoodChain.gotchi {
         /// </summary>
         public void Reset() {
 
-            hp = BaseHp;
-            maxHp = BaseMaxHp;
-            atk = BaseAtk;
-            def = BaseDef;
-            spd = BaseSpd;
+            hp = baseHp;
+            maxHp = baseMaxHp;
+            atk = baseAtk;
+            def = baseDef;
+            spd = baseSpd;
 
         }
 
@@ -177,30 +166,31 @@ namespace OurFoodChain.gotchi {
 
         private void _init() {
 
-            BaseHp = hp;
-            BaseMaxHp = maxHp;
-            BaseAtk = atk;
-            BaseDef = def;
-            BaseSpd = spd;
+            baseHp = hp;
+            baseMaxHp = maxHp;
+            baseAtk = atk;
+            baseDef = def;
+            baseSpd = spd;
 
         }
 
     }
 
     [MoonSharpUserData]
-    public class LuaGotchiParameters :
-       LuaGotchiStats {
+    public class LuaGotchiParameters {
 
-        public LuaGotchiParameters(LuaGotchiStats stats, Role[] roles, Species species) :
-            base(stats) {
+        public LuaGotchiParameters(LuaGotchiStats stats, Role[] roles, Species species) {
 
+            this.stats = stats;
             this.roles = roles;
             this.species = species;
 
         }
 
+        public LuaGotchiStats stats;
         public Role[] roles;
         public Species species;
+        public string status = GotchiBattleState.DEFAULT_GOTCHI_BATTLE_STATUS;
 
     }
 
@@ -227,7 +217,7 @@ namespace OurFoodChain.gotchi {
         /// </summary>
         /// <returns>The move's base damage.</returns>
         public double BaseDamage() {
-            return user.atk;
+            return user.stats.atk;
         }
         /// <summary>
         /// For offensive moves, returns the total damage dealt to the opponent, with all scaling and defensive stats taken into account.
@@ -247,7 +237,7 @@ namespace OurFoodChain.gotchi {
             //return Math.Max(1.0, (damage * bonus_multiplier) - target.def) * matchup_multiplier;
 
             double multiplier = bonusMultiplier * matchupMultiplier * (BotUtils.RandomInteger(85, 100 + 1) / 100.0);
-            double damage = baseDamage * (user.atk / Math.Max(1.0, target.def)) / 10.0 * multiplier;
+            double damage = baseDamage * (user.stats.atk / Math.Max(1.0, target.stats.def)) / 10.0 * multiplier;
 
             damage = Math.Max(1.0 * bonusMultiplier * matchupMultiplier, damage);
 
@@ -265,15 +255,15 @@ namespace OurFoodChain.gotchi {
 
             double damage = TotalDamage(baseDamage * multiplier);
 
-            target.hp -= damage;
+            target.stats.hp -= damage;
 
         }
 
         public void DoRecover(double amount) {
-            user.hp += amount;
+            user.stats.hp += amount;
         }
         public void DoRecoverPercent(double percent) {
-            user.hp += user.maxHp * percent;
+            user.stats.hp += user.stats.maxHp * percent;
         }
 
         public bool TargetHasRole(string roleName) {

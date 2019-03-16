@@ -13,5 +13,5 @@
 end
 
 function callback(args) 	
-	args.user.atk = args.user.atk * 1.2;
+	args.user.stats.atk = args.user.stats.atk * 1.2;
 end

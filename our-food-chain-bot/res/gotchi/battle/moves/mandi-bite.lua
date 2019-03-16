@@ -15,7 +15,7 @@ function callback(args)
 	args.DoDamage();
 
 	if(chance(5)) then
-		args.target.def = args.target.def * 0.9;
+		args.target.stats.def = args.target.stats.def * 0.9;
 	end
 
 end

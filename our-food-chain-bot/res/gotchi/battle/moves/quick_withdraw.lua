@@ -6,6 +6,7 @@
 	move.pp = 5;
 	move.type = type.Buff;
 	move.priority = 2;
+	move.canMiss = false;
 
 	move.requires.match = "shell|carapace";
 	move.requires.minLevel = 20;

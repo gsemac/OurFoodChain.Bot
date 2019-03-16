@@ -14,8 +14,8 @@ end
 
 function callback(args) 
 	
-	base_damage = args.BaseDamage() * (args.user.hp / args.target.hp);
+	base_damage = args.BaseDamage() * (args.user.stats.hp / args.target.stats.hp);
 
-	args.target.hp = args.target.hp - args.TotalDamage(base_damage);
+	args.DoDamage(base_damage);
 
 end

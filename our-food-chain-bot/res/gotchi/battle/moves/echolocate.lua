@@ -9,5 +9,5 @@
 end
 
 function callback(args) 
-	args.user.accuracy = args.user.accuracy * 10;
+	args.user.stats.accuracy = args.user.stats.accuracy * 10;
 end

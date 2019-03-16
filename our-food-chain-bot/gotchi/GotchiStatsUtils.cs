@@ -184,11 +184,11 @@ namespace OurFoodChain.gotchi {
             stats.maxHp = stats.hp;
 
             // Copy stats over to base stats, so base stats can be referenced later even if they are changed during battle.
-            stats.BaseHp = stats.hp;
-            stats.BaseMaxHp = stats.maxHp;
-            stats.BaseAtk = stats.atk;
-            stats.BaseDef = stats.def;
-            stats.BaseSpd = stats.spd;
+            stats.baseHp = stats.hp;
+            stats.baseMaxHp = stats.maxHp;
+            stats.baseAtk = stats.atk;
+            stats.baseDef = stats.def;
+            stats.baseSpd = stats.spd;
 
             return stats;
 

@@ -9,6 +9,6 @@ end
 
 function callback(args) 
 
-	args.user.evasion = args.user.evasion + 0.1;
+	args.user.stats.evasion = args.user.stats.evasion + 0.1;
 
 end

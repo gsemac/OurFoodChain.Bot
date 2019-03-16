@@ -16,7 +16,7 @@ end
 
 function callback(args) 
 
-	args.user.hp = min(1, args.user.hp);
+	args.user.stats.hp = min(1, args.user.stats.hp);
 
 	args.DoDamage();
 

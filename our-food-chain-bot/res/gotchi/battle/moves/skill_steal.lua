@@ -16,11 +16,11 @@ function callback(args)
 	r = rand(0, 3);
 
 	if(r == 0) then
-		swap(args.user.atk, args.target.atk);
+		swap(args.user.stats.atk, args.target.stats.atk);
 	elseif(r == 1) then
-		swap(args.user.def, args.target.def);
+		swap(args.user.stats.def, args.target.stats.def);
 	elseif(r == 2) then
-		swap(args.user.spd, args.target.spd);
+		swap(args.user.stats.spd, args.target.stats.spd);
 	end
 
 	args.text = "swapping a stat with the opponent";

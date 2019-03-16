@@ -16,7 +16,7 @@ function callback(args)
 
 	args.DoDamage();
 
-	args.user.hp = args.user.hp + (args.TotalDamage() / 2);
+	args.user.stats.hp = args.user.stats.hp + (args.TotalDamage() / 2);
 	args.text = "sapping {damage} hit points";
 
 end

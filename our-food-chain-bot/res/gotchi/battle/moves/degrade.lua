@@ -13,7 +13,7 @@ end;
 
 function callback(args) 	
 	
-	args.target.MultiplyAll(0.8);
+	args.target.stats.MultiplyAll(0.8);
 	args.text = "lowering their opponent's stats by 20%";
 
 end;

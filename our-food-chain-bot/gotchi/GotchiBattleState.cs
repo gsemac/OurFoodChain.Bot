@@ -19,6 +19,8 @@ namespace OurFoodChain.gotchi {
         public const ulong WILD_GOTCHI_USER_ID = 0;
         public const long WILD_GOTCHI_ID = -1;
 
+        public const string DEFAULT_GOTCHI_BATTLE_STATUS = "none";
+
         private static ConcurrentDictionary<ulong, GotchiBattleState> _battle_states = new ConcurrentDictionary<ulong, GotchiBattleState>();
 
         public class PlayerState {
@@ -26,6 +28,7 @@ namespace OurFoodChain.gotchi {
             public LuaGotchiStats stats;
             public GotchiMoveset moves;
             public GotchiMove selectedMove = null;
+            public string status = DEFAULT_GOTCHI_BATTLE_STATUS;
         }
 
         public PlayerState player1;
@@ -443,8 +446,8 @@ namespace OurFoodChain.gotchi {
                 // Initialize the callback args.
 
                 LuaGotchiMoveCallbackArgs args = new LuaGotchiMoveCallbackArgs {
-                    user = new LuaGotchiParameters(user.stats, null, null),
-                    target = new LuaGotchiParameters(target.stats, target_roles, target_species)
+                    user = new LuaGotchiParameters(user.stats, null, null) { status = user.status },
+                    target = new LuaGotchiParameters(target.stats, target_roles, target_species) { status = target.status }
                 };
 
                 // Initialize the move state (required for only certain moves).
@@ -459,7 +462,7 @@ namespace OurFoodChain.gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = target.stats.status != "blinding" && (!user.selectedMove.info.canMiss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hitRate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
+                    bool is_hit = target.status != "blinding" && (!user.selectedMove.info.canMiss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hitRate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
                     bool is_critical = user.selectedMove.info.canCritical && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.criticalRate)) == 0);
 
                     if (is_hit) {
@@ -474,14 +477,14 @@ namespace OurFoodChain.gotchi {
 
                         // Clone each user's stats before triggering the callback, so we can compare them before and after.
 
-                        LuaGotchiStats user_clone = user.stats.Clone();
-                        LuaGotchiStats target_clone = target.stats.Clone();
+                        LuaGotchiStats user_before = user.stats.Clone();
+                        LuaGotchiStats target_before = target.stats.Clone();
 
                         // Trigger the callback.
 
                         try {
 
-                            if (user.selectedMove.info.type == GotchiMoveType.Recovery && user.stats.status == "heal block") {
+                            if (user.selectedMove.info.type == GotchiMoveType.Recovery && user.status == "heal block") {
 
                                 args.text = "but it failed";
 
@@ -491,10 +494,10 @@ namespace OurFoodChain.gotchi {
                                 if (!(script.Globals["callback"] is null))
                                     await script.CallAsync(script.Globals["callback"], args);
 
-                                // Update the user's stats after the callback.
+                                // Copy the statuses over for both participants (to reflect changes made in the callback).
 
-                                user.stats = args.user.Clone();
-                                target.stats = args.target.Clone();
+                                user.status = args.user.status;
+                                target.status = args.target.status;
 
                             }
 
@@ -504,16 +507,16 @@ namespace OurFoodChain.gotchi {
                         }
 
                         // If the target is "withdrawn", allow them to survive the hit with at least 1 HP.
-                        if (target.stats.status == "withdrawn") {
+                        if (target.status == "withdrawn") {
 
                             target.stats.hp = Math.Max(1.0, target.stats.hp);
-                            target.stats.status = "";
+                            target.status = "";
 
                         }
 
                         // If the target is "blinding", remove the status.
-                        if (target.stats.status == "blinding")
-                            target.stats.status = "";
+                        if (target.status == "blinding")
+                            target.status = "";
 
                         // Show the battle text.
                         // If the move doesn't specify a text, choose one automatically (where possible).
@@ -522,53 +525,53 @@ namespace OurFoodChain.gotchi {
 
                         if (string.IsNullOrEmpty(text)) {
 
-                            if (target.stats.hp < target_clone.hp) {
+                            if (target.stats.hp < target_before.hp) {
                                 text = "dealing {target:damage} damage";
                                 user.selectedMove.info.Type = GotchiMoveType.Offensive;
                             }
 
-                            else if (target.stats.atk < target_clone.atk) {
+                            else if (target.stats.atk < target_before.atk) {
                                 text = "lowering its opponent's ATK by {target:atk%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.def < target_clone.def) {
+                            else if (target.stats.def < target_before.def) {
                                 text = "lowering its opponent's DEF by {target:def%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.spd < target_clone.spd) {
+                            else if (target.stats.spd < target_before.spd) {
                                 text = "lowering its opponent's SPD by {target:spd%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.accuracy < target_clone.accuracy) {
+                            else if (target.stats.accuracy < target_before.accuracy) {
                                 text = "lowering its opponent's accuracy by {target:acc%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.evasion < target_clone.evasion) {
+                            else if (target.stats.evasion < target_before.evasion) {
                                 text = "lowering its opponent's evasion by {target:eva%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
 
-                            else if (user.stats.hp > user_clone.hp) {
+                            else if (user.stats.hp > user_before.hp) {
                                 text = "recovering {user:recovered} HP";
                                 user.selectedMove.info.Type = GotchiMoveType.Recovery;
                             }
-                            else if (user.stats.atk > user_clone.atk) {
+                            else if (user.stats.atk > user_before.atk) {
                                 text = "boosting its ATK by {user:atk%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.def > user_clone.def) {
+                            else if (user.stats.def > user_before.def) {
                                 text = "boosting its DEF by {user:def%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.spd > user_clone.spd) {
+                            else if (user.stats.spd > user_before.spd) {
                                 text = "boosting its SPD by {user:spd%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.accuracy > user_clone.accuracy) {
+                            else if (user.stats.accuracy > user_before.accuracy) {
                                 text = "boosting its accuracy by {user:acc%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.evasion > user_clone.evasion) {
+                            else if (user.stats.evasion > user_before.evasion) {
                                 text = "boosting its evasion by {user:eva%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
@@ -589,32 +592,32 @@ namespace OurFoodChain.gotchi {
 
                                 case "damage":
                                 case "target:damage":
-                                    return string.Format("{0:0.#}", target_clone.hp - target.stats.hp);
+                                    return string.Format("{0:0.#}", target_before.hp - target.stats.hp);
 
                                 case "target:atk%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.atk - target.stats.atk) / target_clone.atk) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.atk - target.stats.atk) / target_before.atk) * 100.0);
                                 case "target:def%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.def - target.stats.def) / target_clone.def) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.def - target.stats.def) / target_before.def) * 100.0);
                                 case "target:spd%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.spd - target.stats.spd) / target_clone.spd) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.spd - target.stats.spd) / target_before.spd) * 100.0);
                                 case "target:acc%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.accuracy - target.stats.accuracy) / target_clone.accuracy) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.accuracy - target.stats.accuracy) / target_before.accuracy) * 100.0);
                                 case "target:eva%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_clone.evasion - target.stats.evasion) / target_clone.evasion) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.evasion - target.stats.evasion) / target_before.evasion) * 100.0);
 
                                 case "user:atk%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.atk - user.stats.atk) / user_clone.atk) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.atk - user.stats.atk) / user_before.atk) * 100.0);
                                 case "user:def%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.def - user.stats.def) / user_clone.def) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.def - user.stats.def) / user_before.def) * 100.0);
                                 case "user:spd%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.spd - user.stats.spd) / user_clone.spd) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.spd - user.stats.spd) / user_before.spd) * 100.0);
                                 case "user:acc%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_clone.accuracy - user.stats.accuracy) / user_clone.accuracy) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.accuracy - user.stats.accuracy) / user_before.accuracy) * 100.0);
                                 case "user:eva%":
-                                    return string.Format("{0:0.#}%", (user_clone.evasion == 0.0 ? user.stats.evasion : (Math.Abs(user_clone.evasion - user.stats.evasion) / user_clone.evasion)) * 100.0);
+                                    return string.Format("{0:0.#}%", (user_before.evasion == 0.0 ? user.stats.evasion : (Math.Abs(user_before.evasion - user.stats.evasion) / user_before.evasion)) * 100.0);
 
                                 case "user:recovered":
-                                    return string.Format("{0:0.#}", user.stats.hp - user_clone.hp);
+                                    return string.Format("{0:0.#}", user.stats.hp - user_before.hp);
 
                                 default:
                                     return "???";
@@ -632,7 +635,7 @@ namespace OurFoodChain.gotchi {
                         if (user.selectedMove.info.canMatchup && weakness_multiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (user.selectedMove.info.canCritical && is_critical && target.stats.hp < target_clone.hp)
+                        if (user.selectedMove.info.canCritical && is_critical && target.stats.hp < target_before.hp)
                             battle_text.Append(" Critical hit!");
 
                         battle_text.AppendLine();
@@ -678,7 +681,7 @@ namespace OurFoodChain.gotchi {
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat(battleText);
 
-            if (user.stats.status == "poisoned") {
+            if (user.status == "poisoned") {
 
                 // If the user is poisoned, apply poison damage (1/16th of max HP).
 
@@ -687,7 +690,7 @@ namespace OurFoodChain.gotchi {
                 sb.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user.stats.status == "rooted") {
+            else if (user.status == "rooted") {
 
                 // If the user is rooted, heal some HP (1/10th of max HP).
 
@@ -696,7 +699,7 @@ namespace OurFoodChain.gotchi {
                 sb.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user.stats.status == "vine-wrapped") {
+            else if (user.status == "vine-wrapped") {
 
                 // If the user is wrapped in vines, apply poison damage (1/16th of max HP).
 
@@ -705,7 +708,7 @@ namespace OurFoodChain.gotchi {
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user.stats.status == "thorn-surrounded") {
+            else if (user.status == "thorn-surrounded") {
 
                 // #todo Damage should only be incurred when the user uses a damaging move.
 
@@ -717,11 +720,11 @@ namespace OurFoodChain.gotchi {
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }
-            else if (user.stats.status == "withdrawn") {
+            else if (user.status == "withdrawn") {
 
                 // This status only lasts a single turn.
 
-                user.stats.status = "";
+                user.status = "";
                 sb.Append(string.Format("\n⚡ **{0}** came back out of its shell.", StringUtils.ToTitleCase(user.gotchi.name)));
 
             }

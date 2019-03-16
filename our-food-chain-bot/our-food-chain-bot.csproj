@@ -240,6 +240,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="help\gotchi\forfeit.json" />
     <None Include="res\gotchi\battle\moves\all-out_attack.lua" />
     <None Include="res\gotchi\battle\moves\bite.lua" />
     <None Include="res\gotchi\battle\moves\blinding_flash.lua" />

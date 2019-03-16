@@ -580,6 +580,26 @@ namespace OurFoodChain.gotchi {
 
         }
 
+        [Command("forfeit")]
+        public async Task Forfeit() {
+
+            // Get the battle state that the user is involved with.
+            GotchiBattleState state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
+
+            if (!await _validateGotchiBattleState(Context, state))
+                await BotUtils.ReplyAsync_Error(Context, "You are not currently in battle.");
+
+            else {
+
+                // Deregister the battle state.
+                GotchiBattleState.DeregisterBattle(Context.User.Id);
+
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has forfeited the battle.", Context.User.Username));
+
+            }
+
+        }
+
         [Command("help"), Alias("h")]
         public async Task Help() {
 
@@ -640,6 +660,22 @@ namespace OurFoodChain.gotchi {
 
         }
 
+        private static async Task<bool> _validateGotchiBattleState(ICommandContext context, GotchiBattleState battleState) {
+
+            if (battleState is null)
+                return false;
+
+            // Even in CPU battles, the first participant must be a human player still in the server.
+            if (await battleState.GetPlayer1UserAsync(context) is null)
+                return false;
+
+            // If not battling a CPU, the opponent must still be present in the server.
+            if (!battleState.IsBattlingCpu() && await battleState.GetPlayer2UserAsync(context) is null)
+                return false;
+
+            return true;
+
+        }
         private static async Task<bool> _replyValidateChallengerGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
 
             if (!await GotchiUtils.Reply_ValidateGotchiAsync(context, gotchi))

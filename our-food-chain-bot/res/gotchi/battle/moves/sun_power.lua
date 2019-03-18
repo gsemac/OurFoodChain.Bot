@@ -17,7 +17,7 @@ function callback(args)
 	if(args.user.status == "shaded") then
 		args.text = "but couldn't get any sun";
 	else
-		args.user.MultiplyAll(1.10);
+		args.user.stats.MultiplyAll(1.10);
 		args.text = "boosting their stats by 10%";
 	end;
 

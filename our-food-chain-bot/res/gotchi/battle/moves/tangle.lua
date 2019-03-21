@@ -15,6 +15,6 @@ end
 function callback(args) 	
 	
 	args.target.stats.spd = args.target.stats.spd * 0.8;
-	args.target.text = "lowering the opponent's speed by 20%";
+	args.text = "lowering the opponent's speed by 20%";
 
 end

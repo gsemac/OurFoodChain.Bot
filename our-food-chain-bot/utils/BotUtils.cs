@@ -1026,6 +1026,43 @@ namespace OurFoodChain {
             return species.ToArray();
 
         }
+        public static async Task<long> CountSpeciesInTaxonFromDb(Taxon taxon) {
+
+            long species_count = 0;
+
+            if (taxon.type == TaxonType.Species) {
+
+                // If a species was passed in, count it as a single species.
+                species_count += 1;
+
+            }
+            else if (taxon.type == TaxonType.Genus) {
+
+                // Count all species within this genus.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE genus_id=$genus_id;")) {
+
+                    cmd.Parameters.AddWithValue("$genus_id", taxon.id);
+
+                    species_count += await Database.GetScalar<long>(cmd);
+
+                }
+
+            }
+            else {
+
+                // Get all subtaxa and call this function recursively to get the species from each of them.
+
+                Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
+
+                foreach (Taxon t in subtaxa)
+                    species_count += await CountSpeciesInTaxonFromDb(t);
+
+            }
+
+            return species_count;
+
+        }
         public static async Task<Species[]> GetSpeciesInTaxonFromDb(string taxonName) {
 
             List<Species> species = new List<Species>();
@@ -1706,11 +1743,19 @@ namespace OurFoodChain {
 
                         else {
 
+                            // Count the number of species under this taxon.
+                            // Taxa with no species under them will not be displayed.
+
+                            long species_count = await CountSpeciesInTaxonFromDb(t);
+
+                            if (species_count <= 0)
+                                continue;
+
                             // Count the sub-taxa under this taxon.
 
                             long subtaxa_count = 0;
 
-                            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT count(*) FROM {0} WHERE {1}=$parent_id;",
+                            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT COUNT(*) FROM {0} WHERE {1}=$parent_id;",
                                 Taxon.TypeToDatabaseTableName(t.GetChildType()),
                                 Taxon.TypeToDatabaseColumnName(t.type)
                                 ))) {

@@ -1524,7 +1524,7 @@ namespace OurFoodChain {
 
             // Create and execute the search query.
 
-            SearchQuery query = new SearchQuery(terms);
+            SearchQuery query = new SearchQuery(Context, terms);
             SearchQuery.FindResult result = await query.FindMatchesAsync();
 
             // Build the embed.

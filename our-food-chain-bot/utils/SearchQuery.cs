@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -133,7 +134,9 @@ namespace OurFoodChain {
 
         }
 
-        public SearchQuery(string[] keywords) {
+        public SearchQuery(ICommandContext context, string[] keywords) {
+
+            _context = context;
 
             // Filter out the basic search terms from the modifiers.
 
@@ -256,7 +259,7 @@ namespace OurFoodChain {
 
                         case "owner":
                             await result.GroupByAsync(async (x) => {
-                                return new string[] { x.owner };
+                                return new string[] { await x.GetOwnerOrDefault(_context) };
                             });
                             break;
 
@@ -338,7 +341,7 @@ namespace OurFoodChain {
                 case "owner":
 
                     await result.FilterByAsync(async (x) => {
-                        return x.owner.ToLower() != value.ToLower();
+                        return (await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower();
                     });
 
                     break;
@@ -443,6 +446,7 @@ namespace OurFoodChain {
 
         }
 
+        ICommandContext _context;
         private List<string> _terms = new List<string>();
         private List<string> _modifiers = new List<string>();
 

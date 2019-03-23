@@ -1905,26 +1905,16 @@ namespace OurFoodChain {
 
             int user_rank = 1;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, COUNT(id) AS count FROM Species GROUP BY owner ORDER BY count DESC;"))
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, COUNT(id) AS count FROM Species GROUP BY user_id ORDER BY count DESC;"))
             using (DataTable table = await Database.GetRowsAsync(cmd)) {
-
-                long last_count = long.MaxValue;
 
                 foreach (DataRow row in table.Rows) {
 
                     long count = row.Field<long>("count");
 
-                    if (last_count == long.MaxValue)
-                        last_count = count;
-
-                    else if (count < last_count) {
-
+                    if (count > user_species_count)
                         user_rank += 1;
-                        last_count = count;
-
-                    }
-
-                    if (count == user_species_count)
+                    else
                         break;
 
                 }
@@ -2133,7 +2123,6 @@ namespace OurFoodChain {
             }
 
         }
-
 
     }
 

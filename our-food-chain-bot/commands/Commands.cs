@@ -1376,7 +1376,7 @@ namespace OurFoodChain {
                             description.Append(prey.Item1.isExtinct ? BotUtils.Strikeout(prey.Item1.GetShortName()) : prey.Item1.GetShortName());
 
                             if (!string.IsNullOrEmpty(prey.Item2))
-                                description.Append(string.Format(" ({0})", prey.Item2));
+                                description.Append(string.Format(" ({0})", prey.Item2.ToLower()));
 
                             description.AppendLine();
 

@@ -5,6 +5,7 @@
 	move.role = "producer";
 
 	move.pp = 10;
+	move.canMiss = false;
 
 	move.requires.role = "producer";
 

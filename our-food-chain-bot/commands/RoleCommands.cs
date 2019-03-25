@@ -129,7 +129,7 @@ namespace OurFoodChain {
                     StringUtils.ToTitleCase(role.name),
                     count);
 
-                embed.AddField(title, role.GetDescriptionOrDefault());
+                embed.AddField(title, role.GetShortDescription());
 
             }
 

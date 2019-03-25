@@ -15,7 +15,7 @@ function callback(args)
 
 	if(rand(0, 10) == 0) then
 		args.target.stats.MultiplyAll(0.9);
-	end;
+	end
 
 	args.DoDamage();
 

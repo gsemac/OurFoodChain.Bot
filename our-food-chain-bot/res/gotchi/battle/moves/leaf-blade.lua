@@ -19,6 +19,6 @@ function callback(args)
 		args.DoDamage(args.BaseDamage(), 0.5);
 	else
 		args.DoDamage();
-	end;
+	end
 
 end

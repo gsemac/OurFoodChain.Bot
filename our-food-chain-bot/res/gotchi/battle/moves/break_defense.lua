@@ -9,7 +9,7 @@
 	move.requires.role = "decomposer";
 	move.requires.minLevel = 30;
 
-end;
+end
 
 function callback(args) 
 
@@ -17,4 +17,4 @@ function callback(args)
 	args.target.stats.def = 0;
 	args.text = "breaking the opponent's defense";
 
-end;
+end

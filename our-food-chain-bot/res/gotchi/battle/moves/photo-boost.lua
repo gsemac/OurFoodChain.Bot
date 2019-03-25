@@ -18,6 +18,6 @@ function callback(args)
 		args.text = "but couldn't get any sun";
 	else
 		args.DoRecoverPercent(0.15);
-	end;
+	end
 
 end

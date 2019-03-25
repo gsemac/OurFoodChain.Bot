@@ -111,7 +111,7 @@ namespace OurFoodChain {
         }
 
         public static string GetShortDescription(string description) {
-            return Regex.Match(description, "^[a-zA-Z0-9 ,;:\\-\"’']+(?:\\.+|[!\\?])").Value;
+            return StringUtils.GetFirstSentence(description);
         }
         public static string GetFullName(string name) {
 
@@ -304,6 +304,9 @@ namespace OurFoodChain {
 
             return description;
 
+        }
+        public string GetShortDescription() {
+            return StringUtils.GetFirstSentence(GetDescriptionOrDefault());
         }
 
         public static Role FromDataRow(DataRow row) {

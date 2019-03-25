@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -35,6 +36,16 @@ namespace OurFoodChain {
         }
         public static string ConjunctiveJoin(string separator, IEnumerable<string> values) {
             return _joinWithUniqueEndSeparator(separator, " and ", values);
+        }
+        public static string GetFirstSentence(string value) {
+
+            Match match = Regex.Match(value, "^[a-zA-Z0-9 ,;:\\-\"’']+(?:\\.+|[!\\?])");
+
+            if (!match.Success || match.Length <= 0)
+                return value;
+
+            return match.Value;
+
         }
 
         // https://stackoverflow.com/questions/11454004/calculate-a-md5-hash-from-a-string

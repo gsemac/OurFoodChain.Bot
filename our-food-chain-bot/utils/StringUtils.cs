@@ -47,6 +47,14 @@ namespace OurFoodChain {
             return match.Value;
 
         }
+        public static string ReplaceWhitespaceCharacters(string value, string with = "_") {
+
+            if (string.IsNullOrEmpty(value))
+                return value;
+
+            return Regex.Replace(value, @"\s", with);
+
+        }
 
         // https://stackoverflow.com/questions/11454004/calculate-a-md5-hash-from-a-string
         public static string CreateMD5(string input) {

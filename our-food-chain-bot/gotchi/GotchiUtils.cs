@@ -370,7 +370,7 @@ namespace OurFoodChain.gotchi {
                 auto = true
             };
 
-            return await Reply_GenerateAndUploadGotchiGifAsync(context, new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = "home_aquatic.png" });
+            return await Reply_GenerateAndUploadGotchiGifAsync(context, new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
 
         }
         static public async Task<string> Reply_GenerateAndUploadGotchiGifAsync(ICommandContext context, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
@@ -383,6 +383,29 @@ namespace OurFoodChain.gotchi {
             await BotUtils.ReplyAsync_Error(context, "Failed to generate gotchi image.");
 
             return string.Empty;
+
+        }
+
+        public static async Task<string> GetGotchiBackgroundFileNameAsync(Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
+
+            // Returns a background image based on the gotchi passed in (i.e., corresponding to the zone it resides in).
+
+            if (!(gotchi is null) && gotchi.species_id > 0) {
+
+                Zone[] zones = await BotUtils.GetZonesFromDb(gotchi.species_id);
+
+                foreach (Zone zone in zones) {
+
+                    string candidate_filename = string.Format("home_{0}.png", StringUtils.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
+        
+                    if (System.IO.File.Exists("res/gotchi/" + candidate_filename))
+                        return candidate_filename;
+
+                }
+
+            }
+
+            return defaultFileName;
 
         }
 

@@ -399,7 +399,7 @@ namespace OurFoodChain.gotchi {
             if (background is null)
                 return;
 
-            gfx.DrawImage(background, new Rectangle(0, 0, background.Width, background.Height));
+            gfx.DrawImage(background, new Rectangle(0, 0, _screen_size.Width, _screen_size.Height));
 
         }
         private void _drawFood(Graphics gfx) {

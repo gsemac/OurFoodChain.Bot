@@ -389,7 +389,7 @@ namespace OurFoodChain.gotchi {
             };
 
             gif_url = await GotchiUtils.Reply_GenerateAndUploadGotchiGifAsync(context, new GotchiUtils.GotchiGifCreatorParams[] { p1, p2 }, new GotchiUtils.GotchiGifCreatorExtraParams {
-                backgroundFileName = "home_battle.png",
+                backgroundFileName = await GotchiUtils.GetGotchiBackgroundFileNameAsync(state.player2.gotchi, "home_battle.png"),
                 overlay = (Graphics gfx) => {
 
                     // Draw health bars.

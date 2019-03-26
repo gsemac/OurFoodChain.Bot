@@ -177,6 +177,7 @@ namespace OurFoodChain.trophies {
             _registry.Add(new Trophy("Can We Keep It?", "Be the first to create a species with fur.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Turn On The AC!", "Be the first to create a warm-blooded species.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
+            _registry.Add(new Trophy("Imposter", "Be the first to create a species that mimics another species.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
 
             await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Trophies", "Finished registering trophies");
 

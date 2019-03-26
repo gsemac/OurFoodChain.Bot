@@ -94,8 +94,6 @@ namespace OurFoodChain {
 
             }
 
-            embed.WithColor(embed_color);
-
             zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
             string zones_value = string.Join(", ", zone_names);
@@ -112,13 +110,13 @@ namespace OurFoodChain {
                 if (!(row is null)) {
 
                     embed_title = "[EXTINCT] " + embed_title;
-                    embed.WithColor(Color.Red);
+                    embed_color = Color.Red;
 
                     string reason = row.Field<string>("reason");
                     string ts = BotUtils.GetTimeStampAsDateString((long)row.Field<decimal>("timestamp"));
 
                     if (!string.IsNullOrEmpty(reason))
-                        description_builder.AppendLine(string.Format("**{0}: {1}**\n", ts, reason));
+                        description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", ts, reason));
 
                 }
 
@@ -128,6 +126,7 @@ namespace OurFoodChain {
 
             embed.WithTitle(embed_title);
             embed.WithThumbnailUrl(sp.pics);
+            embed.WithColor(embed_color);
 
             // If the description puts us over the character limit, we'll paginate.
 
@@ -156,6 +155,7 @@ namespace OurFoodChain {
 
                 PaginatedEmbedBuilder builder = new PaginatedEmbedBuilder(pages);
                 builder.AddPageNumbers();
+                builder.SetColor(embed_color);
 
                 await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, builder.Build());
 

@@ -1308,7 +1308,7 @@ namespace OurFoodChain {
                             string line_text = s.GetShortName();
 
                             if (!string.IsNullOrEmpty(notes))
-                                line_text += string.Format(" ({0})", notes);
+                                line_text += string.Format(" ({0})", notes.ToLower());
 
                             lines.Add(s.isExtinct ? string.Format("~~{0}~~", line_text) : line_text);
 

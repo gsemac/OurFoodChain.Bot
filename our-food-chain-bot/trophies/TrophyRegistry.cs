@@ -292,7 +292,7 @@ namespace OurFoodChain.trophies {
                     if (current_ts == 0)
                         current_ts = ts;
 
-                    if (ts - current_ts > ts_threshold || row_index == table.Rows.Count) {
+                    if (ts - current_ts > ts_threshold || row_index == table.Rows.Count - 1) {
 
                         // To make this process more efficient, we'll check the trophy condition at the end of an extinction event.
                         // The check will also occur when we reach the end of the extinction records, in case it ended on an extinction event.

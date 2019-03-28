@@ -1397,6 +1397,35 @@ namespace OurFoodChain {
 
         }
 
+        [Command("size")]
+        public async Task Size(string species) {
+            await Size("", species);
+        }
+        [Command("size")]
+        public async Task Size(string genus, string species) {
+
+            // Get the specified species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Attempt to get the size of the species.
+
+            SpeciesSizeMatch match = SpeciesSizeMatch.Match(sp.description);
+
+            // Output the result.
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.Title = string.Format("Size of {0}", sp.GetFullName());
+            embed.WithDescription(match.ToString());
+            embed.WithFooter("Size is determined from species description, and may not be accurate.");
+
+            await ReplyAsync("", false, embed.Build());
+
+        }
+
         [Command("addedby"), Alias("ownedby", "own", "owned")]
         public async Task AddedBy() {
             await AddedBy(Context.User);

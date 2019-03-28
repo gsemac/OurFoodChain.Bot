@@ -101,6 +101,47 @@ namespace OurFoodChain {
 
         }
 
+        public static string UnitsToAbbreviation(string value) {
+
+            switch (value.ToLower()) {
+
+                case "μm":
+                case "micrometer":
+                case "micrometers":
+                    return "μm";
+
+                case "mm":
+                case "millimeter":
+                case "millimeters":
+                    return "mm";
+
+                case "cm":
+                case "centimeter":
+                case "centimeters":
+                    return "cm";
+
+                case "m":
+                case "meter":
+                case "meters":
+                    return "m";
+
+                case "in":
+                case "inch":
+                case "inches":
+                    return "in";
+
+                case "ft":
+                case "foot":
+                case "feet":
+                    return "ft";
+
+
+            }
+
+            return value;
+
+        }
+
         private static string _joinWithUniqueEndSeparator(string separator, string endSeparator, IEnumerable<string> values) {
 
             if (values.Count() <= 0)

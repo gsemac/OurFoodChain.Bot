@@ -18,7 +18,7 @@ namespace OurFoodChain {
             // The first pass will look for things that are most likely to be the size of the species, with explicit keywords located around the size.
 
             string number_pattern = @"(\d+(?:\.\d+)?(?:\-\d+(?:\.\d+)?)?)";
-            string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|c?m|(?:micro|milli|centi)?meters?)";
+            string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|c?m|(?:micro|milli|centi)?meters?|μm)";
             string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow to|up to|size:)[\s\w]*?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
 
             Regex pass_1 = new Regex(pass_1_pattern, RegexOptions.IgnoreCase);

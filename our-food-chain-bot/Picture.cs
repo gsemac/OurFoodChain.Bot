@@ -14,6 +14,7 @@ namespace OurFoodChain {
         public long galleryId = 0;
         public string name;
         public string description;
+        public string footer = "";
         public string artist;
 
         public Picture() { }

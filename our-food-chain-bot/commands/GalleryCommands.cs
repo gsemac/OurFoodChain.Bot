@@ -78,7 +78,7 @@ namespace OurFoodChain {
                 pictures.Add(new Picture {
                     url = species.pics,
                     artist = await species.GetOwnerOrDefault(Context),
-                    description = string.Format("Depiction of {0}", species.GetShortName())
+                    footer = string.Format("Depiction of {0}", species.GetShortName())
                 });
 
             // Check the database for additional pictures to add to the gallery.
@@ -89,9 +89,19 @@ namespace OurFoodChain {
             Gallery gallery = await BotUtils.GetGalleryFromDb(gallery_name);
 
             if (!(gallery is null))
-                foreach (Picture p in await BotUtils.GetPicsFromDb(gallery))
+                foreach (Picture p in await BotUtils.GetPicsFromDb(gallery)) {
+
+                    // Make sure we don't add the default picture twice.
+                    // However, if we come across it and it has a description, set the description for the default picture.
+
+                    p.footer = string.Format("Depiction of {0}", species.GetShortName());
+
                     if (p.url != species.pics)
                         pictures.Add(p);
+                    else if (pictures.Count() > 0 && p.url == pictures[0].url)
+                        pictures[0].description = p.description;
+
+                }
 
             return pictures;
 
@@ -124,10 +134,11 @@ namespace OurFoodChain {
                     EmbedBuilder embed = new EmbedBuilder();
 
                     string title = string.Format("Pictures of {0} ({1} of {2})", galleryName, index, pictures.Count());
-                    string footer = string.Format("\"{0}\" by {2} — {1}", p.GetName(), p.GetDescriptionOrDefault(), p.GetArtist());
+                    string footer = string.Format("\"{0}\" by {1} — {2}", p.GetName(), p.GetArtist(), p.footer);
 
                     embed.WithTitle(title);
                     embed.WithImageUrl(p.url);
+                    embed.WithDescription(p.description);
                     embed.WithFooter(footer);
 
                     message.pages.Add(embed.Build());

@@ -203,7 +203,7 @@ namespace OurFoodChain {
                 // Get the name of the command that the user attempted to use.
 
                 System.Text.RegularExpressions.Match command_m = System.Text.RegularExpressions.Regex.Match(message.Content.Substring(pos),
-                    @"^\w+",
+                    @"^[^\s]+",
                     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
                 // If help documentation exists for this command, display it.

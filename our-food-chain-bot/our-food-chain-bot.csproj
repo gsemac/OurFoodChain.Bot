@@ -227,6 +227,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils\BotUtils.cs" />
+    <Compile Include="utils\HelpUtils.cs" />
     <Compile Include="utils\SpeciesSizeMatch.cs" />
     <Compile Include="utils\EmbedUtils.cs" />
     <Compile Include="utils\LevenshteinDistance.cs" />

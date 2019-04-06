@@ -196,7 +196,38 @@ namespace OurFoodChain {
             if (result.IsSuccess)
                 return true;
 
-            await BotUtils.ReplyAsync_Error(context, result.ErrorReason);
+            bool show_error_message = true;
+
+            if (result.Error == CommandError.BadArgCount) {
+
+                // Get the name of the command that the user attempted to use.
+
+                System.Text.RegularExpressions.Match command_m = System.Text.RegularExpressions.Regex.Match(message.Content.Substring(pos),
+                    @"^\w+",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                // If help documentation exists for this command, display it.
+
+                HelpUtils.CommandInfo command_info = HelpUtils.GetCommandInfo(command_m.Value);
+
+                if (!(command_info is null)) {
+
+                    EmbedBuilder embed = new EmbedBuilder();
+                    embed.WithColor(Color.Red);
+                    embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", command_m.Value));
+                    embed.WithDescription("❌ " + result.ErrorReason);
+                    embed.AddField("Example(s) of correct usage:", command_info.ExamplesToString(_config.prefix));
+
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+
+                    show_error_message = false;
+
+                }
+
+            }
+
+            if (show_error_message)
+                await BotUtils.ReplyAsync_Error(context, result.ErrorReason);
 
             return false;
 

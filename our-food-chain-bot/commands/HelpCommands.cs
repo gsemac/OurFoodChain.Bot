@@ -12,14 +12,6 @@ namespace OurFoodChain {
     public class HelpCommands :
         ModuleBase {
 
-        private class CommandInfo {
-            public string name = "";
-            public string description = "";
-            public string category = "uncategorized";
-            public string[] aliases;
-            public string[] examples;
-        }
-
         [Command("help"), Alias("h")]
         public async Task Help(string command = "", string nestedCommand = "") {
 
@@ -27,14 +19,14 @@ namespace OurFoodChain {
 
         }
 
-        private static async Task _showHelpCategory(ICommandContext context, List<CommandInfo> commandInfo, string category) {
+        private static async Task _showHelpCategory(ICommandContext context, List<HelpUtils.CommandInfo> commandInfo, string category) {
 
-            SortedDictionary<string, List<CommandInfo>> commands_lists = new SortedDictionary<string, List<CommandInfo>>();
+            SortedDictionary<string, List<HelpUtils.CommandInfo>> commands_lists = new SortedDictionary<string, List<HelpUtils.CommandInfo>>();
 
-            foreach (CommandInfo c in commandInfo) {
+            foreach (HelpUtils.CommandInfo c in commandInfo) {
 
                 if (!commands_lists.ContainsKey(c.category))
-                    commands_lists[c.category] = new List<CommandInfo>();
+                    commands_lists[c.category] = new List<HelpUtils.CommandInfo>();
 
                 commands_lists[c.category].Add(c);
 
@@ -64,7 +56,7 @@ namespace OurFoodChain {
 
                 commands_lists[cat].Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
-                foreach (CommandInfo c in commands_lists[cat])
+                foreach (HelpUtils.CommandInfo c in commands_lists[cat])
                     command_str_list.Add(string.Format("`{0}`", c.name));
 
                 builder.AddField(StringUtils.ToTitleCase(cat), string.Join("  ", command_str_list));
@@ -84,11 +76,11 @@ namespace OurFoodChain {
 
             }
 
-            List<CommandInfo> command_info = new List<CommandInfo>();
+            List<HelpUtils.CommandInfo> command_info = new List<HelpUtils.CommandInfo>();
             string[] fnames = System.IO.Directory.GetFiles(commandInfoDirectory, "*.json", System.IO.SearchOption.TopDirectoryOnly);
 
             foreach (string fname in fnames)
-                command_info.Add(JsonConvert.DeserializeObject<CommandInfo>(System.IO.File.ReadAllText(fname)));
+                command_info.Add(JsonConvert.DeserializeObject<HelpUtils.CommandInfo>(System.IO.File.ReadAllText(fname)));
 
             await _showHelpCategory(context, command_info, category);
 
@@ -98,8 +90,8 @@ namespace OurFoodChain {
             // Load the .json files containing command information.
             // If there is a subdirectory in the help directory with the same name as the command, load files in that subdirectory instead.
 
-            List<CommandInfo> command_info = new List<CommandInfo>();
-            string help_directory = "help";
+            List<HelpUtils.CommandInfo> command_info = new List<HelpUtils.CommandInfo>();
+            string help_directory = HelpUtils.HELP_DIRECTORY;
 
             if (!string.IsNullOrEmpty(nestedCommand) && System.IO.Directory.Exists(System.IO.Path.Combine(help_directory, command)))
                 help_directory = System.IO.Path.Combine(help_directory, command);
@@ -115,7 +107,7 @@ namespace OurFoodChain {
             string[] fnames = System.IO.Directory.GetFiles(help_directory, "*.json", System.IO.SearchOption.TopDirectoryOnly);
 
             foreach (string fname in fnames)
-                command_info.Add(JsonConvert.DeserializeObject<CommandInfo>(System.IO.File.ReadAllText(fname)));
+                command_info.Add(JsonConvert.DeserializeObject<HelpUtils.CommandInfo>(System.IO.File.ReadAllText(fname)));
 
             if (!string.IsNullOrEmpty(command)) {
 
@@ -124,9 +116,9 @@ namespace OurFoodChain {
                 command = command.ToLower();
                 nestedCommand = nestedCommand.ToLower();
 
-                CommandInfo info = null;
+                HelpUtils.CommandInfo info = null;
 
-                foreach (CommandInfo c in command_info)
+                foreach (HelpUtils.CommandInfo c in command_info)
                     if (string.IsNullOrEmpty(nestedCommand) ? (c.name == command || c.aliases.Contains(command)) : (c.name == nestedCommand || c.aliases.Contains(nestedCommand))) {
 
                         info = c;

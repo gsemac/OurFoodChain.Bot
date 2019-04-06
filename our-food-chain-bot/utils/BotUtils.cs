@@ -1444,9 +1444,20 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyAsync_ValidateTaxon(ICommandContext context, TaxonType type, Taxon taxon) {
 
+            return await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, string.Empty);
+
+        }
+        public static async Task<bool> ReplyAsync_ValidateTaxonWithSuggestion(ICommandContext context, TaxonType type, Taxon taxon, string nameForSuggestions) {
+
             if (taxon is null || taxon.id <= 0) {
 
-                await context.Channel.SendMessageAsync(string.Format("No such {0} exists.", Taxon.TypeToName(type)));
+                // The taxon does not exist-- Get some suggestions to present to the user.
+
+                Taxon suggestion = string.IsNullOrEmpty(nameForSuggestions) ? null : await GetTaxonSuggestionAsync(type, nameForSuggestions);
+
+                await context.Channel.SendMessageAsync(string.Format("No such {0} exists.{1}",
+                    Taxon.TypeToName(type),
+                    suggestion is null ? "" : string.Format(" Did you mean **{0}**?", suggestion.GetName())));
 
                 return false;
 
@@ -1710,7 +1721,7 @@ namespace OurFoodChain {
 
                 Taxon taxon = await GetTaxonFromDb(name, type);
 
-                if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
+                if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                     return;
 
                 List<string> items = new List<string>();
@@ -1851,14 +1862,14 @@ namespace OurFoodChain {
 
             Taxon child = await GetTaxonFromDb(childTaxonName, Taxon.TypeToChildType(type));
 
-            if (!await ReplyAsync_ValidateTaxon(context, Taxon.TypeToChildType(type), child))
+            if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, Taxon.TypeToChildType(type), child, childTaxonName))
                 return;
 
             // Get the specified parent taxon.
 
             Taxon parent = await GetTaxonFromDb(parentTaxonName, type);
 
-            if (!await ReplyAsync_ValidateTaxon(context, type, parent))
+            if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, parent, parentTaxonName))
                 return;
 
             // Update the taxon.
@@ -1899,7 +1910,7 @@ namespace OurFoodChain {
 
             Taxon taxon = await GetTaxonFromDb(name, type);
 
-            if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
+            if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                 return;
 
             await Command_SetTaxonDescription(context, taxon, description);
@@ -1913,7 +1924,7 @@ namespace OurFoodChain {
 
             Taxon taxon = await GetTaxonFromDb(name, type);
 
-            if (!await ReplyAsync_ValidateTaxon(context, type, taxon))
+            if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                 return;
 
             taxon.common_name = commonName;
@@ -1925,6 +1936,29 @@ namespace OurFoodChain {
                 taxon.GetName(),
                 taxon.GetCommonName()
                 ));
+
+        }
+        public static async Task<Taxon> GetTaxonSuggestionAsync(TaxonType type, string name) {
+
+            Taxon[] taxa = await GetTaxaFromDb(type);
+
+            int min_dist = int.MaxValue;
+            Taxon suggestion = null;
+
+            foreach (Taxon t in taxa) {
+
+                int dist = LevenshteinDistance.Compute(t.name.ToLower(), name.ToLower());
+
+                if (dist < min_dist) {
+
+                    min_dist = dist;
+                    suggestion = t;
+
+                }
+
+            }
+
+            return suggestion;
 
         }
 

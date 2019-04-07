@@ -39,12 +39,16 @@ namespace OurFoodChain {
         }
         public static string GetFirstSentence(string value) {
 
-            Match match = Regex.Match(value, @"^.+?(?:\.+|[!\?])");
+            string result = value;
+            Match match = Regex.Match(value, @"^.+?(?:\.+|[;!\?])");
 
-            if (!match.Success || match.Length <= 0)
-                return value;
+            if (match.Success && match.Length > 0)
+                result = match.Value;
 
-            return match.Value;
+            if (result.Length > 0 && result.Last() == ';')
+                result = result.Substring(0, result.Length - 1) + ".";
+
+            return result;
 
         }
         public static string ReplaceWhitespaceCharacters(string value, string with = "_") {

@@ -501,8 +501,23 @@ namespace OurFoodChain {
 
                     List<string> lines = new List<string>();
 
-                    foreach (Zone zone in zone_list)
-                        lines.Add(string.Format("{1} **{0}** - {2}", StringUtils.ToTitleCase(zone.name), zone.type == ZoneType.Aquatic ? "🌊" : "🌳", zone.GetShortDescription()));
+                    // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
+
+                    string embed_title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", name, zone_list.Count()));
+                    string embed_description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.GetInstance().GetConfig().prefix);
+                    int zones_per_page = 20;
+                    int max_line_length = (EmbedUtils.MAX_EMBED_LENGTH - embed_title.Length - embed_description.Length) / zones_per_page;
+
+                    foreach (Zone zone in zone_list) {
+
+                        string line = string.Format("{1} **{0}**\t-\t{2}", StringUtils.ToTitleCase(zone.name), zone.type == ZoneType.Aquatic ? "🌊" : "🌳", zone.GetShortDescription());
+
+                        if (line.Length > max_line_length)
+                            line = line.Substring(0, max_line_length - 3) + "...";
+
+                        lines.Add(line);
+
+                    }
 
                     // Build paginated message.
 
@@ -516,8 +531,8 @@ namespace OurFoodChain {
                     else if (name == "terrestrial")
                         embed.SetColor(Color.DarkGreen);
 
-                    embed.SetTitle(StringUtils.ToTitleCase(string.Format("{0} zones ({1})", name, zone_list.Count())));
-                    embed.PrependDescription(string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.GetInstance().GetConfig().prefix));
+                    embed.SetTitle(embed_title);
+                    embed.PrependDescription(embed_description);
 
                     await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 

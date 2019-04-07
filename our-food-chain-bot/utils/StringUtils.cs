@@ -109,6 +109,11 @@ namespace OurFoodChain {
 
             switch (value.ToLower()) {
 
+                case "nm":
+                case "nanometer":
+                case "nanometers":
+                    return "nm";
+
                 case "μm":
                 case "micrometer":
                 case "micrometers":

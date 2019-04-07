@@ -18,7 +18,7 @@ namespace OurFoodChain {
             // The first pass will look for things that are most likely to be the size of the species, with explicit keywords located around the size.
 
             string number_pattern = @"(\d+(?:\.\d+)?(?:\-\d+(?:\.\d+)?)?)";
-            string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|c?m|(?:micro|milli|centi)?meters?|μm)";
+            string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|[nμmc]?m|(?:nano|micro|milli|centi)?meters?)";
             string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow to|up to|size:)[\s\w]*?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
 
             Regex pass_1 = new Regex(pass_1_pattern, RegexOptions.IgnoreCase);
@@ -122,7 +122,7 @@ namespace OurFoodChain {
 
                 }
 
-                return string.Format("**{0:0.#} {1}** ({2:0.#} {3})",
+                return string.Format("**{0:0.#} {1}** ({2:" + (_metricToImperial(size, metric_units) < 0.1 ? "0.#e+0" : "0.#") + "} {3})",
                     size,
                     metric_units,
                     _metricToImperial(size, metric_units),
@@ -167,6 +167,7 @@ namespace OurFoodChain {
 
             switch (units.ToLower()) {
 
+                case "nm":
                 case "μm":
                 case "mm":
                 case "cm":
@@ -198,6 +199,9 @@ namespace OurFoodChain {
         private double _metricToImperial(double number, string units) {
 
             switch (units.ToLower()) {
+
+                case "nm":
+                    return number / 25400000.0; // to in
 
                 case "μm":
                     return number / 25400.0; // to in

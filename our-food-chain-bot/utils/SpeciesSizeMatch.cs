@@ -122,10 +122,10 @@ namespace OurFoodChain {
 
                 }
 
-                return string.Format("**{0:0.#} {1}** ({2:" + (_metricToImperial(size, metric_units) < 0.1 ? "0.#e+0" : "0.#") + "} {3})",
+                return string.Format("**{0:0.#} {1}** ({2} {3})",
                     size,
                     metric_units,
-                    _metricToImperial(size, metric_units),
+                    _formatImperialUnits(_metricToImperial(size, metric_units)),
                     _metricUnitsToImperialEquivalent(metric_units));
 
             }
@@ -218,6 +218,59 @@ namespace OurFoodChain {
             }
 
             return 0.0;
+
+        }
+
+        private string _formatImperialUnits(double number) {
+
+            if (number < 0.1) {
+
+                string formatted = number.ToString("0.0e+0", System.Globalization.CultureInfo.InvariantCulture);
+                Match match = Regex.Match(formatted, @"([\d.]+)e([+\-])([\d.]+)");
+
+                return string.Format("{0} × 10{1}{2}",
+                   match.Groups[1].Value,
+                   match.Groups[2].Value == "-" ? "⁻" : "⁺",
+                   _digitsToUnicodeExponents(match.Groups[3].Value));
+
+            }
+            else
+                return number.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        private string _digitsToUnicodeExponents(string digits) {
+
+            return Regex.Replace(digits, @"\d", m => {
+
+                switch (m.Value) {
+
+                    case "0":
+                        return "⁰";
+                    case "1":
+                        return "¹";
+                    case "2":
+                        return "²";
+                    case "3":
+                        return "³";
+                    case "4":
+                        return "⁴";
+                    case "5":
+                        return "⁵";
+                    case "6":
+                        return "⁶";
+                    case "7":
+                        return "⁷";
+                    case "8":
+                        return "⁸";
+                    case "9":
+                        return "⁹";
+                    case ".":
+                        return "˙";
+                    default:
+                        return "?";
+
+                }
+
+            });
 
         }
 

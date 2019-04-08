@@ -17,9 +17,11 @@ namespace OurFoodChain {
 
             // The first pass will look for things that are most likely to be the size of the species, with explicit keywords located around the size.
 
+            // April 7th, 2019: I added an optional opening parenthesis to the "pass 1" pattern to pick up the size from phrases like "growing to ten centimeters (10 cm)".
+
             string number_pattern = @"(\d+(?:\.\d+)?(?:\-\d+(?:\.\d+)?)?)";
             string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|[nμmc]?m|(?:nano|micro|milli|centi)?meters?)";
-            string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow to|up to|size:)[\s\w]*?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
+            string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow(?:ing)? to|up to|size:)[\s\w]*?\(?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
 
             Regex pass_1 = new Regex(pass_1_pattern, RegexOptions.IgnoreCase);
             Regex pass_2 = new Regex(number_pattern + @"[\s]*?" + units_pattern + @"\b", RegexOptions.IgnoreCase);

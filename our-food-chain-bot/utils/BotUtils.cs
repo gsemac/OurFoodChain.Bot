@@ -211,13 +211,15 @@ namespace OurFoodChain {
 
             long genus_id = row.Field<long>("genus_id");
 
+            // The genus should never be null, but there was instance where a user manually edited the database and the genus ID was invalid.
+            // We should at least try to handle this situation gracefully.
             Genus genus_info = await BotUtils.GetGenusFromDb(genus_id);
 
             Species species = new Species {
                 id = row.Field<long>("id"),
                 genusId = row.Field<long>("genus_id"),
                 name = row.Field<string>("name"),
-                genus = genus_info.name,
+                genus = genus_info is null ? "?" : genus_info.name,
                 description = row.Field<string>("description"),
                 owner = row.Field<string>("owner"),
                 timestamp = (long)row.Field<decimal>("timestamp"),

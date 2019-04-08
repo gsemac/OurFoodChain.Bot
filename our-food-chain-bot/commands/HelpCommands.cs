@@ -46,9 +46,15 @@ namespace OurFoodChain {
                 string.IsNullOrEmpty(category) ? "" : category + " ",
                 commandInfo[0].name)));
 
+            string version_string = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+            // Remove any trailing ".0"s from the version number, so they don't appear when unused.
+            while (version_string.EndsWith(".0"))
+                version_string = version_string.Substring(0, version_string.Length - 2);
+
             builder.WithTitle("Commands list");
             builder.WithDescription(description_builder.ToString());
-            builder.WithFooter("Source: github.com/gsemac/ourfoodchain-bot");
+            builder.WithFooter(string.Format("ourfoodchain-bot v.{0} — github.com/gsemac/ourfoodchain-bot", version_string));
 
             foreach (string cat in commands_lists.Keys) {
 

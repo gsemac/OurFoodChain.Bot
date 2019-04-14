@@ -1172,7 +1172,10 @@ namespace OurFoodChain {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(commonName)));
+            if (string.IsNullOrEmpty(commonName))
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed common name from **{0}**.", sp.GetShortName()));
+            else
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(commonName)));
 
         }
 

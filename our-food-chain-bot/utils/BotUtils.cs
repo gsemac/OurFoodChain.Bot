@@ -405,10 +405,17 @@ namespace OurFoodChain {
             genus = genus.ToLower();
             species = species.ToLower();
 
-            Genus genus_info = null;
             List<Species> matches = new List<Species>();
 
+            // If the species is the empty string, don't bother trying to find any matches.
+            // This prevents species with an empty, but non-null common name (set to "") from being returned.
+
+            if (string.IsNullOrEmpty(species))
+                return matches.ToArray();
+
+            Genus genus_info = null;
             bool genus_is_abbreviated = false;
+
             string sql_command_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND name=$species;";
 
             if (string.IsNullOrEmpty(genus)) {

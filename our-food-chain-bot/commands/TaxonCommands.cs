@@ -279,9 +279,14 @@ namespace OurFoodChain {
 
             if (species_list.Count() <= 0) {
 
-                // No such species exists for the given genus/species, so look for the species instead and update its description directly.
+                // No such species exists for the given genus/species. We have two possibilities.
 
-                await SetSpeciesDescription("", speciesOrGenus, descriptionOrSpecies);
+                if (!string.IsNullOrEmpty(speciesOrGenus))
+                    // The user passed in a species and a description, so attempt to update the description for that species.
+                    await SetSpeciesDescription("", speciesOrGenus, descriptionOrSpecies);
+                else
+                    // The user passed in a blank genus and a non-existent species, so reply with some suggestions.
+                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, speciesOrGenus, descriptionOrSpecies);
 
             }
             else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {

@@ -1143,16 +1143,14 @@ namespace OurFoodChain {
         }
 
         [Command("setcommonname"), Alias("setcommon")]
-        public async Task SetCommonName(string genus, string species, string commonName = "") {
+        public async Task SetCommonName(string species, string commonName) {
+            await SetCommonName("", species, commonName);
+        }
+        [Command("setcommonname"), Alias("setcommon")]
+        public async Task SetCommonName(string genus, string species, string commonName) {
 
-            // If the "commonName" argument was omitted, assume the user omitted the genus.
-            // e.g. setcommon <species> <commonName>
-
-            if (string.IsNullOrEmpty(commonName)) {
-                commonName = species;
-                species = genus;
-                genus = string.Empty;
-            }
+            if (!string.IsNullOrEmpty(commonName))
+                commonName = commonName.Trim();
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 

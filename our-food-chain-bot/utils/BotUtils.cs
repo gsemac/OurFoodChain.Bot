@@ -526,6 +526,22 @@ namespace OurFoodChain {
             return species.ToArray();
 
         }
+        public static async Task<bool> IsBaseSpeciesAsync(Species species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM Ancestors WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                long count = await Database.GetScalar<long>(cmd);
+
+                if (count > 0)
+                    return false;
+
+            }
+
+            return true;
+
+        }
 
         public static async Task AddGenusToDb(string genus) {
 

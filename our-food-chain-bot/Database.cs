@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 20;
+        public const int DATABASE_VERSION = 21;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -275,6 +275,10 @@ namespace OurFoodChain {
 
                 case 20:
                     await _update020(conn);
+                    break;
+
+                case 21:
+                    await _update021(conn);
                     break;
 
             }
@@ -564,6 +568,16 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _updateDatabaseVersion(conn, 20);
+
+        }
+        private static async Task _update021(SQLiteConnection conn) {
+
+            // Adds support for storing Gotchi user information (currency, gotchi limit, etc.).
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS GotchiUser(user_id INTEGER PRIMARY KEY, g INTEGER, gotchi_limit INTEGER, primary_gotchi_id INTEGER)"))
+                await ExecuteNonQuery(cmd);
+
+            await _updateDatabaseVersion(conn, 21);
 
         }
 

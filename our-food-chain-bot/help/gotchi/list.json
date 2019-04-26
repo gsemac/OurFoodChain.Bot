@@ -1,0 +1,9 @@
+﻿{
+  "name": "list",
+  "aliases": [],
+  "category": "general",
+  "description": "Lists all Gotchis belonging to the current user.",
+  "examples": [
+    "list"
+  ]
+}

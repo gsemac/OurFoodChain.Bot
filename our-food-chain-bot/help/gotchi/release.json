@@ -1,0 +1,10 @@
+﻿{
+  "name": "release",
+  "aliases": [],
+  "category": "general",
+  "description": "Releases the Gotchi with the given name, making room for a new Gotchi. A released Gotchi cannot be recovered, so be careful!",
+  "examples": [
+    "release <gotchi name>",
+    "release \"user jr.\""
+  ]
+}

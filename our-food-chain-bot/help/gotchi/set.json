@@ -1,0 +1,15 @@
+﻿{
+  "name": "set",
+  "aliases": [
+    "primary",
+    "pick",
+    "choose"
+  ],
+  "category": "general",
+  "description": "Sets the current user's primary Gotchi, which is the one used for training and battles, among other things.",
+  "examples": [
+    "set <list index or name>",
+    "set 1",
+    "set \"user jr.\""
+  ]
+}

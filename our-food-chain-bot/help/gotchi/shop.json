@@ -1,0 +1,9 @@
+﻿{
+  "name": "shop",
+  "aliases": [],
+  "category": "shop",
+  "description": "Displays all items available for sale at the Gotchi Shop, which provide various effects for your Gotchis.",
+  "examples": [
+    "shop"
+  ]
+}

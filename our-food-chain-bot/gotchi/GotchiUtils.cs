@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -42,13 +43,13 @@ namespace OurFoodChain.gotchi {
                 return false;
 
             IUser user1 = await context.Guild.GetUserAsync(requesterGotchi.owner_id);
-            Gotchi gotchi1 = user1 is null ? null : await GotchiUtils.GetGotchiAsync(user1);
+            Gotchi gotchi1 = user1 is null ? null : await GotchiUtils.GetPrimaryGotchiByUserAsync(user1);
 
             if (gotchi1 is null || gotchi1.IsDead() || gotchi1.id != requesterGotchi.id)
                 return false;
 
             IUser user2 = await context.Guild.GetUserAsync(partnerGotchi.owner_id);
-            Gotchi gotchi2 = user2 is null ? null : await GotchiUtils.GetGotchiAsync(user2);
+            Gotchi gotchi2 = user2 is null ? null : await GotchiUtils.GetPrimaryGotchiByUserAsync(user2);
 
             if (gotchi2 is null || gotchi2.IsDead() || gotchi2.id != partnerGotchi.id)
                 return false;
@@ -61,10 +62,10 @@ namespace OurFoodChain.gotchi {
             // Get both users and their gotchis.
 
             IUser user1 = await context.Guild.GetUserAsync(requesterGotchi.owner_id);
-            Gotchi gotchi1 = await GotchiUtils.GetGotchiAsync(user1);
+            Gotchi gotchi1 = await GotchiUtils.GetPrimaryGotchiByUserAsync(user1);
 
             IUser user2 = await context.Guild.GetUserAsync(partnerGotchi.owner_id);
-            Gotchi gotchi2 = await GotchiUtils.GetGotchiAsync(user2);
+            Gotchi gotchi2 = await GotchiUtils.GetPrimaryGotchiByUserAsync(user2);
 
             // Swap the owners of the gotchis.
 
@@ -164,15 +165,24 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        static public async Task CreateGotchiAsync(IUser user, Species species) {
+        static public async Task AddGotchiAsync(IUser user, Species species) {
+
+            // We need to generate a name for this Gotchi that doesn't already exist for this user.
+
+            string name = GenerateGotchiName(user, species);
+
+            while (!(await GetGotchiByNameAsync(user.Id, name) is null))
+                name = GenerateGotchiName(user, species);
+            
+            // Add the Gotchi to the database.
+
+            long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Gotchi(species_id, name, owner_id, fed_ts, born_ts, died_ts, evolved_ts) VALUES($species_id, $name, $owner_id, $fed_ts, $born_ts, $died_ts, $evolved_ts);")) {
 
-                long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
                 cmd.Parameters.AddWithValue("$species_id", species.id);
                 cmd.Parameters.AddWithValue("$owner_id", user.Id);
-                cmd.Parameters.AddWithValue("$name", string.Format("{0} Jr.", user.Username).ToLower());
+                cmd.Parameters.AddWithValue("$name", name.ToLower());
                 cmd.Parameters.AddWithValue("$fed_ts", ts - 60 * 60); // subtract an hour to keep it from eating immediately after creation
                 cmd.Parameters.AddWithValue("$born_ts", ts);
                 cmd.Parameters.AddWithValue("$died_ts", 0);
@@ -182,12 +192,27 @@ namespace OurFoodChain.gotchi {
 
             }
 
-        }
-        static public async Task<Gotchi> GetGotchiAsync(IUser user) {
+            // Set this gotchi as the user's primary Gotchi.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id=$owner_id;")) {
+            GotchiUser user_data = await GetGotchiUserAsync(user);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT id FROM Gotchi WHERE owner_id = $owner_id AND born_ts = $born_ts")) {
 
                 cmd.Parameters.AddWithValue("$owner_id", user.Id);
+                cmd.Parameters.AddWithValue("$born_ts", ts);
+
+                user_data.PrimaryGotchiId = await Database.GetScalar<long>(cmd);
+
+            }
+
+            await UpdateGotchiUserAsync(user_data);
+
+        }
+        static public async Task<Gotchi> GetGotchiByIdAsync(long gotchiId) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE id = $id;")) {
+
+                cmd.Parameters.AddWithValue("$id", gotchiId);
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
@@ -196,7 +221,125 @@ namespace OurFoodChain.gotchi {
             }
 
         }
-        static public async Task<bool> EvolveGotchiAsync(Gotchi gotchi) {
+        static public async Task<Gotchi> GetGotchiByNameAsync(ulong userId, string name) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id = $owner_id AND name = $name;")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", userId);
+                cmd.Parameters.AddWithValue("$name", name.ToLower());
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                return row is null ? null : Gotchi.FromDataRow(row);
+
+            }
+
+        }
+        static public async Task<Gotchi[]> GetGotchisByUserIdAsync(ulong userId) {
+
+            List<Gotchi> gotchis = new List<Gotchi>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id = $owner_id ORDER BY born_ts ASC;")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", userId);
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows)
+                        gotchis.Add(Gotchi.FromDataRow(row));
+
+            }
+
+            return gotchis.ToArray();
+
+        }
+        static public async Task<Gotchi> GetPrimaryGotchiByUserAsync(IUser user) {
+
+            // Get this user's Gotchi user data.
+            GotchiUser user_data = await GetGotchiUserAsync(user);
+
+            // Get this user's primary Gotchi.
+            Gotchi gotchi = await GetGotchiByIdAsync(user_data.PrimaryGotchiId);
+
+            // If this user's primary gotchi doesn't exist (either it was never set or no longer exists), pick a primary gotchi from their current gotchis.
+
+            if (gotchi is null) {
+
+                Gotchi[] gotchis = await GetGotchisByUserIdAsync(user_data.UserId);
+
+                if (gotchis.Count() > 0) {
+
+                    gotchi = gotchis[0];
+
+                    user_data.PrimaryGotchiId = gotchi.id;
+
+                    await UpdateGotchiUserAsync(user_data);
+
+                }
+
+            }
+
+            return gotchi;
+
+        }
+        static public async Task DeleteGotchiByIdAsync(long gotchiId) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", gotchiId);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+
+        static public async Task<GotchiUser> GetGotchiUserAsync(IUser user) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM GotchiUser WHERE user_id = $user_id;")) {
+
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+               
+                if (!(row is null))
+                    return GotchiUser.FromDataRow(row);
+
+            }
+
+            // If the user is not yet in the database, return a default user object.
+            return new GotchiUser(user.Id);
+
+        }
+        static public async Task UpdateGotchiUserAsync(GotchiUser userData) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO GotchiUser(user_id, g, gotchi_limit, primary_gotchi_id) VALUES ($user_id, $g, $gotchi_limit, $primary_gotchi_id);")) {
+
+                cmd.Parameters.AddWithValue("$user_id", userData.UserId);
+                cmd.Parameters.AddWithValue("$g", userData.G);
+                cmd.Parameters.AddWithValue("$gotchi_limit", userData.GotchiLimit);
+                cmd.Parameters.AddWithValue("$primary_gotchi_id", userData.PrimaryGotchiId);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+        static public async Task<ulong> GetGotchiCountAsync(IUser user) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Gotchi WHERE owner_id = $user_id;")) {
+
+                cmd.Parameters.AddWithValue("$user_id", user.Id);
+
+                long count = await Database.GetScalar<long>(cmd);
+
+                Debug.Assert(count >= 0);
+
+                return (ulong)count;
+
+            }
+
+        }
+        static public async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi) {
 
             bool evolved = false;
 
@@ -397,7 +540,7 @@ namespace OurFoodChain.gotchi {
                 foreach (Zone zone in zones) {
 
                     string candidate_filename = string.Format("home_{0}.png", StringUtils.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
-        
+
                     if (System.IO.File.Exists("res/gotchi/" + candidate_filename))
                         return candidate_filename;
 
@@ -406,6 +549,57 @@ namespace OurFoodChain.gotchi {
             }
 
             return defaultFileName;
+
+        }
+
+        /// <summary>
+        /// Returns the minimum timestamp that the Gotchi should have been fed at to avoid starving to death.
+        /// </summary>
+        /// <returns>The minimum timestamp that the Gotchi should have been fed at to avoid starving to death.</returns>
+        public static long MinimumFedTimestamp() {
+
+            long current_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            current_ts -= Gotchi.MAXIMUM_STARVATION_DAYS * Gotchi.HOURS_PER_DAY * 60 * 60;
+
+            return current_ts;
+
+        }
+        public static string GenerateGotchiName(IUser user, Species species) {
+
+            List<string> name_options = new List<string>();
+
+            // Add the default name first.
+            name_options.Add(string.Format("{0} Jr.", user.Username));
+
+            // We'll generate some names using some portion of the species name.
+            // For example, "gigas" might generate "gi-gi", "mr. giga", or "giga".
+
+            string species_name = species.name;
+            MatchCollection vowel_matches = Regex.Matches(species_name, "[aeiou]");
+            string[] roots = vowel_matches.Cast<Match>().Where(x => x.Index > 1).Select(x => species_name.Substring(0, x.Index + 1)).ToArray();
+
+            for (int i = 0; i < 2; ++i) {
+
+                string name = roots[BotUtils.RandomInteger(roots.Count())];
+
+                if (BotUtils.RandomInteger(2) == 0)
+                    name = name.Substring(0, name.Length - 1); // cut off the last vowel
+
+                if (BotUtils.RandomInteger(2) == 0 && name.Length <= 5)
+                    name += "-" + name;
+
+                if (BotUtils.RandomInteger(2) == 0 && name.Length > 1 && (name.Last() == 'r' || name.Last() == 't'))
+                    name += "y";
+
+                if (BotUtils.RandomInteger(2) == 0)
+                    name = "Mr. " + name;
+
+                name_options.Add(name);
+
+            }
+
+            return name_options.Select(x => StringUtils.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
 
         }
 

@@ -210,6 +210,7 @@
     <Compile Include="gotchi\GotchiMoveset.cs" />
     <Compile Include="gotchi\GotchiStatsUtils.cs" />
     <Compile Include="gotchi\GotchiBattleStatus.cs" />
+    <Compile Include="gotchi\GotchiUser.cs" />
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Period.cs" />
     <Compile Include="Picture.cs" />
@@ -243,6 +244,10 @@
     <None Include="App.config" />
     <None Include="config.json" />
     <None Include="help\gotchi\forfeit.json" />
+    <None Include="help\gotchi\list.json" />
+    <None Include="help\gotchi\release.json" />
+    <None Include="help\gotchi\set.json" />
+    <None Include="help\gotchi\shop.json" />
     <None Include="res\gotchi\battle\moves\all-out_attack.lua" />
     <None Include="res\gotchi\battle\moves\bite.lua" />
     <None Include="res\gotchi\battle\moves\blinding_flash.lua" />

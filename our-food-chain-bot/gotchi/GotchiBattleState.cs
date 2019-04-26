@@ -835,7 +835,7 @@ namespace OurFoodChain.gotchi {
             long evolved_max = player1.stats.level / 10;
 
             for (evolved_times = 0; evolved_times < evolved_max; ++evolved_times)
-                if (!await GotchiUtils.EvolveGotchiAsync(opp))
+                if (!await GotchiUtils.EvolveAndUpdateGotchiAsync(opp))
                     break;
 
             // Calculate stats.
@@ -902,7 +902,7 @@ namespace OurFoodChain.gotchi {
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.gotchi.name), winner.stats.level));
 
                 if (((winner.stats.level - winner_levels) / 10) < (winner.stats.level / 10))
-                    if (await GotchiUtils.EvolveGotchiAsync(winner.gotchi)) {
+                    if (await GotchiUtils.EvolveAndUpdateGotchiAsync(winner.gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(winner.gotchi.species_id);
 
@@ -925,7 +925,7 @@ namespace OurFoodChain.gotchi {
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(loser.gotchi.name), loser.stats.level));
 
                 if (((loser.stats.level - loser_levels) / 10) < (loser.stats.level / 10))
-                    if (await GotchiUtils.EvolveGotchiAsync(loser.gotchi)) {
+                    if (await GotchiUtils.EvolveAndUpdateGotchiAsync(loser.gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(loser.gotchi.species_id);
 

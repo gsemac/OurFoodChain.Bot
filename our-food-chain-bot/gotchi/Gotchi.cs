@@ -9,10 +9,12 @@ namespace OurFoodChain.gotchi {
 
     public class Gotchi {
 
-        private const long HOURS_OF_SLEEP_PER_DAY = 8;
-        private const long HOURS_PER_DAY = 24;
+        public const long NULL_GOTCHI_ID = -1;
+        public const long HOURS_OF_SLEEP_PER_DAY = 8;
+        public const long HOURS_PER_DAY = 24;
+        public const long MAXIMUM_STARVATION_DAYS = 3; // 3 days of no feeding
 
-        public long id = -1;
+        public long id = NULL_GOTCHI_ID;
         public long species_id = -1;
         public string name;
         public ulong owner_id = 0;
@@ -62,7 +64,7 @@ namespace OurFoodChain.gotchi {
         }
         public bool IsDead() {
 
-            return HoursSinceFed() > 72; // 3 days of no feeding
+            return HoursSinceFed() > (HOURS_PER_DAY * MAXIMUM_STARVATION_DAYS); 
 
         }
         public long HoursSinceBirth() {
@@ -97,7 +99,7 @@ namespace OurFoodChain.gotchi {
         }
         public bool IsReadyToEvolve() {
 
-            return HoursSinceEvolved() >= 7 * 24;
+            return !IsDead() && HoursSinceEvolved() >= 7 * 24;
 
         }
         public long Age() {

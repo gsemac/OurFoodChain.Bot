@@ -1,0 +1,11 @@
+﻿{
+  "name": "buy",
+  "aliases": [],
+  "category": "shop",
+  "description": "Buys the given item from the Gotchi shop, provided the current user has enough currency.",
+  "examples": [
+    "buy <item index or name>",
+    "buy 1",
+    "buy \"tank expansion\""
+  ]
+}

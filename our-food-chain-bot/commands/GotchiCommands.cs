@@ -703,6 +703,8 @@ namespace OurFoodChain.gotchi {
         [Command("shop")]
         public async Task Shop() {
 
+            GotchiUser user_data = await GotchiUtils.GetGotchiUserAsync(Context.User);
+
             // List all gotchi items available for sale.
 
             // Generate a field for each item.
@@ -710,8 +712,18 @@ namespace OurFoodChain.gotchi {
             List<EmbedFieldBuilder> items = new List<EmbedFieldBuilder>();
 
             items.Add(new EmbedFieldBuilder {
-                Name = "1. 🐟 Tank Expansion — 1,000 G",
+                Name = string.Format("1. 🐟 Tank Expansion — {0:n0}G", 1000 * user_data.GotchiLimit),
                 Value = "A larger gotchi tank, giving you room to keep an additional gotchi. Your tank can be expanded more than once."
+            });
+
+            items.Add(new EmbedFieldBuilder {
+                Name = string.Format("2. ⭐ Evo Stone — {0:n0}G", 500),
+                Value = "Makes your current Gotchi evolve immediately. The evolution chosen is random."
+            });
+
+            items.Add(new EmbedFieldBuilder {
+                Name = string.Format("3. 🌟 Glowing Evo Stone — {0}", "Not Available"),
+                Value = "Makes your current Gotchi evolve immediately. You get to pick what it evolves into."
             });
 
             // Create the embed.
@@ -722,9 +734,77 @@ namespace OurFoodChain.gotchi {
             embed.SetTitle("🛒 Gotchi Shop");
             embed.SetDescription(string.Format("Welcome to the Gotchi Shop! Purchase an item with `{0}gotchi buy <item>`.",
                OurFoodChainBot.GetInstance().GetConfig().prefix));
+            embed.SetFooter(string.Format("You currently have {0:n0}G.", user_data.G));
+            embed.SetColor(Color.LightOrange);
             embed.AddPageNumbers();
 
             await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+
+        }
+
+        [Command("buy")]
+        public async Task Buy(string itemNameOrIndex) {
+
+            itemNameOrIndex = itemNameOrIndex.ToLower();
+
+            GotchiUser user_data = await GotchiUtils.GetGotchiUserAsync(Context.User);
+
+            // #todo In the future, don't do all of these manually, but store the values somewhere.
+
+            long cost = 0;
+
+            switch (itemNameOrIndex) {
+
+                case "tank expansion":
+                case "1":
+
+                    cost = 1000 * (long)user_data.GotchiLimit;
+
+                    if (user_data.G >= cost) {
+
+                        user_data.G -= cost;
+                        user_data.GotchiLimit += 1;
+
+                        await BotUtils.ReplyAsync_Success(Context, string.Format("Your Gotchi limit has been increased to {0}!", user_data.GotchiLimit));
+
+                    }
+
+                    break;
+
+                case "evo stone":
+                case "2":
+
+                    cost = 500;
+
+                    if (user_data.G >= cost) {
+
+                        Gotchi gotchi = await GotchiUtils.GetPrimaryGotchiByUserAsync(Context.User);
+
+                        if (await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi)) {
+
+                            user_data.G -= cost;
+
+                            await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
+                                (await BotUtils.GetSpeciesFromDb(gotchi.species_id)).GetShortName()));
+
+                        }
+                        else
+                            await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
+
+                    }
+
+                    break;
+
+                default:
+                    await BotUtils.ReplyAsync_Error(Context, "Invalid item selection.");
+                    break;
+
+            }
+
+            if (user_data.G < cost)
+                await BotUtils.ReplyAsync_Error(Context, string.Format("You don't have enough G to afford this item ({0:n0}G).", cost));
+
+            await GotchiUtils.UpdateGotchiUserAsync(user_data);
 
         }
 
@@ -758,7 +838,7 @@ namespace OurFoodChain.gotchi {
                 GotchiUser user_data = await GotchiUtils.GetGotchiUserAsync(Context.User);
 
                 PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
-                embed.AddPages(EmbedUtils.ListToEmbedPages(gotchi_list, fieldName: string.Format("{0}'s gotchis ({1}/{2})",
+                embed.AddPages(EmbedUtils.ListToEmbedPages(gotchi_list, fieldName: string.Format("{0}'s Gotchis ({1}/{2})",
                     Context.User.Username,
                     gotchi_list.Count,
                     user_data.GotchiLimit)));

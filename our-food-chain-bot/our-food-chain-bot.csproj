@@ -243,6 +243,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="help\gotchi\buy.json" />
     <None Include="help\gotchi\forfeit.json" />
     <None Include="help\gotchi\list.json" />
     <None Include="help\gotchi\release.json" />

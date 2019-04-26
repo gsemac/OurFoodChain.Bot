@@ -173,7 +173,7 @@ namespace OurFoodChain.gotchi {
 
             while (!(await GetGotchiByNameAsync(user.Id, name) is null))
                 name = GenerateGotchiName(user, species);
-            
+
             // Add the Gotchi to the database.
 
             long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -293,22 +293,25 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        static public async Task<GotchiUser> GetGotchiUserAsync(IUser user) {
+        static public async Task<GotchiUser> GetGotchiUserByUserIdAsync(ulong userId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM GotchiUser WHERE user_id = $user_id;")) {
 
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
+                cmd.Parameters.AddWithValue("$user_id", userId);
 
                 DataRow row = await Database.GetRowAsync(cmd);
-               
+
                 if (!(row is null))
                     return GotchiUser.FromDataRow(row);
 
             }
 
             // If the user is not yet in the database, return a default user object.
-            return new GotchiUser(user.Id);
+            return new GotchiUser(userId);
 
+        }
+        static public async Task<GotchiUser> GetGotchiUserAsync(IUser user) {
+            return await GetGotchiUserByUserIdAsync(user.Id);
         }
         static public async Task UpdateGotchiUserAsync(GotchiUser userData) {
 

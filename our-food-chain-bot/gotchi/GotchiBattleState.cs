@@ -895,8 +895,12 @@ namespace OurFoodChain.gotchi {
 
                 double winner_exp = winner.gotchi.id == player1.gotchi.id ? exp1 : exp2;
                 long winner_levels = winner.gotchi.id == player1.gotchi.id ? levels1 : levels2;
+                long winner_g = (long)(loser.stats.level * (BotUtils.RandomInteger(100, 150) / 100.0));
 
-                sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP**.", StringUtils.ToTitleCase(winner.gotchi.name), winner_exp));
+                sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP** and **{2}G**.",
+                    StringUtils.ToTitleCase(winner.gotchi.name),
+                    winner_exp,
+                    winner_g));
 
                 if (winner_levels > 0)
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.gotchi.name), winner.stats.level));
@@ -909,6 +913,14 @@ namespace OurFoodChain.gotchi {
                         sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(winner.gotchi.name), sp.GetShortName()));
 
                     }
+
+                // Update the winner's G.
+
+                GotchiUser user_data = await GotchiUtils.GetGotchiUserByUserIdAsync(winner.gotchi.owner_id);
+
+                user_data.G += winner_g;
+
+                await GotchiUtils.UpdateGotchiUserAsync(user_data);
 
                 sb.AppendLine();
 

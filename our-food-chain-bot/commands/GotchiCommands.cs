@@ -722,7 +722,7 @@ namespace OurFoodChain.gotchi {
                 // Build the field.
 
                 item_fields.Add(new EmbedFieldBuilder {
-                    Name = string.Format("{0}. {1} — {2}", item.id, item.Name, item.cost <= 0 ? "Not Available" : (item.cost.ToString("n0") + "G")),
+                    Name = string.Format("{0}. {1} {2} — {3}", item.id, item.icon, item.Name, item.cost <= 0 ? "Not Available" : (item.cost.ToString("n0") + "G")),
                     Value = item.description
                 });
 
@@ -812,6 +812,41 @@ namespace OurFoodChain.gotchi {
                                         await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
 
                                     }
+
+                                }
+
+                            }
+
+                            break;
+
+                        case 4: // alarm clock
+                            {
+
+                                Gotchi gotchi = await GotchiUtils.GetPrimaryGotchiByUserAsync(Context.User);
+
+                                if (await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi) && gotchi.IsSleeping()) {
+
+                                    using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET born_ts = $born_ts WHERE id = $id")) {
+
+                                        long born_ts = gotchi.born_ts;
+                                        born_ts -= gotchi.HoursOfSleepLeft() * 60 * 60;
+
+                                        cmd.Parameters.AddWithValue("$id", gotchi.id);
+                                        cmd.Parameters.AddWithValue("$born_ts", born_ts);
+
+                                        await Database.ExecuteNonQuery(cmd);
+
+                                    }
+
+                                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** woke up! Its sleep schedule has been reset.",
+                                        StringUtils.ToTitleCase(gotchi.name)));
+
+                                }
+                                else {
+
+                                    item_failed = true;
+
+                                    await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is already awake.");
 
                                 }
 

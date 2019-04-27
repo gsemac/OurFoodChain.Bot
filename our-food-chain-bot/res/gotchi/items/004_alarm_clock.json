@@ -1,0 +1,7 @@
+﻿{
+  "id": 4,
+  "icon": "⏰",
+  "name": "alarm clock",
+  "description": "Wakes up your Gotchi immediately, resetting its sleeping schedule.",
+  "cost": 250
+}

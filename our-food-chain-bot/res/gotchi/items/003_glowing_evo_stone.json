@@ -1,6 +1,7 @@
 ﻿{
   "id": 3,
-  "name": "🌟 glowing evo stone",
-  "description": "Makes your current Gotchi evolve immediately. You get to pick what it evolves into.",
+  "icon": "🌟",
+  "name": "glowing evo stone",
+  "description": "Makes your current Gotchi evolve immediately. You get to pick what it evolves into (specify when buying).",
   "cost": 2000
 }

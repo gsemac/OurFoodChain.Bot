@@ -13,6 +13,7 @@ namespace OurFoodChain.gotchi {
         public const string DEFAULT_DESCRIPTION = "No description provided.";
         
         public long id = NULL_ITEM_ID;
+        public string icon = "";
         public string name = DEFAULT_NAME;
         public string description = DEFAULT_DESCRIPTION;
         public ulong cost = 0;

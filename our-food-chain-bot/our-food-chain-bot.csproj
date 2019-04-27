@@ -387,6 +387,7 @@
     <None Include="res\gotchi\items\002_evo_stone.json" />
     <None Include="res\gotchi\items\001_tank_expansion.json" />
     <None Include="res\gotchi\items\003_glowing_evo_stone.json" />
+    <None Include="res\gotchi\items\004_alarm_clock.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="help\+prey.json" />

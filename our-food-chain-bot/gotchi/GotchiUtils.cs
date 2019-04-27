@@ -344,26 +344,58 @@ namespace OurFoodChain.gotchi {
 
         }
         static public async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi) {
+            return await EvolveAndUpdateGotchiAsync(gotchi, string.Empty);
+        }
+        static public async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi, string desiredEvo) {
 
             bool evolved = false;
 
-            // Find all descendatants of this species.
+            if (string.IsNullOrEmpty(desiredEvo)) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT species_id FROM Ancestors WHERE ancestor_id=$ancestor_id;")) {
+                // Find all descendatants of this species.
 
-                List<long> descendant_ids = new List<long>();
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT species_id FROM Ancestors WHERE ancestor_id=$ancestor_id;")) {
 
-                cmd.Parameters.AddWithValue("$ancestor_id", gotchi.species_id);
+                    List<long> descendant_ids = new List<long>();
 
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows)
-                        descendant_ids.Add(row.Field<long>("species_id"));
+                    cmd.Parameters.AddWithValue("$ancestor_id", gotchi.species_id);
 
-                // Pick an ID at random.
+                    using (DataTable rows = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in rows.Rows)
+                            descendant_ids.Add(row.Field<long>("species_id"));
 
-                if (descendant_ids.Count > 0) {
+                    // Pick an ID at random.
 
-                    gotchi.species_id = descendant_ids[BotUtils.RandomInteger(descendant_ids.Count)];
+                    if (descendant_ids.Count > 0) {
+
+                        gotchi.species_id = descendant_ids[BotUtils.RandomInteger(descendant_ids.Count)];
+
+                        evolved = true;
+
+                    }
+
+                }
+
+            }
+            else {
+
+                // Get the desired evo.
+                Species[] sp = await BotUtils.GetSpeciesFromDb("", desiredEvo);
+
+                if (sp is null || sp.Length != 1)
+                    return false;
+           
+                // Ensure that the species evolves into the desired evo.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Ancestors WHERE ancestor_id = $ancestor_id AND species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$ancestor_id", gotchi.species_id);
+                    cmd.Parameters.AddWithValue("$species_id", sp[0].id);
+
+                    if (await Database.GetScalar<long>(cmd) <= 0)
+                        return false;
+
+                    gotchi.species_id = sp[0].id;
 
                     evolved = true;
 
@@ -402,6 +434,21 @@ namespace OurFoodChain.gotchi {
             }
 
             return items.ToArray();
+
+        }
+        static public GotchiItem GetGotchiItemByNameOrId(string nameOrId) {
+
+            GotchiItem[] items = GetAllGotchiItems();
+            long id = -1;
+
+            if (StringUtils.IsNumeric(nameOrId))
+                id = long.Parse(nameOrId);
+
+            foreach (GotchiItem item in items)
+                if (item.name.ToLower() == nameOrId.ToLower() || (id != GotchiItem.NULL_ITEM_ID && item.id == id))
+                    return item;
+
+            return null;
 
         }
 

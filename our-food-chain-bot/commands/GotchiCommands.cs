@@ -176,9 +176,9 @@ namespace OurFoodChain.gotchi {
             await GotchiUtils.DeleteGotchiByIdAsync(gotchi.id);
 
             if (gotchi.IsDead())
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}**'s corpse was successfully flushed down the toilet.\n\nRest in peace, **{0}**!", StringUtils.ToTitleCase(gotchi.name)));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtils.ToTitleCase(gotchi.name)));
             else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Gotchi **{0}** was successfully released.\n\nTake care, **{0}**!", StringUtils.ToTitleCase(gotchi.name)));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Gotchi **{0}** was successfully released. Take care, **{0}**!", StringUtils.ToTitleCase(gotchi.name)));
 
         }
 
@@ -745,93 +745,93 @@ namespace OurFoodChain.gotchi {
         }
 
         [Command("buy")]
-        public async Task Buy(string itemNameOrIndex) {
+        public async Task Buy(string itemIdentifier, params string[] arguments) {
 
-            itemNameOrIndex = itemNameOrIndex.ToLower();
+            GotchiItem item = GotchiUtils.GetGotchiItemByNameOrId(itemIdentifier);
 
-            GotchiUser user_data = await GotchiUtils.GetGotchiUserAsync(Context.User);
+            if (item is null || item.id == GotchiItem.NULL_ITEM_ID) {
 
-            // #todo In the future, don't do all of these manually, but store the values somewhere.
-
-            long cost = 0;
-
-            switch (itemNameOrIndex) {
-
-                case "tank expansion":
-                case "1":
-
-                    cost = 1000 * (long)user_data.GotchiLimit;
-
-                    if (user_data.G >= cost) {
-
-                        user_data.G -= cost;
-                        user_data.GotchiLimit += 1;
-
-                        await BotUtils.ReplyAsync_Success(Context, string.Format("Your Gotchi limit has been increased to {0}!", user_data.GotchiLimit));
-
-                    }
-
-                    break;
-
-                case "evo stone":
-                case "2":
-
-                    cost = 500;
-
-                    if (user_data.G >= cost) {
-
-                        Gotchi gotchi = await GotchiUtils.GetPrimaryGotchiByUserAsync(Context.User);
-
-                        if (await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi)) {
-
-                            user_data.G -= cost;
-
-                            await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
-                                (await BotUtils.GetSpeciesFromDb(gotchi.species_id)).GetShortName()));
-
-                        }
-                        else
-                            await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
-
-                    }
-
-                    break;
-
-                case "glowing evo stone":
-                case "3":
-
-                    cost = 2000;
-
-                    if (user_data.G >= cost) {
-
-                        Gotchi gotchi = await GotchiUtils.GetPrimaryGotchiByUserAsync(Context.User);
-
-                        if (await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi)) {
-
-                            user_data.G -= cost;
-
-                            await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
-                                (await BotUtils.GetSpeciesFromDb(gotchi.species_id)).GetShortName()));
-
-                        }
-                        else
-                            await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
-
-                    }
-
-                    break;
-
-                default:
-                    await BotUtils.ReplyAsync_Error(Context, "Invalid item selection.");
-                    break;
+                await BotUtils.ReplyAsync_Error(Context, "Invalid item selection.");
 
             }
+            else {
 
-            if (user_data.G < cost)
-                await BotUtils.ReplyAsync_Error(Context, string.Format("You don't have enough G to afford this item ({0:n0}G).", cost));
+                GotchiUser user_data = await GotchiUtils.GetGotchiUserAsync(Context.User);
 
-            await GotchiUtils.UpdateGotchiUserAsync(user_data);
+                // (Tank expansions cost extra the more the user has already.)
 
+                if (item.id == 1)
+                    item.cost *= user_data.GotchiLimit;
+
+                bool item_failed = false;
+
+                if (item.cost > (ulong)user_data.G) {
+
+                    await BotUtils.ReplyAsync_Error(Context, string.Format("You don't have enough G to afford this item ({0:n0}G).", item.cost));
+
+                }
+                else {
+
+                    switch (item.id) {
+
+                        case 1: // tank expansion
+
+                            user_data.GotchiLimit += 1;
+
+                            await BotUtils.ReplyAsync_Success(Context, string.Format("Your Gotchi limit has been increased to {0}!", user_data.GotchiLimit));
+
+                            break;
+
+                        case 2: // evo stone
+                        case 3: // glowing evo stone
+                            {
+
+                                Gotchi gotchi = await GotchiUtils.GetPrimaryGotchiByUserAsync(Context.User);
+                                string desired_evo = item.id == 3 ? string.Join(" ", arguments) : string.Empty;
+
+                                if (item.id == 3 && string.IsNullOrEmpty(desired_evo)) {
+
+                                    await BotUtils.ReplyAsync_Error(Context,
+                                        string.Format("Please specify the desired species when buying this item.\n\nEx: `{0}gotchi buy 3 asperum`", OurFoodChainBot.GetInstance().GetConfig().prefix));
+
+                                    item_failed = true;
+
+                                }
+                                else {
+
+                                    if (await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desired_evo)) {
+
+                                        await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
+                                            (await BotUtils.GetSpeciesFromDb(gotchi.species_id)).GetShortName()));
+
+                                    }
+                                    else {
+
+                                        item_failed = true;
+
+                                        await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
+
+                                    }
+
+                                }
+
+                            }
+
+                            break;
+
+                    }
+
+                }
+
+                // If using the item was successful, subtract the cost of the item from the user's balance.
+
+                if (!item_failed)
+                    user_data.G -= (long)item.cost;
+
+                // Update the user.
+                await GotchiUtils.UpdateGotchiUserAsync(user_data);
+
+            }
         }
 
         [Command("list")]

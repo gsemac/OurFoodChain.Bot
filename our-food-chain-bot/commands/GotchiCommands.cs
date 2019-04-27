@@ -709,28 +709,30 @@ namespace OurFoodChain.gotchi {
 
             // Generate a field for each item.
 
-            List<EmbedFieldBuilder> items = new List<EmbedFieldBuilder>();
+            GotchiItem[] items = GotchiUtils.GetAllGotchiItems();
+            List<EmbedFieldBuilder> item_fields = new List<EmbedFieldBuilder>();
 
-            items.Add(new EmbedFieldBuilder {
-                Name = string.Format("1. 🐟 Tank Expansion — {0:n0}G", 1000 * user_data.GotchiLimit),
-                Value = "A larger gotchi tank, giving you room to keep an additional gotchi. Your tank can be expanded more than once."
-            });
+            foreach (GotchiItem item in items) {
 
-            items.Add(new EmbedFieldBuilder {
-                Name = string.Format("2. ⭐ Evo Stone — {0:n0}G", 500),
-                Value = "Makes your current Gotchi evolve immediately. The evolution chosen is random."
-            });
+                // (Tank expansions cost extra the more the user has already.)
 
-            items.Add(new EmbedFieldBuilder {
-                Name = string.Format("3. 🌟 Glowing Evo Stone — {0}", "Not Available"),
-                Value = "Makes your current Gotchi evolve immediately. You get to pick what it evolves into."
-            });
+                if (item.id == 1)
+                    item.cost *= user_data.GotchiLimit;
+
+                // Build the field.
+
+                item_fields.Add(new EmbedFieldBuilder {
+                    Name = string.Format("{0}. {1} — {2}", item.id, item.Name, item.cost <= 0 ? "Not Available" : (item.cost.ToString("n0") + "G")),
+                    Value = item.description
+                });
+
+            }
 
             // Create the embed.
 
             PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
 
-            embed.AddPages(EmbedUtils.FieldsToEmbedPages(items));
+            embed.AddPages(EmbedUtils.FieldsToEmbedPages(item_fields));
             embed.SetTitle("🛒 Gotchi Shop");
             embed.SetDescription(string.Format("Welcome to the Gotchi Shop! Purchase an item with `{0}gotchi buy <item>`.",
                OurFoodChainBot.GetInstance().GetConfig().prefix));
@@ -775,6 +777,30 @@ namespace OurFoodChain.gotchi {
                 case "2":
 
                     cost = 500;
+
+                    if (user_data.G >= cost) {
+
+                        Gotchi gotchi = await GotchiUtils.GetPrimaryGotchiByUserAsync(Context.User);
+
+                        if (await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi)) {
+
+                            user_data.G -= cost;
+
+                            await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
+                                (await BotUtils.GetSpeciesFromDb(gotchi.species_id)).GetShortName()));
+
+                        }
+                        else
+                            await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
+
+                    }
+
+                    break;
+
+                case "glowing evo stone":
+                case "3":
+
+                    cost = 2000;
 
                     if (user_data.G >= cost) {
 

@@ -205,6 +205,7 @@
     <Compile Include="gotchi\Gotchi.cs" />
     <Compile Include="commands\GotchiCommands.cs" />
     <Compile Include="gotchi\GotchiGifCreator.cs" />
+    <Compile Include="gotchi\GotchiItem.cs" />
     <Compile Include="gotchi\GotchiLua.cs" />
     <Compile Include="gotchi\GotchiMoveRegistry.cs" />
     <Compile Include="gotchi\GotchiMoveset.cs" />
@@ -383,6 +384,9 @@
     <None Include="res\gotchi\battle\moves\wrap.lua" />
     <None Include="res\gotchi\battle\moves\wriggle.lua" />
     <None Include="res\gotchi\battle\moves\zap.lua" />
+    <None Include="res\gotchi\items\002_evo_stone.json" />
+    <None Include="res\gotchi\items\001_tank_expansion.json" />
+    <None Include="res\gotchi\items\003_glowing_evo_stone.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="help\+prey.json" />

@@ -21,7 +21,7 @@ namespace OurFoodChain {
 
             string number_pattern = @"(\d+(?:\.\d+)?(?:\-\d+(?:\.\d+)?)?)";
             string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|[nμmc]?m|(?:nano|micro|milli|centi)?meters?)";
-            string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow(?:ing)? to|up to|size:)[\s\w]*?\(?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
+            string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow(?:ing)? to|up to|size:|max(?:imum)? size (?:of|is))[\s\w]*?\(?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
 
             Regex pass_1 = new Regex(pass_1_pattern, RegexOptions.IgnoreCase);
             Regex pass_2 = new Regex(number_pattern + @"[\s]*?" + units_pattern + @"\b", RegexOptions.IgnoreCase);

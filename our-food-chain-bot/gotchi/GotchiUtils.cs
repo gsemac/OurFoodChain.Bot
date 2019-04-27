@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -384,6 +385,23 @@ namespace OurFoodChain.gotchi {
             }
 
             return evolved;
+
+        }
+
+        static public GotchiItem[] GetAllGotchiItems() {
+
+            List<GotchiItem> items = new List<GotchiItem>();
+            string[] files = System.IO.Directory.GetFiles("res/gotchi/items", "*.json");
+
+            foreach (string file in files) {
+
+                GotchiItem item = JsonConvert.DeserializeObject<GotchiItem>(System.IO.File.ReadAllText(file));
+
+                items.Add(item);
+
+            }
+
+            return items.ToArray();
 
         }
 

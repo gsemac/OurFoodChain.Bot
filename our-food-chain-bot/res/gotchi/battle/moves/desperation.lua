@@ -14,7 +14,7 @@ end
 function callback(args) 
 	
 	damage = args.TotalDamage();
-	args.user.hp = args.user.hp - damage;
+	args.user.stats.hp = args.user.stats.hp - damage;
 
 	args.DoDamage();
 

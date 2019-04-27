@@ -6,6 +6,7 @@
 
 	move.pp = 5;
 	move.type = type.Recovery;
+	move.canMiss = false;
 
 	move.requires.role = "producer";
 

@@ -1,0 +1,9 @@
+﻿{
+  "name": "leaderboard",
+  "aliases": [],
+  "category": "fun",
+  "description": "Shows a list of users ordered by the number of species they have submitted.",
+  "examples": [
+    "leaderboard"
+  ]
+}

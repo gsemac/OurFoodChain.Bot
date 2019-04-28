@@ -75,6 +75,12 @@ namespace OurFoodChain {
                 page.WithColor(color);
 
         }
+        public void SetColor(byte r, byte g, byte b) {
+
+            foreach (EmbedBuilder page in _pages)
+                page.WithColor(new Color(r, g, b));
+
+        }
 
         public void AddPages(IEnumerable<EmbedBuilder> pages) {
 

@@ -2050,6 +2050,69 @@ namespace OurFoodChain {
             await ReplyAsync("", false, embed.Build());
 
         }
+        [Command("leaderboard")]
+        public async Task Leaderboard() {
+
+            List<string> lines = new List<string>();
+
+
+            // Get the users and their species counts, ordered by species count.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, user_id, COUNT(id) AS count FROM Species GROUP BY user_id ORDER BY count DESC;")) {
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows) {
+
+                        // Get information about the user.
+
+                        ulong user_id = row.IsNull("user_id") ? 0 : (ulong)row.Field<long>("user_id");
+                        IUser user = await Context.Guild.GetUserAsync(user_id);
+
+                        string icon = "";
+
+                        switch (lines.Count) {
+
+                            case 0:
+                                icon = "👑";
+                                break;
+
+                            case 1:
+                                icon = "🥈";
+                                break;
+
+                            case 2:
+                                icon = "🥉";
+                                break;
+
+                            default:
+                                icon = "➖";
+                                break;
+
+                        }
+
+                        lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
+                            string.Format("{0}.", (lines.Count + 1).ToString("000")),
+                            icon,
+                            row.Field<long>("count").ToString("000"),
+                            string.Format(lines.Count < 3 ? "**{0}**" : "{0}", user is null ? row.Field<string>("owner") : user.Username)
+                           ));
+
+                    }
+
+            }
+
+            // Create the embed.
+
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
+            embed.SetTitle(string.Format("🏆 Leaderboard ({0})", lines.Count));
+            embed.SetColor(255, 204, 77);
+            embed.AddPageNumbers();
+
+            // Send the embed.
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+
+        }
 
         [Command("+fav"), Alias("addfav")]
         public async Task AddFav(string species) {

@@ -81,10 +81,10 @@ namespace OurFoodChain {
                         if (other_species is null)
                             continue;
 
-                        if (!items.ContainsKey(relationship.BeneficiaryName() + "s"))
-                            items[relationship.BeneficiaryName() + "s"] = new List<string>();
+                        if (!items.ContainsKey(relationship.BeneficiaryName(plural: true)))
+                            items[relationship.BeneficiaryName(plural: true)] = new List<string>();
 
-                        items[relationship.BeneficiaryName() + "s"].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                        items[relationship.BeneficiaryName(plural: true)].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
 
                     }
 
@@ -106,10 +106,10 @@ namespace OurFoodChain {
                         if (other_species is null)
                             continue;
 
-                        if (!items.ContainsKey(relationship.BenefactorName() + "s"))
-                            items[relationship.BenefactorName() + "s"] = new List<string>();
+                        if (!items.ContainsKey(relationship.BenefactorName(plural: true)))
+                            items[relationship.BenefactorName(plural: true)] = new List<string>();
 
-                        items[relationship.BenefactorName() + "s"].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                        items[relationship.BenefactorName(plural: true)].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
 
                     }
 

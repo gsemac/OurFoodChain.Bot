@@ -20,42 +20,53 @@ namespace OurFoodChain {
             return string.IsNullOrEmpty(description) ? BotUtils.DEFAULT_DESCRIPTION : description;
         }
 
-        public string BeneficiaryName() {
+        public string BeneficiaryName(bool plural = false) {
 
             switch (name.ToLower()) {
 
                 case "parasitism":
-                    return "parasite";
+                    return plural ? "parasites" : "parasite";
 
                 case "mutualism":
-                    return "partner";
+                    return plural ? "partners" : "partner";
 
                 case "commensalism":
-                    return "beneficiary";
+                    return plural ? "beneficiaries" : "beneficiary";
 
                 default:
-                    return name.ToLower() + "ee";
+                    return plural ? name.ToLower() + "ee" : name.ToLower() + "ees";
 
             }
 
         }
-        public string BenefactorName() {
+        public string BenefactorName(bool plural = false) {
+
+            string term = "";
 
             switch (name.ToLower()) {
 
                 case "parasitism":
-                    return "host";
+                    term = "host";
+                    break;
 
                 case "mutualism":
-                    return "partner";
+                    term = "partner";
+                    break;
 
                 case "commensalism":
-                    return "benefactor";
+                    term = "benefactor";
+                    break;
 
                 default:
-                    return name.ToLower() + "er";
+                    term = name.ToLower() + "er";
+                    break;
 
             }
+
+            if (plural)
+                term += "s";
+
+            return term;
 
         }
         public string DescriptorName() {

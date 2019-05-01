@@ -2054,7 +2054,8 @@ namespace OurFoodChain {
         public async Task Leaderboard() {
 
             List<string> lines = new List<string>();
-
+            long place = 1;
+            long last_count = -1;
 
             // Get the users and their species counts, ordered by species count.
 
@@ -2067,20 +2068,25 @@ namespace OurFoodChain {
 
                         ulong user_id = row.IsNull("user_id") ? 0 : (ulong)row.Field<long>("user_id");
                         IUser user = await Context.Guild.GetUserAsync(user_id);
-
+                        long count = row.Field<long>("count");
                         string icon = "";
 
-                        switch (lines.Count) {
+                        if (last_count != -1 && count < last_count)
+                            ++place;
 
-                            case 0:
+                        last_count = count;
+
+                        switch (place) {
+
+                            case 1:
                                 icon = "👑";
                                 break;
 
-                            case 1:
+                            case 2:
                                 icon = "🥈";
                                 break;
 
-                            case 2:
+                            case 3:
                                 icon = "🥉";
                                 break;
 
@@ -2090,10 +2096,11 @@ namespace OurFoodChain {
 
                         }
 
+
                         lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
-                            string.Format("{0}.", (lines.Count + 1).ToString("000")),
+                            string.Format("{0}.", place.ToString("000")),
                             icon,
-                            row.Field<long>("count").ToString("000"),
+                            count.ToString("000"),
                             string.Format(lines.Count < 3 ? "**{0}**" : "{0}", user is null ? row.Field<string>("owner") : user.Username)
                            ));
 

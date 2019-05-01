@@ -2101,7 +2101,7 @@ namespace OurFoodChain {
                             string.Format("{0}.", place.ToString("000")),
                             icon,
                             count.ToString("000"),
-                            string.Format(lines.Count < 3 ? "**{0}**" : "{0}", user is null ? row.Field<string>("owner") : user.Username)
+                            string.Format(place <= 3 ? "**{0}**" : "{0}", user is null ? row.Field<string>("owner") : user.Username)
                            ));
 
                     }

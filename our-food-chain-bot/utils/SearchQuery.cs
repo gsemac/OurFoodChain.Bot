@@ -66,7 +66,13 @@ namespace OurFoodChain {
                         Add(group, s);
 
             }
-            public async Task FilterByAsync(Func<Species, Task<bool>> func) {
+            /// <summary>
+            /// Removes all results for which the given condition is met.
+            /// </summary>
+            /// <param name="func">The condition to use when checking each result.</param>
+            /// <param name="constructive">If true, removes results for which the condition is not met instead.</param>
+            /// <returns></returns>
+            public async Task FilterByAsync(Func<Species, Task<bool>> func, bool constructive = false) {
 
                 foreach (FindResultGroup group in groups.Values) {
 
@@ -74,7 +80,9 @@ namespace OurFoodChain {
 
                     while (index >= 0) {
 
-                        if (await func(group.items[index]))
+                        bool condition_met = await func(group.items[index]);
+
+                        if ((condition_met && !constructive) || (!condition_met && constructive))
                             group.items.RemoveAt(index);
 
                         --index;
@@ -232,6 +240,10 @@ namespace OurFoodChain {
             int split_index = modifier.IndexOf(':');
             string name = modifier.Substring(0, split_index).Trim();
             string value = modifier.Substring(split_index + 1, modifier.Length - split_index - 1).Trim();
+            bool subtract = name.Length > 0 ? name[0] == '-' : false;
+
+            if (name.StartsWith("-"))
+                name = name.Substring(1, name.Length - 1);
 
             switch (name) {
 
@@ -290,7 +302,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetZonesFromDb(x.id)).Any(z => zone_list.Contains(z.GetFullName()));
-                    });
+                    }, subtract);
 
                     break;
 
@@ -303,7 +315,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetRolesFromDbBySpecies(x.id)).Any(r => role_list.Contains(r.name.ToLower()));
-                    });
+                    }, subtract);
 
                     break;
 
@@ -342,7 +354,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return (await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower();
-                    });
+                    }, subtract);
 
                     break;
 
@@ -354,7 +366,7 @@ namespace OurFoodChain {
 
                             await result.FilterByAsync(async (x) => {
                                 return x.isExtinct;
-                            });
+                            }, subtract);
 
                             break;
 
@@ -362,7 +374,7 @@ namespace OurFoodChain {
 
                             await result.FilterByAsync(async (x) => {
                                 return !x.isExtinct;
-                            });
+                            }, subtract);
 
                             break;
 
@@ -375,7 +387,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return x.genus.ToLower() != value.ToLower();
-                    });
+                    }, subtract);
 
                     break;
 
@@ -384,7 +396,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Family);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -393,7 +405,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Order);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -402,7 +414,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Class);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -411,7 +423,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Phylum);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -420,7 +432,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Kingdom);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -429,7 +441,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Domain);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -438,7 +450,7 @@ namespace OurFoodChain {
 
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value);
-                    });
+                    }, subtract);
 
                     break;
 
@@ -446,7 +458,7 @@ namespace OurFoodChain {
 
         }
 
-        ICommandContext _context;
+        private readonly ICommandContext _context;
         private List<string> _terms = new List<string>();
         private List<string> _modifiers = new List<string>();
 

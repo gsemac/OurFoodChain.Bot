@@ -264,8 +264,8 @@ namespace OurFoodChain {
 
                         case "g":
                         case "genus":
-                            await result.GroupByAsync(async (x) => {
-                                return new string[] { x.genus };
+                            await result.GroupByAsync((x) => {
+                                return Task.FromResult(new string[] { x.genus });
                             });
                             break;
 
@@ -278,8 +278,8 @@ namespace OurFoodChain {
                         case "status":
                         case "extant":
                         case "extinct":
-                            await result.GroupByAsync(async (x) => {
-                                return new string[] { x.isExtinct ? "extinct" : "extant" };
+                            await result.GroupByAsync((x) => {
+                                return Task.FromResult(new string[] { x.isExtinct ? "extinct" : "extant" });
                             });
                             break;
 
@@ -364,16 +364,16 @@ namespace OurFoodChain {
 
                         case "extant":
 
-                            await result.FilterByAsync(async (x) => {
-                                return x.isExtinct;
+                            await result.FilterByAsync((x) => {
+                                return Task.FromResult(x.isExtinct);
                             }, subtract);
 
                             break;
 
                         case "extinct":
 
-                            await result.FilterByAsync(async (x) => {
-                                return !x.isExtinct;
+                            await result.FilterByAsync((x) => {
+                                return Task.FromResult(!x.isExtinct);
                             }, subtract);
 
                             break;
@@ -385,8 +385,8 @@ namespace OurFoodChain {
                 case "g":
                 case "genus":
 
-                    await result.FilterByAsync(async (x) => {
-                        return x.genus.ToLower() != value.ToLower();
+                    await result.FilterByAsync((x) => {
+                        return Task.FromResult(x.genus.ToLower() != value.ToLower());
                     }, subtract);
 
                     break;

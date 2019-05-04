@@ -27,7 +27,7 @@ namespace OurFoodChain {
         public Taxon Order;
         public Taxon Family;
         public Taxon Genus;
-        public Taxon Species;
+        public Taxon Species = null;
 
         public bool Contains(string name) {
 

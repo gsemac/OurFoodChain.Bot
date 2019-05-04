@@ -14,9 +14,6 @@ namespace OurFoodChain {
 
         // https://stackoverflow.com/questions/248603/natural-sort-order-in-c-sharp/248613#248613
 
-        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
-        private static extern int StrCmpLogicalW(string psz1, string psz2);
-
         [SuppressUnmanagedCodeSecurity]
         internal static class SafeNativeMethods {
             [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]

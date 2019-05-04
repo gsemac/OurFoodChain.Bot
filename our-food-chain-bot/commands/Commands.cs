@@ -1579,6 +1579,12 @@ namespace OurFoodChain {
                 await BotUtils.ReplyAsync_Info(Context, "No species matching this query could be found.");
 
             }
+            else if (result.Count() == 1) {
+
+                // If there's only one result, just show that species.
+                await GetSpecies(result.ToArray()[0]);
+
+            }
             else {
 
                 PaginatedEmbedBuilder embed;

@@ -93,6 +93,17 @@ namespace OurFoodChain {
 
             }
 
+            public Species[] ToArray() {
+
+                List<Species> results = new List<Species>();
+
+                foreach (FindResultGroup group in groups.Values)
+                    results.AddRange(group.items);
+
+                return results.ToArray();
+
+            }
+
         }
 
         public class FindResultGroup {
@@ -451,6 +462,27 @@ namespace OurFoodChain {
                     await result.FilterByAsync(async (x) => {
                         return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value);
                     }, subtract);
+
+                    break;
+
+                case "random": {
+
+                        if (!int.TryParse(value, out int count))
+                            break;
+
+                        if (count <= 0)
+                            break;
+
+                        // Generate N random IDs from the results.
+                        long[] ids = result.ToArray().OrderBy(i => BotUtils.RandomInteger(int.MaxValue)).Take(count).Select(i => i.id).ToArray();
+
+                        // Filter all but those results.
+
+                        await result.FilterByAsync((x) => {
+                            return Task.FromResult(!ids.Contains(x.id));
+                        }, subtract);
+
+                    }
 
                     break;
 

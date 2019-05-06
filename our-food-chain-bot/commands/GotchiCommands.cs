@@ -190,10 +190,11 @@ namespace OurFoodChain.gotchi {
             if (!await GotchiUtils.Reply_ValidateGotchiAsync(Context, gotchi))
                 return;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET name=$name WHERE owner_id=$owner_id;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET name = $name WHERE owner_id = $owner_id AND id = $id")) {
 
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
                 cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
+                cmd.Parameters.AddWithValue("$id", gotchi.id);
 
                 await Database.ExecuteNonQuery(cmd);
 

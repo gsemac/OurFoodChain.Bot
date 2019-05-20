@@ -373,6 +373,7 @@ namespace OurFoodChain {
 
                     switch (value) {
 
+                        case "lc":
                         case "extant":
 
                             await result.FilterByAsync((x) => {
@@ -381,10 +382,20 @@ namespace OurFoodChain {
 
                             break;
 
+                        case "ex":
                         case "extinct":
 
                             await result.FilterByAsync((x) => {
                                 return Task.FromResult(!x.isExtinct);
+                            }, subtract);
+
+                            break;
+
+                        case "en":
+                        case "endangered":
+
+                            await result.FilterByAsync(async (x) => {
+                                return !await BotUtils.IsEndangeredSpeciesAsync(x);
                             }, subtract);
 
                             break;

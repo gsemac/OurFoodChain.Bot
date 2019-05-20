@@ -542,6 +542,23 @@ namespace OurFoodChain {
             return true;
 
         }
+        public static async Task<bool> IsEndangeredSpeciesAsync(Species species) {
+
+            // Consider a species "endangered" if:
+            // - All of its prey has gone extinct.
+
+            if (species.isExtinct)
+                return false;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM Predates WHERE eats_id NOT IN (SELECT species_id FROM Extinctions)) AND id IN (SELECT species_id from Predates)")) {
+
+                cmd.Parameters.AddWithValue("$id", species.id);
+
+                return await Database.GetScalar<long>(cmd) > 0;
+
+            }
+
+        }
 
         public static async Task AddGenusToDb(string genus) {
 

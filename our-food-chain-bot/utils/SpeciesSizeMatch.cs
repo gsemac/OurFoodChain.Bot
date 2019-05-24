@@ -365,7 +365,7 @@ namespace OurFoodChain {
 
             // Before we make our passes, remove things that might be false positives (i.e. size of young, depth of burrows).
 
-            input = Regex.Replace(input, @"(?:hatchlings|young|babies)\s*" + pass_1_pattern, string.Empty, RegexOptions.IgnoreCase); // "Young grow up to..."
+            input = Regex.Replace(input, @"(?:hatchlings|young|babies|eggs)\s*" + pass_1_pattern, string.Empty, RegexOptions.IgnoreCase); // "Young grow up to..."
             input = Regex.Replace(input, units_pattern + @"\s*(?:deep|in depth)", string.Empty, RegexOptions.IgnoreCase); // "12 inches deep..."
             input = Regex.Replace(input, @"zone\s*\d+", string.Empty, RegexOptions.IgnoreCase); // get rid of zone information ("Zone 3 in...")
 

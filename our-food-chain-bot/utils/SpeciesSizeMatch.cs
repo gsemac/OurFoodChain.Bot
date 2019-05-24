@@ -7,6 +7,339 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
+    public enum LengthUnit {
+
+        Unknown = 0,
+
+        Nanometers,
+        Micrometers,
+        Millimeters,
+        Centimeters,
+        Meters,
+
+        METRIC_END,
+
+        Inches,
+        Feet,
+
+        IMPERIAL_END
+
+    }
+
+    public class Length {
+
+        public Length() {
+
+            Value = 0.0;
+            Units = LengthUnit.Unknown;
+
+        }
+        public Length(double value, string units) {
+
+            Value = value;
+            Units = _parseUnits(units);
+
+        }
+        public Length(double value, LengthUnit units) {
+
+            Value = value;
+            Units = units;
+
+        }
+
+        public double Value { get; set; } = 0.0;
+        public LengthUnit Units { get; set; } = 0;
+        public string ValueString {
+            get {
+                return _formatValue();
+            }
+        }
+        public string UnitsString {
+            get {
+                return _unitsToString();
+            }
+        }
+
+        public double ToNanometers() {
+
+            if (Units == LengthUnit.Nanometers)
+                return Value;
+
+            return ToMeters() * 1000000000.0;
+
+        }
+        public double ToMicrometers() {
+
+            if (Units == LengthUnit.Micrometers)
+                return Value;
+
+            return ToMeters() * 1000000.0;
+
+        }
+        public double ToMillimeters() {
+
+            if (Units == LengthUnit.Millimeters)
+                return Value;
+
+            return ToMeters() * 1000.0;
+
+        }
+        public double ToCentimeters() {
+
+            if (Units == LengthUnit.Centimeters)
+                return Value;
+
+            return ToMeters() * 100.0;
+
+        }
+        public double ToMeters() {
+
+            switch (Units) {
+
+                case LengthUnit.Nanometers:
+                    return Value / 1000000000.0;
+                case LengthUnit.Micrometers:
+                    return Value / 1000000.0;
+                case LengthUnit.Millimeters:
+                    return Value / 1000.0;
+                case LengthUnit.Centimeters:
+                    return Value / 100.0;
+                case LengthUnit.Meters:
+                    return Value;
+                case LengthUnit.Feet:
+                    return Value / 3.281;
+                case LengthUnit.Inches:
+                    return Value / 39.37;
+                default:
+                    return Value;
+
+            }
+
+        }
+
+        public double ToFeet() {
+
+            if (Units == LengthUnit.Feet)
+                return Value;
+
+            return ToMeters() * 3.281;
+
+        }
+        public double ToInches() {
+
+            if (Units == LengthUnit.Inches)
+                return Value;
+
+            return ToMeters() * 39.37;
+
+        }
+
+        public double ConvertTo(LengthUnit units) {
+
+            switch (units) {
+
+                case LengthUnit.Nanometers:
+                    return ToNanometers();
+                case LengthUnit.Micrometers:
+                    return ToMicrometers();
+                case LengthUnit.Millimeters:
+                    return ToMillimeters();
+                case LengthUnit.Centimeters:
+                    return ToCentimeters();
+                case LengthUnit.Meters:
+                    return ToMeters();
+
+                case LengthUnit.Feet:
+                    return ToFeet();
+                case LengthUnit.Inches:
+                    return ToInches();
+
+                default:
+                    throw new ArgumentException("Invalid units");
+
+            }
+
+        }
+
+        public bool IsMetric() {
+            return IsMetric(Units);
+        }
+        public bool IsMetric(LengthUnit units) {
+            return units < LengthUnit.METRIC_END;
+        }
+        public bool IsImperial() {
+            return IsImperial(Units);
+        }
+        public bool IsImperial(LengthUnit units) {
+            return units > LengthUnit.METRIC_END && units < LengthUnit.IMPERIAL_END;
+        }
+
+        public Length ToNearestMetricUnits() {
+
+            if (IsMetric())
+                return new Length { Value = Value, Units = Units };
+
+            if (Units >= LengthUnit.Feet)
+                return new Length { Value = ToMeters(), Units = LengthUnit.Meters };
+            else
+                return new Length { Value = ToCentimeters(), Units = LengthUnit.Centimeters };
+
+        }
+        public Length ToNearestImperialUnits() {
+
+            if (IsImperial())
+                return new Length { Value = Value, Units = Units };
+
+            if (Units >= LengthUnit.Meters)
+                return new Length { Value = ToFeet(), Units = LengthUnit.Feet };
+            else
+                return new Length { Value = ToInches(), Units = LengthUnit.Inches };
+
+        }
+
+        public override string ToString() {
+
+            return string.Format("{0} {1}",
+                ValueString,
+                UnitsString);
+
+        }
+
+        private string _formatValue() {
+
+            if (Value < 0.1) {
+
+                string formatted = Value.ToString("0.0e+0", System.Globalization.CultureInfo.InvariantCulture);
+                Match match = Regex.Match(formatted, @"([\d.]+)e([+\-])([\d.]+)");
+
+                return string.Format("{0} × 10{1}{2}",
+                   match.Groups[1].Value,
+                   match.Groups[2].Value == "-" ? "⁻" : "⁺",
+                   _digitsToUnicodeExponents(match.Groups[3].Value));
+
+            }
+            else
+                return Value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+
+        }
+        private string _digitsToUnicodeExponents(string digits) {
+
+            return Regex.Replace(digits, @"\d", m => {
+
+                switch (m.Value) {
+
+                    case "0":
+                        return "⁰";
+                    case "1":
+                        return "¹";
+                    case "2":
+                        return "²";
+                    case "3":
+                        return "³";
+                    case "4":
+                        return "⁴";
+                    case "5":
+                        return "⁵";
+                    case "6":
+                        return "⁶";
+                    case "7":
+                        return "⁷";
+                    case "8":
+                        return "⁸";
+                    case "9":
+                        return "⁹";
+                    case ".":
+                        return "˙";
+                    default:
+                        return "?";
+
+                }
+
+            });
+
+        }
+        private string _unitsToString() {
+
+            switch (Units) {
+
+                case LengthUnit.Nanometers:
+                    return "nm";
+                case LengthUnit.Micrometers:
+                    return "μm";
+                case LengthUnit.Millimeters:
+                    return "mm";
+                case LengthUnit.Centimeters:
+                    return "cm";
+                case LengthUnit.Meters:
+                    return "m";
+
+                case LengthUnit.Inches:
+                    return "in";
+                case LengthUnit.Feet:
+                    return "ft";
+
+                default:
+                    return "units";
+
+            }
+
+        }
+        private LengthUnit _parseUnits(string value) {
+
+            LengthUnit units = LengthUnit.Unknown;
+
+            switch (value.ToLower()) {
+
+                case "nm":
+                case "nanometer":
+                case "nanometers":
+                    units = LengthUnit.Nanometers;
+                    break;
+
+                case "μm":
+                case "micrometer":
+                case "micrometers":
+                    units = LengthUnit.Micrometers;
+                    break;
+
+                case "mm":
+                case "millimeter":
+                case "millimeters":
+                    units = LengthUnit.Millimeters;
+                    break;
+
+                case "cm":
+                case "centimeter":
+                case "centimeters":
+                    units = LengthUnit.Centimeters;
+                    break;
+
+                case "m":
+                case "meter":
+                case "meters":
+                    units = LengthUnit.Meters;
+                    break;
+
+                case "in":
+                case "inch":
+                case "inches":
+                    units = LengthUnit.Inches;
+                    break;
+
+                case "ft":
+                case "foot":
+                case "feet":
+                    units = LengthUnit.Feet;
+                    break;
+
+            }
+
+            return units;
+
+        }
+
+    }
+
     public class SpeciesSizeMatch {
 
         public const string UNKNOWN_SIZE_STRING = "unknown";
@@ -57,8 +390,11 @@ namespace OurFoodChain {
 
                     }
 
-                    result._size = best_match.Groups[1].Value;
-                    result._units = best_match.Groups[2].Value.ToLower();
+                    string size_str = best_match.Groups[1].Value;
+                    string units_str = best_match.Groups[2].Value.ToLower();
+
+                    result._parseSizeString(size_str);
+                    result._units = new Length(0.0, units_str).Units;
 
                     break;
 
@@ -72,207 +408,72 @@ namespace OurFoodChain {
 
         public override string ToString() {
 
-            if (string.IsNullOrEmpty(_size))
+            if (_min_size <= 0.0 && _max_size <= 0.0 || (_units == LengthUnit.Unknown))
                 return UNKNOWN_SIZE_STRING;
 
-            if (_size.Contains("-")) {
+            if (_min_size != _max_size) {
 
                 // Represent the size as a range.
 
-                Match m = Regex.Match(_size, @"([\d\.]+)\-([\d\.]+)");
+                Length min_size = new Length(_min_size, _units).ToNearestMetricUnits();
+                Length max_size = new Length(_max_size, _units).ToNearestMetricUnits();
 
-                string min_str = m.Groups[1].Value;
-                string max_str = m.Groups[2].Value;
-
-                if (!double.TryParse(min_str, out double min) || !double.TryParse(max_str, out double max))
-                    return UNKNOWN_SIZE_STRING;
-
-                string metric_units = StringUtils.UnitsToAbbreviation(_units);
-
-                if (_isImperialUnits(metric_units)) {
-
-                    // Convert the units to metric so we can show that first.
-
-                    min = _imperialToMetric(min, metric_units);
-                    max = _imperialToMetric(max, metric_units);
-                    metric_units = _imperialUnitsToMetricEquivalent(metric_units);
-
-                }
-
-                return string.Format("**{0:0.#}-{1:0.#} {2}** ({3:0.#}-{4:0.#} {5})",
-                    min,
-                    max,
-                    metric_units,
-                    _metricToImperial(min, metric_units),
-                    _metricToImperial(max, metric_units),
-                    _metricUnitsToImperialEquivalent(metric_units));
+                return string.Format("**{0}-{1} {2}** ({3}-{4} {5})",
+                    min_size.ValueString,
+                    max_size.ValueString,
+                    min_size.UnitsString,
+                    min_size.ToNearestImperialUnits().ValueString,
+                    max_size.ToNearestImperialUnits().ValueString,
+                    max_size.ToNearestImperialUnits().UnitsString);
 
             }
             else {
 
-                if (!double.TryParse(_size, out double size))
-                    return UNKNOWN_SIZE_STRING;
+                // Represent the size as a single value.
 
-                string metric_units = StringUtils.UnitsToAbbreviation(_units);
+                Length size = new Length(_min_size <= 0.0 ? _max_size : _min_size, _units).ToNearestMetricUnits();
 
-                if (_isImperialUnits(metric_units)) {
+                return string.Format("**{0}** ({1})",
+                    size.ToString(),
+                    size.ToNearestImperialUnits().ToString());
 
-                    // Convert the units to metric so we can show that first.
+            }
 
-                    size = _imperialToMetric(size, metric_units);
-                    metric_units = _imperialUnitsToMetricEquivalent(metric_units);
+        }
+
+        private double _min_size = 0.0;
+        private double _max_size = 0.0;
+        private LengthUnit _units = 0;
+
+        private void _parseSizeString(string value) {
+
+            if (value.Contains("-"))
+                _parseSizeRangeString(value);
+            else {
+
+                if (double.TryParse(value, out double size)) {
+
+                    _min_size = size;
+                    _max_size = size;
 
                 }
 
-                return string.Format("**{0:0.#} {1}** ({2} {3})",
-                    size,
-                    metric_units,
-                    _formatImperialUnits(_metricToImperial(size, metric_units)),
-                    _metricUnitsToImperialEquivalent(metric_units));
-
             }
 
         }
+        private void _parseSizeRangeString(string value) {
 
-        private string _size = "";
-        private string _units = "";
+            Match m = Regex.Match(value, @"([\d\.]+)\-([\d\.]+)");
 
-        private bool _isImperialUnits(string units) {
+            string min_str = m.Groups[1].Value;
+            string max_str = m.Groups[2].Value;
 
-            switch (units.ToLower()) {
+            if (double.TryParse(min_str, out double min) && double.TryParse(max_str, out double max)) {
 
-                case "in":
-                case "ft":
-                    return true;
-
-            }
-
-            return false;
-
-        }
-        private string _imperialUnitsToMetricEquivalent(string units) {
-
-            switch (units.ToLower()) {
-
-                case "in":
-                    return "cm";
-
-                case "ft":
-                    return "m";
+                _min_size = min;
+                _max_size = max;
 
             }
-
-            return units;
-
-        }
-        private string _metricUnitsToImperialEquivalent(string units) {
-
-            switch (units.ToLower()) {
-
-                case "nm":
-                case "μm":
-                case "mm":
-                case "cm":
-                    return "in";
-
-                case "m":
-                    return "ft";
-
-            }
-
-            return units;
-
-        }
-        private double _imperialToMetric(double number, string units) {
-
-            switch (units.ToLower()) {
-
-                case "in":
-                    return number * 2.54; // to cm
-
-                case "ft":
-                    return number / 3.281; // to m
-
-            }
-
-            return 0.0;
-
-        }
-        private double _metricToImperial(double number, string units) {
-
-            switch (units.ToLower()) {
-
-                case "nm":
-                    return number / 25400000.0; // to in
-
-                case "μm":
-                    return number / 25400.0; // to in
-
-                case "mm":
-                    return number / 25.4; // to in
-
-                case "cm":
-                    return number / 2.54; // to in
-
-                case "m":
-                    return number * 3.281; // to ft
-
-            }
-
-            return 0.0;
-
-        }
-
-        private string _formatImperialUnits(double number) {
-
-            if (number < 0.1) {
-
-                string formatted = number.ToString("0.0e+0", System.Globalization.CultureInfo.InvariantCulture);
-                Match match = Regex.Match(formatted, @"([\d.]+)e([+\-])([\d.]+)");
-
-                return string.Format("{0} × 10{1}{2}",
-                   match.Groups[1].Value,
-                   match.Groups[2].Value == "-" ? "⁻" : "⁺",
-                   _digitsToUnicodeExponents(match.Groups[3].Value));
-
-            }
-            else
-                return number.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
-        }
-        private string _digitsToUnicodeExponents(string digits) {
-
-            return Regex.Replace(digits, @"\d", m => {
-
-                switch (m.Value) {
-
-                    case "0":
-                        return "⁰";
-                    case "1":
-                        return "¹";
-                    case "2":
-                        return "²";
-                    case "3":
-                        return "³";
-                    case "4":
-                        return "⁴";
-                    case "5":
-                        return "⁵";
-                    case "6":
-                        return "⁶";
-                    case "7":
-                        return "⁷";
-                    case "8":
-                        return "⁸";
-                    case "9":
-                        return "⁹";
-                    case ".":
-                        return "˙";
-                    default:
-                        return "?";
-
-                }
-
-            });
 
         }
 

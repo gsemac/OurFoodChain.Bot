@@ -134,33 +134,6 @@ namespace OurFoodChain {
 
         }
 
-        public double ConvertTo(LengthUnit units) {
-
-            switch (units) {
-
-                case LengthUnit.Nanometers:
-                    return ToNanometers();
-                case LengthUnit.Micrometers:
-                    return ToMicrometers();
-                case LengthUnit.Millimeters:
-                    return ToMillimeters();
-                case LengthUnit.Centimeters:
-                    return ToCentimeters();
-                case LengthUnit.Meters:
-                    return ToMeters();
-
-                case LengthUnit.Feet:
-                    return ToFeet();
-                case LengthUnit.Inches:
-                    return ToInches();
-
-                default:
-                    throw new ArgumentException("Invalid units");
-
-            }
-
-        }
-
         public bool IsMetric() {
             return IsMetric(Units);
         }
@@ -194,6 +167,11 @@ namespace OurFoodChain {
                 return new Length { Value = ToFeet(), Units = LengthUnit.Feet };
             else
                 return new Length { Value = ToInches(), Units = LengthUnit.Inches };
+
+        }
+        public Length ConvertTo(LengthUnit units) {
+
+            return new Length { Value = _convertValueTo(units), Units = units };
 
         }
 
@@ -337,6 +315,32 @@ namespace OurFoodChain {
             return units;
 
         }
+        private double _convertValueTo(LengthUnit units) {
+
+            switch (units) {
+
+                case LengthUnit.Nanometers:
+                    return ToNanometers();
+                case LengthUnit.Micrometers:
+                    return ToMicrometers();
+                case LengthUnit.Millimeters:
+                    return ToMillimeters();
+                case LengthUnit.Centimeters:
+                    return ToCentimeters();
+                case LengthUnit.Meters:
+                    return ToMeters();
+
+                case LengthUnit.Feet:
+                    return ToFeet();
+                case LengthUnit.Inches:
+                    return ToInches();
+
+                default:
+                    throw new ArgumentException("Invalid units");
+
+            }
+
+        }
 
     }
 
@@ -436,6 +440,35 @@ namespace OurFoodChain {
                 return string.Format("**{0}** ({1})",
                     size.ToString(),
                     size.ToNearestImperialUnits().ToString());
+
+            }
+
+        }
+        public string ToString(LengthUnit units) {
+
+            if (_min_size <= 0.0 && _max_size <= 0.0 || (_units == LengthUnit.Unknown))
+                return UNKNOWN_SIZE_STRING;
+
+            if (_min_size != _max_size) {
+
+                // Represent the size as a range.
+
+                Length min_size = new Length(_min_size, _units).ConvertTo(units);
+                Length max_size = new Length(_max_size, _units).ConvertTo(units);
+
+                return string.Format("**{0}-{1} {2}**",
+                    min_size.ValueString,
+                    max_size.ValueString,
+                    min_size.UnitsString);
+
+            }
+            else {
+
+                // Represent the size as a single value.
+
+                Length size = new Length(_min_size <= 0.0 ? _max_size : _min_size, _units).ConvertTo(units);
+
+                return string.Format("**{0}**", size.ToString());
 
             }
 

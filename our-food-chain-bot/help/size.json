@@ -1,0 +1,13 @@
+﻿{
+  "name": "size",
+  "aliases": [
+    "sz"
+  ],
+  "category": "info",
+  "description": "Displays the size of the given species as determined from the species description.\n\nSizes returned from this command may not always be accurate!",
+  "examples": [
+    "size aspersum",
+    "size cornu aspersum",
+    "size aspersum inches"
+  ]
+}

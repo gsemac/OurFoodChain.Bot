@@ -251,6 +251,7 @@
     <None Include="help\gotchi\set.json" />
     <None Include="help\gotchi\shop.json" />
     <None Include="help\leaderboard.json" />
+    <None Include="help\size.json" />
     <None Include="res\gotchi\battle\moves\all-out_attack.lua" />
     <None Include="res\gotchi\battle\moves\bite.lua" />
     <None Include="res\gotchi\battle\moves\blinding_flash.lua" />

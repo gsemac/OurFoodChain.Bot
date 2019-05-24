@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
+    [Flags]
+    public enum EmbedPagesFlag {
+        None = 0,
+        CrossOutExtinctSpecies = 1,
+        Default = CrossOutExtinctSpecies,
+    }
+
     public class EmbedUtils {
 
         public const int MAX_FIELD_COUNT = 25;
@@ -198,7 +205,7 @@ namespace OurFoodChain {
             return columns;
 
         }
-        public static List<EmbedBuilder> SpeciesListToEmbedPages(List<Species> items, int speciesPerPage = 40, string fieldName = "\u200B") {
+        public static List<EmbedBuilder> SpeciesListToEmbedPages(List<Species> items, int speciesPerPage = 40, string fieldName = "\u200B", EmbedPagesFlag flags = EmbedPagesFlag.Default) {
 
             List<List<Species>> columns = SpeciesListToColumns(items, speciesPerPage / 2);
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
@@ -211,7 +218,7 @@ namespace OurFoodChain {
                 StringBuilder builder = new StringBuilder();
 
                 foreach (Species sp in column)
-                    if (sp.isExtinct)
+                    if (flags.HasFlag(EmbedPagesFlag.CrossOutExtinctSpecies) && sp.isExtinct)
                         builder.AppendLine(string.Format("~~{0}~~", sp.GetShortName()));
                     else
                         builder.AppendLine(sp.GetShortName());

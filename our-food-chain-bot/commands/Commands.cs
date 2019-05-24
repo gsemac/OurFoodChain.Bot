@@ -760,17 +760,10 @@ namespace OurFoodChain {
 
             sp_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-            StringBuilder description = new StringBuilder();
+            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list, fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
 
-            foreach (Species sp in sp_list)
-                description.AppendLine(sp.GetShortName());
-
-            EmbedBuilder embed = new EmbedBuilder();
-
-            embed.WithTitle(string.Format("Extinct species ({0})", sp_list.Count()));
-            embed.WithDescription(description.ToString());
-
-            await ReplyAsync("", false, embed.Build());
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build(), "There are currently no extinct species.");
 
         }
 

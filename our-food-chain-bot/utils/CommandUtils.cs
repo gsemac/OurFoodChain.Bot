@@ -44,12 +44,18 @@ namespace OurFoodChain {
 
         public static Dictionary<ulong, PaginatedMessage> PAGINATED_MESSAGES = new Dictionary<ulong, PaginatedMessage>();
 
-        public static async Task ReplyAsync_SendPaginatedMessage(ICommandContext context, PaginatedMessage message) {
+        public static async Task ReplyAsync_SendPaginatedMessage(ICommandContext context, PaginatedMessage message, string defaultMessage = "") {
 
             // If the message does not have any pages, quit.
 
-            if (message.pages.Count() <= 0)
+            if (message.pages.Count() <= 0) {
+
+                if (!string.IsNullOrEmpty(defaultMessage))
+                    await BotUtils.ReplyAsync_Info(context, defaultMessage);
+
                 return;
+
+            }
 
             IUserMessage msg = await context.Channel.SendMessageAsync("", false, message.pages[0]);
 

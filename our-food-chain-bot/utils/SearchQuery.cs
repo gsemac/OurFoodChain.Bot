@@ -280,6 +280,72 @@ namespace OurFoodChain {
                             });
                             break;
 
+                        case "f":
+                        case "family":
+                            await result.GroupByAsync(async (x) => {
+
+                                Taxon taxon = (await BotUtils.GetFullTaxaFromDb(x)).Family;
+
+                                return new string[] { taxon is null ? "N/A" : taxon.GetName() };
+
+                            });
+                            break;
+
+                        case "o":
+                        case "order":
+                            await result.GroupByAsync(async (x) => {
+
+                                Taxon taxon = (await BotUtils.GetFullTaxaFromDb(x)).Order;
+
+                                return new string[] { taxon is null ? "N/A" : taxon.GetName() };
+
+                            });
+                            break;
+
+                        case "c":
+                        case "class":
+                            await result.GroupByAsync(async (x) => {
+
+                                Taxon taxon = (await BotUtils.GetFullTaxaFromDb(x)).Class;
+
+                                return new string[] { taxon is null ? "N/A" : taxon.GetName() };
+
+                            });
+                            break;
+
+                        case "p":
+                        case "phylum":
+                            await result.GroupByAsync(async (x) => {
+
+                                Taxon taxon = (await BotUtils.GetFullTaxaFromDb(x)).Phylum;
+
+                                return new string[] { taxon is null ? "N/A" : taxon.GetName() };
+
+                            });
+                            break;
+
+                        case "k":
+                        case "kingdom":
+                            await result.GroupByAsync(async (x) => {
+
+                                Taxon taxon = (await BotUtils.GetFullTaxaFromDb(x)).Kingdom;
+
+                                return new string[] { taxon is null ? "N/A" : taxon.GetName() };
+
+                            });
+                            break;
+
+                        case "d":
+                        case "domain":
+                            await result.GroupByAsync(async (x) => {
+
+                                Taxon taxon = (await BotUtils.GetFullTaxaFromDb(x)).Domain;
+
+                                return new string[] { taxon is null ? "N/A" : taxon.GetName() };
+
+                            });
+                            break;
+
                         case "owner":
                             await result.GroupByAsync(async (x) => {
                                 return new string[] { await x.GetOwnerOrDefault(_context) };
@@ -491,6 +557,20 @@ namespace OurFoodChain {
 
                         await result.FilterByAsync((x) => {
                             return Task.FromResult(!ids.Contains(x.id));
+                        }, subtract);
+
+                    }
+
+                    break;
+
+                case "pred":
+                case "predator": {
+
+                        Species[] predator_list = await BotUtils.GetSpeciesFromDb("", value);
+                        Species[] prey_list = predator_list.Count() == 1 ? await BotUtils.GetPreySpeciesAsync(predator_list[0]) : new Species[] { };
+
+                        await result.FilterByAsync((x) => {
+                            return Task.FromResult(!prey_list.Any(i => i.id == x.id));
                         }, subtract);
 
                     }

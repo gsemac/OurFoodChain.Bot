@@ -1,0 +1,10 @@
+﻿{
+  "name": "roll",
+  "aliases": [],
+  "category": "fun",
+  "description": "Returns the result of an `N`-sided dice roll, where `N` is the number passed in. If two numbers `N` and `M` are passed in, a random value in the range `[N, M]` is returned.",
+  "examples": [
+    "roll 6",
+    "roll 20 25"
+  ]
+}

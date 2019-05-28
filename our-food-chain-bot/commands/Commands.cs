@@ -1663,21 +1663,30 @@ namespace OurFoodChain {
 
         }
 
-        private static Random _random_generator = new Random();
         [Command("roll")]
-        public async Task Roll(int min = 0, int max = 0) {
+        public async Task Roll(int max) {
 
-            if (min == 0 && max == 0) {
-                min = 1;
-                max = 6;
-            }
-            else if (max == 0) {
-                max = min;
-                min = 0;
+            if (max < 1)
+                await BotUtils.ReplyAsync_Error(Context, "Value must be greater than or equal 1.");
+
+            else {
+
+                int value = BotUtils.RandomInteger(1, max + 1);
+
+                await ReplyAsync(value.ToString());
+
             }
 
-            // [min, max)
-            await ReplyAsync(_random_generator.Next(min, max + 1).ToString());
+        }
+        [Command("roll")]
+        public async Task Roll(int min, int max) {
+
+            if (min < 0 || max < 0)
+                await BotUtils.ReplyAsync_Error(Context, "Values must be greater than 1.");
+            if (min > max + 1)
+                await BotUtils.ReplyAsync_Error(Context, "Minimum value must be less than or equal to the maximum value.");
+            else
+                await ReplyAsync(BotUtils.RandomInteger(min, max + 1).ToString());
 
         }
 
@@ -1959,7 +1968,7 @@ namespace OurFoodChain {
             if (species.Count() <= 0)
                 await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtils.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
             else
-                await GetSpecies(species[_random_generator.Next(species.Count())]);
+                await GetSpecies(species[BotUtils.RandomInteger(species.Count())]);
 
         }
 

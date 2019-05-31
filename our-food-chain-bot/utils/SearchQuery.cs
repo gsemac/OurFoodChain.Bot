@@ -13,17 +13,26 @@ namespace OurFoodChain {
 
         public const string DEFAULT_GROUP = "";
 
-        public enum OutputModifier {
+        public enum DisplayFormat {
             FullName,
             ShortName,
             CommonName,
             SpeciesOnly
         }
 
+        public enum OrderBy {
+            Default,
+            Newest,
+            Oldest,
+            Smallest,
+            Largest
+        }
+
         public class FindResult {
 
             public SortedDictionary<string, FindResultGroup> groups = new SortedDictionary<string, FindResultGroup>(new ArrayUtils.NaturalStringComparer());
-            public OutputModifier outputModifier = OutputModifier.ShortName;
+            public DisplayFormat displayFormat = DisplayFormat.ShortName;
+            public OrderBy orderBy = OrderBy.Default;
 
             public void Add(string group, Species species) {
 
@@ -112,9 +121,7 @@ namespace OurFoodChain {
             public FindResult owner = null;
 
             public List<string> ToList() {
-
                 return items.Select(x => _speciesToString(x)).ToList();
-
             }
 
             private string _speciesToString(Species species) {
@@ -123,20 +130,20 @@ namespace OurFoodChain {
 
                 if (!(owner is null)) {
 
-                    switch (owner.outputModifier) {
+                    switch (owner.displayFormat) {
 
-                        case OutputModifier.CommonName:
+                        case DisplayFormat.CommonName:
 
                             if (!string.IsNullOrEmpty(species.commonName))
                                 str = StringUtils.ToTitleCase(species.commonName);
 
                             break;
 
-                        case OutputModifier.FullName:
+                        case DisplayFormat.FullName:
                             str = species.GetFullName();
                             break;
 
-                        case OutputModifier.SpeciesOnly:
+                        case DisplayFormat.SpeciesOnly:
                             str = species.name.ToLower();
                             break;
 
@@ -219,7 +226,30 @@ namespace OurFoodChain {
             // Sort the contents of all groups.
 
             foreach (FindResultGroup group in result.groups.Values)
-                group.items.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                switch (result.orderBy) {
+
+                    case OrderBy.Newest:
+                        group.items.Sort((lhs, rhs) => rhs.timestamp.CompareTo(lhs.timestamp));
+                        break;
+
+                    case OrderBy.Oldest:
+                        group.items.Sort((lhs, rhs) => lhs.timestamp.CompareTo(rhs.timestamp));
+                        break;
+
+                    case OrderBy.Smallest:
+                        group.items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters()));
+                        break;
+
+                    case OrderBy.Largest:
+                        group.items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters()));
+                        break;
+
+                    default:
+                    case OrderBy.Default:
+                        group.items.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                        break;
+
+                }
 
             // Return the result.
             return result;
@@ -263,7 +293,7 @@ namespace OurFoodChain {
 
                     // Applies grouping to the species based on the given attribute.
 
-                    switch (value) {
+                    switch (value.ToLower()) {
 
                         case "z":
                         case "zones":
@@ -370,6 +400,37 @@ namespace OurFoodChain {
 
                     break;
 
+                case "orderby":
+                case "sortby":
+                case "sort":
+                case "ordering":
+
+                    switch (value.ToLower()) {
+
+                        case "smallest":
+                            result.orderBy = OrderBy.Smallest;
+                            break;
+
+                        case "largest":
+                        case "biggest":
+                        case "size":
+                            result.orderBy = OrderBy.Largest;
+                            break;
+
+                        case "newest":
+                        case "recent":
+                            result.orderBy = OrderBy.Newest;
+                            break;
+
+                        case "age":
+                        case "oldest":
+                            result.orderBy = OrderBy.Oldest;
+                            break;
+
+                    }
+
+                    break;
+
                 case "z":
                 case "zone":
 
@@ -405,22 +466,22 @@ namespace OurFoodChain {
 
                         case "c":
                         case "common":
-                            result.outputModifier = OutputModifier.CommonName;
+                            result.displayFormat = DisplayFormat.CommonName;
                             break;
 
                         case "f":
                         case "full":
-                            result.outputModifier = OutputModifier.FullName;
+                            result.displayFormat = DisplayFormat.FullName;
                             break;
 
                         case "s":
                         case "short":
-                            result.outputModifier = OutputModifier.ShortName;
+                            result.displayFormat = DisplayFormat.ShortName;
                             break;
 
                         case "sp":
                         case "species":
-                            result.outputModifier = OutputModifier.SpeciesOnly;
+                            result.displayFormat = DisplayFormat.SpeciesOnly;
                             break;
 
                     }

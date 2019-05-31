@@ -474,6 +474,17 @@ namespace OurFoodChain {
 
         }
 
+        public Length MinSize {
+            get {
+                return new Length(_min_size, _units);
+            }
+        }
+        public Length MaxSize {
+            get {
+                return new Length(_max_size, _units);
+            }
+        }
+
         private double _min_size = 0.0;
         private double _max_size = 0.0;
         private LengthUnit _units = 0;

@@ -17,9 +17,11 @@ namespace OurFoodChain {
 
             List<string> ideas = new List<string>();
 
-            ideas.AddRange(await GetEmptyZoneIdeasAsync());
-            ideas.AddRange(await GetSmallGeneraIdeasAsync());
-            ideas.AddRange(await GetEmptyLineageIdeasAsync());
+            ideas.AddRange(await _getEmptyZoneIdeasAsync());
+            ideas.AddRange(await _getSmallGeneraIdeasAsync());
+            ideas.AddRange(await _getEmptyLineageIdeasAsync());
+            ideas.AddRange(await _getNoPredatorIdeasAsync());
+            ideas.AddRange(await _getMissingRolesInZoneIdeasAsync());
 
             if (ideas.Count() > 0)
                 await BotUtils.ReplyAsync_Info(Context, string.Format("💡 {0}", ideas[new Random().Next(ideas.Count())]));
@@ -29,7 +31,7 @@ namespace OurFoodChain {
         }
 
         // Checks for empty zones
-        private async Task<string[]> GetEmptyZoneIdeasAsync() {
+        private async Task<string[]> _getEmptyZoneIdeasAsync() {
 
             List<string> ideas = new List<string>();
 
@@ -42,7 +44,7 @@ namespace OurFoodChain {
 
         }
         // Checks for genera with only one species
-        private async Task<string[]> GetSmallGeneraIdeasAsync() {
+        private async Task<string[]> _getSmallGeneraIdeasAsync() {
 
             List<string> ideas = new List<string>();
 
@@ -55,7 +57,7 @@ namespace OurFoodChain {
 
         }
         // Checks for species with empty lineage
-        private async Task<string[]> GetEmptyLineageIdeasAsync() {
+        private async Task<string[]> _getEmptyLineageIdeasAsync() {
 
             List<string> ideas = new List<string>();
 
@@ -63,6 +65,53 @@ namespace OurFoodChain {
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
                     ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", (await Species.FromDataRow(row)).GetShortName()));
+
+            return ideas.ToArray();
+
+        }
+        // Checks for species with no predators (that aren't themselves predators)
+        private async Task<string[]> _getNoPredatorIdeasAsync() {
+
+            List<string> ideas = new List<string>();
+
+            string query = @"SELECT * FROM Species WHERE 
+	            id NOT IN (SELECT species_id FROM Extinctions) AND  
+	            id NOT IN (SELECT eats_id FROM Predates) AND 
+	            id NOT IN (SELECT species_id FROM Predates)";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(query))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows) {
+
+                    Species species = await Species.FromDataRow(row);
+
+                    ideas.Add(string.Format("There are no species that feed on **{0}**. Why not make one?", species.GetShortName()));
+
+                }
+
+            return ideas.ToArray();
+
+        }
+        // Checks for roles that are unfulfilled for a given zone
+        private async Task<string[]> _getMissingRolesInZoneIdeasAsync() {
+
+            List<string> ideas = new List<string>();
+
+            string query = @"SELECT Zones.id AS zone_id1, Zones.name AS zone_name, Roles.id AS role_id1, Roles.name AS role_name FROM Zones, Roles WHERE
+	            NOT EXISTS(SELECT * FROM SpeciesRoles WHERE role_id = role_id1 AND species_id IN (SELECT species_id FROM SpeciesZones WHERE zone_id = zone_id1));";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(query))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows) {
+
+                    string zone_name = row.Field<string>("zone_name");
+                    string role_name = row.Field<string>("role_name");
+
+                    ideas.Add(string.Format("**{0}** does not have any **{1}s**. Why not fill this role?",
+                        Zone.GetFullName(zone_name),
+                        StringUtils.ToTitleCase(role_name)));
+
+                }
 
             return ideas.ToArray();
 

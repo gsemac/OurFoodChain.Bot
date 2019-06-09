@@ -423,6 +423,7 @@ namespace OurFoodChain {
                             break;
 
                         case "age":
+                        case "date":
                         case "oldest":
                             result.orderBy = OrderBy.Oldest;
                             break;

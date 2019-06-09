@@ -60,6 +60,10 @@ namespace OurFoodChain {
 
         }
 
+        public static bool IsUrl(string input) {
+            return Regex.Match(input, "^https?:").Success;
+        }
+
         // https://stackoverflow.com/questions/11454004/calculate-a-md5-hash-from-a-string
         public static string CreateMD5(string input) {
             // Use input string to calculate MD5 hash

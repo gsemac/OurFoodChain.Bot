@@ -240,8 +240,39 @@ namespace OurFoodChain {
             await PlusPic("", species, imageUrl, "");
         }
         [Command("+pic")]
-        public async Task PlusPic(string genus, string species, string imageUrl) {
-            await PlusPic(genus, species, imageUrl, "");
+        public async Task PlusPic(string arg0, string arg1, string arg2) {
+
+            // This command can be used in the following ways:
+            // +pic <genus> <species> <url>
+            // +pic <species> <url> <description>
+
+            string genus = "";
+            string species = "";
+            string url = "";
+            string description = "";
+
+            if (StringUtils.IsUrl(arg1)) {
+
+                // <species> <url> <description>
+
+                genus = "";
+                species = arg0;
+                url = arg1;
+                description = arg2;
+
+            }
+            else {
+
+                // <genus> <species> <url>
+
+                genus = arg0;
+                species = arg1;
+                url = arg2;
+
+            }
+
+            await PlusPic(genus, species, url, description);
+
         }
         [Command("+pic")]
         public async Task PlusPic(string genus, string species, string imageUrl, string description) {

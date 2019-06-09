@@ -1631,7 +1631,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyAsync_ValidateImageUrl(ICommandContext context, string imageUrl) {
 
-            if (!Regex.Match(imageUrl, "^https?:").Success) {
+            if (!StringUtils.IsUrl(imageUrl)) {
 
                 await ReplyAsync_Error(context, "The image URL is invalid.");
 

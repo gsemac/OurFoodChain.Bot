@@ -2,11 +2,13 @@
   "name": "pic",
   "aliases": [
     "pics",
-    "gallery"
+    "gallery",
+    "pictures"
   ],
   "category": "info",
-  "description": "Shows a picture of the given species.",
+  "description": "Displays an image gallery for the given species or taxon.",
   "examples": [
-    "pic H. quattuorus"
+    "pics cornu aspersum",
+    "pics cornu"
   ]
 }

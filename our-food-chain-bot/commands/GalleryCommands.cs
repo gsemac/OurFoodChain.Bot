@@ -11,7 +11,7 @@ namespace OurFoodChain {
     public class GalleryCommands :
         ModuleBase {
 
-        [Command("gallery"), Alias("pic", "pics")]
+        [Command("gallery"), Alias("pic", "pics", "pictures")]
         public async Task Gallery(string speciesOrTaxon) {
 
             // Prioritize species galleries first.
@@ -56,7 +56,7 @@ namespace OurFoodChain {
             }
 
         }
-        [Command("gallery"), Alias("pic", "pics")]
+        [Command("gallery"), Alias("pic", "pics", "pictures")]
         public async Task Gallery(string genus, string species) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);

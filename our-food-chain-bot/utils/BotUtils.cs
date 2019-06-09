@@ -13,26 +13,6 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    enum TwoPartCommandWaitParamsType {
-        Description
-    }
-
-    class TwoPartCommandWaitParams {
-
-        public TwoPartCommandWaitParams(ICommandContext context) {
-
-            this.context = context;
-
-        }
-
-        public TwoPartCommandWaitParamsType type;
-        public ICommandContext context;
-        public string[] args;
-        public DateTime timestamp;
-        public ulong channelId = 0;
-
-    }
-
     public enum ZoneType {
         Unknown,
         Aquatic,
@@ -331,8 +311,6 @@ namespace OurFoodChain {
         public const string DEFAULT_ZONE_DESCRIPTION = "No description provided.";
         public const string DEFAULT_DESCRIPTION = "No description provided.";
         private static Random RANDOM = new Random();
-
-        public static Dictionary<ulong, TwoPartCommandWaitParams> TWO_PART_COMMAND_WAIT_PARAMS = new Dictionary<ulong, TwoPartCommandWaitParams>();
 
         public static async Task<bool> SpeciesExistsInDb(string genus, string species) {
 
@@ -1315,40 +1293,6 @@ namespace OurFoodChain {
                 return;
 
             await UpdateSpeciesDescription(sp_list[0], description);
-
-        }
-        public static async Task HandleTwoPartCommandResponse(SocketMessage message) {
-
-            if (!TWO_PART_COMMAND_WAIT_PARAMS.ContainsKey(message.Author.Id))
-                return;
-
-            TwoPartCommandWaitParams p = TWO_PART_COMMAND_WAIT_PARAMS[message.Author.Id];
-
-            // The second half of a two-part message must be sent in the same channel as the first part.
-            if (message.Channel.Id != p.channelId)
-                return;
-
-            switch (p.type) {
-
-                case TwoPartCommandWaitParamsType.Description:
-
-                    if (message.Content.Equals("cancel", StringComparison.OrdinalIgnoreCase)) {
-
-                        await message.Channel.SendMessageAsync("Description update canceled.");
-
-                    }
-                    else {
-
-                        await UpdateSpeciesDescription(p.args[0], p.args[1], message.Content);
-                        await ReplyAsync_Success(p.context, "Description updated successfully.");
-
-                    }
-
-                    break;
-
-            }
-
-            TWO_PART_COMMAND_WAIT_PARAMS.Remove(message.Author.Id);
 
         }
 

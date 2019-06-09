@@ -297,15 +297,20 @@ namespace OurFoodChain {
                 if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
-                TwoPartCommandWaitParams p = new TwoPartCommandWaitParams(Context);
-                p.type = TwoPartCommandWaitParamsType.Description;
-                p.args = new string[] { speciesOrGenus, descriptionOrSpecies };
-                p.timestamp = DateTime.Now;
-                p.channelId = Context.Channel.Id;
+                MultistageCommand p = new MultistageCommand(Context) {
+                    OriginalArguments = new string[] { speciesOrGenus, descriptionOrSpecies },
+                    Callback = async (MultistageCommandCallbackArgs args) => {
 
-                BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
+                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
 
-                await ReplyAsync(string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
+                        if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
+                            await SetSpeciesDescription(species[0], args.MessageContent);
+
+                    }
+                };
+
+                await MultistageCommand.SendAsync(p,
+                    string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
 
             }
 
@@ -392,16 +397,20 @@ namespace OurFoodChain {
                 if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
-                TwoPartCommandWaitParams p = new TwoPartCommandWaitParams(Context) {
-                    type = TwoPartCommandWaitParamsType.Description,
-                    args = new string[] { taxonNameOrGenus, descriptionOrSpecies },
-                    timestamp = DateTime.Now,
-                    channelId = Context.Channel.Id
+                MultistageCommand p = new MultistageCommand(Context) {
+                    OriginalArguments = new string[] { taxonNameOrGenus, descriptionOrSpecies },
+                    Callback = async (MultistageCommandCallbackArgs args) => {
+
+                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
+
+                        if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
+                            await SetSpeciesDescription(species[0], args.MessageContent);
+
+                    }
                 };
 
-                BotUtils.TWO_PART_COMMAND_WAIT_PARAMS[Context.User.Id] = p;
-
-                await ReplyAsync(string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
+                await MultistageCommand.SendAsync(p,
+                    string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
 
             }
 

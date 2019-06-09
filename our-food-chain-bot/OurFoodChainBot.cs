@@ -135,13 +135,8 @@ namespace OurFoodChain {
             if (!_isUserMessage(message))
                 return;
 
-            if (BotUtils.TWO_PART_COMMAND_WAIT_PARAMS.ContainsKey(message.Author.Id)) {
-
-                await BotUtils.HandleTwoPartCommandResponse(message);
-
+            if (await MultistageCommand.HandleResponseAsync(message))
                 return;
-
-            }
 
             if (!_isBotCommand(message as SocketUserMessage))
                 return;

@@ -270,6 +270,7 @@
     <None Include="res\gotchi\battle\moves\desperation.lua" />
     <None Include="res\gotchi\battle\moves\filter.lua" />
     <None Include="res\gotchi\battle\moves\fin_slash.lua" />
+    <None Include="res\gotchi\battle\moves\flagella_whip.lua" />
     <None Include="res\gotchi\battle\moves\grow.lua" />
     <None Include="res\gotchi\battle\moves\helpless_facade.lua" />
     <None Include="res\gotchi\battle\moves\hit.lua" />

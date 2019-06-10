@@ -92,7 +92,7 @@ namespace OurFoodChain.gotchi {
                     options.Add(move);
 
             if (options.Count() > 0)
-                return moves[BotUtils.RandomInteger(moves.Count())];
+                return options[BotUtils.RandomInteger(options.Count())];
             else
                 return new GotchiMove {
                     info = await GotchiMoveRegistry.GetMoveByNameAsync("desperation")
@@ -138,7 +138,7 @@ namespace OurFoodChain.gotchi {
                         continue;
 
                 }
- 
+
                 set.Add(move);
 
             }

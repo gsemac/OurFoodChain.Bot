@@ -1469,6 +1469,14 @@ namespace OurFoodChain {
             return true;
 
         }
+        public static bool ValidateTaxa(Taxon[] taxa) {
+
+            if (taxa is null || taxa.Count() != 1)
+                return false;
+
+            return true;
+
+        }
         public static async Task<bool> ReplyAsync_ValidateTaxa(ICommandContext context, Taxon[] taxa) {
 
             if (taxa is null || taxa.Count() <= 0) {
@@ -1905,6 +1913,33 @@ namespace OurFoodChain {
 
 
         }
+        public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            // Since the description wasn't provided directly, initiate a multistage update.
+
+            Taxon taxon = await GetTaxonFromDb(name, type);
+
+            if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
+                return;
+
+            MultistageCommand p = new MultistageCommand(context) {
+                OriginalArguments = new string[] { name },
+                Callback = async (MultistageCommandCallbackArgs args) => {
+
+                    await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon, args.MessageContent);
+
+                }
+            };
+
+            await MultistageCommand.SendAsync(p,
+                string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon.GetTypeName(), taxon.GetName()));
+
+
+        }
         public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
@@ -1917,6 +1952,43 @@ namespace OurFoodChain {
                 return;
 
             await Command_SetTaxonDescription(context, taxon, description);
+
+        }
+        public static async Task Command_SetTaxonPic(ICommandContext context, Taxon taxon, string url) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            // Ensure that the image URL appears to be valid.
+            if (!await ReplyAsync_ValidateImageUrl(context, url))
+                return;
+
+            taxon.pics = url;
+
+            await UpdateTaxonInDb(taxon, taxon.type);
+
+            string success_message = string.Format("Successfully set the picture for for {0} **{1}**.", Taxon.TypeToName(taxon.type), taxon.GetName());
+
+            await ReplyAsync_Success(context, success_message);
+
+        }
+        public static async Task Command_SetTaxonPic(ICommandContext context, TaxonType type, string name, string url) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            // Ensure that the image URL appears to be valid.
+            if (!await ReplyAsync_ValidateImageUrl(context, url))
+                return;
+
+            Taxon taxon = await GetTaxonFromDb(name, type);
+
+            if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
+                return;
+
+            await Command_SetTaxonPic(context, taxon, url);
 
         }
         public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonType type, string name, string commonName) {

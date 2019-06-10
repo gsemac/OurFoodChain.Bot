@@ -87,56 +87,21 @@ namespace OurFoodChain {
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(genus_info.name)));
 
         }
-        [Command("setgenuspic"), Alias("setgpic")]
-        public async Task SetGenusPic(string genus, string picUrl) {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
-                return;
-
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
-
-            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
-                return;
-
-            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, picUrl))
-                return;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET pics=$url WHERE id=$genus_id;")) {
-
-                cmd.Parameters.AddWithValue("$url", picUrl);
-                cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added a picture for **{0}**.", StringUtils.ToTitleCase(genus_info.name)));
-
+        [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
+        public async Task SetGenusDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Genus, name);
         }
         [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
-        public async Task SetGenusDescription(string genus, string description) {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
-                return;
-
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
-
-            if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
-                return;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET description=$description WHERE id=$genus_id;")) {
-
-                cmd.Parameters.AddWithValue("$description", description);
-                cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for genus **{0}**.", StringUtils.ToTitleCase(genus_info.name)));
-
+        public async Task SetGenusDescription(string name, string description) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Genus, name, description);
+        }
+        [Command("setgenuspic"), Alias("setgpic")]
+        public async Task SetGenusPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Genus, name, url);
+        }
+        [Command("setgenuscommonname"), Alias("setgenuscommon", "setgcommon")]
+        public async Task SetGenuscommonName(string name, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Genus, name, commonName);
         }
 
         [Command("family"), Alias("f", "families")]
@@ -152,11 +117,19 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Family, child, parent);
         }
         [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
-        public async Task SetFamilyDesc(string name, string description) {
+        public async Task SetFamilyDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name);
+        }
+        [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
+        public async Task SetFamilyDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name, description);
         }
+        [Command("setfamilypic"), Alias("setfpic")]
+        public async Task SetFamilyPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Family, name, url);
+        }
         [Command("setfamilycommonname"), Alias("setfamilycommon", "setfcommon")]
-        public async Task SetFamilyCommon(string name, string commonName) {
+        public async Task SetFamilyCommonName(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Family, name, commonName);
         }
 
@@ -173,8 +146,16 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Order, child, parent);
         }
         [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
+        public async Task SetOrderDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Order, name);
+        }
+        [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
         public async Task SetOrderDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Order, name, description);
+        }
+        [Command("setorderpic"), Alias("setopic")]
+        public async Task SetOrderPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Order, name, url);
         }
         [Command("setordercommonname"), Alias("setordercommon", "setocommon")]
         public async Task SetOrderCommon(string name, string commonName) {
@@ -194,8 +175,16 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Class, child, parent);
         }
         [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
+        public async Task SetClassDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Class, name);
+        }
+        [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
         public async Task SetClassDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Class, name, description);
+        }
+        [Command("setclasspic"), Alias("setcpic")]
+        public async Task SetClassPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Class, name, url);
         }
         [Command("setclasscommonname"), Alias("setclasscommon", "setccommon")]
         public async Task SetClassCommon(string name, string commonName) {
@@ -215,8 +204,16 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Phylum, child, parent);
         }
         [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
+        public async Task SetPhylumDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Phylum, name);
+        }
+        [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
         public async Task SetPhylumDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Phylum, name, description);
+        }
+        [Command("setphylumpic"), Alias("setppic")]
+        public async Task SetPhylumPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Phylum, name, url);
         }
         [Command("setphylumcommonname"), Alias("setphylumcommon", "setpcommon")]
         public async Task SetPhylumCommon(string name, string commonName) {
@@ -236,8 +233,16 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Kingdom, child, parent);
         }
         [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
+        public async Task SetKingdomDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Kingdom, name);
+        }
+        [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
         public async Task SetKingdomDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Kingdom, name, description);
+        }
+        [Command("setkingdompic"), Alias("setkpic")]
+        public async Task SetKingdomPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Kingdom, name, url);
         }
         [Command("setkingdomcommonname"), Alias("setkingdomcommon", "setkcommon")]
         public async Task SetKingdomCommon(string name, string commonName) {
@@ -257,8 +262,16 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxon(Context, TaxonType.Domain, child, parent);
         }
         [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
+        public async Task SetDomainDescription(string name) {
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Domain, name);
+        }
+        [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
         public async Task SetDomainDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Domain, name, description);
+        }
+        [Command("setdomainpic"), Alias("setdpic")]
+        public async Task SetDomainPic(string name, string url) {
+            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Domain, name, url);
         }
         [Command("setdomaincommonname"), Alias("setdomaincommon", "setdcommon")]
         public async Task SetDomainCommon(string name, string commonName) {
@@ -304,7 +317,7 @@ namespace OurFoodChain {
                         Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
 
                         if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
-                            await SetSpeciesDescription(species[0], args.MessageContent);
+                            await _setSpeciesDescription(species[0], args.MessageContent);
 
                     }
                 };
@@ -323,10 +336,10 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
-            await SetSpeciesDescription(sp, description);
+            await _setSpeciesDescription(sp, description);
 
         }
-        public async Task SetSpeciesDescription(Species species, string description) {
+        private async Task _setSpeciesDescription(Species species, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
@@ -338,14 +351,65 @@ namespace OurFoodChain {
 
         }
 
-
         [Command("setdescription"), Alias("setdesc")]
         public async Task SetTaxonDescription(string taxon) {
 
-            // #todo Initiate a two-part command sequence for this taxon.
-            // For now, only species can be updated in this way.
+            // Since this command is traditionally for species descriptions, start by assuming the user wants to update a species.
 
-            await SetSpeciesDescription(taxon);
+            Species[] species_list = await BotUtils.GetSpeciesFromDb("", taxon);
+
+            if (species_list.Count() <= 0) {
+
+                // No such species exists, so assume the user is trying to update another taxon.
+
+                Taxon[] taxon_list = await BotUtils.GetTaxaFromDb(taxon);
+
+                if (taxon_list.Count() == 1) {
+
+                    if (taxon_list[0].type == TaxonType.Species)
+                        await SetSpeciesDescription(taxon);
+                    else if (await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator)) { // moderator use only
+
+                        MultistageCommand p = new MultistageCommand(Context) {
+                            OriginalArguments = new string[] { taxon },
+                            Callback = async (MultistageCommandCallbackArgs args) => {
+
+                                await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon_list[0], args.MessageContent);
+
+                            }
+                        };
+
+                        await MultistageCommand.SendAsync(p,
+                            string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon_list[0].GetTypeName(), taxon_list[0].GetName()));
+
+                    }
+
+                }
+                else if (taxon_list.Count() > 1) {
+
+                    await BotUtils.ReplyAsync_ValidateTaxa(Context, taxon_list);
+
+                }
+                else {
+
+                    // Since this command was originally specifically for species, show species suggestions when the taxon doesn't exist.
+                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", taxon);
+
+                }
+
+            }
+            else if (species_list.Count() > 1) {
+
+                // The species exists, however there are multiple possible matches. Require clarification from the user.
+                await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list);
+
+            }
+            else if (species_list.Count() == 1) {
+
+                // The species exists, so begin a multistage update for this species.
+                await SetSpeciesDescription(taxon);
+
+            }
 
         }
         [Command("setdescription"), Alias("setdesc")]
@@ -379,7 +443,7 @@ namespace OurFoodChain {
                     if (taxon.type == TaxonType.Species)
 
                         // If the taxon is a species, use the species update procedure.
-                        await SetSpeciesDescription(await BotUtils.GetSpeciesFromDb(taxon.id), descriptionOrSpecies);
+                        await _setSpeciesDescription(await BotUtils.GetSpeciesFromDb(taxon.id), descriptionOrSpecies);
 
                     else
 
@@ -404,7 +468,7 @@ namespace OurFoodChain {
                         Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
 
                         if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
-                            await SetSpeciesDescription(species[0], args.MessageContent);
+                            await _setSpeciesDescription(species[0], args.MessageContent);
 
                     }
                 };

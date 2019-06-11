@@ -2220,7 +2220,7 @@ namespace OurFoodChain {
 
                     // Save the result.
 
-                    string out_dir = "temp";
+                    string out_dir = Constants.TEMP_DIRECTORY + "anc";
 
                     if (!System.IO.Directory.Exists(out_dir))
                         System.IO.Directory.CreateDirectory(out_dir);
@@ -2237,7 +2237,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<string> Reply_UploadFileToScratchServerAsync(ICommandContext context, string filePath) {
+        public static async Task<string> Reply_UploadFileToScratchServerAsync(ICommandContext context, string filePath, bool deleteAfterUpload = false) {
 
             var client = OurFoodChainBot.GetInstance().GetClient();
             ulong serverId = OurFoodChainBot.GetInstance().GetConfig().scratch_server;
@@ -2277,6 +2277,9 @@ namespace OurFoodChain {
             enumerator.MoveNext();
 
             string url = enumerator.Current.Url;
+
+            if (deleteAfterUpload)
+                IoUtils.TryDeleteFile(filePath);
 
             return url;
 

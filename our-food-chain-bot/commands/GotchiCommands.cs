@@ -644,7 +644,7 @@ namespace OurFoodChain.gotchi {
         [Command("help"), Alias("h")]
         public async Task Help() {
 
-            await HelpCommands.ShowHelpCategory(Context, "help/gotchi", "gotchi");
+            await HelpCommands.ShowHelpCategory(Context, Constants.HELP_DIRECTORY + "/gotchi", "gotchi");
 
         }
         [Command("help"), Alias("h")]

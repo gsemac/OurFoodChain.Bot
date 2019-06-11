@@ -53,7 +53,7 @@ namespace OurFoodChain.gotchi {
 
             // Register all moves.
 
-            foreach (string file in System.IO.Directory.GetFiles("res/gotchi/battle/moves", "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
+            foreach (string file in System.IO.Directory.GetFiles(Constants.GOTCHI_MOVES_DIRECTORY, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
 
                 try {
 

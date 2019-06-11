@@ -384,7 +384,7 @@ namespace OurFoodChain.gotchi {
 
                 if (sp is null || sp.Length != 1)
                     return false;
-           
+
                 // Ensure that the species evolves into the desired evo.
 
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Ancestors WHERE ancestor_id = $ancestor_id AND species_id = $species_id")) {
@@ -423,7 +423,7 @@ namespace OurFoodChain.gotchi {
         static public GotchiItem[] GetAllGotchiItems() {
 
             List<GotchiItem> items = new List<GotchiItem>();
-            string[] files = System.IO.Directory.GetFiles("res/gotchi/items", "*.json");
+            string[] files = System.IO.Directory.GetFiles(Constants.GOTCHI_ITEMS_DIRECTORY, "*.json");
 
             foreach (string file in files) {
 
@@ -485,13 +485,13 @@ namespace OurFoodChain.gotchi {
 
             // Download the gotchi image if possible.
 
-            string gotchi_pic = "res/gotchi/default.png";
+            string gotchi_pic = Constants.GOTCHI_DATA_DIRECTORY + "default.png";
 
             if (!string.IsNullOrEmpty(sp.pics) && Regex.Match(sp.pics, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success) {
 
-                string downloads_dir = "res/gotchi/downloads";
+                string downloads_dir = Constants.TEMP_DIRECTORY + "downloads";
                 string ext = Regex.Match(sp.pics, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
-                string disk_fpath = System.IO.Path.Combine("res/gotchi/downloads", StringUtils.CreateMD5(sp.pics) + ext);
+                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtils.CreateMD5(sp.pics) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -522,7 +522,7 @@ namespace OurFoodChain.gotchi {
 
             // Create the temporary directory where the GIF will be saved.
 
-            string temp_dir = "res/gotchi/temp";
+            string temp_dir = Constants.TEMP_DIRECTORY + "gotchi";
 
             if (!System.IO.Directory.Exists(temp_dir))
                 System.IO.Directory.CreateDirectory(temp_dir);
@@ -547,7 +547,7 @@ namespace OurFoodChain.gotchi {
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 
-                string background_fpath = System.IO.Path.Combine("res/gotchi", extraParams.backgroundFileName);
+                string background_fpath = System.IO.Path.Combine(Constants.GOTCHI_DATA_DIRECTORY, extraParams.backgroundFileName);
 
                 if (System.IO.File.Exists(background_fpath))
                     gif.SetBackground(background_fpath);
@@ -589,7 +589,7 @@ namespace OurFoodChain.gotchi {
             string file_path = await GenerateGotchiGif(gifParams, extraParams);
 
             if (!string.IsNullOrEmpty(file_path))
-                return await BotUtils.Reply_UploadFileToScratchServerAsync(context, file_path);
+                return await BotUtils.Reply_UploadFileToScratchServerAsync(context, file_path, deleteAfterUpload: true);
 
             await BotUtils.ReplyAsync_Error(context, "Failed to generate gotchi image.");
 
@@ -609,7 +609,7 @@ namespace OurFoodChain.gotchi {
 
                     string candidate_filename = string.Format("home_{0}.png", StringUtils.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
 
-                    if (System.IO.File.Exists("res/gotchi/" + candidate_filename))
+                    if (System.IO.File.Exists(Constants.GOTCHI_DATA_DIRECTORY + candidate_filename))
                         return candidate_filename;
 
                 }

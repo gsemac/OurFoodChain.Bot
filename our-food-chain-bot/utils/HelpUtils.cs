@@ -10,8 +10,6 @@ namespace OurFoodChain {
 
     public class HelpUtils {
 
-        public const string HELP_DIRECTORY = "help";
-
         public class CommandInfo {
 
             public string name = "";
@@ -38,12 +36,12 @@ namespace OurFoodChain {
             // Look inside the help directory, and read all JSON files containing command documentation.
             // We can't just go by filename because the command might have aliases.            
 
-            if (!System.IO.Directory.Exists(HELP_DIRECTORY))
+            if (!System.IO.Directory.Exists(Constants.HELP_DIRECTORY))
                 return null;
 
             List<CommandInfo> command_info = new List<CommandInfo>();
 
-            string[] fnames = System.IO.Directory.GetFiles(HELP_DIRECTORY, "*.json", System.IO.SearchOption.TopDirectoryOnly);
+            string[] fnames = System.IO.Directory.GetFiles(Constants.HELP_DIRECTORY, "*.json", System.IO.SearchOption.TopDirectoryOnly);
 
             foreach (string fname in fnames)
                 command_info.Add(JsonConvert.DeserializeObject<CommandInfo>(System.IO.File.ReadAllText(fname)));

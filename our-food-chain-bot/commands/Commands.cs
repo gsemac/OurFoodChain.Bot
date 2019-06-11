@@ -34,13 +34,13 @@ namespace OurFoodChain {
 
                 // Otherwise, show other taxon.
 
-                Taxon taxon = await BotUtils.GetTaxonFromDb(name);
+                Taxon[] taxa = await BotUtils.GetTaxaFromDb(name);
 
-                if (taxon is null)
-                    // For now, call the regular "GetSpecies" command so this command still shows species suggestions.
-                    await GetSpecies(name);
-                else
-                    await BotUtils.Command_ShowTaxon(Context, taxon.type, name);
+                if (taxa.Count() <= 0)
+                    // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
+                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name);
+                else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
+                    await BotUtils.Command_ShowTaxon(Context, taxa[0].type, name);
 
             }
 

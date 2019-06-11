@@ -834,7 +834,7 @@ namespace OurFoodChain {
             if (string.IsNullOrEmpty(table_name))
                 return null;
 
-            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name=$name;", table_name))) {
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name=$name OR common_name=$name;", table_name))) {
 
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
 

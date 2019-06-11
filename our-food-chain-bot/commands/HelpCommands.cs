@@ -97,7 +97,7 @@ namespace OurFoodChain {
             // If there is a subdirectory in the help directory with the same name as the command, load files in that subdirectory instead.
 
             List<HelpUtils.CommandInfo> command_info = new List<HelpUtils.CommandInfo>();
-            string help_directory = HelpUtils.HELP_DIRECTORY;
+            string help_directory = Constants.HELP_DIRECTORY;
 
             if (!string.IsNullOrEmpty(nestedCommand) && System.IO.Directory.Exists(System.IO.Path.Combine(help_directory, command)))
                 help_directory = System.IO.Path.Combine(help_directory, command);

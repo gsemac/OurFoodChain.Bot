@@ -16,6 +16,7 @@ namespace OurFoodChain {
         ModuleBase {
 
         private const int MAX_EMBED_LENGTH = 2048;
+        private static bool _running_backup = false;
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
@@ -1641,21 +1642,38 @@ namespace OurFoodChain {
 
         }
 
-        [Command("backup")]
+        [Command("backup", RunMode = RunMode.Async)]
         public async Task Backup() {
 
             if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.BotAdmin))
                 return;
 
-            if (System.IO.File.Exists(Database.GetFilePath()))
-                try {
-                    await Context.Channel.SendFileAsync(Database.GetFilePath(), string.Format(string.Format("Database backup {0}", DateTime.UtcNow.ToString())));
-                }
-                catch (Exception) {
-                    await BotUtils.ReplyAsync_Error(Context, "Database file cannot be accessed.");
-                }
-            else
-                await BotUtils.ReplyAsync_Error(Context, "Database file does not exist at the specified path.");
+            if (_running_backup) {
+
+                await BotUtils.ReplyAsync_Error(Context, "A backup is already in progress. Please wait until it has completed.");
+
+            }
+            else {
+
+                _running_backup = true;
+
+                if (System.IO.File.Exists(Database.GetFilePath()))
+                    try {
+
+                        await BotUtils.ReplyAsync_Info(Context, "Uploading database backup. The backup will be posted in this channel when it is complete.");
+
+                        await Context.Channel.SendFileAsync(Database.GetFilePath(), string.Format(string.Format("`Database backup {0}`", DateTime.UtcNow.ToString())));
+
+                    }
+                    catch (Exception) {
+                        await BotUtils.ReplyAsync_Error(Context, "Database file cannot be accessed.");
+                    }
+                else
+                    await BotUtils.ReplyAsync_Error(Context, "Database file does not exist at the specified path.");
+
+                _running_backup = false;
+
+            }
 
         }
 

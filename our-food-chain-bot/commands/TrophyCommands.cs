@@ -77,14 +77,14 @@ namespace OurFoodChain.trophies {
 
                 }
 
-                long times_unlocked = await TrophyRegistry.GetTimesUnlocked(trophy);
-                string description = (trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0) ? string.Format("_{0}_", trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION) : trophy.GetDescription();
+                double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy, Context);
+                string description = (trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0) ? string.Format("_{0}_", trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION) : trophy.GetDescription();
 
                 // If this was a first-time trophy, show who unlocked it.
 
-                if (trophy.Flags.HasFlag(TrophyFlags.OneTime) && times_unlocked > 0) {
+                if (trophy.Flags.HasFlag(TrophyFlags.OneTime) && completion_rate > 0.0) {
 
-                    ulong[] user_ids = await TrophyRegistry.GetUsersUnlocked(trophy);
+                    ulong[] user_ids = await TrophyRegistry.GetUsersUnlockedAsync(trophy);
 
                     if (user_ids.Count() > 0) {
 
@@ -97,7 +97,7 @@ namespace OurFoodChain.trophies {
 
                 }
 
-                embed.AddField(string.Format("{0} **{1}** ({2:0.##}%)", trophy.GetIcon(), trophy.name, 100.0 * times_unlocked / total_users), description);
+                embed.AddField(string.Format("{0} **{1}** ({2:0.#}%)", trophy.GetIcon(), trophy.name, completion_rate), description);
 
                 ++current_page_trophy_count;
 
@@ -123,17 +123,7 @@ namespace OurFoodChain.trophies {
         public async Task Trophy(string name) {
 
             // Find the trophy with this name.
-
-            Trophy trophy = null;
-
-            foreach (Trophy t in await TrophyRegistry.GetTrophiesAsync())
-                if (t.GetName().ToLower() == name.ToLower()) {
-
-                    trophy = t;
-
-                    break;
-
-                }
+            Trophy trophy = await TrophyRegistry.GetTrophyByNameAsync(name);
 
             // If no such trophy exists, return an error.
 
@@ -147,12 +137,11 @@ namespace OurFoodChain.trophies {
 
             // Show trophy information.
 
-            int total_users = (await Context.Guild.GetUsersAsync()).Count;
-            long times_unlocked = await TrophyRegistry.GetTimesUnlocked(trophy);
-            bool hide_description = trophy.Flags.HasFlag(TrophyFlags.Hidden) && times_unlocked <= 0;
+            double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy, Context);
+            bool hide_description = trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0;
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("{0} {1} ({2:0.##}%)", trophy.GetIcon(), trophy.GetName(), 100.0 * times_unlocked / total_users));
+            embed.WithTitle(string.Format("{0} {1} ({2:0.#}%)", trophy.GetIcon(), trophy.GetName(), completion_rate));
             embed.WithDescription(hide_description ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 
@@ -178,7 +167,7 @@ namespace OurFoodChain.trophies {
 
             // #todo Show warning and do nothing if the user already has the trophy
 
-            await TrophyRegistry.SetUnlocked(user.Id, t);
+            await TrophyRegistry.UnlockAsync(user.Id, t);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", t.GetName(), user.Mention));
 

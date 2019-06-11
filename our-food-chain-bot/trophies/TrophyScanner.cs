@@ -105,7 +105,7 @@ namespace OurFoodChain.trophies {
                     if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item)) {
 
                         // Insert new trophy into the database.
-                        await TrophyRegistry.SetUnlocked(item.userId, trophy);
+                        await TrophyRegistry.UnlockAsync(item.userId, trophy);
 
                         // Pop the new trophy.
                         await _popTrophyAsync(item, trophy);

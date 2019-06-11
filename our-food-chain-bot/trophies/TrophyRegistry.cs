@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -17,7 +18,7 @@ namespace OurFoodChain.trophies {
             await _registerAllAsync();
 
         }
-        public static async Task<long> GetTimesUnlocked(Trophy trophy) {
+        public static async Task<long> GetTimesUnlockedAsync(Trophy trophy) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Trophies WHERE trophy_name=$trophy_name;")) {
 
@@ -28,7 +29,7 @@ namespace OurFoodChain.trophies {
             }
 
         }
-        public static async Task<ulong[]> GetUsersUnlocked(Trophy trophy) {
+        public static async Task<ulong[]> GetUsersUnlockedAsync(Trophy trophy) {
 
             List<ulong> user_ids = new List<ulong>();
 
@@ -43,6 +44,19 @@ namespace OurFoodChain.trophies {
             }
 
             return user_ids.ToArray();
+
+        }
+        public static async Task<double> GetCompletionRateAsync(Trophy trophy, ICommandContext context) {
+
+            // The completion rate is determined from the number of users who have earned the trophy and the number of users who have submitted species.
+
+            long times_unlocked = await GetTimesUnlockedAsync(trophy);
+            long total_users = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM  (SELECT user_id FROM Species GROUP BY user_id)"))
+                total_users = await Database.GetScalar<long>(cmd);
+
+            return (total_users <= 0) ? 0.0 : (100.0 * times_unlocked / total_users);
 
         }
         public static async Task<UnlockedTrophyInfo[]> GetUnlockedTrophiesAsync(ulong userId) {
@@ -103,7 +117,7 @@ namespace OurFoodChain.trophies {
             return null;
 
         }
-        public static async Task SetUnlocked(ulong userId, Trophy trophy) {
+        public static async Task UnlockAsync(ulong userId, Trophy trophy) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Trophies(user_id, trophy_name, timestamp) VALUES($user_id, $trophy_name, $timestamp);")) {
 

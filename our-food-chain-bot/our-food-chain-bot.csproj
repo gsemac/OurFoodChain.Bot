@@ -333,7 +333,6 @@
     <None Include="data\help\genus.json" />
     <None Include="data\help\help.json" />
     <None Include="data\help\relationships.json" />
-    <None Include="data\help\setfamilycommonname.json" />
     <None Include="data\help\setgenus.json" />
     <None Include="data\help\setgenuspic.json" />
     <None Include="data\help\setmap.json" />
@@ -348,7 +347,7 @@
     <None Include="data\help\prey.json" />
     <None Include="data\help\role.json" />
     <None Include="data\help\search.json" />
-    <None Include="data\help\setcommonname.json" />
+    <None Include="data\help\setcommon.json" />
     <None Include="data\help\setfamily.json" />
     <None Include="data\help\setowner.json" />
     <None Include="data\help\setpic.json" />

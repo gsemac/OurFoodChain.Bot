@@ -1121,41 +1121,6 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setcommonname"), Alias("setcommon")]
-        public async Task SetCommonName(string species, string commonName) {
-            await SetCommonName("", species, commonName);
-        }
-        [Command("setcommonname"), Alias("setcommon")]
-        public async Task SetCommonName(string genus, string species, string commonName) {
-
-            if (!string.IsNullOrEmpty(commonName))
-                commonName = commonName.Trim();
-
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
-
-            if (sp is null)
-                return;
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
-                return;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET common_name = $common_name WHERE id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
-                cmd.Parameters.AddWithValue("$common_name", commonName.ToLower());
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            if (string.IsNullOrEmpty(commonName))
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed common name from **{0}**.", sp.GetShortName()));
-            else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(commonName)));
-
-        }
-
         [Command("setowner"), Alias("setown", "claim")]
         public async Task SetOwner(string species, IUser user) {
 

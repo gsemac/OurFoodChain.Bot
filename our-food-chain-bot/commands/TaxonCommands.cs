@@ -343,7 +343,6 @@ namespace OurFoodChain {
 
         }
         [Command("setspeciesdesc"), Alias("setspeciesdescription", "setsdesc")]
-
         public async Task SetSpeciesDescription(string genus, string species, string description) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -354,6 +353,22 @@ namespace OurFoodChain {
             await _setSpeciesDescription(sp, description);
 
         }
+        [Command("setspeciescommonname"), Alias("setspeciescommon", "setscommon")]
+        private async Task SetSpeciesCommonName(string species, string commonName) {
+            await SetSpeciesCommonName("", species, commonName);
+        }
+        [Command("setspeciescommonname"), Alias("setspeciescommon", "setscommon")]
+        private async Task SetSpeciesCommonName(string genus, string species, string commonName) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            await _setSpeciesCommonName(sp, commonName);
+
+        }
+
         private async Task _setSpeciesDescription(Species species, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
@@ -363,6 +378,30 @@ namespace OurFoodChain {
             await BotUtils.UpdateSpeciesDescription(species, description);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
+
+        }
+        private async Task _setSpeciesCommonName(Species species, string commonName) {
+
+            if (!string.IsNullOrEmpty(commonName))
+                commonName = commonName.Trim();
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
+                return;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET common_name = $common_name WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$common_name", commonName.ToLower());
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            if (string.IsNullOrEmpty(commonName))
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed common name from **{0}**.", species.GetShortName()));
+            else
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.", species.GetShortName(), StringUtils.ToTitleCase(commonName)));
 
         }
 
@@ -503,6 +542,31 @@ namespace OurFoodChain {
 
         }
 
+        [Command("setcommonname"), Alias("setcommon")]
+        public async Task SetCommonName(string taxon, string commonName) {
+
+            // Get all taxa with the specified name.
+            Taxon[] taxa = await BotUtils.GetTaxaFromDb(taxon);
+
+            if (taxa.Count() <= 0) {
+
+                // If there is no such taxon, default to showing species suggestions.
+                await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", taxon);
+
+            }
+            else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {
+
+                // If we got a single taxon, update the common name for that taxon.
+                await _setTaxonCommonName(taxa[0], commonName);
+
+            }
+
+        }
+        [Command("setcommonname"), Alias("setcommon")]
+        public async Task SetCommonName(string genus, string species, string commonName) {
+            await SetSpeciesCommonName(genus, species, commonName);
+        }
+
         private async Task _setTaxonDescription(Taxon taxon) {
 
             if (taxon.type == TaxonType.Species)
@@ -573,6 +637,9 @@ namespace OurFoodChain {
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
 
+        }
+        private async Task _setTaxonCommonName(Taxon taxon, string commonName) {
+            await BotUtils.Command_SetTaxonCommonName(Context, taxon.type, taxon.name, commonName);
         }
 
     }

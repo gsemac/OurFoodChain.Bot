@@ -395,51 +395,6 @@ namespace OurFoodChain {
 
         }
 
-        [Command("appenddescription"), Alias("appenddesc")]
-        public async Task AppendDescription(string species, string description) {
-
-            await AppendDescription("", species, description);
-
-        }
-        [Command("appenddescription"), Alias("appenddesc")]
-        public async Task AppendDescription(string genus, string species, string description) {
-
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
-
-            if (sp is null)
-                return;
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
-                return;
-
-            // Ensure the decription is of a reasonable size.
-
-            const int MAX_DESCRIPTION_LENGTH = 10000;
-
-            if (sp.description.Length + description.Length > MAX_DESCRIPTION_LENGTH) {
-
-                await BotUtils.ReplyAsync_Error(Context, string.Format("The description length exceeds the maximum allowed length ({0} characters).", MAX_DESCRIPTION_LENGTH));
-
-                return;
-
-            }
-
-            // Append text to the existing description.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$id;")) {
-
-                cmd.Parameters.AddWithValue("$id", sp.id);
-                cmd.Parameters.AddWithValue("$description", sp.description + description);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", sp.GetShortName()));
-
-        }
-
         [Command("addzone"), Alias("addz")]
         public async Task AddZone(string name, string type = "", string description = "") {
 

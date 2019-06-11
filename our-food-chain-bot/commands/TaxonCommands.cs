@@ -13,6 +13,8 @@ namespace OurFoodChain {
     public class TaxonCommands :
         ModuleBase {
 
+        // Genus
+
         [Command("genus"), Alias("g", "genera")]
         public async Task Genus(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonType.Genus, name);
@@ -104,6 +106,8 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Genus, name, commonName);
         }
 
+        // Family
+
         [Command("family"), Alias("f", "families")]
         public async Task Family(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonType.Family, name);
@@ -132,6 +136,8 @@ namespace OurFoodChain {
         public async Task SetFamilyCommonName(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Family, name, commonName);
         }
+
+        // Order
 
         [Command("order"), Alias("o", "orders")]
         public async Task Order(string name = "") {
@@ -162,6 +168,8 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Order, name, commonName);
         }
 
+        // Class
+
         [Command("class"), Alias("c", "classes")]
         public async Task Class(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonType.Class, name);
@@ -190,6 +198,8 @@ namespace OurFoodChain {
         public async Task SetClassCommon(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Class, name, commonName);
         }
+
+        // Phylum
 
         [Command("phylum"), Alias("p", "phyla")]
         public async Task Phylum(string name = "") {
@@ -249,6 +259,8 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Kingdom, name, commonName);
         }
 
+        // Domain
+
         [Command("domain"), Alias("d", "domains")]
         public async Task Domain(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonType.Domain, name);
@@ -278,11 +290,13 @@ namespace OurFoodChain {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Domain, name, commonName);
         }
 
-        [Command("setspeciesdesc"), Alias("setsdesc")]
+        // Species
+
+        [Command("setspeciesdesc"), Alias("setspeciesdescription", "setsdesc")]
         public async Task SetSpeciesDescription(string species) {
             await SetSpeciesDescription("", species);
         }
-        [Command("setspeciesdesc"), Alias("setsdesc")]
+        [Command("setspeciesdesc"), Alias("setspeciesdescription", "setsdesc")]
         public async Task SetSpeciesDescription(string speciesOrGenus, string descriptionOrSpecies) {
 
             // Either the user provided a species and a description, or they provided a genus and species and want to use the two-part command.
@@ -328,7 +342,8 @@ namespace OurFoodChain {
             }
 
         }
-        [Command("setspeciesdesc"), Alias("setsdesc")]
+        [Command("setspeciesdesc"), Alias("setspeciesdescription", "setsdesc")]
+
         public async Task SetSpeciesDescription(string genus, string species, string description) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -351,63 +366,24 @@ namespace OurFoodChain {
 
         }
 
+        // Generic
+
         [Command("setdescription"), Alias("setdesc")]
         public async Task SetTaxonDescription(string taxon) {
 
-            // Since this command is traditionally for species descriptions, start by assuming the user wants to update a species.
+            // Get all taxa with the specified name.
+            Taxon[] taxa = await BotUtils.GetTaxaFromDb(taxon);
 
-            Species[] species_list = await BotUtils.GetSpeciesFromDb("", taxon);
+            if (taxa.Count() <= 0) {
 
-            if (species_list.Count() <= 0) {
-
-                // No such species exists, so assume the user is trying to update another taxon.
-
-                Taxon[] taxon_list = await BotUtils.GetTaxaFromDb(taxon);
-
-                if (taxon_list.Count() == 1) {
-
-                    if (taxon_list[0].type == TaxonType.Species)
-                        await SetSpeciesDescription(taxon);
-                    else if (await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator)) { // moderator use only
-
-                        MultistageCommand p = new MultistageCommand(Context) {
-                            OriginalArguments = new string[] { taxon },
-                            Callback = async (MultistageCommandCallbackArgs args) => {
-
-                                await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon_list[0], args.MessageContent);
-
-                            }
-                        };
-
-                        await MultistageCommand.SendAsync(p,
-                            string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon_list[0].GetTypeName(), taxon_list[0].GetName()));
-
-                    }
-
-                }
-                else if (taxon_list.Count() > 1) {
-
-                    await BotUtils.ReplyAsync_ValidateTaxa(Context, taxon_list);
-
-                }
-                else {
-
-                    // Since this command was originally specifically for species, show species suggestions when the taxon doesn't exist.
-                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", taxon);
-
-                }
+                // If there is no such taxon, default to showing species suggestions.
+                await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", taxon);
 
             }
-            else if (species_list.Count() > 1) {
+            else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {
 
-                // The species exists, however there are multiple possible matches. Require clarification from the user.
-                await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list);
-
-            }
-            else if (species_list.Count() == 1) {
-
-                // The species exists, so begin a multistage update for this species.
-                await SetSpeciesDescription(taxon);
+                // If we got a single taxon, begin a multistage update for that taxon.
+                await _setTaxonDescription(taxa[0]);
 
             }
 
@@ -481,8 +457,121 @@ namespace OurFoodChain {
         }
         [Command("setdescription"), Alias("setdesc")]
         public async Task SetTaxonDescription(string genus, string species, string description) {
-
             await SetSpeciesDescription(genus, species, description);
+        }
+
+        [Command("appenddescription"), Alias("appenddesc", "+desc", "+description")]
+        public async Task AppendDescription(string species) {
+            await AppendDescription("", species);
+        }
+        [Command("appenddescription"), Alias("appenddesc", "+desc", "+description")]
+        public async Task AppendDescription(string arg0, string arg1) {
+
+            // Possible input:
+            // +desc <genus> <species>
+            // +desc <species> <description>
+
+            Species[] species_list = await BotUtils.GetSpeciesFromDb(arg0, arg1);
+
+            if (species_list.Count() <= 0) {
+
+                // We weren't able to find a species with the given genus and name, so perhaps the user provided a species and description.
+                // The following method call will handle this situation, as well as the situation where the species was invalid.
+                await AppendDescription("", species: arg0, description: arg1);
+
+            }
+            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {
+
+                // Initialize a multistage update for the given species.
+
+                Species species = species_list[0];
+
+                await _appendDescription(species);
+
+            }
+
+        }
+        [Command("appenddescription"), Alias("appenddesc", "+desc", "+description")]
+        public async Task AppendDescription(string genus, string species, string description) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            await _appendDescription(sp, description);
+
+        }
+
+        private async Task _setTaxonDescription(Taxon taxon) {
+
+            if (taxon.type == TaxonType.Species)
+                await SetSpeciesDescription(taxon.name);
+            else if (await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator)) { // moderator use only
+
+                MultistageCommand p = new MultistageCommand(Context) {
+                    OriginalArguments = new string[] { taxon.name },
+                    Callback = async (MultistageCommandCallbackArgs args) => {
+
+                        await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon, args.MessageContent);
+
+                    }
+                };
+
+                await MultistageCommand.SendAsync(p,
+                    string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon.GetTypeName(), taxon.GetName()));
+
+            }
+
+        }
+        public async Task _appendDescription(Species species) {
+
+            MultistageCommand p = new MultistageCommand(Context) {
+                Callback = async (MultistageCommandCallbackArgs args) => {
+
+                    if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
+                        await _appendDescription(species, args.MessageContent);
+
+                }
+            };
+
+            await MultistageCommand.SendAsync(p,
+                string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.GetShortName()));
+
+        }
+        public async Task _appendDescription(Species species, string description) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
+                return;
+
+            // Always start appended test on a new paragraph.
+            description = Environment.NewLine + Environment.NewLine + description.Trim();
+
+            // Ensure the decription is of a reasonable size.
+
+            const int MAX_DESCRIPTION_LENGTH = 10000;
+
+            if (species.description.Length + description.Length > MAX_DESCRIPTION_LENGTH) {
+
+                await BotUtils.ReplyAsync_Error(Context, string.Format("The description length exceeds the maximum allowed length ({0} characters).", MAX_DESCRIPTION_LENGTH));
+
+                return;
+
+            }
+
+            // Append text to the existing description.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$id;")) {
+
+                cmd.Parameters.AddWithValue("$id", species.id);
+                cmd.Parameters.AddWithValue("$description", species.description + description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
 
         }
 

@@ -1,0 +1,13 @@
+﻿{
+  "name": "+desc",
+  "aliases": [
+    "appenddesc",
+    "appenddescription",
+    "+description"
+  ],
+  "category": "update",
+  "description": "When a species description is too long to add in a single message, `+desc` can be used to append text to the existing description.",
+  "examples": [
+    "+desc bullous \"some extra details that go over the character limit\""
+  ]
+}

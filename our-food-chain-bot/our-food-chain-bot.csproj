@@ -291,7 +291,7 @@
     <None Include="data\help\addkingdom.json" />
     <None Include="data\help\addorder.json" />
     <None Include="data\help\addphylum.json" />
-    <None Include="data\help\appenddesc.json" />
+    <None Include="data\help\+desc.json" />
     <None Include="data\help\awardtrophy.json" />
     <None Include="data\help\class.json" />
     <None Include="data\help\domain.json" />

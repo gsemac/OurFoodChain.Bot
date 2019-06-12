@@ -626,10 +626,10 @@ namespace OurFoodChain {
 
             // Append text to the existing description.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$id;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description = $description WHERE id = $id")) {
 
                 cmd.Parameters.AddWithValue("$id", species.id);
-                cmd.Parameters.AddWithValue("$description", species.description + description);
+                cmd.Parameters.AddWithValue("$description", (species.description + description).Trim());
 
                 await Database.ExecuteNonQuery(cmd);
 

@@ -74,7 +74,7 @@ namespace OurFoodChain.trophies {
 
                     embed = new EmbedBuilder();
                     embed.WithTitle(string.Format("All Trophies ({0})", (await TrophyRegistry.GetTrophiesAsync()).Count));
-                    embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).", 
+                    embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).",
                         OurFoodChainBot.GetInstance().GetConfig().prefix,
                         trophy_list.First().GetName()));
                     embed.WithFooter(string.Format("Page {0} of {1}", current_page, total_pages));
@@ -147,9 +147,11 @@ namespace OurFoodChain.trophies {
 
             string embed_title = string.Format("{0} {1} ({2:0.#}%)", trophy.GetIcon(), trophy.GetName(), completion_rate);
             string embed_description = string.Format("_{0}_", hide_description ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
+            long times_unlocked = await TrophyRegistry.GetTimesUnlockedAsync(trophy);
 
-            embed_description += string.Format("\n\nThis trophy has been earned by **{0}** users ({1:0.#}%).",
-                await TrophyRegistry.GetTimesUnlockedAsync(trophy),
+            embed_description += string.Format("\n\nThis trophy has been earned by **{0}** user{1} ({2:0.#}%).",
+                times_unlocked,
+                times_unlocked == 1 ? "" : "s",
                 completion_rate);
 
             EmbedBuilder embed = new EmbedBuilder();

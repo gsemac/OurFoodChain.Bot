@@ -160,6 +160,9 @@ namespace OurFoodChain {
 
         }
 
+        public SearchQuery(ICommandContext context, string queryString) :
+            this(context, _parseQueryString(queryString)) {
+        }
         public SearchQuery(ICommandContext context, string[] keywords) {
 
             _context = context;
@@ -285,6 +288,11 @@ namespace OurFoodChain {
 
             if (name.StartsWith("-"))
                 name = name.Substring(1, name.Length - 1);
+
+            // Trim outer quotes from the value.
+
+            if (value.Length > 0 && value.First() == '"' && value.Last() == '"')
+                value = value.Trim('"');
 
             switch (name) {
 
@@ -491,8 +499,10 @@ namespace OurFoodChain {
 
                 case "owner":
 
+                    Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(_context, value);
+
                     await result.FilterByAsync(async (x) => {
-                        return (await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower();
+                        return user is null ? ((await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower()) : (ulong)x.user_id != user.Id;
                     }, subtract);
 
                     break;
@@ -640,6 +650,39 @@ namespace OurFoodChain {
                     break;
 
             }
+
+        }
+
+        private static string[] _parseQueryString(string queryString) {
+
+            List<string> keywords = new List<string>();
+
+            string keyword = "";
+            bool in_quotes = false;
+
+            for (int i = 0; i < queryString.Length; ++i) {
+
+                if (queryString[i] == '\"') {
+
+                    in_quotes = !in_quotes;
+
+                    keyword += queryString[i];
+
+                }
+                else if (!in_quotes && char.IsWhiteSpace(queryString[i])) {
+
+                    keywords.Add(keyword);
+                    keyword = "";
+
+                } else
+                    keyword += queryString[i];
+
+            }
+
+            if (keyword.Length > 0)
+                keywords.Add(keyword);
+
+            return keywords.ToArray();
 
         }
 

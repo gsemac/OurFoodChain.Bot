@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -172,6 +173,21 @@ namespace OurFoodChain {
         public static bool CheckPrivilege(IGuildUser user, PrivilegeLevel level) {
 
             return GetPrivilegeLevel(user) <= level;
+
+        }
+
+        public static async Task<IUser> GetUserFromUsernameOrMentionAsync(ICommandContext context, string usernameOrMention) {
+
+            IReadOnlyCollection<IGuildUser> users = await context.Guild.GetUsersAsync();
+
+            foreach (IGuildUser user in users)
+                if (user.Username.ToLower() == usernameOrMention.ToLower() ||
+                    (!string.IsNullOrEmpty(user.Nickname) && user.Nickname.ToLower() == usernameOrMention.ToLower()) ||
+                    (string.Format("{0}#{1}", user.Username, user.Discriminator)).ToLower() == usernameOrMention.ToLower() ||
+                    Regex.Matches(usernameOrMention, @"^<@(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString()))
+                    return user;
+
+            return null;
 
         }
 

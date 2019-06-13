@@ -1568,11 +1568,11 @@ namespace OurFoodChain {
         }
 
         [Command("search")]
-        public async Task Search(params string[] terms) {
-
+        public async Task Search([Remainder]string queryString) {
+     
             // Create and execute the search query.
 
-            SearchQuery query = new SearchQuery(Context, terms);
+            SearchQuery query = new SearchQuery(Context, queryString);
             SearchQuery.FindResult result = await query.FindMatchesAsync();
 
             // Build the embed.

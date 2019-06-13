@@ -248,6 +248,15 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="data\gotchi\moves\branch_drop.lua" />
+    <None Include="data\gotchi\moves\crush.lua" />
+    <None Include="data\gotchi\moves\molt.lua" />
+    <None Include="data\gotchi\moves\night_strike.lua" />
+    <None Include="data\gotchi\moves\sap_seep.lua" />
+    <None Include="data\gotchi\moves\stem_slap.lua" />
+    <None Include="data\gotchi\moves\thorn_assault.lua" />
+    <None Include="data\gotchi\moves\thorn_prick.lua" />
+    <None Include="data\gotchi\moves\thorn_strike.lua" />
     <None Include="data\help\gotchi\buy.json" />
     <None Include="data\help\gotchi\forfeit.json" />
     <None Include="data\help\gotchi\list.json" />

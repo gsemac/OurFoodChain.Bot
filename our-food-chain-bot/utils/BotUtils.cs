@@ -380,8 +380,11 @@ namespace OurFoodChain {
 
             // Convert both names to lowercase, since this is how they're stored in the database.
 
-            genus = genus.ToLower();
-            species = species.ToLower();
+            if (!string.IsNullOrEmpty(genus))
+                genus = genus.Trim().ToLower();
+
+            if (!string.IsNullOrEmpty(species))
+                species = species.Trim().ToLower();
 
             List<Species> matches = new List<Species>();
 
@@ -1318,7 +1321,21 @@ namespace OurFoodChain {
             return sp_list[0];
 
         }
+
+        public class ConfirmSuggestionArgs {
+
+            public ConfirmSuggestionArgs(string suggestion) {
+                Suggestion = suggestion;
+            }
+
+            public string Suggestion { get; }
+
+        }
+
         public static async Task ReplyAsync_SpeciesSuggestions(ICommandContext context, string genus, string species) {
+            await ReplyAsync_SpeciesSuggestions(context, genus, species, null);
+        }
+        public static async Task ReplyAsync_SpeciesSuggestions(ICommandContext context, string genus, string species, Func<ConfirmSuggestionArgs, Task> onConfirmSuggestion) {
 
             List<Species> sp_list = new List<Species>();
 
@@ -1344,10 +1361,17 @@ namespace OurFoodChain {
 
             }
 
-            await ReplyAsync_NoSuchSpeciesExists(context, suggestion);
+            await ReplyAsync_NoSuchSpeciesExists(context, suggestion, onConfirmSuggestion);
 
         }
-        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context, string suggestion = "") {
+
+        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context) {
+            await ReplyAsync_NoSuchSpeciesExists(context, "");
+        }
+        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context, string suggestion) {
+            await ReplyAsync_NoSuchSpeciesExists(context, suggestion, null);
+        }
+        public static async Task ReplyAsync_NoSuchSpeciesExists(ICommandContext context, string suggestion, Func<ConfirmSuggestionArgs, Task> onConfirmSuggestion) {
 
             StringBuilder sb = new StringBuilder();
 
@@ -1355,8 +1379,31 @@ namespace OurFoodChain {
 
             if (!string.IsNullOrEmpty(suggestion))
                 sb.Append(string.Format(" Did you mean **{0}**?", suggestion));
-          
-            await context.Channel.SendMessageAsync(sb.ToString());
+
+            PaginatedEmbedBuilder message_content = new PaginatedEmbedBuilder {
+                Message = sb.ToString()
+            };
+
+            if (!(onConfirmSuggestion is null)) {
+
+                message_content.AddReaction("👍");
+                message_content.SetCallback(async (CommandUtils.PaginatedMessageCallbackArgs args) => {
+
+                    if (args.reaction == "👍") {
+
+                        args.paginatedMessage.Enabled = false;
+
+                        await args.discordMessage.RemoveAllReactionsAsync();
+
+                        await onConfirmSuggestion(new ConfirmSuggestionArgs(suggestion));
+
+                    }
+
+                });
+
+            }
+
+            await CommandUtils.ReplyAsync_SendPaginatedMessage(context, message_content.Build(), respondToSenderOnly: true);
 
         }
         public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, Species[] speciesList) {

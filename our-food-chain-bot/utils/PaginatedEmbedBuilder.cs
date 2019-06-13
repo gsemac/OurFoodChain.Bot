@@ -119,6 +119,8 @@ namespace OurFoodChain {
 
             CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
 
+            message.message = Message;
+
             foreach (EmbedBuilder page in _pages)
                 message.pages.Add(page.Build());
 
@@ -131,6 +133,8 @@ namespace OurFoodChain {
             return message;
 
         }
+
+        public string Message { get; set; }
 
         private List<EmbedBuilder> _pages = new List<EmbedBuilder>();
         private Action<CommandUtils.PaginatedMessageCallbackArgs> _callback;

@@ -40,16 +40,21 @@ namespace OurFoodChain {
             public string emojiToggle;
             public bool paginationEnabled = true;
             public Action<PaginatedMessageCallbackArgs> callback;
+            public string message = "";
+
+            public ICommandContext Context { get; set; } = null;
+            public bool RespondToSenderOnly { get; set; } = false;
+            public bool Enabled { get; set; } = true;
 
         }
 
         public static Dictionary<ulong, PaginatedMessage> PAGINATED_MESSAGES = new Dictionary<ulong, PaginatedMessage>();
 
-        public static async Task ReplyAsync_SendPaginatedMessage(ICommandContext context, PaginatedMessage message, string defaultMessage = "") {
+        public static async Task ReplyAsync_SendPaginatedMessage(ICommandContext context, PaginatedMessage message, string defaultMessage = "", bool respondToSenderOnly = false) {
 
-            // If the message does not have any pages, quit.
+            // If the message does not have any pages and does not have a message, quit.
 
-            if (message.pages.Count() <= 0) {
+            if (message.pages.Count() <= 0 && string.IsNullOrEmpty(message.message)) {
 
                 if (!string.IsNullOrEmpty(defaultMessage))
                     await BotUtils.ReplyAsync_Info(context, defaultMessage);
@@ -58,7 +63,10 @@ namespace OurFoodChain {
 
             }
 
-            IUserMessage msg = await context.Channel.SendMessageAsync("", false, message.pages[0]);
+            message.Context = context;
+            message.RespondToSenderOnly = respondToSenderOnly;
+
+            IUserMessage msg = await context.Channel.SendMessageAsync(message.message, false, message.pages.Count() > 0 ? message.pages[0] : null);
 
             // Only add reactions if there's more than one page.
 
@@ -105,7 +113,12 @@ namespace OurFoodChain {
 
             PaginatedMessage message = PAGINATED_MESSAGES[reaction.MessageId];
 
-            if (message.pages is null || message.pages.Count() <= 0)
+            if (!message.Enabled)
+                return;
+
+            // Ignore the reaction if it's not from the sender and we only accept reactions from the sender.
+
+            if (message.RespondToSenderOnly && reaction.UserId != message.Context.User.Id)
                 return;
 
             string emote = reaction.Emote.Name;
@@ -114,11 +127,14 @@ namespace OurFoodChain {
 
             if (!(message.callback is null))
                 message.callback(new PaginatedMessageCallbackArgs {
-                    discordMessage = (await cached.DownloadAsync()),
+                    discordMessage = await cached.DownloadAsync(),
                     paginatedMessage = message,
                     on = added,
                     reaction = emote
                 });
+
+            if (message.pages is null || message.pages.Count() <= 0)
+                return;
 
             if (!pagination_enabled || !message.paginationEnabled)
                 return;
@@ -202,7 +218,7 @@ namespace OurFoodChain {
                 nickname == usernameOrMention ||
                 full_username == usernameOrMention ||
                 Regex.Matches(usernameOrMention, @"^<@(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString());
-           
+
         }
 
     }

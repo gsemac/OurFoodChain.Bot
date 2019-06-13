@@ -39,7 +39,7 @@ namespace OurFoodChain {
 
                 if (taxa.Count() <= 0)
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
-                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name);
+                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name, async (BotUtils.ConfirmSuggestionArgs args) => await GetInfo(args.Suggestion));
                 else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
                     await BotUtils.Command_ShowTaxon(Context, taxa[0].type, name);
 

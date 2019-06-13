@@ -181,14 +181,28 @@ namespace OurFoodChain {
             IReadOnlyCollection<IGuildUser> users = await context.Guild.GetUsersAsync();
 
             foreach (IGuildUser user in users)
-                if (user.Username.ToLower() == usernameOrMention.ToLower() ||
-                    (!string.IsNullOrEmpty(user.Nickname) && user.Nickname.ToLower() == usernameOrMention.ToLower()) ||
-                    (string.Format("{0}#{1}", user.Username, user.Discriminator)).ToLower() == usernameOrMention.ToLower() ||
-                    Regex.Matches(usernameOrMention, @"^<@(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString()))
+                if (_userMatchesUsernameOrMention(user, usernameOrMention))
                     return user;
 
             return null;
 
+        }
+        private static bool _userMatchesUsernameOrMention(IGuildUser user, string usernameOrMention) {
+
+            if (user is null)
+                return false;
+
+            usernameOrMention = usernameOrMention.ToLower();
+
+            string username = string.IsNullOrEmpty(user.Username) ? string.Empty : user.Username.ToLower();
+            string nickname = string.IsNullOrEmpty(user.Nickname) ? string.Empty : user.Nickname.ToLower();
+            string full_username = string.Format("{0}#{1}", username, user.Discriminator).ToLower();
+
+            return username == usernameOrMention ||
+                nickname == usernameOrMention ||
+                full_username == usernameOrMention ||
+                Regex.Matches(usernameOrMention, @"^<@(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString());
+           
         }
 
     }

@@ -500,9 +500,9 @@ namespace OurFoodChain {
                 case "owner":
 
                     Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(_context, value);
-
+                   
                     await result.FilterByAsync(async (x) => {
-                        return user is null ? ((await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower()) : (ulong)x.user_id != user.Id;
+                        return (user is null) ? ((await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower()) : (ulong)x.user_id != user.Id;
                     }, subtract);
 
                     break;

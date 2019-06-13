@@ -554,6 +554,13 @@ namespace OurFoodChain {
                 await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", taxon);
 
             }
+            else if (taxa.Count() == 1 && taxa[0].type == TaxonType.Species) {
+
+                // If there's a single result, and it's a species, use the species-specific update procedure.
+                // (The generic one works fine, but this currently shows a unique confirmation message.)
+                await SetSpeciesCommonName(taxon, commonName);
+
+            }
             else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {
 
                 // If we got a single taxon, update the common name for that taxon.

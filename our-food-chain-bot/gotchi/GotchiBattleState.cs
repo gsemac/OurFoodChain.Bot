@@ -762,7 +762,7 @@ namespace OurFoodChain.gotchi {
                     case "predator":
                         if (role.name.ToLower() == "predator" || role.name.ToLower() == "base-consumer")
                             mult *= 1.2;
-                        else if (role.name.ToLower() == "producers")
+                        else if (role.name.ToLower() == "producer")
                             mult *= 0.8;
                         break;
 

@@ -1355,7 +1355,7 @@ namespace OurFoodChain {
 
             if (!string.IsNullOrEmpty(suggestion))
                 sb.Append(string.Format(" Did you mean **{0}**?", suggestion));
-
+          
             await context.Channel.SendMessageAsync(sb.ToString());
 
         }

@@ -20,7 +20,7 @@ namespace OurFoodChain {
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
-
+            
             // Prioritize species first.
 
             Species[] species = await BotUtils.GetSpeciesFromDb("", name);

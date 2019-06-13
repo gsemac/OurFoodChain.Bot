@@ -219,6 +219,7 @@
     <Compile Include="Taxon.cs" />
     <Compile Include="commands\TrophyCommands.cs" />
     <Compile Include="trophies\Trophy.cs" />
+    <Compile Include="trophies\TrophyUser.cs" />
     <Compile Include="trophies\UnlockedTrophyInfo.cs" />
     <Compile Include="trophies\TrophyRegistry.cs" />
     <Compile Include="trophies\TrophyScanner.cs" />

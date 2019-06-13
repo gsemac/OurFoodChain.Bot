@@ -29,17 +29,17 @@ namespace OurFoodChain.trophies {
             }
 
         }
-        public static async Task<ulong[]> GetUsersUnlockedAsync(Trophy trophy) {
+        public static async Task<TrophyUser[]> GetUsersUnlockedAsync(Trophy trophy) {
 
-            List<ulong> user_ids = new List<ulong>();
+            List<TrophyUser> user_ids = new List<TrophyUser>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT user_id FROM Trophies WHERE trophy_name=$trophy_name;")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT user_id, timestamp FROM Trophies WHERE trophy_name = $trophy_name")) {
 
                 cmd.Parameters.AddWithValue("$trophy_name", trophy.GetIdentifier());
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        user_ids.Add((ulong)row.Field<long>("user_id"));
+                        user_ids.Add(new TrophyUser((ulong)row.Field<long>("user_id"), row.Field<long>("timestamp")));
 
             }
 

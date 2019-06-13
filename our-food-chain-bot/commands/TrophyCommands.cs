@@ -84,11 +84,11 @@ namespace OurFoodChain.trophies {
 
                 if (trophy.Flags.HasFlag(TrophyFlags.OneTime) && completion_rate > 0.0) {
 
-                    ulong[] user_ids = await TrophyRegistry.GetUsersUnlockedAsync(trophy);
+                    TrophyUser[] user_ids = await TrophyRegistry.GetUsersUnlockedAsync(trophy);
 
                     if (user_ids.Count() > 0) {
 
-                        IGuildUser user = await Context.Guild.GetUserAsync(user_ids.First());
+                        IGuildUser user = await Context.Guild.GetUserAsync(user_ids.First().UserId);
 
                         if (!(user is null))
                             description += string.Format(" (unlocked by {0})", user.Mention);
@@ -140,10 +140,50 @@ namespace OurFoodChain.trophies {
             double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy, Context);
             bool hide_description = trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0;
 
+            string embed_title = string.Format("{0} {1} ({2:0.#}%)", trophy.GetIcon(), trophy.GetName(), completion_rate);
+            string embed_description = string.Format("_{0}_", hide_description ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
+
+            embed_description += string.Format("\n\nThis trophy has been earned by **{0}** users ({1:0.#}%).",
+                await TrophyRegistry.GetTimesUnlockedAsync(trophy),
+                completion_rate);
+
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("{0} {1} ({2:0.#}%)", trophy.GetIcon(), trophy.GetName(), completion_rate));
-            embed.WithDescription(hide_description ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
+            embed.WithTitle(embed_title);
+            embed.WithDescription(embed_description);
             embed.WithColor(new Color(255, 204, 77));
+
+            // Show first/latest earners.
+
+            TrophyUser[] earners = (await TrophyRegistry.GetUsersUnlockedAsync(trophy)).OrderBy(x => x.EarnedTimestamp).ToArray();
+            string date_format = "MMMM dd, yyyy";
+
+            foreach (TrophyUser trophy_user in earners) {
+
+                IUser user = await Context.Guild.GetUserAsync(trophy_user.UserId);
+
+                if (!(user is null)) {
+
+                    embed.AddField("First earned", string.Format("**{0}** ({1})", user.Username, trophy_user.EarnedDate.ToString(date_format)), inline: true);
+
+                    break;
+
+                }
+
+            }
+
+            foreach (TrophyUser trophy_user in earners.Reverse()) {
+
+                IUser user = await Context.Guild.GetUserAsync(trophy_user.UserId);
+
+                if (!(user is null)) {
+
+                    embed.AddField("Latest earned", string.Format("**{0}** ({1})", user.Username, trophy_user.EarnedDate.ToString(date_format)), inline: true);
+
+                    break;
+
+                }
+
+            }
 
             await ReplyAsync("", false, embed.Build());
 

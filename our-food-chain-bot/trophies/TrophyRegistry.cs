@@ -137,7 +137,16 @@ namespace OurFoodChain.trophies {
             return _registry.AsReadOnly();
 
         }
+        public static async Task<double> GetUserCompletionRateAsync(ulong userId, bool includeOneTimeTrophies = false) {
 
+            UnlockedTrophyInfo[] unlocked = await GetUnlockedTrophiesAsync(userId);
+
+            int unlocked_count = unlocked.Where(x => includeOneTimeTrophies || !GetTrophyByIdentifierAsync(x.identifier).Result.Flags.HasFlag(TrophyFlags.OneTime)).Count();
+            int trophy_count = (await GetTrophiesAsync()).Where(x => includeOneTimeTrophies || !x.Flags.HasFlag(TrophyFlags.OneTime)).Count();
+   
+            return trophy_count <= 0 ? 0.0 : (100.0 * unlocked_count / trophy_count);
+
+        }
 
         private static List<Trophy> _registry = new List<Trophy>();
 

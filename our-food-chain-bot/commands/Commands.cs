@@ -2026,22 +2026,6 @@ namespace OurFoodChain {
 
             }
 
-            // Get the user's trophy count.
-
-            long trophy_count = (await trophies.TrophyRegistry.GetTrophiesAsync()).Count;
-            long user_trophy_count = 0;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT user_id, COUNT(trophy_name) AS trophy_count FROM Trophies WHERE user_id=$user_id GROUP BY user_id;")) {
-
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    user_trophy_count = row.Field<long>("trophy_count");
-
-            }
-
             // Get the user's rarest trophy.
 
             string rarest_trophy = "N/A";
@@ -2075,7 +2059,10 @@ namespace OurFoodChain {
                     ((double)user_species_count / species_count) * 100.0));
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);
                 embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
-                embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)", user_trophy_count, ((double)user_trophy_count / trophy_count) * 100.0), inline: true);
+                embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
+                    (await trophies.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id)).Count(),
+                    await trophies.TrophyRegistry.GetUserCompletionRateAsync(user.Id)
+                    ), inline: true);
                 embed.AddField("Rarest trophy", rarest_trophy, inline: true);
 
             }

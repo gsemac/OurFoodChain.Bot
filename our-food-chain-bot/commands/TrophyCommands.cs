@@ -22,7 +22,7 @@ namespace OurFoodChain.trophies {
             Array.Sort(unlocked, (x, y) => x.timestamp.CompareTo(y.timestamp));
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.##}%)", user.Username, 100.0 * unlocked.Count() / (await TrophyRegistry.GetTrophiesAsync()).Count));
+            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.##}%)", user.Username, await TrophyRegistry.GetUserCompletionRateAsync(user.Id)));
             embed.WithFooter(string.Format("See a list of all available trophies with the \"{0}trophylist\" command.", OurFoodChainBot.GetInstance().GetConfig().prefix));
             embed.WithColor(new Color(255, 204, 77));
 
@@ -64,7 +64,9 @@ namespace OurFoodChain.trophies {
             CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
             EmbedBuilder embed = null;
 
-            foreach (Trophy trophy in await TrophyRegistry.GetTrophiesAsync()) {
+            IReadOnlyCollection<Trophy> trophy_list = await TrophyRegistry.GetTrophiesAsync();
+
+            foreach (Trophy trophy in trophy_list) {
 
                 if (current_page_trophy_count == 0) {
 
@@ -72,7 +74,10 @@ namespace OurFoodChain.trophies {
 
                     embed = new EmbedBuilder();
                     embed.WithTitle(string.Format("All Trophies ({0})", (await TrophyRegistry.GetTrophiesAsync()).Count));
-                    embed.WithFooter(string.Format("Page {0} of {1} — Want to know more about a trophy? Use the \"{2}trophy\" command, e.g.: {2}trophy \"polar power\"", current_page, total_pages, OurFoodChainBot.GetInstance().GetConfig().prefix));
+                    embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).", 
+                        OurFoodChainBot.GetInstance().GetConfig().prefix,
+                        trophy_list.First().GetName()));
+                    embed.WithFooter(string.Format("Page {0} of {1}", current_page, total_pages));
                     embed.WithColor(new Color(255, 204, 77));
 
                 }

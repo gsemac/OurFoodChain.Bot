@@ -86,7 +86,12 @@ namespace OurFoodChain {
         public string name = "";
         public string CommonName {
             get {
+
+                if (string.IsNullOrEmpty(_common_name))
+                    return "";
+
                 return StringUtils.ToTitleCase(_common_name);
+
             }
             set {
                 _common_name = value;
@@ -102,7 +107,7 @@ namespace OurFoodChain {
 
         }
         public string GetCommonName() {
-            return StringUtils.ToTitleCase(CommonName);
+            return CommonName;
         }
         public string GetTypeName(bool plural = false) {
             return TypeToName(type);

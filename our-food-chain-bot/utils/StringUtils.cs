@@ -9,9 +9,12 @@ namespace OurFoodChain {
 
     class StringUtils {
 
-        public static string ToTitleCase(string str) {
+        public static string ToTitleCase(string input) {
 
-            return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(str.ToLower());
+            if (string.IsNullOrEmpty(input))
+                return string.Empty;
+
+            return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
 
         }
         public static string ToSentenceCase(string str) {

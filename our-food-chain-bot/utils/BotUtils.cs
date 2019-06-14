@@ -1669,7 +1669,7 @@ namespace OurFoodChain {
 
         }
         public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type, string name) {
-
+           
             if (string.IsNullOrEmpty(name))
                 await Command_ShowTaxon(context, type);
 
@@ -1678,14 +1678,14 @@ namespace OurFoodChain {
                 // Get the specified taxon.
 
                 Taxon taxon = await GetTaxonFromDb(name, type);
-
+         
                 if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                     return;
-
+            
                 List<string> items = new List<string>();
 
                 if (taxon.type == TaxonType.Genus) {
-
+                  
                     // For genera, get all species underneath it.
                     // This will let us check if the species is extinct, and cross it out if that's the case.
 
@@ -1701,20 +1701,20 @@ namespace OurFoodChain {
 
                 }
                 else {
-
+                 
                     // Get all subtaxa under this taxon.
                     Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
 
                     // Add all subtaxa to the list.
-
+                 
                     foreach (Taxon t in subtaxa) {
-
+                     
                         if (t.type == TaxonType.Species)
                             // Do not attempt to count sub-taxa for species.
                             items.Add(t.GetName().ToLower());
 
                         else {
-
+                          
                             // Count the number of species under this taxon.
                             // Taxa with no species under them will not be displayed.
 
@@ -1722,7 +1722,7 @@ namespace OurFoodChain {
 
                             if (species_count <= 0)
                                 continue;
-
+                        
                             // Count the sub-taxa under this taxon.
 
                             long subtaxa_count = 0;
@@ -1737,7 +1737,7 @@ namespace OurFoodChain {
                                 subtaxa_count = await Database.GetScalar<long>(cmd);
 
                             }
-
+                           
                             // Add the taxon to the list.
 
                             if (subtaxa_count > 0)
@@ -1748,16 +1748,16 @@ namespace OurFoodChain {
                     }
 
                 }
-
+       
                 // Generate embed pages.
 
                 string title = string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
                 string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)), Taxon.TypeToName(type), items.Count());
                 string thumbnail_url = taxon.pics;
-
+         
                 StringBuilder description = new StringBuilder();
                 description.AppendLine(taxon.GetDescriptionOrDefault());
-
+      
                 if (items.Count() <= 0) {
 
                     description.AppendLine();

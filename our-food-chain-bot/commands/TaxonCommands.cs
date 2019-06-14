@@ -365,12 +365,16 @@ namespace OurFoodChain {
             if (species_info is null)
                 return;
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_info))
+                return;
+
             if (string.IsNullOrWhiteSpace(commonName)) {
 
                 // If the given common name is empty, erase all common names associated with this species.
                 await SpeciesUtils.RemoveCommonNames(species_info);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed common name from **{0}**.",
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed all common names from **{0}**.",
                     species_info.GetShortName()));
 
             }
@@ -403,6 +407,10 @@ namespace OurFoodChain {
             if (species_info is null)
                 return;
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_info))
+                return;
+
             if (string.IsNullOrWhiteSpace(commonName)) {
 
                 await BotUtils.ReplyAsync_Error(Context, "Common name cannot be empty.");
@@ -431,9 +439,13 @@ namespace OurFoodChain {
             if (species_info is null)
                 return;
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_info))
+                return;
+
             CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species_info);
 
-            if(!common_names.Any(x => x.Value.ToLower() == commonName.ToLower())) {
+            if (!common_names.Any(x => x.Value.ToLower() == commonName.ToLower())) {
 
                 // Check if the species actually has this common name before attempting to remove it (for the sake of clarity to the user).
 

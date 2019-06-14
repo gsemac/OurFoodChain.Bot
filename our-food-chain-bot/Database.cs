@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     class Database {
 
-        public const int DATABASE_VERSION = 21;
+        public const int DATABASE_VERSION = 22;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
@@ -279,6 +279,10 @@ namespace OurFoodChain {
 
                 case 21:
                     await _update021(conn);
+                    break;
+
+                case 22:
+                    await _update022(conn);
                     break;
 
             }
@@ -578,6 +582,16 @@ namespace OurFoodChain {
                 await ExecuteNonQuery(cmd);
 
             await _updateDatabaseVersion(conn, 21);
+
+        }
+        private static async Task _update022(SQLiteConnection conn) {
+
+            // Adds support for multiple common names for species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS SpeciesCommonNames(species_id INTEGER, name TEXT, FOREIGN KEY(species_id) REFERENCES Species(id), UNIQUE(species_id, name))"))
+                await ExecuteNonQuery(cmd);
+
+            await _updateDatabaseVersion(conn, 22);
 
         }
 

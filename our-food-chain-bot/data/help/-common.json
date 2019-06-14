@@ -1,0 +1,11 @@
+﻿{
+  "name": "-common",
+  "aliases": [
+    "-commonname"
+  ],
+  "category": "update",
+  "description": "Removes a common name from the given species.",
+  "examples": [
+    "-common cornu asperum \"garden snail\""
+  ]
+}

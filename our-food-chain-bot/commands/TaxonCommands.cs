@@ -360,12 +360,96 @@ namespace OurFoodChain {
         [Command("setspeciescommonname"), Alias("setspeciescommon", "setscommon")]
         private async Task SetSpeciesCommonName(string genus, string species, string commonName) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species species_info = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (sp is null)
+            if (species_info is null)
                 return;
 
-            await _setSpeciesCommonName(sp, commonName);
+            if (string.IsNullOrWhiteSpace(commonName)) {
+
+                // If the given common name is empty, erase all common names associated with this species.
+                await SpeciesUtils.RemoveCommonNames(species_info);
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed common name from **{0}**.",
+                    species_info.GetShortName()));
+
+            }
+            else {
+
+                // Otherwise, add the common name to the database.
+
+                // The difference between this and the "+common" command is that this one overwrites the value stored in the "Species" table.
+                // This field is pretty much deprected at this point, but it is still accessed through some generic taxon commands.
+
+                await SpeciesUtils.AddCommonName(species_info, commonName, overwriteSpeciesTable: true);
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
+                    species_info.GetShortName(),
+                    StringUtils.ToTitleCase(commonName)));
+
+            }
+
+        }
+
+        [Command("+commonname"), Alias("+common")]
+        private async Task PlusCommonName(string species, string commonName) {
+            await PlusCommonName("", species, commonName);
+        }
+        [Command("+commonname"), Alias("+common")]
+        private async Task PlusCommonName(string genus, string species, string commonName) {
+
+            Species species_info = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (species_info is null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(commonName)) {
+
+                await BotUtils.ReplyAsync_Error(Context, "Common name cannot be empty.");
+
+            }
+            else {
+
+                await SpeciesUtils.AddCommonName(species_info, commonName, overwriteSpeciesTable: false);
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
+                    species_info.GetShortName(),
+                    StringUtils.ToTitleCase(commonName)));
+
+            }
+
+        }
+        [Command("-commonname"), Alias("-common")]
+        private async Task MinusCommonName(string species, string commonName) {
+            await MinusCommonName("", species, commonName);
+        }
+        [Command("-commonname"), Alias("-common")]
+        private async Task MinusCommonName(string genus, string species, string commonName) {
+
+            Species species_info = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (species_info is null)
+                return;
+
+            CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species_info);
+
+            if(!common_names.Any(x => x.Value.ToLower() == commonName.ToLower())) {
+
+                // Check if the species actually has this common name before attempting to remove it (for the sake of clarity to the user).
+
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("The common name **{0}** has already been removed.",
+                      StringUtils.ToTitleCase(commonName)));
+
+            }
+            else {
+
+                await SpeciesUtils.RemoveCommonName(species_info, commonName);
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is no longer known as the **{1}**.",
+                    species_info.GetShortName(),
+                    StringUtils.ToTitleCase(commonName)));
+
+            }
 
         }
 
@@ -378,30 +462,6 @@ namespace OurFoodChain {
             await BotUtils.UpdateSpeciesDescription(species, description);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
-
-        }
-        private async Task _setSpeciesCommonName(Species species, string commonName) {
-
-            if (!string.IsNullOrEmpty(commonName))
-                commonName = commonName.Trim();
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
-                return;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET common_name = $common_name WHERE id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", species.id);
-                cmd.Parameters.AddWithValue("$common_name", commonName.ToLower());
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            if (string.IsNullOrEmpty(commonName))
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed common name from **{0}**.", species.GetShortName()));
-            else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.", species.GetShortName(), StringUtils.ToTitleCase(commonName)));
 
         }
 

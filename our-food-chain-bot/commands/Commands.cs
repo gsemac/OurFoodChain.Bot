@@ -20,7 +20,7 @@ namespace OurFoodChain {
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
-            
+
             // Prioritize species first.
 
             Species[] species = await BotUtils.GetSpeciesFromDb("", name);
@@ -79,8 +79,10 @@ namespace OurFoodChain {
             string embed_title = sp.GetFullName();
             Color embed_color = Color.Blue;
 
-            if (!string.IsNullOrEmpty(sp.commonName))
-                embed_title += string.Format(" ({0})", StringUtils.ToTitleCase(sp.commonName));
+            CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(sp);
+
+            if (common_names.Count() > 0)
+                embed_title += string.Format(" ({0})", string.Join(", ", (object[])common_names));
 
             embed.AddField("Owner", await sp.GetOwnerOrDefault(Context), inline: true);
 
@@ -1569,7 +1571,7 @@ namespace OurFoodChain {
 
         [Command("search")]
         public async Task Search([Remainder]string queryString) {
-     
+
             // Create and execute the search query.
 
             SearchQuery query = new SearchQuery(Context, queryString);
@@ -1879,7 +1881,7 @@ namespace OurFoodChain {
 
             foreach (EmbedBuilder page in pages) {
 
-                page.WithTitle(string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
+                page.WithTitle(string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
                 page.WithDescription(description_builder.ToString());
                 page.WithThumbnailUrl(taxon.pics);
 

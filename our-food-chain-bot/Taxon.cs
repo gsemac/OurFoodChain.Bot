@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
@@ -88,7 +84,14 @@ namespace OurFoodChain {
         public long id = -1;
         public long parent_id = -1; // For genera, this is the family_id, etc.
         public string name = "";
-        public string common_name = "";
+        public string CommonName {
+            get {
+                return StringUtils.ToTitleCase(_common_name);
+            }
+            set {
+                _common_name = value;
+            }
+        }
         public string description = "";
         public string pics = "";
         public TaxonType type = 0;
@@ -99,7 +102,7 @@ namespace OurFoodChain {
 
         }
         public string GetCommonName() {
-            return StringUtils.ToTitleCase(common_name);
+            return StringUtils.ToTitleCase(CommonName);
         }
         public string GetTypeName(bool plural = false) {
             return TypeToName(type);
@@ -124,7 +127,7 @@ namespace OurFoodChain {
             Taxon taxon = new Taxon(type) {
                 id = row.Field<long>("id"),
                 name = row.Field<string>("name"),
-                common_name = row.Field<string>("common_name"),
+                CommonName = row.Field<string>("common_name"),
                 description = row.Field<string>("description"),
                 pics = row.Field<string>("pics")
             };
@@ -227,6 +230,8 @@ namespace OurFoodChain {
             return string.Format("{0}_id", TypeToName(type));
 
         }
+
+        private string _common_name = "";
 
     }
 

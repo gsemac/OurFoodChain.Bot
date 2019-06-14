@@ -145,7 +145,7 @@ namespace OurFoodChain {
 
     }
 
-    class Genus {
+    public class Genus {
 
         public long id;
         public long family_id;
@@ -187,19 +187,15 @@ namespace OurFoodChain {
         public string genus;
         public bool isExtinct;
 
-        public static async Task<Species> FromDataRow(DataRow row) {
-
-            long genus_id = row.Field<long>("genus_id");
-
-            // The genus should never be null, but there was instance where a user manually edited the database and the genus ID was invalid.
-            // We should at least try to handle this situation gracefully.
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus_id);
+        public static async Task<Species> FromDataRow(DataRow row, Genus genusInfo) {
 
             Species species = new Species {
                 id = row.Field<long>("id"),
                 genusId = row.Field<long>("genus_id"),
                 name = row.Field<string>("name"),
-                genus = genus_info is null ? "?" : genus_info.name,
+                // The genus should never be null, but there was instance where a user manually edited the database and the genus ID was invalid.
+                // We should at least try to handle this situation gracefully.
+                genus = genusInfo is null ? "?" : genusInfo.name,
                 description = row.Field<string>("description"),
                 owner = row.Field<string>("owner"),
                 timestamp = (long)row.Field<decimal>("timestamp"),
@@ -220,6 +216,14 @@ namespace OurFoodChain {
             }
 
             return species;
+
+        }
+        public static async Task<Species> FromDataRow(DataRow row) {
+
+            long genus_id = row.Field<long>("genus_id");
+            Genus genus_info = await BotUtils.GetGenusFromDb(genus_id);
+
+            return await FromDataRow(row, genus_info);
 
         }
 
@@ -356,110 +360,8 @@ namespace OurFoodChain {
 
         }
         public static async Task<Species[]> GetSpeciesFromDb(string genus, string species) {
-
-            // If the genus is empty but the species contains a period, assume everything to the left of the period is the genus.
-            // This allows us to process inputs like "C.aspersum" where the user forgot to put a space between the genus and species names.
-
-            if (string.IsNullOrEmpty(genus) && species.Contains('.')) {
-
-                int split_index = species.IndexOf('.');
-
-                genus = species.Substring(0, split_index);
-                species = species.Substring(split_index, species.Length - split_index);
-
-            }
-
-            // Strip all periods from the genus/species names.
-            // This allows us to process inputs like "c aspersum" and "c. asperum" in the same way.
-
-            if (!string.IsNullOrEmpty(genus))
-                genus = genus.Trim('.');
-
-            if (!string.IsNullOrEmpty(species))
-                species = species.Trim('.');
-
-            // Convert both names to lowercase, since this is how they're stored in the database.
-
-            if (!string.IsNullOrEmpty(genus))
-                genus = genus.Trim().ToLower();
-
-            if (!string.IsNullOrEmpty(species))
-                species = species.Trim().ToLower();
-
-            List<Species> matches = new List<Species>();
-
-            // If the species is the empty string, don't bother trying to find any matches.
-            // This prevents species with an empty, but non-null common name (set to "") from being returned.
-
-            if (string.IsNullOrEmpty(species))
-                return matches.ToArray();
-
-            Genus genus_info = null;
-            bool genus_is_abbreviated = false;
-
-            string sql_command_str = "SELECT * FROM Species WHERE genus_id=$genus_id AND name=$species;";
-
-            if (string.IsNullOrEmpty(genus)) {
-
-                // If the genus is empty, it's possible that the user either omitted the genus or just past in the species name.
-                // In this case, we'll allow for the species to be looked up via its common name as well.
-
-                sql_command_str = "SELECT * FROM Species WHERE name=$species OR common_name=$species;";
-
-            }
-            else if (Regex.IsMatch(genus, @"^[a-zA-Z]\.?$")) {
-
-                // If the genus is abbreviated (e.g. "Cornu" -> "C.") but not null, we'll look for matching species and determine the genus afterwards.
-                // Notice that this case does not allow for looking up the species by common name, which should not occur when the genus is included.
-
-                sql_command_str = "SELECT * FROM Species WHERE name=$species;";
-                genus_is_abbreviated = true;
-
-            }
-            else {
-
-                // Since the genus is not abbreviated, we can get genus information immediately.
-                genus_info = await GetGenusFromDb(genus);
-
-                // If the genus doesn't exist, then the species doesn't exist.
-
-                if (genus_info is null)
-                    return matches.ToArray();
-
-            }
-
-            using (SQLiteConnection conn = await Database.GetConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand(sql_command_str)) {
-
-                cmd.Parameters.AddWithValue("$species", species);
-
-                if (!genus_is_abbreviated && !(genus_info is null))
-                    cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
-
-                using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
-                    foreach (DataRow row in rows.Rows) {
-
-                        if (!string.IsNullOrEmpty(genus) && genus_is_abbreviated) {
-
-                            // If the user passed in an abbreviated genus, get the genus for this species and see if matches.
-                            // If so, this species will be added to the list of candidates.
-
-                            genus_info = await GetGenusFromDb(row.Field<long>("genus_id"));
-
-                            if (genus_info != null && !genus_info.name.StartsWith(genus[0].ToString()))
-                                continue;
-
-                        }
-
-                        matches.Add(await Species.FromDataRow(row));
-
-                    }
-
-            }
-
-            return matches.ToArray();
-
-        }
+            return await SpeciesUtils.GetSpeciesAsync(genus, species);
+        } // deprecated
         public static async Task<Species[]> GetSpeciesFromDbByRole(Role role) {
 
             // Return all species with the given role.
@@ -986,7 +888,7 @@ namespace OurFoodChain {
                 cmd.Parameters.AddWithValue("$id", taxon.id);
 
                 // Because this field was added in a database update, it's possible for it to be null rather than the empty string.
-                cmd.Parameters.AddWithValue("$common_name", string.IsNullOrEmpty(taxon.common_name) ? "" : taxon.common_name.ToLower());
+                cmd.Parameters.AddWithValue("$common_name", string.IsNullOrEmpty(taxon.CommonName) ? "" : taxon.CommonName.ToLower());
 
                 if (!string.IsNullOrEmpty(parent_column_name) && taxon.parent_id != -1) {
                     cmd.Parameters.AddWithValue("$parent_column_name", parent_column_name);
@@ -1392,8 +1294,6 @@ namespace OurFoodChain {
                     if (args.reaction == "👍") {
 
                         args.paginatedMessage.Enabled = false;
-
-                        await args.discordMessage.RemoveAllReactionsAsync();
 
                         await onConfirmSuggestion(new ConfirmSuggestionArgs(suggestion));
 
@@ -1851,7 +1751,7 @@ namespace OurFoodChain {
 
                 // Generate embed pages.
 
-                string title = string.IsNullOrEmpty(taxon.common_name) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
+                string title = string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
                 string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)), Taxon.TypeToName(type), items.Count());
                 string thumbnail_url = taxon.pics;
 
@@ -2049,7 +1949,7 @@ namespace OurFoodChain {
             if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                 return;
 
-            taxon.common_name = commonName;
+            taxon.CommonName = commonName;
 
             await UpdateTaxonInDb(taxon, type);
 

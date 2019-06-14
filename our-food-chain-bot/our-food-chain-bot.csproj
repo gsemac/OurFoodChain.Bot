@@ -230,7 +230,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils\BotUtils.cs" />
+    <Compile Include="utils\CommonName.cs" />
     <Compile Include="utils\Constants.cs" />
+    <Compile Include="utils\GenusSpeciesPair.cs" />
     <Compile Include="utils\HelpUtils.cs" />
     <Compile Include="utils\IoUtils.cs" />
     <Compile Include="utils\MultistageCommand.cs" />
@@ -241,6 +243,7 @@
     <Compile Include="utils\GraphicsUtils.cs" />
     <Compile Include="utils\PaginatedEmbedBuilder.cs" />
     <Compile Include="utils\SearchQuery.cs" />
+    <Compile Include="utils\SpeciesUtils.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\Tree.cs" />
     <Compile Include="utils\Utils.cs" />
@@ -257,6 +260,8 @@
     <None Include="data\gotchi\moves\thorn_assault.lua" />
     <None Include="data\gotchi\moves\thorn_prick.lua" />
     <None Include="data\gotchi\moves\thorn_strike.lua" />
+    <None Include="data\help\+common.json" />
+    <None Include="data\help\-common.json" />
     <None Include="data\help\gotchi\buy.json" />
     <None Include="data\help\gotchi\forfeit.json" />
     <None Include="data\help\gotchi\list.json" />

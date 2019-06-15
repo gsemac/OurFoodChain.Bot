@@ -9,7 +9,7 @@
 	move.multiplier = 0.8;
 	move.type = type.Offensive;
 
-	move.requires.match = "\\d(sting)";
+	move.requires.match = "\\b(sting)";
 	move.requires.minLevel = 10;
 
 end

@@ -1639,7 +1639,7 @@ namespace OurFoodChain {
                             long subtaxa_count = 0;
 
                             using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT COUNT(*) FROM {0} WHERE {1}=$parent_id;",
-                                Taxon.TypeToDatabaseTableName(t.GetChildType()),
+                                Taxon.TypeToDatabaseTableName(t.GetChildRank()),
                                 Taxon.TypeToDatabaseColumnName(t.type)
                                 ))) {
 
@@ -1684,7 +1684,7 @@ namespace OurFoodChain {
                 embed.SetDescription(description.ToString());
 
                 if (items.Count() > 0 && taxon.type != TaxonRank.Genus)
-                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(taxon.GetChildType(), plural: true)));
+                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(taxon.GetChildRank(), plural: true)));
 
                 await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
 

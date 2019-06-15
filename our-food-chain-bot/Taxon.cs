@@ -124,7 +124,7 @@ namespace OurFoodChain {
         public TaxonRank GetParentType() {
             return TypeToParentType(type);
         }
-        public TaxonRank GetChildType() {
+        public TaxonRank GetChildRank() {
             return TypeToChildType(type);
         }
 
@@ -227,7 +227,7 @@ namespace OurFoodChain {
 
             return table_name;
 
-        }
+        } // deprecated
         public static string TypeToDatabaseColumnName(TaxonRank type) {
 
             if (type <= 0)
@@ -235,7 +235,7 @@ namespace OurFoodChain {
 
             return string.Format("{0}_id", GetRankName(type));
 
-        }
+        } // deprecated
 
         private string _common_name = "";
 

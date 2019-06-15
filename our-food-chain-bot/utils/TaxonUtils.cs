@@ -83,7 +83,7 @@ namespace OurFoodChain {
 
             List<Taxon> result = new List<Taxon>();
 
-            string table_name = Taxon.TypeToDatabaseTableName(taxon.GetChildType());
+            string table_name = Taxon.TypeToDatabaseTableName(taxon.GetChildRank());
             string parent_column_name = Taxon.TypeToDatabaseColumnName(taxon.type);
 
             if (string.IsNullOrEmpty(table_name))
@@ -97,7 +97,7 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        result.Add(Taxon.FromDataRow(row, taxon.GetChildType()));
+                        result.Add(Taxon.FromDataRow(row, taxon.GetChildRank()));
 
             }
 
@@ -112,6 +112,25 @@ namespace OurFoodChain {
         public static async Task DeleteTaxonAsync(Taxon taxon) {
 
             string table_name = _getRankTableName(taxon.type);
+            string subtaxa_table_name = _getRankTableName(taxon.GetChildRank());
+            string subtaxa_column_name = _getRankColumnName(taxon.type);
+
+            // Set to NULL any references subtaxa have to this taxon.
+            // Note that this can also happen automatically if the foreign key is set up correctly when creating the database.
+
+            if (!string.IsNullOrEmpty(table_name) && !string.IsNullOrEmpty(subtaxa_column_name)) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("UPDATE {0} SET {1} = NULL WHERE {1} = $id", subtaxa_table_name, subtaxa_column_name))) {
+
+                    cmd.Parameters.AddWithValue("$id", taxon.id);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+            // Delete the taxon.
 
             if (!string.IsNullOrEmpty(table_name)) {
 
@@ -135,6 +154,14 @@ namespace OurFoodChain {
                 table_name = "Ord";
 
             return table_name;
+
+        }
+        private static string _getRankColumnName(TaxonRank rank) {
+
+            if (rank <= 0)
+                return string.Empty;
+
+            return string.Format("{0}_id", Taxon.GetRankName(rank));
 
         }
 

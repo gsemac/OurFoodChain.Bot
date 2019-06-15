@@ -17,7 +17,7 @@ namespace OurFoodChain {
 
         [Command("genus"), Alias("g", "genera")]
         public async Task Genus(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Genus, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Genus, name);
         }
         [Command("addgenus")]
         public async Task AddGenus(string genus, string description = "") {
@@ -91,203 +91,231 @@ namespace OurFoodChain {
         }
         [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
         public async Task SetGenusDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Genus, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Genus, name);
         }
         [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
         public async Task SetGenusDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Genus, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Genus, name, description);
         }
         [Command("setgenuspic"), Alias("setgpic")]
         public async Task SetGenusPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Genus, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Genus, name, url);
         }
         [Command("setgenuscommonname"), Alias("setgenuscommon", "setgcommon")]
         public async Task SetGenuscommonName(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Genus, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Genus, name, commonName);
+        }
+        [Command("deletegenus")]
+        public async Task DeleteGenus(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Genus);
         }
 
         // Family
 
         [Command("family"), Alias("f", "families")]
         public async Task Family(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Family, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Family, name);
         }
         [Command("addfamily")]
         public async Task AddFamily(string name, string description = "") {
-            await BotUtils.Command_AddTaxon(Context, TaxonType.Family, name, description);
+            await BotUtils.Command_AddTaxon(Context, TaxonRank.Family, name, description);
         }
         [Command("setfamily")]
         public async Task SetFamily(string child, string parent) {
-            await BotUtils.Command_SetTaxon(Context, TaxonType.Family, child, parent);
+            await BotUtils.Command_SetTaxon(Context, TaxonRank.Family, child, parent);
         }
         [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
         public async Task SetFamilyDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Family, name);
         }
         [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
         public async Task SetFamilyDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Family, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Family, name, description);
         }
         [Command("setfamilypic"), Alias("setfpic")]
         public async Task SetFamilyPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Family, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Family, name, url);
         }
         [Command("setfamilycommonname"), Alias("setfamilycommon", "setfcommon")]
         public async Task SetFamilyCommonName(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Family, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Family, name, commonName);
+        }
+        [Command("deletefamily")]
+        public async Task DeleteFamily(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Family);
         }
 
         // Order
 
         [Command("order"), Alias("o", "orders")]
         public async Task Order(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Order, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Order, name);
         }
         [Command("addorder")]
         public async Task AddOrder(string name, string description = "") {
-            await BotUtils.Command_AddTaxon(Context, TaxonType.Order, name, description);
+            await BotUtils.Command_AddTaxon(Context, TaxonRank.Order, name, description);
         }
         [Command("setorder")]
         public async Task SetOrder(string child, string parent) {
-            await BotUtils.Command_SetTaxon(Context, TaxonType.Order, child, parent);
+            await BotUtils.Command_SetTaxon(Context, TaxonRank.Order, child, parent);
         }
         [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
         public async Task SetOrderDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Order, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Order, name);
         }
         [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
         public async Task SetOrderDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Order, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Order, name, description);
         }
         [Command("setorderpic"), Alias("setopic")]
         public async Task SetOrderPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Order, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Order, name, url);
         }
         [Command("setordercommonname"), Alias("setordercommon", "setocommon")]
         public async Task SetOrderCommon(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Order, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Order, name, commonName);
+        }
+        [Command("deleteorder")]
+        public async Task DeleteOrder(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Order);
         }
 
         // Class
 
         [Command("class"), Alias("c", "classes")]
         public async Task Class(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Class, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Class, name);
         }
         [Command("addclass")]
         public async Task AddClass(string name, string description = "") {
-            await BotUtils.Command_AddTaxon(Context, TaxonType.Class, name, description);
+            await BotUtils.Command_AddTaxon(Context, TaxonRank.Class, name, description);
         }
         [Command("setclass")]
         public async Task SetClass(string child, string parent) {
-            await BotUtils.Command_SetTaxon(Context, TaxonType.Class, child, parent);
+            await BotUtils.Command_SetTaxon(Context, TaxonRank.Class, child, parent);
         }
         [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
         public async Task SetClassDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Class, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Class, name);
         }
         [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
         public async Task SetClassDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Class, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Class, name, description);
         }
         [Command("setclasspic"), Alias("setcpic")]
         public async Task SetClassPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Class, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Class, name, url);
         }
         [Command("setclasscommonname"), Alias("setclasscommon", "setccommon")]
         public async Task SetClassCommon(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Class, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Class, name, commonName);
+        }
+        [Command("deleteclass")]
+        public async Task DeleteClass(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Class);
         }
 
         // Phylum
 
         [Command("phylum"), Alias("p", "phyla")]
         public async Task Phylum(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Phylum, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Phylum, name);
         }
         [Command("addphylum")]
         public async Task AddPhylum(string name, string description = "") {
-            await BotUtils.Command_AddTaxon(Context, TaxonType.Phylum, name, description);
+            await BotUtils.Command_AddTaxon(Context, TaxonRank.Phylum, name, description);
         }
         [Command("setphylum")]
         public async Task SetPhylum(string child, string parent) {
-            await BotUtils.Command_SetTaxon(Context, TaxonType.Phylum, child, parent);
+            await BotUtils.Command_SetTaxon(Context, TaxonRank.Phylum, child, parent);
         }
         [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
         public async Task SetPhylumDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Phylum, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Phylum, name);
         }
         [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
         public async Task SetPhylumDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Phylum, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Phylum, name, description);
         }
         [Command("setphylumpic"), Alias("setppic")]
         public async Task SetPhylumPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Phylum, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Phylum, name, url);
         }
         [Command("setphylumcommonname"), Alias("setphylumcommon", "setpcommon")]
         public async Task SetPhylumCommon(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Phylum, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Phylum, name, commonName);
+        }
+        [Command("deletephylum")]
+        public async Task DeletePhylum(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Phylum);
         }
 
         [Command("kingdom"), Alias("k", "kingdoms")]
         public async Task Kingdom(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Kingdom, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Kingdom, name);
         }
         [Command("addkingdom")]
         public async Task AddKingdom(string name, string description = "") {
-            await BotUtils.Command_AddTaxon(Context, TaxonType.Kingdom, name, description);
+            await BotUtils.Command_AddTaxon(Context, TaxonRank.Kingdom, name, description);
         }
         [Command("setkingdom")]
         public async Task SetKingdom(string child, string parent) {
-            await BotUtils.Command_SetTaxon(Context, TaxonType.Kingdom, child, parent);
+            await BotUtils.Command_SetTaxon(Context, TaxonRank.Kingdom, child, parent);
         }
         [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
         public async Task SetKingdomDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Kingdom, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Kingdom, name);
         }
         [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
         public async Task SetKingdomDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Kingdom, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Kingdom, name, description);
         }
         [Command("setkingdompic"), Alias("setkpic")]
         public async Task SetKingdomPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Kingdom, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Kingdom, name, url);
         }
         [Command("setkingdomcommonname"), Alias("setkingdomcommon", "setkcommon")]
         public async Task SetKingdomCommon(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Kingdom, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Kingdom, name, commonName);
+        }
+        [Command("deletekingdom")]
+        public async Task DeleteKingdom(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Kingdom);
         }
 
         // Domain
 
         [Command("domain"), Alias("d", "domains")]
         public async Task Domain(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, TaxonType.Domain, name);
+            await BotUtils.Command_ShowTaxon(Context, TaxonRank.Domain, name);
         }
         [Command("adddomain")]
         public async Task AddDomain(string name, string description = "") {
-            await BotUtils.Command_AddTaxon(Context, TaxonType.Domain, name, description);
+            await BotUtils.Command_AddTaxon(Context, TaxonRank.Domain, name, description);
         }
         [Command("setdomain")]
         public async Task SetDomain(string child, string parent) {
-            await BotUtils.Command_SetTaxon(Context, TaxonType.Domain, child, parent);
+            await BotUtils.Command_SetTaxon(Context, TaxonRank.Domain, child, parent);
         }
         [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
         public async Task SetDomainDescription(string name) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Domain, name);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Domain, name);
         }
         [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
         public async Task SetDomainDescription(string name, string description) {
-            await BotUtils.Command_SetTaxonDescription(Context, TaxonType.Domain, name, description);
+            await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Domain, name, description);
         }
         [Command("setdomainpic"), Alias("setdpic")]
         public async Task SetDomainPic(string name, string url) {
-            await BotUtils.Command_SetTaxonPic(Context, TaxonType.Domain, name, url);
+            await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Domain, name, url);
         }
         [Command("setdomaincommonname"), Alias("setdomaincommon", "setdcommon")]
         public async Task SetDomainCommon(string name, string commonName) {
-            await BotUtils.Command_SetTaxonCommonName(Context, TaxonType.Domain, name, commonName);
+            await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Domain, name, commonName);
+        }
+        [Command("deletedomain")]
+        public async Task DeleteDomain(string name) {
+            await _deleteTaxonAsync(name, TaxonRank.Domain);
         }
 
         // Species
@@ -494,7 +522,7 @@ namespace OurFoodChain {
             else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {
 
                 // If we got a single taxon, begin a multistage update for that taxon.
-                await _setTaxonDescription(taxa[0]);
+                await _setTaxonDescriptionAsync(taxa[0]);
 
             }
 
@@ -527,7 +555,7 @@ namespace OurFoodChain {
 
                     Taxon taxon = taxa[0];
 
-                    if (taxon.type == TaxonType.Species)
+                    if (taxon.type == TaxonRank.Species)
 
                         // If the taxon is a species, use the species update procedure.
                         await _setSpeciesDescription(await BotUtils.GetSpeciesFromDb(taxon.id), descriptionOrSpecies);
@@ -597,7 +625,11 @@ namespace OurFoodChain {
 
                 Species species = species_list[0];
 
-                await _appendDescription(species);
+                // Ensure that the user has necessary privileges to use this command.
+                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
+                    return;
+
+                await _appendDescriptionAsync(species);
 
             }
 
@@ -610,12 +642,20 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
-            await _appendDescription(sp, description);
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+                return;
+
+            await _appendDescriptionAsync(sp, description);
 
         }
 
         [Command("setcommonname"), Alias("setcommon")]
         public async Task SetCommonName(string taxon, string commonName) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
 
             // Get all taxa with the specified name.
             Taxon[] taxa = await BotUtils.GetTaxaFromDb(taxon);
@@ -626,7 +666,7 @@ namespace OurFoodChain {
                 await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", taxon);
 
             }
-            else if (taxa.Count() == 1 && taxa[0].type == TaxonType.Species) {
+            else if (taxa.Count() == 1 && taxa[0].type == TaxonRank.Species) {
 
                 // If there's a single result, and it's a species, use the species-specific update procedure.
                 // (The generic one works fine, but this currently shows a unique confirmation message.)
@@ -636,7 +676,7 @@ namespace OurFoodChain {
             else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {
 
                 // If we got a single taxon, update the common name for that taxon.
-                await _setTaxonCommonName(taxa[0], commonName);
+                await _setTaxonCommonNameAsync(taxa[0], commonName);
 
             }
 
@@ -646,9 +686,22 @@ namespace OurFoodChain {
             await SetSpeciesCommonName(genus, species, commonName);
         }
 
-        private async Task _setTaxonDescription(Taxon taxon) {
+        [Command("delete"), Alias("deletetaxon")]
+        public async Task DeleteTaxon(string name) {
 
-            if (taxon.type == TaxonType.Species)
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            Taxon[] taxa = await TaxonUtils.GetTaxaAsync(name);
+
+            await _deleteTaxonAsync(taxa);
+
+        }
+
+        private async Task _setTaxonDescriptionAsync(Taxon taxon) {
+
+            if (taxon.type == TaxonRank.Species)
                 await SetSpeciesDescription(taxon.name);
             else if (await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator)) { // moderator use only
 
@@ -667,13 +720,13 @@ namespace OurFoodChain {
             }
 
         }
-        public async Task _appendDescription(Species species) {
+        public async Task _appendDescriptionAsync(Species species) {
 
             MultistageCommand p = new MultistageCommand(Context) {
                 Callback = async (MultistageCommandCallbackArgs args) => {
 
                     if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
-                        await _appendDescription(species, args.MessageContent);
+                        await _appendDescriptionAsync(species, args.MessageContent);
 
                 }
             };
@@ -682,7 +735,7 @@ namespace OurFoodChain {
                 string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.GetShortName()));
 
         }
-        public async Task _appendDescription(Species species, string description) {
+        public async Task _appendDescriptionAsync(Species species, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
@@ -717,8 +770,46 @@ namespace OurFoodChain {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
 
         }
-        private async Task _setTaxonCommonName(Taxon taxon, string commonName) {
+        private async Task _setTaxonCommonNameAsync(Taxon taxon, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, taxon.type, taxon.name, commonName);
+        }
+        private async Task _deleteTaxonAsync(string name, TaxonRank rank) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            Taxon[] taxa = await TaxonUtils.GetTaxaAsync(name, rank);
+
+            await _deleteTaxonAsync(taxa);
+
+        }
+        private async Task _deleteTaxonAsync(Taxon[] taxa) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
+            if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {
+
+                if ((await TaxonUtils.GetSpeciesAsync(taxa[0])).Count() > 0) {
+
+                    // If the taxon still has species underneath of it, don't allow it to be deleted.
+                    await BotUtils.ReplyAsync_Error(Context, "Taxa containing species cannot be deleted.");
+
+                }
+                else {
+
+                    // The taxon is empty, so delete the taxon.
+
+                    await TaxonUtils.DeleteTaxonAsync(taxa[0]);
+
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("{0} **{1}** was successfully deleted.", taxa[0].GetTypeName(), taxa[0].GetName()));
+
+                }
+
+            }
+
         }
 
     }

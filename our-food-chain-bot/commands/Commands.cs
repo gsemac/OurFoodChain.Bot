@@ -1873,7 +1873,7 @@ namespace OurFoodChain {
             if (species.Count() <= 0) {
 
                 description_builder.AppendLine();
-                description_builder.AppendLine(string.Format("This {0} contains no species.", Taxon.TypeToName(taxon.type)));
+                description_builder.AppendLine(string.Format("This {0} contains no species.", Taxon.GetRankName(taxon.type)));
 
             }
 

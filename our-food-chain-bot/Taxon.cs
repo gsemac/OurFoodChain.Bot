@@ -3,7 +3,7 @@ using System.Data;
 
 namespace OurFoodChain {
 
-    enum TaxonType {
+    public enum TaxonRank {
         Species = 1,
         Genus,
         Family,
@@ -11,7 +11,8 @@ namespace OurFoodChain {
         Class,
         Phylum,
         Kingdom,
-        Domain
+        Domain,
+        Any
     }
 
     class TaxonSet {
@@ -27,17 +28,17 @@ namespace OurFoodChain {
 
         public bool Contains(string name) {
 
-            return Contains(name, TaxonType.Domain) ||
-                Contains(name, TaxonType.Kingdom) ||
-                Contains(name, TaxonType.Phylum) ||
-                Contains(name, TaxonType.Class) ||
-                Contains(name, TaxonType.Order) ||
-                Contains(name, TaxonType.Family) ||
-                Contains(name, TaxonType.Genus) ||
-                Contains(name, TaxonType.Species);
+            return Contains(name, TaxonRank.Domain) ||
+                Contains(name, TaxonRank.Kingdom) ||
+                Contains(name, TaxonRank.Phylum) ||
+                Contains(name, TaxonRank.Class) ||
+                Contains(name, TaxonRank.Order) ||
+                Contains(name, TaxonRank.Family) ||
+                Contains(name, TaxonRank.Genus) ||
+                Contains(name, TaxonRank.Species);
 
         }
-        public bool Contains(string name, TaxonType type) {
+        public bool Contains(string name, TaxonRank type) {
 
             if (string.IsNullOrEmpty(name))
                 return false;
@@ -46,21 +47,21 @@ namespace OurFoodChain {
 
             switch (type) {
 
-                case TaxonType.Species:
+                case TaxonRank.Species:
                     return Species != null && Species.name.ToLower() == name;
-                case TaxonType.Genus:
+                case TaxonRank.Genus:
                     return Genus != null && Genus.name.ToLower() == name;
-                case TaxonType.Family:
+                case TaxonRank.Family:
                     return Family != null && Family.name.ToLower() == name;
-                case TaxonType.Order:
+                case TaxonRank.Order:
                     return Order != null && Order.name.ToLower() == name;
-                case TaxonType.Class:
+                case TaxonRank.Class:
                     return Class != null && Class.name.ToLower() == name;
-                case TaxonType.Phylum:
+                case TaxonRank.Phylum:
                     return Phylum != null && Phylum.name.ToLower() == name;
-                case TaxonType.Kingdom:
+                case TaxonRank.Kingdom:
                     return Kingdom != null && Kingdom.name.ToLower() == name;
-                case TaxonType.Domain:
+                case TaxonRank.Domain:
                     return Domain != null && Domain.name.ToLower() == name;
 
             }
@@ -71,9 +72,9 @@ namespace OurFoodChain {
 
     }
 
-    class Taxon {
+    public class Taxon {
 
-        public Taxon(TaxonType type) {
+        public Taxon(TaxonRank type) {
 
             id = -1;
             parent_id = -1;
@@ -99,7 +100,7 @@ namespace OurFoodChain {
         }
         public string description = "";
         public string pics = "";
-        public TaxonType type = 0;
+        public TaxonRank type = 0;
 
         public string GetName() {
 
@@ -110,7 +111,7 @@ namespace OurFoodChain {
             return CommonName;
         }
         public string GetTypeName(bool plural = false) {
-            return TypeToName(type);
+            return GetRankName(type);
         }
         public string GetDescriptionOrDefault() {
 
@@ -120,14 +121,14 @@ namespace OurFoodChain {
             return description;
 
         }
-        public TaxonType GetParentType() {
+        public TaxonRank GetParentType() {
             return TypeToParentType(type);
         }
-        public TaxonType GetChildType() {
+        public TaxonRank GetChildType() {
             return TypeToChildType(type);
         }
 
-        public static Taxon FromDataRow(DataRow row, TaxonType type) {
+        public static Taxon FromDataRow(DataRow row, TaxonRank type) {
 
             Taxon taxon = new Taxon(type) {
                 id = row.Field<long>("id"),
@@ -147,79 +148,79 @@ namespace OurFoodChain {
             return taxon;
 
         }
-        public static string TypeToName(TaxonType type, bool plural = false) {
+        public static string GetRankName(TaxonRank type, bool plural = false) {
 
             switch (type) {
-                case TaxonType.Species:
+                case TaxonRank.Species:
                     return plural ? "species" : "species";
-                case TaxonType.Genus:
+                case TaxonRank.Genus:
                     return plural ? "genera" : "genus";
-                case TaxonType.Family:
+                case TaxonRank.Family:
                     return plural ? "families" : "family";
-                case TaxonType.Order:
+                case TaxonRank.Order:
                     return plural ? "orders" : "order";
-                case TaxonType.Class:
+                case TaxonRank.Class:
                     return plural ? "classes" : "class";
-                case TaxonType.Phylum:
+                case TaxonRank.Phylum:
                     return plural ? "phyla" : "phylum";
-                case TaxonType.Kingdom:
+                case TaxonRank.Kingdom:
                     return plural ? "kingdoms" : "kingdom";
-                case TaxonType.Domain:
+                case TaxonRank.Domain:
                     return plural ? "domains" : "domain";
                 default:
                     return string.Empty;
             }
 
         }
-        public static TaxonType TypeToParentType(TaxonType type) {
+        public static TaxonRank TypeToParentType(TaxonRank type) {
 
             switch (type) {
-                case TaxonType.Species:
-                    return TaxonType.Genus;
-                case TaxonType.Genus:
-                    return TaxonType.Family;
-                case TaxonType.Family:
-                    return TaxonType.Order;
-                case TaxonType.Order:
-                    return TaxonType.Class;
-                case TaxonType.Class:
-                    return TaxonType.Phylum;
-                case TaxonType.Phylum:
-                    return TaxonType.Kingdom;
-                case TaxonType.Kingdom:
-                    return TaxonType.Domain;
+                case TaxonRank.Species:
+                    return TaxonRank.Genus;
+                case TaxonRank.Genus:
+                    return TaxonRank.Family;
+                case TaxonRank.Family:
+                    return TaxonRank.Order;
+                case TaxonRank.Order:
+                    return TaxonRank.Class;
+                case TaxonRank.Class:
+                    return TaxonRank.Phylum;
+                case TaxonRank.Phylum:
+                    return TaxonRank.Kingdom;
+                case TaxonRank.Kingdom:
+                    return TaxonRank.Domain;
                 default:
                     return 0;
             }
 
         }
-        public static TaxonType TypeToChildType(TaxonType type) {
+        public static TaxonRank TypeToChildType(TaxonRank type) {
 
             switch (type) {
-                case TaxonType.Species:
+                case TaxonRank.Species:
                     return 0;
-                case TaxonType.Genus:
-                    return TaxonType.Species;
-                case TaxonType.Family:
-                    return TaxonType.Genus;
-                case TaxonType.Order:
-                    return TaxonType.Family;
-                case TaxonType.Class:
-                    return TaxonType.Order;
-                case TaxonType.Phylum:
-                    return TaxonType.Class;
-                case TaxonType.Kingdom:
-                    return TaxonType.Phylum;
-                case TaxonType.Domain:
-                    return TaxonType.Kingdom;
+                case TaxonRank.Genus:
+                    return TaxonRank.Species;
+                case TaxonRank.Family:
+                    return TaxonRank.Genus;
+                case TaxonRank.Order:
+                    return TaxonRank.Family;
+                case TaxonRank.Class:
+                    return TaxonRank.Order;
+                case TaxonRank.Phylum:
+                    return TaxonRank.Class;
+                case TaxonRank.Kingdom:
+                    return TaxonRank.Phylum;
+                case TaxonRank.Domain:
+                    return TaxonRank.Kingdom;
                 default:
                     return 0;
             }
 
         }
-        public static string TypeToDatabaseTableName(TaxonType type) {
+        public static string TypeToDatabaseTableName(TaxonRank type) {
 
-            string table_name = StringUtils.ToTitleCase(TypeToName(type));
+            string table_name = StringUtils.ToTitleCase(GetRankName(type));
 
             if (table_name == "Order")
                 table_name = "Ord";
@@ -227,12 +228,12 @@ namespace OurFoodChain {
             return table_name;
 
         }
-        public static string TypeToDatabaseColumnName(TaxonType type) {
+        public static string TypeToDatabaseColumnName(TaxonRank type) {
 
             if (type <= 0)
                 return string.Empty;
 
-            return string.Format("{0}_id", TypeToName(type));
+            return string.Format("{0}_id", GetRankName(type));
 
         }
 

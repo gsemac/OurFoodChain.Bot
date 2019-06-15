@@ -51,7 +51,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE id IN (SELECT genus_id FROM(SELECT genus_id, COUNT(genus_id) AS c FROM (SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions)) GROUP BY genus_id) WHERE c <= 1);"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
-                    ideas.Add(string.Format("Genus **{0}** only has one species in it. Why not make another?", Taxon.FromDataRow(row, TaxonType.Genus).GetName()));
+                    ideas.Add(string.Format("Genus **{0}** only has one species in it. Why not make another?", Taxon.FromDataRow(row, TaxonRank.Genus).GetName()));
 
             return ideas.ToArray();
 

@@ -731,28 +731,10 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Taxon[]> GetTaxaFromDb(string name, TaxonType type) {
-
-            List<Taxon> taxa = new List<Taxon>();
-            string table_name = Taxon.TypeToDatabaseTableName(type);
-
-            if (string.IsNullOrEmpty(table_name))
-                return null;
-
-            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name=$name OR common_name=$name;", table_name))) {
-
-                cmd.Parameters.AddWithValue("$name", name.ToLower());
-
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        taxa.Add(Taxon.FromDataRow(row, type));
-
-            }
-
-            return taxa.ToArray();
-
-        }
-        public static async Task<Taxon> GetTaxonFromDb(long id, TaxonType type) {
+        public static async Task<Taxon[]> GetTaxaFromDb(string name, TaxonRank type) {
+            return await TaxonUtils.GetTaxaAsync(name, type);
+        } // deprecated
+        public static async Task<Taxon> GetTaxonFromDb(long id, TaxonRank type) {
 
             string table_name = Taxon.TypeToDatabaseTableName(type);
 
@@ -777,7 +759,7 @@ namespace OurFoodChain {
         }
         public static async Task<Taxon> GetTaxonFromDb(string name) {
 
-            foreach (TaxonType type in new TaxonType[] { TaxonType.Domain, TaxonType.Kingdom, TaxonType.Phylum, TaxonType.Class, TaxonType.Order, TaxonType.Family, TaxonType.Genus, TaxonType.Species }) {
+            foreach (TaxonRank type in new TaxonRank[] { TaxonRank.Domain, TaxonRank.Kingdom, TaxonRank.Phylum, TaxonRank.Class, TaxonRank.Order, TaxonRank.Family, TaxonRank.Genus, TaxonRank.Species }) {
 
                 Taxon[] taxa = await GetTaxaFromDb(name, type);
 
@@ -789,7 +771,7 @@ namespace OurFoodChain {
             return null;
 
         }
-        public static async Task<Taxon> GetTaxonFromDb(string name, TaxonType type) {
+        public static async Task<Taxon> GetTaxonFromDb(string name, TaxonRank type) {
 
             Taxon[] taxa = await GetTaxaFromDb(name, type);
 
@@ -799,7 +781,7 @@ namespace OurFoodChain {
             return null;
 
         }
-        public static async Task<Taxon[]> GetTaxaFromDb(TaxonType type) {
+        public static async Task<Taxon[]> GetTaxaFromDb(TaxonRank type) {
 
             List<Taxon> result = new List<Taxon>();
             string table_name = Taxon.TypeToDatabaseTableName(type);
@@ -824,46 +806,12 @@ namespace OurFoodChain {
 
         }
         public static async Task<Taxon[]> GetTaxaFromDb(string name) {
-
-            // Return all taxa that have the given name.
-
-            List<Taxon> result = new List<Taxon>();
-
-            foreach (TaxonType type in new TaxonType[] { TaxonType.Domain, TaxonType.Kingdom, TaxonType.Phylum, TaxonType.Class, TaxonType.Order, TaxonType.Family, TaxonType.Genus, TaxonType.Species })
-                result.AddRange(await GetTaxaFromDb(name, type));
-
-            return result.ToArray();
-
-        }
+            return await TaxonUtils.GetTaxaAsync(name);
+        } // deprecated
         public static async Task<Taxon[]> GetSubTaxaFromDb(Taxon parentTaxon) {
-
-            List<Taxon> result = new List<Taxon>();
-
-            string table_name = Taxon.TypeToDatabaseTableName(parentTaxon.GetChildType());
-            string parent_column_name = Taxon.TypeToDatabaseColumnName(parentTaxon.type);
-
-            if (string.IsNullOrEmpty(table_name))
-                return result.ToArray();
-
-            string query = "SELECT * FROM {0} WHERE {1}=$parent_id;";
-
-            using (SQLiteCommand cmd = new SQLiteCommand(string.Format(query, table_name, parent_column_name))) {
-
-                cmd.Parameters.AddWithValue("$parent_id", parentTaxon.id);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows)
-                        result.Add(Taxon.FromDataRow(row, parentTaxon.GetChildType()));
-
-            }
-
-            // Sort taxa alphabetically by name.
-            result.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
-
-            return result.ToArray();
-
-        }
-        public static async Task UpdateTaxonInDb(Taxon taxon, TaxonType type) {
+            return await TaxonUtils.GetSubtaxaAsync(parentTaxon);
+        } // deprecated
+        public static async Task UpdateTaxonInDb(Taxon taxon, TaxonRank type) {
 
             string table_name = Taxon.TypeToDatabaseTableName(type);
 
@@ -900,7 +848,7 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task AddTaxonToDb(Taxon taxon, TaxonType type) {
+        public static async Task AddTaxonToDb(Taxon taxon, TaxonRank type) {
 
             string table_name = Taxon.TypeToDatabaseTableName(type);
 
@@ -932,56 +880,19 @@ namespace OurFoodChain {
 
         }
         public static async Task<Species[]> GetSpeciesInTaxonFromDb(Taxon taxon) {
-
-            List<Species> species = new List<Species>();
-
-            if (taxon.type == TaxonType.Species) {
-
-                // Return all species with the same name as the taxon.
-
-                species.AddRange(await GetSpeciesFromDb("", taxon.name));
-
-            }
-            else if (taxon.type == TaxonType.Genus) {
-
-                // Return all species within this genus (rather than recursively calling this function for each species).
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE genus_id=$genus_id;")) {
-
-                    cmd.Parameters.AddWithValue("$genus_id", taxon.id);
-
-                    using (DataTable table = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in table.Rows)
-                            species.Add(await Species.FromDataRow(row));
-
-                }
-
-            }
-            else {
-
-                // Get all subtaxa and call this function recursively to get the species from each of them.
-
-                Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
-
-                foreach (Taxon t in subtaxa)
-                    species.AddRange(await GetSpeciesInTaxonFromDb(t));
-
-            }
-
-            return species.ToArray();
-
-        }
+            return await TaxonUtils.GetSpeciesAsync(taxon);
+        } // deprecated
         public static async Task<long> CountSpeciesInTaxonFromDb(Taxon taxon) {
 
             long species_count = 0;
 
-            if (taxon.type == TaxonType.Species) {
+            if (taxon.type == TaxonRank.Species) {
 
                 // If a species was passed in, count it as a single species.
                 species_count += 1;
 
             }
-            else if (taxon.type == TaxonType.Genus) {
+            else if (taxon.type == TaxonRank.Genus) {
 
                 // Count all species within this genus.
 
@@ -1023,25 +934,25 @@ namespace OurFoodChain {
 
             TaxonSet set = new TaxonSet();
 
-            set.Genus = await GetTaxonFromDb(sp.genusId, TaxonType.Genus);
+            set.Genus = await GetTaxonFromDb(sp.genusId, TaxonRank.Genus);
 
             if (!(set.Genus is null))
-                set.Family = await GetTaxonFromDb(set.Genus.parent_id, TaxonType.Family);
+                set.Family = await GetTaxonFromDb(set.Genus.parent_id, TaxonRank.Family);
 
             if (!(set.Family is null))
-                set.Order = await GetTaxonFromDb(set.Family.parent_id, TaxonType.Order);
+                set.Order = await GetTaxonFromDb(set.Family.parent_id, TaxonRank.Order);
 
             if (!(set.Order is null))
-                set.Class = await GetTaxonFromDb(set.Order.parent_id, TaxonType.Class);
+                set.Class = await GetTaxonFromDb(set.Order.parent_id, TaxonRank.Class);
 
             if (!(set.Class is null))
-                set.Phylum = await GetTaxonFromDb(set.Class.parent_id, TaxonType.Phylum);
+                set.Phylum = await GetTaxonFromDb(set.Class.parent_id, TaxonRank.Phylum);
 
             if (!(set.Phylum is null))
-                set.Kingdom = await GetTaxonFromDb(set.Phylum.parent_id, TaxonType.Kingdom);
+                set.Kingdom = await GetTaxonFromDb(set.Phylum.parent_id, TaxonRank.Kingdom);
 
             if (!(set.Kingdom is null))
-                set.Domain = await GetTaxonFromDb(set.Kingdom.parent_id, TaxonType.Domain);
+                set.Domain = await GetTaxonFromDb(set.Kingdom.parent_id, TaxonRank.Domain);
 
             return set;
 
@@ -1392,12 +1303,12 @@ namespace OurFoodChain {
             return await ReplyAsync_ValidateTaxon(context, taxon.type, taxon);
 
         }
-        public static async Task<bool> ReplyAsync_ValidateTaxon(ICommandContext context, TaxonType type, Taxon taxon) {
+        public static async Task<bool> ReplyAsync_ValidateTaxon(ICommandContext context, TaxonRank type, Taxon taxon) {
 
             return await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, string.Empty);
 
         }
-        public static async Task<bool> ReplyAsync_ValidateTaxonWithSuggestion(ICommandContext context, TaxonType type, Taxon taxon, string nameForSuggestions) {
+        public static async Task<bool> ReplyAsync_ValidateTaxonWithSuggestion(ICommandContext context, TaxonRank type, Taxon taxon, string nameForSuggestions) {
 
             if (taxon is null || taxon.id <= 0) {
 
@@ -1406,7 +1317,7 @@ namespace OurFoodChain {
                 Taxon suggestion = string.IsNullOrEmpty(nameForSuggestions) ? null : await GetTaxonSuggestionAsync(type, nameForSuggestions);
 
                 await context.Channel.SendMessageAsync(string.Format("No such {0} exists.{1}",
-                    Taxon.TypeToName(type),
+                    Taxon.GetRankName(type),
                     suggestion is null ? "" : string.Format(" Did you mean **{0}**?", suggestion.GetName())));
 
                 return false;
@@ -1440,7 +1351,7 @@ namespace OurFoodChain {
 
                 // There must be exactly one taxon in the list.
 
-                SortedDictionary<TaxonType, List<Taxon>> taxa_dict = new SortedDictionary<TaxonType, List<Taxon>>();
+                SortedDictionary<TaxonRank, List<Taxon>> taxa_dict = new SortedDictionary<TaxonRank, List<Taxon>>();
 
                 foreach (Taxon taxon in taxa) {
 
@@ -1456,18 +1367,18 @@ namespace OurFoodChain {
                 if (taxa_dict.Keys.Count() > 1)
                     embed.WithTitle(string.Format("Matching taxa ({0})", taxa.Count()));
 
-                foreach (TaxonType type in taxa_dict.Keys) {
+                foreach (TaxonRank type in taxa_dict.Keys) {
 
                     taxa_dict[type].Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
                     StringBuilder field_content = new StringBuilder();
 
                     foreach (Taxon taxon in taxa_dict[type])
-                        field_content.AppendLine(type == TaxonType.Species ? (await GetSpeciesFromDb(taxon.id)).GetShortName() : taxon.GetName());
+                        field_content.AppendLine(type == TaxonRank.Species ? (await GetSpeciesFromDb(taxon.id)).GetShortName() : taxon.GetName());
 
                     embed.AddField(string.Format("{0}{1} ({2})",
                         taxa_dict.Keys.Count() == 1 ? "Matching " : "",
-                        taxa_dict.Keys.Count() == 1 ? Taxon.TypeToName(type, true).ToLower() : StringUtils.ToTitleCase(Taxon.TypeToName(type, true)), taxa_dict[type].Count()),
+                        taxa_dict.Keys.Count() == 1 ? Taxon.GetRankName(type, true).ToLower() : StringUtils.ToTitleCase(Taxon.GetRankName(type, true)), taxa_dict[type].Count()),
                         field_content.ToString());
 
                 }
@@ -1628,7 +1539,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type) {
+        public static async Task Command_ShowTaxon(ICommandContext context, TaxonRank type) {
 
             // If no taxon name was provided, list everything under the taxon.
 
@@ -1651,7 +1562,7 @@ namespace OurFoodChain {
 
             }
 
-            string title = string.Format("All {0} ({1})", Taxon.TypeToName(type, plural: true), taxon_count);
+            string title = string.Format("All {0} ({1})", Taxon.GetRankName(type, plural: true), taxon_count);
             List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: title);
 
             PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
@@ -1659,17 +1570,17 @@ namespace OurFoodChain {
             if (embed_pages.Count <= 0) {
 
                 embed.SetTitle(title);
-                embed.SetDescription(string.Format("No {0} have been added yet.", Taxon.TypeToName(type, plural: true)));
+                embed.SetDescription(string.Format("No {0} have been added yet.", Taxon.GetRankName(type, plural: true)));
 
             }
             else
-                embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(type, plural: true)));
+                embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(type, plural: true)));
 
             await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
 
         }
-        public static async Task Command_ShowTaxon(ICommandContext context, TaxonType type, string name) {
-           
+        public static async Task Command_ShowTaxon(ICommandContext context, TaxonRank type, string name) {
+
             if (string.IsNullOrEmpty(name))
                 await Command_ShowTaxon(context, type);
 
@@ -1678,14 +1589,14 @@ namespace OurFoodChain {
                 // Get the specified taxon.
 
                 Taxon taxon = await GetTaxonFromDb(name, type);
-         
+
                 if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                     return;
-            
+
                 List<string> items = new List<string>();
 
-                if (taxon.type == TaxonType.Genus) {
-                  
+                if (taxon.type == TaxonRank.Genus) {
+
                     // For genera, get all species underneath it.
                     // This will let us check if the species is extinct, and cross it out if that's the case.
 
@@ -1701,20 +1612,20 @@ namespace OurFoodChain {
 
                 }
                 else {
-                 
+
                     // Get all subtaxa under this taxon.
                     Taxon[] subtaxa = await GetSubTaxaFromDb(taxon);
 
                     // Add all subtaxa to the list.
-                 
+
                     foreach (Taxon t in subtaxa) {
-                     
-                        if (t.type == TaxonType.Species)
+
+                        if (t.type == TaxonRank.Species)
                             // Do not attempt to count sub-taxa for species.
                             items.Add(t.GetName().ToLower());
 
                         else {
-                          
+
                             // Count the number of species under this taxon.
                             // Taxa with no species under them will not be displayed.
 
@@ -1722,7 +1633,7 @@ namespace OurFoodChain {
 
                             if (species_count <= 0)
                                 continue;
-                        
+
                             // Count the sub-taxa under this taxon.
 
                             long subtaxa_count = 0;
@@ -1737,7 +1648,7 @@ namespace OurFoodChain {
                                 subtaxa_count = await Database.GetScalar<long>(cmd);
 
                             }
-                           
+
                             // Add the taxon to the list.
 
                             if (subtaxa_count > 0)
@@ -1748,20 +1659,20 @@ namespace OurFoodChain {
                     }
 
                 }
-       
+
                 // Generate embed pages.
 
                 string title = string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
-                string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)), Taxon.TypeToName(type), items.Count());
+                string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type), plural: true)), Taxon.GetRankName(type), items.Count());
                 string thumbnail_url = taxon.pics;
-         
+
                 StringBuilder description = new StringBuilder();
                 description.AppendLine(taxon.GetDescriptionOrDefault());
-      
+
                 if (items.Count() <= 0) {
 
                     description.AppendLine();
-                    description.AppendLine(string.Format("This {0} contains no {1}.", Taxon.TypeToName(type), Taxon.TypeToName(Taxon.TypeToChildType(type), plural: true)));
+                    description.AppendLine(string.Format("This {0} contains no {1}.", Taxon.GetRankName(type), Taxon.GetRankName(Taxon.TypeToChildType(type), plural: true)));
 
                 }
 
@@ -1772,15 +1683,15 @@ namespace OurFoodChain {
                 embed.SetThumbnailUrl(thumbnail_url);
                 embed.SetDescription(description.ToString());
 
-                if (items.Count() > 0 && taxon.type != TaxonType.Genus)
-                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.TypeToName(taxon.GetChildType(), plural: true)));
+                if (items.Count() > 0 && taxon.type != TaxonRank.Genus)
+                    embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(taxon.GetChildType(), plural: true)));
 
                 await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
 
             }
 
         }
-        public static async Task Command_AddTaxon(ICommandContext context, TaxonType type, string name, string description) {
+        public static async Task Command_AddTaxon(ICommandContext context, TaxonRank type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
@@ -1792,7 +1703,7 @@ namespace OurFoodChain {
 
             if (!(taxon is null)) {
 
-                await ReplyAsync_Warning(context, string.Format("The {0} **{1}** already exists.", Taxon.TypeToName(type), taxon.GetName()));
+                await ReplyAsync_Warning(context, string.Format("The {0} **{1}** already exists.", Taxon.GetRankName(type), taxon.GetName()));
 
                 return;
 
@@ -1806,11 +1717,11 @@ namespace OurFoodChain {
             await AddTaxonToDb(taxon, type);
 
             await ReplyAsync_Success(context, string.Format("Successfully created new {0}, **{1}**.",
-                Taxon.TypeToName(type),
+                Taxon.GetRankName(type),
                 taxon.GetName()));
 
         }
-        public static async Task Command_SetTaxon(ICommandContext context, TaxonType type, string childTaxonName, string parentTaxonName) {
+        public static async Task Command_SetTaxon(ICommandContext context, TaxonRank type, string childTaxonName, string parentTaxonName) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
@@ -1837,9 +1748,9 @@ namespace OurFoodChain {
             await UpdateTaxonInDb(child, Taxon.TypeToChildType(type));
 
             await ReplyAsync_Success(context, string.Format("{0} **{1}** has sucessfully been placed under the {2} **{3}**.",
-                    StringUtils.ToTitleCase(Taxon.TypeToName(Taxon.TypeToChildType(type))),
+                    StringUtils.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type))),
                     child.GetName(),
-                    Taxon.TypeToName(type),
+                    Taxon.GetRankName(type),
                     parent.GetName()
                 ));
 
@@ -1854,13 +1765,13 @@ namespace OurFoodChain {
 
             await UpdateTaxonInDb(taxon, taxon.type);
 
-            string success_message = string.Format("Successfully updated description for {0} **{1}**.", Taxon.TypeToName(taxon.type), taxon.GetName());
+            string success_message = string.Format("Successfully updated description for {0} **{1}**.", Taxon.GetRankName(taxon.type), taxon.GetName());
 
             await ReplyAsync_Success(context, success_message);
 
 
         }
-        public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name) {
+        public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonRank type, string name) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
@@ -1887,7 +1798,7 @@ namespace OurFoodChain {
 
 
         }
-        public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonType type, string name, string description) {
+        public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonRank type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
@@ -1915,12 +1826,12 @@ namespace OurFoodChain {
 
             await UpdateTaxonInDb(taxon, taxon.type);
 
-            string success_message = string.Format("Successfully set the picture for for {0} **{1}**.", Taxon.TypeToName(taxon.type), taxon.GetName());
+            string success_message = string.Format("Successfully set the picture for for {0} **{1}**.", Taxon.GetRankName(taxon.type), taxon.GetName());
 
             await ReplyAsync_Success(context, success_message);
 
         }
-        public static async Task Command_SetTaxonPic(ICommandContext context, TaxonType type, string name, string url) {
+        public static async Task Command_SetTaxonPic(ICommandContext context, TaxonRank type, string name, string url) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
@@ -1938,7 +1849,7 @@ namespace OurFoodChain {
             await Command_SetTaxonPic(context, taxon, url);
 
         }
-        public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonType type, string name, string commonName) {
+        public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonRank type, string name, string commonName) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
@@ -1954,13 +1865,13 @@ namespace OurFoodChain {
             await UpdateTaxonInDb(taxon, type);
 
             await ReplyAsync_Success(context, string.Format("Members of the {0} **{1}** are now commonly known as **{2}**.",
-                Taxon.TypeToName(type),
+                Taxon.GetRankName(type),
                 taxon.GetName(),
                 taxon.GetCommonName()
                 ));
 
         }
-        public static async Task<Taxon> GetTaxonSuggestionAsync(TaxonType type, string name) {
+        public static async Task<Taxon> GetTaxonSuggestionAsync(TaxonRank type, string name) {
 
             Taxon[] taxa = await GetTaxaFromDb(type);
 

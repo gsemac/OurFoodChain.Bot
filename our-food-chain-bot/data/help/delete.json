@@ -1,0 +1,11 @@
+﻿{
+  "name": "delete",
+  "aliases": [
+    "deletetaxon"
+  ],
+  "category": "update",
+  "description": "Deletes the given taxon. The taxon must not contain any species.\n\nIf two different taxa have the same name, you can use the commands `deletegenus`, `deletefamily`, and so on.",
+  "examples": [
+    "delete cornu"
+  ]
+}

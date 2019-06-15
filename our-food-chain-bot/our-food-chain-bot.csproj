@@ -245,6 +245,7 @@
     <Compile Include="utils\SearchQuery.cs" />
     <Compile Include="utils\SpeciesUtils.cs" />
     <Compile Include="utils\StringUtils.cs" />
+    <Compile Include="utils\TaxonUtils.cs" />
     <Compile Include="utils\Tree.cs" />
     <Compile Include="utils\Utils.cs" />
   </ItemGroup>
@@ -262,6 +263,7 @@
     <None Include="data\gotchi\moves\thorn_strike.lua" />
     <None Include="data\help\+common.json" />
     <None Include="data\help\-common.json" />
+    <None Include="data\help\delete.json" />
     <None Include="data\help\gotchi\buy.json" />
     <None Include="data\help\gotchi\forfeit.json" />
     <None Include="data\help\gotchi\list.json" />

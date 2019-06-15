@@ -555,7 +555,7 @@ namespace OurFoodChain {
                 case "family":
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Family);
+                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonRank.Family);
                     }, subtract);
 
                     break;
@@ -564,7 +564,7 @@ namespace OurFoodChain {
                 case "order":
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Order);
+                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonRank.Order);
                     }, subtract);
 
                     break;
@@ -573,7 +573,7 @@ namespace OurFoodChain {
                 case "class":
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Class);
+                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonRank.Class);
                     }, subtract);
 
                     break;
@@ -582,7 +582,7 @@ namespace OurFoodChain {
                 case "phylum":
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Phylum);
+                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonRank.Phylum);
                     }, subtract);
 
                     break;
@@ -591,7 +591,7 @@ namespace OurFoodChain {
                 case "kingdom":
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Kingdom);
+                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonRank.Kingdom);
                     }, subtract);
 
                     break;
@@ -600,7 +600,7 @@ namespace OurFoodChain {
                 case "domain":
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonType.Domain);
+                        return !(await BotUtils.GetFullTaxaFromDb(x)).Contains(value, TaxonRank.Domain);
                     }, subtract);
 
                     break;

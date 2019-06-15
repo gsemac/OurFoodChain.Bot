@@ -8,7 +8,7 @@
 	move.canMiss = false;
 	move.multiplier = 0.8;
 
-	move.requires.match = "sting";
+	move.requires.match = "\\d(sting)";
 	move.requires.maxLevel = 10;
 
 end

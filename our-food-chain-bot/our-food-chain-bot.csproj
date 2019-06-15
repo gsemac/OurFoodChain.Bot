@@ -257,6 +257,7 @@
     <None Include="data\gotchi\moves\molt.lua" />
     <None Include="data\gotchi\moves\night_strike.lua" />
     <None Include="data\gotchi\moves\sap_seep.lua" />
+    <None Include="data\gotchi\moves\slam.lua" />
     <None Include="data\gotchi\moves\stem_slap.lua" />
     <None Include="data\gotchi\moves\thorn_assault.lua" />
     <None Include="data\gotchi\moves\thorn_prick.lua" />

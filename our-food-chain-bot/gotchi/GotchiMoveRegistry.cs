@@ -41,6 +41,8 @@ namespace OurFoodChain.gotchi {
 
             await _registerLuaMovesAsync();
 
+            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Gotchi", "Registered moves");
+
         }
         private static async Task _registerLuaMovesAsync() {
 
@@ -63,7 +65,7 @@ namespace OurFoodChain.gotchi {
 
                     script.DoFile(file);
                     script.Call(script.Globals["register"], move);
-        
+
                     // Register the move.
                     _addMoveToRegistry(move);
 

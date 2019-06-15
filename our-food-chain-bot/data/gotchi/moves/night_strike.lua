@@ -13,11 +13,11 @@ end
 
 function callback(args) 
 	
-	if(rand(0, 2) == 0)
+	if(rand(0, 2) == 0) then
 		args.text = "but the opponent woke up";
 	else 
 
-		local old_defense = args.target.stats.def;
+		old_defense = args.target.stats.def;
 		
 		args.target.stats.def = 0;
 		

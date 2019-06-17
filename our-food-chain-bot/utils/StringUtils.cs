@@ -14,7 +14,13 @@ namespace OurFoodChain {
             if (string.IsNullOrEmpty(input))
                 return string.Empty;
 
-            return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+            string output = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+
+            // Fix possessive "'s" so it's not capitalized (since "ToTitleCase" capitalizes it).
+            // E.g. Widow'S Peak -> Widow's Peak
+            output = Regex.Replace(output, @"\b['’]S\b", "'s");
+
+            return output;
 
         }
         public static string ToSentenceCase(string str) {

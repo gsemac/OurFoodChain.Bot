@@ -252,7 +252,7 @@ namespace OurFoodChain {
 
             string result = owner;
 
-            if (!(context is null) && user_id > 0) {
+            if (!(context is null || context.Guild is null) && user_id > 0) {
 
                 IUser user = await context.Guild.GetUserAsync((ulong)user_id);
 

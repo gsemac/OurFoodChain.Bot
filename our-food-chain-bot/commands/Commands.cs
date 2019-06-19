@@ -2091,7 +2091,7 @@ namespace OurFoodChain {
                         // Get information about the user.
 
                         ulong user_id = row.IsNull("user_id") ? 0 : (ulong)row.Field<long>("user_id");
-                        IUser user = await Context.Guild.GetUserAsync(user_id);
+                        IUser user = Context.Guild is null ? null : await Context.Guild.GetUserAsync(user_id);
                         long count = row.Field<long>("count");
                         string icon = "";
 

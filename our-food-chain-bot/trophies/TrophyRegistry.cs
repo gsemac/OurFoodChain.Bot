@@ -46,7 +46,7 @@ namespace OurFoodChain.trophies {
             return user_ids.ToArray();
 
         }
-        public static async Task<double> GetCompletionRateAsync(Trophy trophy, ICommandContext context) {
+        public static async Task<double> GetCompletionRateAsync(Trophy trophy) {
 
             // The completion rate is determined from the number of users who have earned the trophy and the number of users who have submitted species.
 

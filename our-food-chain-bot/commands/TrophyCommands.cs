@@ -22,12 +22,12 @@ namespace OurFoodChain.trophies {
             Array.Sort(unlocked, (x, y) => x.timestamp.CompareTo(y.timestamp));
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.##}%)", user.Username, await TrophyRegistry.GetUserCompletionRateAsync(user.Id)));
-            embed.WithFooter(string.Format("See a list of all available trophies with the \"{0}trophylist\" command.", OurFoodChainBot.GetInstance().GetConfig().prefix));
+            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.#}%)", user.Username, await TrophyRegistry.GetUserCompletionRateAsync(user.Id)));
             embed.WithColor(new Color(255, 204, 77));
 
             StringBuilder description_builder = new StringBuilder();
-            int total_users = (await Context.Guild.GetUsersAsync()).Count;
+
+            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", OurFoodChainBot.GetInstance().GetConfig().prefix));
 
             foreach (UnlockedTrophyInfo info in unlocked) {
 
@@ -36,11 +36,11 @@ namespace OurFoodChain.trophies {
                 if (trophy is null)
                     continue;
 
-                description_builder.AppendLine(string.Format("{0} **{1}** - Earned {2} ({3:0.##}%)",
+                description_builder.AppendLine(string.Format("{0} **{1}** - Earned {2} ({3:0.#}%)",
                    trophy.GetIcon(),
                    trophy.GetName(),
                    BotUtils.GetTimeStampAsDateString(info.timestamp),
-                   100.0 * info.timesUnlocked / total_users
+                   await TrophyRegistry.GetCompletionRateAsync(trophy)
                   ));
 
             }
@@ -54,7 +54,6 @@ namespace OurFoodChain.trophies {
         [Command("trophylist"), Alias("achievementlist")]
         public async Task TrophyList() {
 
-            int total_users = (await Context.Guild.GetUsersAsync()).Count;
             int total_trophies = (await TrophyRegistry.GetTrophiesAsync()).Count;
             int trophies_per_page = 8;
             int total_pages = (int)Math.Ceiling((float)total_trophies / trophies_per_page);
@@ -82,7 +81,7 @@ namespace OurFoodChain.trophies {
 
                 }
 
-                double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy, Context);
+                double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy);
                 string description = (trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0) ? string.Format("_{0}_", trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION) : trophy.GetDescription();
 
                 // If this was a first-time trophy, show who unlocked it.
@@ -91,7 +90,7 @@ namespace OurFoodChain.trophies {
 
                     TrophyUser[] user_ids = await TrophyRegistry.GetUsersUnlockedAsync(trophy);
 
-                    if (user_ids.Count() > 0) {
+                    if (user_ids.Count() > 0 && !(Context.Guild is null)) {
 
                         IGuildUser user = await Context.Guild.GetUserAsync(user_ids.First().UserId);
 
@@ -142,7 +141,7 @@ namespace OurFoodChain.trophies {
 
             // Show trophy information.
 
-            double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy, Context);
+            double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy);
             bool hide_description = trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0;
 
             string embed_title = string.Format("{0} {1} ({2:0.#}%)", trophy.GetIcon(), trophy.GetName(), completion_rate);
@@ -164,29 +163,33 @@ namespace OurFoodChain.trophies {
             TrophyUser[] earners = (await TrophyRegistry.GetUsersUnlockedAsync(trophy)).OrderBy(x => x.EarnedTimestamp).ToArray();
             string date_format = "MMMM dd, yyyy";
 
-            foreach (TrophyUser trophy_user in earners) {
+            if (!(Context.Guild is null)) {
 
-                IUser user = await Context.Guild.GetUserAsync(trophy_user.UserId);
+                foreach (TrophyUser trophy_user in earners) {
 
-                if (!(user is null)) {
+                    IUser user = await Context.Guild.GetUserAsync(trophy_user.UserId);
 
-                    embed.AddField("First earned", string.Format("**{0}** ({1})", user.Username, trophy_user.EarnedDate.ToString(date_format)), inline: true);
+                    if (!(user is null)) {
 
-                    break;
+                        embed.AddField("First earned", string.Format("**{0}** ({1})", user.Username, trophy_user.EarnedDate.ToString(date_format)), inline: true);
+
+                        break;
+
+                    }
 
                 }
 
-            }
+                foreach (TrophyUser trophy_user in earners.Reverse()) {
 
-            foreach (TrophyUser trophy_user in earners.Reverse()) {
+                    IUser user = await Context.Guild.GetUserAsync(trophy_user.UserId);
 
-                IUser user = await Context.Guild.GetUserAsync(trophy_user.UserId);
+                    if (!(user is null)) {
 
-                if (!(user is null)) {
+                        embed.AddField("Latest earned", string.Format("**{0}** ({1})", user.Username, trophy_user.EarnedDate.ToString(date_format)), inline: true);
 
-                    embed.AddField("Latest earned", string.Format("**{0}** ({1})", user.Username, trophy_user.EarnedDate.ToString(date_format)), inline: true);
+                        break;
 
-                    break;
+                    }
 
                 }
 

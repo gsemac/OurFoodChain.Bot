@@ -3,7 +3,7 @@ function register(move)
   move.description = "Takes a moment to listen for the opponent, boosting the user's accuracy."
   
   move.pp = 5
-  move.requires.match = "\\b(hear|listen)|\\b(ear)\\b"
+  move.requires.match = "\\b(hear|listen)|\\b(ear|ears)\\b"
 end
 
 function callback(args) 

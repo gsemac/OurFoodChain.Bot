@@ -102,9 +102,8 @@ namespace OurFoodChain {
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
             int fields_per_page = 6;
 
-            foreach (string key in result.groups.Keys) {
+            foreach (SearchQuery.FindResultGroup group in result.Groups) {
 
-                SearchQuery.FindResultGroup group = result.groups[key];
                 List<string> items = group.ToList();
 
                 List<List<string>> columns = ListToColumns(items, itemsPerField);
@@ -114,7 +113,7 @@ namespace OurFoodChain {
 
                     // Create the field for this column.
 
-                    string title = key.Length > 25 ? key.Substring(0, 22) + "..." : key;
+                    string title = group.Name.Length > 25 ? group.Name.Substring(0, 22) + "..." : group.Name;
 
                     EmbedFieldBuilder field = new EmbedFieldBuilder {
                         Name = column_index == 1 ? string.Format("{0} ({1})", StringUtils.ToTitleCase(title), items.Count()) : string.Format("...", StringUtils.ToTitleCase(title)),

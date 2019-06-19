@@ -1594,10 +1594,10 @@ namespace OurFoodChain {
 
                 PaginatedEmbedBuilder embed;
 
-                if (result.groups.ContainsKey(SearchQuery.DEFAULT_GROUP)) {
+                if (result.HasGroup(SearchQuery.DEFAULT_GROUP)) {
 
                     // If there's only one group, just list the species without creating separate fields.
-                    embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(result.groups[SearchQuery.DEFAULT_GROUP].ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+                    embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
 
                 }
                 else {

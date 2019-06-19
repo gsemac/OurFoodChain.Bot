@@ -442,23 +442,6 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task<Species[]> GetPreySpeciesAsync(Species predatorSpecies) {
-
-            List<Species> result = new List<Species>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)")) {
-
-                cmd.Parameters.AddWithValue("$species_id", predatorSpecies.id);
-
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        result.Add(await Species.FromDataRow(row));
-
-            }
-
-            return result.ToArray();
-
-        }
 
         public static async Task AddGenusToDb(string genus) {
 

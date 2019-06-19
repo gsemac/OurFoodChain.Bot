@@ -38,25 +38,36 @@ namespace OurFoodChain {
 
         public static async Task<Species[]> GetSpeciesAsync(string name) {
 
-            // Returns species by name and/or common name.
+            GenusSpeciesPair input = _parseGenusAndSpeciesFromUserInput(string.Empty, name);
 
-            List<Species> species = new List<Species>();
+            if (string.IsNullOrEmpty(input.GenusName)) {
 
-            if (!string.IsNullOrEmpty(name)) {
+                // Returns species by name and/or common name.
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
+                List<Species> species = new List<Species>();
 
-                    cmd.Parameters.AddWithValue("$name", name.ToLower());
+                if (!string.IsNullOrEmpty(name)) {
 
-                    using (DataTable table = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in table.Rows)
-                            species.Add(await Species.FromDataRow(row));
+                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
+
+                        cmd.Parameters.AddWithValue("$name", input.SpeciesName.ToLower());
+
+                        using (DataTable table = await Database.GetRowsAsync(cmd))
+                            foreach (DataRow row in table.Rows)
+                                species.Add(await Species.FromDataRow(row));
+
+                    }
 
                 }
 
-            }
+                return species.ToArray();
 
-            return species.ToArray();
+            }
+            else {
+
+                return await GetSpeciesAsync(input.GenusName, input.SpeciesName);
+
+            }
 
         }
         public static async Task<Species[]> GetSpeciesAsync(string genus, string species) {
@@ -95,6 +106,41 @@ namespace OurFoodChain {
                 return (species_result is null) ? new Species[] { } : new Species[] { species_result };
 
             }
+
+        }
+
+        public static async Task<Species[]> GetPredatorSpeciesAsync(Species species) {
+
+            List<Species> result = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Predates WHERE eats_id = $species_id)")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows)
+                        result.Add(await Species.FromDataRow(row));
+
+            }
+
+            return result.ToArray();
+
+        }
+        public static async Task<Species[]> GetPreySpeciesAsync(Species species) {
+
+            List<Species> result = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows)
+                        result.Add(await Species.FromDataRow(row));
+
+            }
+
+            return result.ToArray();
 
         }
 

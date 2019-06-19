@@ -25,35 +25,41 @@ namespace OurFoodChain {
             Newest,
             Oldest,
             Smallest,
-            Largest
+            Largest,
+            Count
         }
 
         public class FindResult {
 
-            public SortedDictionary<string, FindResultGroup> groups = new SortedDictionary<string, FindResultGroup>(new ArrayUtils.NaturalStringComparer());
-            public DisplayFormat displayFormat = DisplayFormat.ShortName;
-            public OrderBy orderBy = OrderBy.Default;
-
             public void Add(string group, Species species) {
+                Add(group, new Species[] { species });
+            }
+            public void Add(string group, Species[] species) {
 
-                if (!groups.ContainsKey(group))
-                    groups.Add(group, new FindResultGroup {
-                        owner = this
+                if (!_groups.ContainsKey(group))
+                    _groups.Add(group, new FindResultGroup {
+                        Name = group,
+                        Items = new List<Species>(species)
                     });
-
-                groups[group].items.Add(species);
+                else
+                    _groups[group].Items.AddRange(species);
 
             }
             public int Count() {
 
                 int count = 0;
 
-                foreach (FindResultGroup group in groups.Values)
-                    count += group.items.Count();
+                foreach (FindResultGroup group in _groups.Values)
+                    count += group.Items.Count();
 
                 return count;
 
             }
+
+            public bool HasGroup(string name) {
+                return _groups.ContainsKey(name);
+            }
+
             public async Task GroupByAsync(Func<Species, Task<string[]>> func) {
 
                 // Take all species that have already been grouped, assembly them into a single list, and then clear the groupings.
@@ -61,10 +67,10 @@ namespace OurFoodChain {
 
                 List<Species> species = new List<Species>();
 
-                foreach (FindResultGroup group in groups.Values)
-                    species.AddRange(group.items);
+                foreach (FindResultGroup group in _groups.Values)
+                    species.AddRange(group.Items);
 
-                groups.Clear();
+                _groups.Clear();
 
                 species = species.GroupBy(x => x.id).Select(x => x.First()).ToList();
 
@@ -83,16 +89,16 @@ namespace OurFoodChain {
             /// <returns></returns>
             public async Task FilterByAsync(Func<Species, Task<bool>> func, bool constructive = false) {
 
-                foreach (FindResultGroup group in groups.Values) {
+                foreach (FindResultGroup group in _groups.Values) {
 
-                    int index = group.items.Count() - 1;
+                    int index = group.Items.Count() - 1;
 
                     while (index >= 0) {
 
-                        bool condition_met = await func(group.items[index]);
+                        bool condition_met = await func(group.Items[index]);
 
                         if ((condition_met && !constructive) || (!condition_met && constructive))
-                            group.items.RemoveAt(index);
+                            group.Items.RemoveAt(index);
 
                         --index;
 
@@ -106,48 +112,130 @@ namespace OurFoodChain {
 
                 List<Species> results = new List<Species>();
 
-                foreach (FindResultGroup group in groups.Values)
-                    results.AddRange(group.items);
+                foreach (FindResultGroup group in Groups)
+                    results.AddRange(group.Items);
 
                 return results.ToArray();
 
             }
 
+            public FindResultGroup DefaultGroup {
+                get {
+                    return _groups[DEFAULT_GROUP];
+                }
+            }
+            public FindResultGroup[] Groups {
+                get {
+
+                    List<FindResultGroup> groups = new List<FindResultGroup>();
+
+                    foreach (FindResultGroup group in _groups.Values)
+                        groups.Add(group);
+
+                    switch (OrderBy) {
+
+                        case OrderBy.Count:
+                            groups.Sort((x, y) => y.Items.Count.CompareTo(x.Items.Count));
+                            break;
+
+                    }
+
+                    return groups.ToArray();
+
+                }
+            }
+
+            public OrderBy OrderBy {
+                get {
+                    return _order_by;
+                }
+                set {
+
+                    foreach (FindResultGroup group in _groups.Values)
+                        group.OrderBy = value;
+
+                    _order_by = value;
+
+                }
+            }
+            public DisplayFormat DisplayFormat {
+                get {
+                    return _display_format;
+                }
+                set {
+
+                    foreach (FindResultGroup group in _groups.Values)
+                        group.DisplayFormat = value;
+
+                    _display_format = value;
+
+                }
+            }
+
+            private SortedDictionary<string, FindResultGroup> _groups = new SortedDictionary<string, FindResultGroup>(new ArrayUtils.NaturalStringComparer());
+            private OrderBy _order_by = OrderBy.Default;
+            private DisplayFormat _display_format = DisplayFormat.ShortName;
+
         }
 
         public class FindResultGroup {
 
-            public List<Species> items = new List<Species>();
-            public FindResult owner = null;
+            public string Name { get; set; } = DEFAULT_GROUP;
+            public OrderBy OrderBy { get; set; } = OrderBy.Default;
+            public DisplayFormat DisplayFormat { get; set; } = DisplayFormat.ShortName;
+            public List<Species> Items { get; set; } = new List<Species>();
 
             public List<string> ToList() {
-                return items.Select(x => _speciesToString(x)).ToList();
+
+                switch (OrderBy) {
+
+                    case OrderBy.Newest:
+                        Items.Sort((lhs, rhs) => rhs.timestamp.CompareTo(lhs.timestamp));
+                        break;
+
+                    case OrderBy.Oldest:
+                        Items.Sort((lhs, rhs) => lhs.timestamp.CompareTo(rhs.timestamp));
+                        break;
+
+                    case OrderBy.Smallest:
+                        Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters()));
+                        break;
+
+                    case OrderBy.Largest:
+                        Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters()));
+                        break;
+
+                    default:
+                    case OrderBy.Default:
+                        Items.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                        break;
+
+                }
+
+                return Items.Select(x => _speciesToString(x)).ToList();
+
             }
 
             private string _speciesToString(Species species) {
 
                 string str = species.GetShortName();
 
-                if (!(owner is null)) {
+                switch (DisplayFormat) {
 
-                    switch (owner.displayFormat) {
+                    case DisplayFormat.CommonName:
 
-                        case DisplayFormat.CommonName:
+                        if (!string.IsNullOrEmpty(species.commonName))
+                            str = StringUtils.ToTitleCase(species.commonName);
 
-                            if (!string.IsNullOrEmpty(species.commonName))
-                                str = StringUtils.ToTitleCase(species.commonName);
+                        break;
 
-                            break;
+                    case DisplayFormat.FullName:
+                        str = species.GetFullName();
+                        break;
 
-                        case DisplayFormat.FullName:
-                            str = species.GetFullName();
-                            break;
-
-                        case DisplayFormat.SpeciesOnly:
-                            str = species.name.ToLower();
-                            break;
-
-                    }
+                    case DisplayFormat.SpeciesOnly:
+                        str = species.name.ToLower();
+                        break;
 
                 }
 
@@ -226,34 +314,6 @@ namespace OurFoodChain {
             // Apply any post-match modifiers (e.g. groupings), and return the result.
             FindResult result = await _applyPostMatchModifiersAsync(matches);
 
-            // Sort the contents of all groups.
-
-            foreach (FindResultGroup group in result.groups.Values)
-                switch (result.orderBy) {
-
-                    case OrderBy.Newest:
-                        group.items.Sort((lhs, rhs) => rhs.timestamp.CompareTo(lhs.timestamp));
-                        break;
-
-                    case OrderBy.Oldest:
-                        group.items.Sort((lhs, rhs) => lhs.timestamp.CompareTo(rhs.timestamp));
-                        break;
-
-                    case OrderBy.Smallest:
-                        group.items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters()));
-                        break;
-
-                    case OrderBy.Largest:
-                        group.items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters()));
-                        break;
-
-                    default:
-                    case OrderBy.Default:
-                        group.items.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
-                        break;
-
-                }
-
             // Return the result.
             return result;
 
@@ -268,10 +328,7 @@ namespace OurFoodChain {
 
             FindResult result = new FindResult();
 
-            result.groups[DEFAULT_GROUP] = new FindResultGroup {
-                items = matches,
-                owner = result
-            };
+            result.Add(DEFAULT_GROUP, matches.ToArray());
 
             foreach (string modifier in _modifiers)
                 await _applyPostMatchModifierAsync(result, modifier);
@@ -416,24 +473,30 @@ namespace OurFoodChain {
                     switch (value.ToLower()) {
 
                         case "smallest":
-                            result.orderBy = OrderBy.Smallest;
+                            result.OrderBy = OrderBy.Smallest;
                             break;
 
                         case "largest":
                         case "biggest":
                         case "size":
-                            result.orderBy = OrderBy.Largest;
+                            result.OrderBy = OrderBy.Largest;
                             break;
 
                         case "newest":
                         case "recent":
-                            result.orderBy = OrderBy.Newest;
+                            result.OrderBy = OrderBy.Newest;
                             break;
 
                         case "age":
                         case "date":
                         case "oldest":
-                            result.orderBy = OrderBy.Oldest;
+                            result.OrderBy = OrderBy.Oldest;
+                            break;
+
+                        case "number":
+                        case "total":
+                        case "count":
+                            result.OrderBy = OrderBy.Count;
                             break;
 
                     }
@@ -475,22 +538,22 @@ namespace OurFoodChain {
 
                         case "c":
                         case "common":
-                            result.displayFormat = DisplayFormat.CommonName;
+                            result.DisplayFormat = DisplayFormat.CommonName;
                             break;
 
                         case "f":
                         case "full":
-                            result.displayFormat = DisplayFormat.FullName;
+                            result.DisplayFormat = DisplayFormat.FullName;
                             break;
 
                         case "s":
                         case "short":
-                            result.displayFormat = DisplayFormat.ShortName;
+                            result.DisplayFormat = DisplayFormat.ShortName;
                             break;
 
                         case "sp":
                         case "species":
-                            result.displayFormat = DisplayFormat.SpeciesOnly;
+                            result.DisplayFormat = DisplayFormat.SpeciesOnly;
                             break;
 
                     }
@@ -500,7 +563,7 @@ namespace OurFoodChain {
                 case "owner":
 
                     Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(_context, value);
-                   
+
                     await result.FilterByAsync(async (x) => {
                         return (user is null) ? ((await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower()) : (ulong)x.user_id != user.Id;
                     }, subtract);
@@ -635,15 +698,61 @@ namespace OurFoodChain {
 
                     break;
 
+                case "prey":
+                case "predates":
+                case "eats": {
+
+                        // Filters out all species that do not prey upon the given species.
+
+                        Species[] prey_list = await SpeciesUtils.GetSpeciesAsync(value);
+                        Species[] predator_list = prey_list.Count() == 1 ? await SpeciesUtils.GetPredatorSpeciesAsync(prey_list[0]) : new Species[] { };
+
+                        await result.FilterByAsync((x) => {
+                            return Task.FromResult(!predator_list.Any(i => i.id == x.id));
+                        }, subtract);
+
+                    }
+
+                    break;
+
                 case "pred":
                 case "predator": {
 
-                        Species[] predator_list = await BotUtils.GetSpeciesFromDb("", value);
-                        Species[] prey_list = predator_list.Count() == 1 ? await BotUtils.GetPreySpeciesAsync(predator_list[0]) : new Species[] { };
+                        // Filters out all species that are not in the prey list of the given species.
+
+                        Species[] predator_list = await SpeciesUtils.GetSpeciesAsync(value);
+                        Species[] prey_list = predator_list.Count() == 1 ? await SpeciesUtils.GetPreySpeciesAsync(predator_list[0]) : new Species[] { };
 
                         await result.FilterByAsync((x) => {
                             return Task.FromResult(!prey_list.Any(i => i.id == x.id));
                         }, subtract);
+
+                    }
+
+                    break;
+
+                case "has": {
+
+                        switch (value) {
+
+                            case "prey":
+
+                                await result.FilterByAsync(async (x) => {
+                                    return (await SpeciesUtils.GetPreySpeciesAsync(x)).Count() <= 0;
+                                }, subtract);
+
+                                break;
+
+                            case "predator":
+                            case "predators":
+
+                                await result.FilterByAsync(async (x) => {
+                                    return (await SpeciesUtils.GetPredatorSpeciesAsync(x)).Count() <= 0;
+                                }, subtract);
+
+                                break;
+
+                        }
 
                     }
 
@@ -674,7 +783,8 @@ namespace OurFoodChain {
                     keywords.Add(keyword);
                     keyword = "";
 
-                } else
+                }
+                else
                     keyword += queryString[i];
 
             }

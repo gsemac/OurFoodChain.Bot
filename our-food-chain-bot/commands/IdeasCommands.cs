@@ -108,7 +108,7 @@ namespace OurFoodChain {
                     string role_name = row.Field<string>("role_name");
 
                     ideas.Add(string.Format("**{0}** does not have any **{1}s**. Why not fill this role?",
-                        Zone.GetFullName(zone_name),
+                        ZoneUtils.FormatZoneName(zone_name),
                         StringUtils.ToTitleCase(role_name)));
 
                 }

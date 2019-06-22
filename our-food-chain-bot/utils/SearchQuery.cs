@@ -508,10 +508,10 @@ namespace OurFoodChain {
 
                     // Filters out all species that aren't in the given zone(s).
 
-                    string[] zone_list = Zone.ParseZoneList(value).Select(x => Zone.GetFullName(x)).ToArray();
+                    long[] zone_list = (await ZoneUtils.GetZonesByZoneListAsync(value)).Zones.Select(x => x.id).ToArray();
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetZonesFromDb(x.id)).Any(z => zone_list.Contains(z.GetFullName()));
+                        return !(await BotUtils.GetZonesFromDb(x.id)).Any(z => zone_list.Contains(z.id));
                     }, subtract);
 
                     break;

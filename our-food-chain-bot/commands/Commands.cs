@@ -390,7 +390,7 @@ namespace OurFoodChain {
             }
 
             // Add to all given zones.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: true);
+            await PlusZone(sp, zone, string.Empty, onlyShowErrors: true);
 
             // Add the user to the trophy scanner queue in case their species earned them any new trophies.
             await trophies.TrophyScanner.AddToQueueAsync(Context, Context.User.Id);
@@ -408,7 +408,7 @@ namespace OurFoodChain {
 
             // Allow the user to specify zones with numbers (e.g., "1") or single letters (e.g., "A").
             // Otherwise, the name is taken as-is.
-            name = OurFoodChain.Zone.GetFullName(name).ToLower();
+            name = ZoneUtils.FormatZoneName(name).ToLower();
 
             // If an invalid type was provided, assume the user meant it as a description instead.
             // i.e., "addzone <name> <description>"
@@ -436,7 +436,7 @@ namespace OurFoodChain {
 
             // Don't attempt to create the zone if it already exists.
 
-            Zone zone = await BotUtils.GetZoneFromDb(name);
+            Zone zone = await ZoneUtils.GetZoneAsync(name);
 
             if (!(zone is null)) {
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", StringUtils.ToTitleCase(zone.name)));
@@ -455,7 +455,7 @@ namespace OurFoodChain {
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new {0} zone, **{1}**.",
                 type.ToLower(),
-                OurFoodChain.Zone.GetFullName(name))
+                ZoneUtils.FormatZoneName(name))
                 );
 
         }
@@ -538,7 +538,7 @@ namespace OurFoodChain {
             }
             else {
 
-                Zone zone = await BotUtils.GetZoneFromDb(name);
+                Zone zone = await ZoneUtils.GetZoneAsync(name);
 
                 if (!await BotUtils.ReplyAsync_ValidateZone(Context, zone))
                     return;
@@ -923,25 +923,85 @@ namespace OurFoodChain {
         }
 
         [Command("+zone"), Alias("+zones")]
-        public async Task PlusZone(string species, string zone) {
-            await PlusZone("", species, zone);
-        }
-        [Command("+zone"), Alias("+zones")]
-        public async Task PlusZone(string genus, string species, string zone) {
+        public async Task PlusZone(string arg0, string arg1, string arg2) {
+
+            // Possible cases:
+            // 1. <species> <zone> <notes>
+            // 2. <genus> <species> <zone>
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
                 return;
 
-            // Get the specified species.
+            // If a species exists with the given genus/species, assume the user intended case (2).
+
+            Species[] species_list = await SpeciesUtils.GetSpeciesAsync(arg0, arg1);
+
+            if (species_list.Count() == 1) {
+
+                // If there is a unqiue species match, proceed with the assumption of case (2).
+
+                await PlusZone(species_list[0], zoneList: arg2, notes: string.Empty, onlyShowErrors: false);
+
+            }
+            else if (species_list.Count() > 1) {
+
+                // If there are species matches but no unique result, show the user.
+                await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list);
+
+            }
+            else if (species_list.Count() <= 0) {
+
+                // If there were no matches, assume the user intended case (1).
+
+                species_list = await SpeciesUtils.GetSpeciesAsync(string.Empty, arg0);
+
+                if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list))
+                    await PlusZone(species_list[0], zoneList: arg1, notes: arg2, onlyShowErrors: false);
+
+            }
+
+        }
+        [Command("+zone"), Alias("+zones")]
+        public async Task PlusZone(string species, string zoneList) {
+            await PlusZone(string.Empty, species, zoneList, string.Empty);
+        }
+        [Command("+zone"), Alias("+zones")]
+        public async Task PlusZone(string genus, string species, string zoneList, string notes) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
-            if (sp is null)
-                return;
+            if (!(sp is null))
+                await PlusZone(sp, zoneList: zoneList, notes: notes, onlyShowErrors: false);
 
-            // Add new zone information for the species.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: false);
+        }
+        public async Task PlusZone(Species species, string zoneList, string notes, bool onlyShowErrors = false) {
+            Console.WriteLine("notes:" + notes);
+            // Get the zones from user input.
+            ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
+
+            // Add the zones to the species.
+            await SpeciesUtils.AddZones(species, zones.Zones, notes);
+
+            if (zones.Invalid.Count() > 0) {
+
+                // Show a warning if the user provided any invalid zones.
+
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
+                    StringUtils.ConjunctiveJoin(", ", zones.Invalid.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
+                    zones.Invalid.Count() == 1 ? "does" : "do"));
+
+            }
+
+            if (zones.Zones.Count() > 0 && !onlyShowErrors) {
+
+                // Show a confirmation of all valid zones.
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now inhabits {1}.",
+                      species.GetShortName(),
+                      StringUtils.ConjunctiveJoin(", ", zones.Zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+
+            }
 
         }
         [Command("-zone"), Alias("-zones")]
@@ -949,7 +1009,7 @@ namespace OurFoodChain {
             await MinusZone("", species, zone);
         }
         [Command("-zone"), Alias("-zones")]
-        public async Task MinusZone(string genus, string species, string zone) {
+        public async Task MinusZone(string genus, string species, string zoneList) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
@@ -967,61 +1027,41 @@ namespace OurFoodChain {
 
             long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.id)).Select(x => x.id).ToArray();
 
-            // Remove the zone information for the species.
-            // #todo This can be done in a single query.
+            // Get the zones from user input.
+            ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
 
-            List<string> valid_zones_list = new List<string>(); // List of all zones the species was successfully removed from
-            List<string> invalid_zones_list = new List<string>(); // List of all zones given that don't exist
-            List<string> not_in_zones_list = new List<string>(); // List of all zones given that the species did not exist in
+            // Remove the zones from the species.
+            await SpeciesUtils.RemoveZones(sp, zones.Zones);
 
-            foreach (string zoneName in OurFoodChain.Zone.ParseZoneList(zone)) {
+            if (zones.Invalid.Count() > 0) {
 
-                Zone zone_info = await BotUtils.GetZoneFromDb(zoneName);
+                // Show a warning if the user provided any invalid zones.
 
-                // If the given zone does not exist, skip it. We'll show a warning later.
-
-                if (zone_info is null) {
-
-                    invalid_zones_list.Add(string.Format("**{0}**", OurFoodChain.Zone.GetFullName(zoneName)));
-
-                    continue;
-
-                }
-
-                // If the species was never in the given zone, skip it. We'll show a warning later.
-
-                if (!current_zone_ids.Contains(zone_info.id)) {
-
-                    not_in_zones_list.Add(string.Format("**{0}**", OurFoodChain.Zone.GetFullName(zoneName)));
-
-                    continue;
-
-                }
-
-                // The zone exists and the species resides within it, so remove the species from this zone.
-
-                valid_zones_list.Add(string.Format("**{0}**", StringUtils.ToTitleCase(zone_info.name)));
-
-                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id AND zone_id=$zone_id;")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", sp.id);
-                    cmd.Parameters.AddWithValue("$zone_id", (zone_info.id));
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
+                    StringUtils.ConjunctiveJoin(", ", zones.Invalid.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
+                    zones.Invalid.Count() == 1 ? "does" : "do"));
 
             }
 
-            if (invalid_zones_list.Count() > 0)
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.", StringUtils.ConjunctiveJoin(", ", invalid_zones_list),
-                    invalid_zones_list.Count() == 1 ? "does" : "do"));
+            if (zones.Zones.Any(x => !current_zone_ids.Contains(x.id))) {
 
-            if (not_in_zones_list.Count() > 0)
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.", sp.GetShortName(), StringUtils.ConjunctiveJoin(", ", not_in_zones_list)));
+                // Show a warning if the species wasn't in one or more of the zones provided.
 
-            if (valid_zones_list.Count() > 0)
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.", sp.GetShortName(), StringUtils.DisjunctiveJoin(", ", valid_zones_list)));
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.",
+                    sp.GetShortName(),
+                    StringUtils.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+
+            }
+
+            if (zones.Zones.Any(x => current_zone_ids.Contains(x.id))) {
+
+                // Show a confirmation of all valid zones.
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.",
+                    sp.GetShortName(),
+                    StringUtils.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+
+            }
 
         }
 
@@ -1058,7 +1098,7 @@ namespace OurFoodChain {
             }
 
             // Add new zone information for the species.
-            await BotUtils.ReplyAsync_AddZonesToSpecies(Context, sp, zone, showErrorsOnly: false);
+            await PlusZone(sp, zone, string.Empty, onlyShowErrors: false);
 
         }
 
@@ -1071,7 +1111,7 @@ namespace OurFoodChain {
 
             // Make sure that the given zone exists.
 
-            Zone z = await BotUtils.GetZoneFromDb(zone);
+            Zone z = await ZoneUtils.GetZoneAsync(zone);
 
             if (!await BotUtils.ReplyAsync_ValidateZone(Context, z))
                 return;
@@ -1105,7 +1145,7 @@ namespace OurFoodChain {
 
             // Get the zone from the database.
 
-            Zone zone = await BotUtils.GetZoneFromDb(zoneName);
+            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
 
             if (!await BotUtils.ReplyAsync_ValidateZone(Context, zone))
                 return;

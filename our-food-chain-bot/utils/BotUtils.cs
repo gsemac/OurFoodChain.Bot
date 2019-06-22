@@ -56,19 +56,6 @@ namespace OurFoodChain {
             return zone;
 
         }
-        public static string[] ParseZoneList(string zoneList) {
-
-            if (string.IsNullOrEmpty(zoneList))
-                return new string[] { };
-
-            string[] result = zoneList.Split(',', '/');
-
-            for (int i = 0; i < result.Count(); ++i)
-                result[i] = result[i].Trim().ToLower();
-
-            return result;
-
-        }
 
         public string GetShortDescription() {
             return GetShortDescription(GetDescriptionOrDefault());
@@ -87,21 +74,11 @@ namespace OurFoodChain {
 
         }
         public string GetFullName() {
-            return GetFullName(name);
+            return ZoneUtils.FormatZoneName(name);
         }
 
         public static string GetShortDescription(string description) {
             return StringUtils.GetFirstSentence(description);
-        }
-        public static string GetFullName(string name) {
-
-            if (StringUtils.IsNumeric(name) || name.Length == 1)
-                name = "zone " + name;
-
-            name = StringUtils.ToTitleCase(name);
-
-            return name;
-
         }
 
     }
@@ -345,7 +322,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
                     foreach (DataRow row in rows.Rows) {
 
-                        Zone zone = await GetZoneFromDb(row.Field<long>("zone_id"));
+                        Zone zone = await ZoneUtils.GetZoneAsync(row.Field<long>("zone_id"));
 
                         if (zone is null)
                             continue;
@@ -576,43 +553,6 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Zone> GetZoneFromDb(long zoneId) {
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id=$zone_id;")) {
-
-                cmd.Parameters.AddWithValue("$zone_id", zoneId);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    return Zone.FromDataRow(row);
-
-            }
-
-            return null;
-
-        }
-        public static async Task<Zone> GetZoneFromDb(string zoneName) {
-
-            if (string.IsNullOrEmpty(zoneName))
-                return null;
-
-            zoneName = Zone.GetFullName(zoneName.Trim()).ToLower();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name=$name;")) {
-
-                cmd.Parameters.AddWithValue("$name", zoneName);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    return Zone.FromDataRow(row);
-
-            }
-
-            return null;
-
-        }
         public static async Task<Role> GetRoleFromDb(long roleId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE id=$role_id;")) {
@@ -1376,53 +1316,6 @@ namespace OurFoodChain {
             }
 
             return true;
-
-        }
-        public static async Task ReplyAsync_AddZonesToSpecies(ICommandContext context, Species sp, string zones, bool showErrorsOnly = false) {
-
-            List<string> valid_zones = new List<string>();
-            List<string> invalid_zones = new List<string>();
-
-            foreach (string zoneName in Zone.ParseZoneList(zones)) {
-
-                Zone zone_info = await GetZoneFromDb(zoneName);
-
-                // If the given zone does not exist, add it to the list of invalid zones.
-
-                if (zone_info is null) {
-
-                    invalid_zones.Add(string.Format("**{0}**", StringUtils.ToTitleCase(Zone.GetFullName(zoneName))));
-
-                    continue;
-
-                }
-
-                // Add the zone relationship into the database (do nothing if the relationship already exists).
-
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesZones(species_id, zone_id) VALUES($species_id, $zone_id);")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", sp.id);
-                    cmd.Parameters.AddWithValue("$zone_id", (zone_info.id));
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-                valid_zones.Add(string.Format("**{0}**", zone_info.GetFullName()));
-
-            }
-
-            if (invalid_zones.Count() > 0)
-                await ReplyAsync_Warning(context, string.Format("{0} {1} not exist.", StringUtils.ConjunctiveJoin(", ", invalid_zones),
-                    invalid_zones.Count() == 1 ? "does" : "do"));
-
-            if (valid_zones.Count() > 0 && !showErrorsOnly) {
-
-                await ReplyAsync_Success(context, string.Format("**{0}** now inhabits {1}.",
-                      sp.GetShortName(),
-                      StringUtils.ConjunctiveJoin(", ", valid_zones)));
-
-            }
 
         }
         public static async Task<bool> ReplyAsync_ValidateImageUrl(ICommandContext context, string imageUrl) {

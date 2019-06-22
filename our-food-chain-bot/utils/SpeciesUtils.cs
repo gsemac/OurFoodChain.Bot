@@ -200,6 +200,43 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task AddZones(Species species, Zone[] zones) {
+            await AddZones(species, zones, string.Empty);
+        }
+        public static async Task AddZones(Species species, Zone[] zones, string notes) {
+
+            foreach (Zone zone in zones) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesZones(species_id, zone_id, notes) VALUES($species_id, $zone_id, $notes)")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.id);
+                    cmd.Parameters.AddWithValue("$notes", string.IsNullOrEmpty(notes) ? "" : notes.Trim().ToLower());
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+        }
+        public static async Task RemoveZones(Species species, Zone[] zones) {
+
+            foreach (Zone zone in zones) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id = $species_id AND zone_id = $zone_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.id);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+        }
+
         private static GenusSpeciesPair _parseGenusAndSpeciesFromUserInput(string inputGenus, string inputSpecies) {
 
             string genus = inputGenus;

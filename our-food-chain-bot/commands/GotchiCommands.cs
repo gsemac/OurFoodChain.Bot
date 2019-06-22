@@ -240,7 +240,10 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtils.ToTitleCase(gotchi.name)));
+            if (await GotchiUtils.GetGotchiCountAsync(Context.User) > 1)
+                await BotUtils.ReplyAsync_Success(Context, "Fed everyone some delicious Suka-Flakes™!");
+            else
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtils.ToTitleCase(gotchi.name)));
 
         }
 

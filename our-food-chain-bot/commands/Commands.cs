@@ -976,7 +976,7 @@ namespace OurFoodChain {
 
         }
         public async Task PlusZone(Species species, string zoneList, string notes, bool onlyShowErrors = false) {
-            Console.WriteLine("notes:" + notes);
+            
             // Get the zones from user input.
             ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
 

@@ -200,6 +200,35 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<SpeciesZone[]> GetZones(Species species) {
+
+            List<SpeciesZone> zones = new List<SpeciesZone>();
+
+            using (SQLiteConnection conn = await Database.GetConnectionAsync())
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesZones WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
+                    foreach (DataRow row in rows.Rows) {
+
+                        Zone zone = await ZoneUtils.GetZoneAsync(row.Field<long>("zone_id"));
+
+                        if (zone is null)
+                            continue;
+
+                        zones.Add(new SpeciesZone {
+                            Zone = zone,
+                            Notes = row.Field<string>("notes")
+                        });
+
+                    }
+
+            }
+
+            return zones.ToArray();
+
+        }
         public static async Task AddZones(Species species, Zone[] zones) {
             await AddZones(species, zones, string.Empty);
         }

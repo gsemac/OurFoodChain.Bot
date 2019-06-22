@@ -89,12 +89,12 @@ namespace OurFoodChain {
 
             List<string> zone_names = new List<string>();
 
-            foreach (Zone zone in await BotUtils.GetZonesFromDb(sp.id)) {
+            foreach (SpeciesZone zone in await SpeciesUtils.GetZones(sp)) {
 
-                if (zone.type == ZoneType.Terrestrial)
+                if (zone.Zone.type == ZoneType.Terrestrial)
                     embed_color = Color.DarkGreen;
 
-                zone_names.Add(zone.GetShortName());
+                zone_names.Add(string.IsNullOrEmpty(zone.Notes) ? zone.Zone.GetShortName() : string.Format("{0} ({1})", zone.Zone.GetShortName(), zone.Notes));
 
             }
 

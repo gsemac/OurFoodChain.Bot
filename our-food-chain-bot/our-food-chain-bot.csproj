@@ -244,6 +244,7 @@
     <Compile Include="utils\PaginatedEmbedBuilder.cs" />
     <Compile Include="utils\SearchQuery.cs" />
     <Compile Include="utils\SpeciesUtils.cs" />
+    <Compile Include="utils\SpeciesZone.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\TaxonUtils.cs" />
     <Compile Include="utils\Tree.cs" />

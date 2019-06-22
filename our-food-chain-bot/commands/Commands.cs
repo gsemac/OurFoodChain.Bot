@@ -63,7 +63,8 @@ namespace OurFoodChain {
         [Command("species"), Alias("sp", "s")]
         public async Task GetSpecies(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species,
+                async (BotUtils.ConfirmSuggestionArgs args) => await GetSpecies(args.Suggestion));
 
             if (sp is null)
                 return;

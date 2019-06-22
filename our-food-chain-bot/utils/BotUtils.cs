@@ -1096,13 +1096,16 @@ namespace OurFoodChain {
         }
 
         public static async Task<Species> ReplyAsync_FindSpecies(ICommandContext context, string genus, string species) {
+            return await ReplyAsync_FindSpecies(context, genus, species, null);
+        }
+        public static async Task<Species> ReplyAsync_FindSpecies(ICommandContext context, string genus, string species, Func<ConfirmSuggestionArgs, Task> onConfirmSuggestion) {
 
             Species[] sp_list = await GetSpeciesFromDb(genus, species);
 
             if (sp_list.Count() <= 0) {
 
                 // The species could not be found. Check all species to find a suggestion.
-                await ReplyAsync_SpeciesSuggestions(context, genus, species);
+                await ReplyAsync_SpeciesSuggestions(context, genus, species, onConfirmSuggestion);
 
                 return null;
 

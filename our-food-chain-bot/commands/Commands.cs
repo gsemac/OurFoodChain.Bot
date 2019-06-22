@@ -969,6 +969,10 @@ namespace OurFoodChain {
         [Command("+zone"), Alias("+zones")]
         public async Task PlusZone(string genus, string species, string zoneList, string notes) {
 
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+                return;
+
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
 
             if (!(sp is null))
@@ -976,7 +980,7 @@ namespace OurFoodChain {
 
         }
         public async Task PlusZone(Species species, string zoneList, string notes, bool onlyShowErrors = false) {
-            
+
             // Get the zones from user input.
             ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
 

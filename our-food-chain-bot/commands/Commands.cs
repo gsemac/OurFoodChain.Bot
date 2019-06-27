@@ -1663,18 +1663,17 @@ namespace OurFoodChain {
         }
 
         [Command("roll")]
+        public async Task Roll() {
+            await Roll(6);
+        }
+        [Command("roll")]
         public async Task Roll(int max) {
 
             if (max < 1)
                 await BotUtils.ReplyAsync_Error(Context, "Value must be greater than or equal 1.");
 
-            else {
-
-                int value = BotUtils.RandomInteger(1, max + 1);
-
-                await ReplyAsync(value.ToString());
-
-            }
+            else
+                await Roll(1, max);
 
         }
         [Command("roll")]
@@ -1684,8 +1683,13 @@ namespace OurFoodChain {
                 await BotUtils.ReplyAsync_Error(Context, "Values must be greater than 1.");
             if (min > max + 1)
                 await BotUtils.ReplyAsync_Error(Context, "Minimum value must be less than or equal to the maximum value.");
-            else
-                await ReplyAsync(BotUtils.RandomInteger(min, max + 1).ToString());
+            else {
+
+                int result = BotUtils.RandomInteger(min, max + 1);
+
+                await ReplyAsync(result.ToString());
+
+            }
 
         }
 

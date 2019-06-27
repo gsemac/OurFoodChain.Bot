@@ -202,7 +202,7 @@ namespace OurFoodChain.trophies {
         [Command("awardtrophy"), Alias("award", "awardachievement")]
         public async Task AwardTrophy(IGuildUser user, string trophy) {
 
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             Trophy t = await TrophyRegistry.GetTrophyByNameAsync(trophy);
@@ -227,7 +227,7 @@ namespace OurFoodChain.trophies {
 
             if (user is null)
                 user = (IGuildUser)Context.User;
-            else if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator)) // Mod privileges are required to scan someone else's trophies
+            else if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) // Mod privileges are required to scan someone else's trophies
                 return;
 
             await TrophyScanner.AddToQueueAsync(Context, user.Id, TrophyScanner.NO_DELAY);

@@ -88,7 +88,7 @@ namespace OurFoodChain {
         public async Task SetMap(string primaryImageUrl, string labeledImageUrl) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Create an image gallery for storing the map images if one hasn't been created yet.

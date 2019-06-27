@@ -159,7 +159,7 @@ namespace OurFoodChain {
 
         }
 
-        public static PrivilegeLevel GetPrivilegeLevel(IGuildUser user) {
+        public static PrivilegeLevel GetPrivilegeLevel(IUser user) {
 
             // If there are no privileges set up in the configuration file, grant all users full privileges.
 
@@ -174,19 +174,28 @@ namespace OurFoodChain {
             if (!(config.bot_admin_user_ids is null) && config.bot_admin_user_ids.Contains(user.Id))
                 return PrivilegeLevel.BotAdmin;
 
-            // Check for Server Moderator privileges.
+            // Attempt to case the user to a guild user so we can get their roles.
+            // If this is not possible, default privileges are assumed.
 
-            if (!(config.mod_role_ids is null))
-                foreach (ulong id in config.mod_role_ids)
-                    if (user.RoleIds.Contains(id))
-                        return PrivilegeLevel.ServerModerator;
+            IGuildUser g_user = user as IGuildUser;
+
+            if (!(g_user is null)) {
+
+                // Check for Server Moderator privileges.
+
+                if (!(config.mod_role_ids is null))
+                    foreach (ulong id in config.mod_role_ids)
+                        if (g_user.RoleIds.Contains(id))
+                            return PrivilegeLevel.ServerModerator;
+
+            }
 
             // Return basic privilege level.
 
             return PrivilegeLevel.ServerMember;
 
         }
-        public static bool CheckPrivilege(IGuildUser user, PrivilegeLevel level) {
+        public static bool HasPrivilege(IUser user, PrivilegeLevel level) {
 
             return GetPrivilegeLevel(user) <= level;
 

@@ -1381,9 +1381,13 @@ namespace OurFoodChain {
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
-        public static async Task<bool> ReplyAsync_CheckPrivilege(ICommandContext context, IGuildUser user, PrivilegeLevel level) {
 
-            if (CommandUtils.CheckPrivilege(user, level))
+        public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, PrivilegeLevel level) {
+            return await ReplyHasPrivilegeAsync(context, context.User, level);
+        }
+        public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, IUser user, PrivilegeLevel level) {
+
+            if (CommandUtils.HasPrivilege(user, level))
                 return true;
 
             string privilege_name = "";
@@ -1409,12 +1413,15 @@ namespace OurFoodChain {
             return false;
 
         }
-        public static async Task<bool> ReplyAsync_CheckPrivilegeOrOwnership(ICommandContext context, IGuildUser user, PrivilegeLevel level, Species species) {
+        public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, PrivilegeLevel level, Species species) {
+            return await ReplyHasPrivilegeOrOwnershipAsync(context, context.User, level, species);
+        }
+        public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, IUser user, PrivilegeLevel level, Species species) {
 
             if (user.Id == (ulong)species.user_id)
                 return true;
 
-            return await ReplyAsync_CheckPrivilege(context, user, level);
+            return await ReplyHasPrivilegeAsync(context, user, level);
 
         }
 
@@ -1573,7 +1580,7 @@ namespace OurFoodChain {
         public static async Task Command_AddTaxon(ICommandContext context, TaxonRank type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Make sure that the taxon does not already exist before trying to add it.
@@ -1603,7 +1610,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxon(ICommandContext context, TaxonRank type, string childTaxonName, string parentTaxonName) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get the specified child taxon.
@@ -1637,7 +1644,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxonDescription(ICommandContext context, Taxon taxon, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             taxon.description = description;
@@ -1653,7 +1660,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonRank type, string name) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Since the description wasn't provided directly, initiate a multistage update.
@@ -1680,7 +1687,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxonDescription(ICommandContext context, TaxonRank type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             Taxon taxon = await GetTaxonFromDb(name, type);
@@ -1694,7 +1701,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxonPic(ICommandContext context, Taxon taxon, string url) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Ensure that the image URL appears to be valid.
@@ -1713,7 +1720,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxonPic(ICommandContext context, TaxonRank type, string name, string url) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Ensure that the image URL appears to be valid.
@@ -1731,7 +1738,7 @@ namespace OurFoodChain {
         public static async Task Command_SetTaxonCommonName(ICommandContext context, TaxonRank type, string name, string commonName) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await ReplyAsync_CheckPrivilege(context, (IGuildUser)context.User, PrivilegeLevel.ServerModerator))
+            if (!await ReplyHasPrivilegeAsync(context, PrivilegeLevel.ServerModerator))
                 return;
 
             Taxon taxon = await GetTaxonFromDb(name, type);

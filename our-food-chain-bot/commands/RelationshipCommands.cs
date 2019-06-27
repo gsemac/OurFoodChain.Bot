@@ -203,7 +203,7 @@ namespace OurFoodChain {
 
             // Ensure that the user has necessary privileges to use this command.
 
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // If the relationship already exists, warn the user and do not modify the database.
@@ -242,7 +242,7 @@ namespace OurFoodChain {
 
             // Ensure that the user has necessary privileges to use this command.
 
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get the relationship from the DB.
@@ -302,7 +302,7 @@ namespace OurFoodChain {
 
             // Ensure that the user has necessary privileges to use this command.
 
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get the relationship from the DB.

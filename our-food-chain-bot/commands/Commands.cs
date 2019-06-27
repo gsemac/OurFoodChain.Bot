@@ -189,7 +189,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
                 return;
 
             // Update the species.
@@ -220,7 +220,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
                 return;
 
             if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
@@ -353,7 +353,7 @@ namespace OurFoodChain {
         public async Task AddSpecies(string genus, string species, string zone = "", string description = "") {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Check if the species already exists before attempting to add it.
@@ -403,7 +403,7 @@ namespace OurFoodChain {
         public async Task AddZone(string name, string type = "", string description = "") {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Allow the user to specify zones with numbers (e.g., "1") or single letters (e.g., "A").
@@ -683,7 +683,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
                 return;
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp);")) {
@@ -707,7 +707,7 @@ namespace OurFoodChain {
         public async Task MinusExtinct(string genus, string species) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -789,7 +789,7 @@ namespace OurFoodChain {
                 Species ancestor = ancestor_list[0];
 
                 // Ensure that the user has necessary privileges to use this command.
-                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, descendant))
+                if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, descendant))
                     return;
 
                 // Check if an ancestor has already been set for this species. If so, update the ancestor, but we'll show a different message later notifying the user of the change.
@@ -930,7 +930,7 @@ namespace OurFoodChain {
             // 2. <genus> <species> <zone>
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // If a species exists with the given genus/species, assume the user intended case (2).
@@ -970,7 +970,7 @@ namespace OurFoodChain {
         public async Task PlusZone(string genus, string species, string zoneList, string notes) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
@@ -1016,7 +1016,7 @@ namespace OurFoodChain {
         public async Task MinusZone(string genus, string species, string zoneList) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get the specified species.
@@ -1073,7 +1073,7 @@ namespace OurFoodChain {
         public async Task SetZone(string genus, string species, string zone = "") {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // If the zone argument is empty, assume the user omitted the genus.
@@ -1110,7 +1110,7 @@ namespace OurFoodChain {
         public async Task SetZonePic(string zone, string imageUrl) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Make sure that the given zone exists.
@@ -1144,7 +1144,7 @@ namespace OurFoodChain {
         public async Task SetZoneDescription(string zoneName, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get the zone from the database.
@@ -1179,7 +1179,7 @@ namespace OurFoodChain {
         public async Task SetOwner(string genus, string species, IUser user) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             if (user is null)
@@ -1228,7 +1228,7 @@ namespace OurFoodChain {
             else {
 
                 // Ensure that the user has necessary privileges to use this command.
-                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, predator_list[0]))
+                if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, predator_list[0]))
                     return;
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Predates(species_id, eats_id, notes) VALUES($species_id, $eats_id, $notes);")) {
@@ -1264,7 +1264,7 @@ namespace OurFoodChain {
             // Remove the relationship.
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, predator))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, predator))
                 return;
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Predates WHERE species_id=$species_id AND eats_id=$eats_id;")) {
@@ -1692,7 +1692,7 @@ namespace OurFoodChain {
         [Command("backup", RunMode = RunMode.Async)]
         public async Task Backup() {
 
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.BotAdmin))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.BotAdmin))
                 return;
 
             if (_running_backup) {

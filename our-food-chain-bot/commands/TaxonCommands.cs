@@ -23,7 +23,7 @@ namespace OurFoodChain {
         public async Task AddGenus(string genus, string description = "") {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Make sure that the genus doesn't already exist.
@@ -49,7 +49,7 @@ namespace OurFoodChain {
         public async Task SetGenus(string genus, string species, string newGenus = "") {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // If there is no argument for "newGenus", assume the user omitted the original genus.
@@ -349,7 +349,7 @@ namespace OurFoodChain {
                 // A species exists with the given genus/species, so initiate a two-part command.
 
                 // Ensure that the user has necessary privileges to use this command.
-                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_list[0]))
+                if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
                 MultistageCommand p = new MultistageCommand(Context) {
@@ -394,7 +394,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_info))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_info))
                 return;
 
             if (string.IsNullOrWhiteSpace(commonName)) {
@@ -436,7 +436,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_info))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_info))
                 return;
 
             if (string.IsNullOrWhiteSpace(commonName)) {
@@ -468,7 +468,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_info))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_info))
                 return;
 
             CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species_info);
@@ -496,7 +496,7 @@ namespace OurFoodChain {
         private async Task _setSpeciesDescription(Species species, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
                 return;
 
             await BotUtils.UpdateSpeciesDescription(species, description);
@@ -573,7 +573,7 @@ namespace OurFoodChain {
                 // A species exists with the given genus/species, so initiate a two-part command.
 
                 // Ensure that the user has necessary privileges to use this command.
-                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species_list[0]))
+                if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
                 MultistageCommand p = new MultistageCommand(Context) {
@@ -626,7 +626,7 @@ namespace OurFoodChain {
                 Species species = species_list[0];
 
                 // Ensure that the user has necessary privileges to use this command.
-                if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
+                if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
                     return;
 
                 await _appendDescriptionAsync(species);
@@ -643,7 +643,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, sp))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
                 return;
 
             await _appendDescriptionAsync(sp, description);
@@ -654,7 +654,7 @@ namespace OurFoodChain {
         public async Task SetCommonName(string taxon, string commonName) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get all taxa with the specified name.
@@ -690,7 +690,7 @@ namespace OurFoodChain {
         public async Task DeleteTaxon(string name) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             Taxon[] taxa = await TaxonUtils.GetTaxaAsync(name);
@@ -703,7 +703,7 @@ namespace OurFoodChain {
 
             if (taxon.type == TaxonRank.Species)
                 await SetSpeciesDescription(taxon.name);
-            else if (await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator)) { // moderator use only
+            else if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) { // moderator use only
 
                 MultistageCommand p = new MultistageCommand(Context) {
                     OriginalArguments = new string[] { taxon.name },
@@ -738,7 +738,7 @@ namespace OurFoodChain {
         public async Task _appendDescriptionAsync(Species species, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilegeOrOwnership(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator, species))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
                 return;
 
             // Always start appended test on a new paragraph.
@@ -776,7 +776,7 @@ namespace OurFoodChain {
         private async Task _deleteTaxonAsync(string name, TaxonRank rank) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             Taxon[] taxa = await TaxonUtils.GetTaxaAsync(name, rank);
@@ -787,7 +787,7 @@ namespace OurFoodChain {
         private async Task _deleteTaxonAsync(Taxon[] taxa) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyAsync_CheckPrivilege(Context, (IGuildUser)Context.User, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
             if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa)) {

@@ -1790,42 +1790,18 @@ namespace OurFoodChain {
 
             // Start by finding the earliest ancestor of this species.
 
-            long id = species.id;
-            List<long> ancestor_ids = new List<long>();
+            List<long> ancestor_ids = new List<long> {
+                species.id
+            };
 
-            ancestor_ids.Add(id);
-
-            if (!descendantsOnly) {
-
-                while (true) {
-
-                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id;")) {
-
-                        cmd.Parameters.AddWithValue("$species_id", id);
-
-                        DataRow row = await Database.GetRowAsync(cmd);
-
-                        if (!(row is null)) {
-
-                            id = row.Field<long>("ancestor_id");
-
-                            ancestor_ids.Add(id);
-
-                        }
-                        else
-                            break;
-
-                    }
-
-                }
-
-            }
+            if (!descendantsOnly)
+                ancestor_ids.AddRange(await SpeciesUtils.GetAncestorIdsAsync(species.id));
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
             TreeNode<SpeciesInfo> root = new TreeNode<SpeciesInfo> {
                 value = new SpeciesInfo {
-                    species = await GetSpeciesFromDb(id),
+                    species = await GetSpeciesFromDb(ancestor_ids.Last()),
                     isAncestor = true
                 }
             };

@@ -705,7 +705,7 @@ namespace OurFoodChain {
                         // Filters out all species that do not prey upon the given species.
 
                         Species[] prey_list = await SpeciesUtils.GetSpeciesAsync(value);
-                        Species[] predator_list = prey_list.Count() == 1 ? await SpeciesUtils.GetPredatorSpeciesAsync(prey_list[0]) : new Species[] { };
+                        Species[] predator_list = prey_list.Count() == 1 ? await SpeciesUtils.GetPredatorsAsync(prey_list[0]) : new Species[] { };
 
                         await result.FilterByAsync((x) => {
                             return Task.FromResult(!predator_list.Any(i => i.id == x.id));
@@ -721,7 +721,7 @@ namespace OurFoodChain {
                         // Filters out all species that are not in the prey list of the given species.
 
                         Species[] predator_list = await SpeciesUtils.GetSpeciesAsync(value);
-                        Species[] prey_list = predator_list.Count() == 1 ? await SpeciesUtils.GetPreySpeciesAsync(predator_list[0]) : new Species[] { };
+                        Species[] prey_list = predator_list.Count() == 1 ? await SpeciesUtils.GetPreyAsync(predator_list[0]) : new Species[] { };
 
                         await result.FilterByAsync((x) => {
                             return Task.FromResult(!prey_list.Any(i => i.id == x.id));
@@ -738,7 +738,7 @@ namespace OurFoodChain {
                             case "prey":
 
                                 await result.FilterByAsync(async (x) => {
-                                    return (await SpeciesUtils.GetPreySpeciesAsync(x)).Count() <= 0;
+                                    return (await SpeciesUtils.GetPreyAsync(x)).Count() <= 0;
                                 }, subtract);
 
                                 break;
@@ -747,12 +747,33 @@ namespace OurFoodChain {
                             case "predators":
 
                                 await result.FilterByAsync(async (x) => {
-                                    return (await SpeciesUtils.GetPredatorSpeciesAsync(x)).Count() <= 0;
+                                    return (await SpeciesUtils.GetPredatorsAsync(x)).Count() <= 0;
+                                }, subtract);
+
+                                break;
+
+                            case "ancestor":
+                            case "ancestors":
+
+                                await result.FilterByAsync(async (x) => {
+                                    return await SpeciesUtils.GetAncestorAsync(x) is null;
                                 }, subtract);
 
                                 break;
 
                         }
+
+                    }
+
+                    break;
+
+                case "ancestor": {
+
+                        Species[] species_list = await SpeciesUtils.GetSpeciesAsync(value);
+
+                        await result.FilterByAsync(async (x) => {
+                            return species_list.Count() != 1 || !(await SpeciesUtils.GetAncestorIdsAsync(x.id)).Any(id => id == species_list[0].id);
+                        }, subtract);
 
                     }
 

@@ -108,8 +108,21 @@ namespace OurFoodChain {
             }
 
         }
+        public static async Task<Species> GetSpeciesAsync(long speciesId) {
 
-        public static async Task<Species[]> GetPredatorSpeciesAsync(Species species) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", speciesId);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                return row is null ? null : await Species.FromDataRow(row);
+
+            }
+
+        }
+
+        public static async Task<Species[]> GetPredatorsAsync(Species species) {
 
             List<Species> result = new List<Species>();
 
@@ -126,7 +139,7 @@ namespace OurFoodChain {
             return result.ToArray();
 
         }
-        public static async Task<Species[]> GetPreySpeciesAsync(Species species) {
+        public static async Task<Species[]> GetPreyAsync(Species species) {
 
             List<Species> result = new List<Species>();
 
@@ -141,6 +154,56 @@ namespace OurFoodChain {
             }
 
             return result.ToArray();
+
+        }
+
+        public static async Task<long[]> GetAncestorIdsAsync(long speciesId) {
+
+            List<long> ancestor_ids = new List<long>();
+
+            while (true) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                    DataRow row = await Database.GetRowAsync(cmd);
+
+                    if (row is null)
+                        break;
+
+                    speciesId = row.Field<long>("ancestor_id");
+
+                    ancestor_ids.Add(speciesId);
+
+                }
+
+            }
+
+            return ancestor_ids.ToArray();
+
+        }
+        public static async Task<Species> GetAncestorAsync(Species species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                return row is null ? null : await GetSpeciesAsync(row.Field<long>("ancestor_id"));
+
+            }
+
+        }
+        public static async Task<Species[]> GetAncestorsAsync(Species species) {
+
+            List<Species> ancestor_species = new List<Species>();
+
+            foreach (long species_id in await GetAncestorIdsAsync(species.id))
+                ancestor_species.Add(await GetSpeciesAsync(species_id));
+
+            return ancestor_species.ToArray();
 
         }
 

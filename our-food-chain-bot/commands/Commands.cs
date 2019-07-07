@@ -87,20 +87,31 @@ namespace OurFoodChain {
 
             embed.AddField("Owner", await sp.GetOwnerOrDefault(Context), inline: true);
 
-            List<string> zone_names = new List<string>();
+            // Group zones according to the ones that have the same notes.
 
-            foreach (SpeciesZone zone in await SpeciesUtils.GetZones(sp)) {
+            List<string> zones_value_builder = new List<string>();
 
-                if (zone.Zone.type == ZoneType.Terrestrial)
-                    embed_color = Color.DarkGreen;
+            SpeciesZone[] zone_list = await SpeciesUtils.GetZones(sp);
+            zone_list.GroupBy(x => string.IsNullOrEmpty(x.Notes) ? "" : x.Notes)
+                .OrderBy(x => x.Key)
+                .ToList()
+                .ForEach(x => {
 
-                zone_names.Add(string.IsNullOrEmpty(zone.Notes) ? zone.Zone.GetShortName() : string.Format("{0} ({1})", zone.Zone.GetShortName(), zone.Notes));
+                    if (x.Any(y => y.Zone.type == ZoneType.Terrestrial))
+                        embed_color = Color.DarkGreen;
 
-            }
+                    // Create an array of zone names, and sort them according to name.
+                    List<string> zones_array = x.Select(y => y.Zone.GetShortName()).ToList();
+                    zones_array.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
-            zone_names.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
+                    if (string.IsNullOrEmpty(x.Key))
+                        zones_value_builder.Add(string.Join(", ", zones_array));
+                    else
+                        zones_value_builder.Add(string.Format("{0} ({1})", string.Join(", ", zones_array), x.Key.ToLower()));
 
-            string zones_value = string.Join(", ", zone_names);
+                });
+
+            string zones_value = string.Join("; ", zones_value_builder);
 
             embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
 

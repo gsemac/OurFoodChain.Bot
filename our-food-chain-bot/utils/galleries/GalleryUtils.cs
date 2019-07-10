@@ -61,7 +61,7 @@ namespace OurFoodChain {
 
             if (picture.id == Picture.NULL_ID) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Picture(url, gallery_id, artist, description) VALUES($url, $gallery_id, $artist, $description)")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Picture(url, gallery_id, artist, description) VALUES($url, $gallery_id, $artist, $description)")) {
 
                     cmd.Parameters.AddWithValue("$url", picture.url);
                     cmd.Parameters.AddWithValue("$gallery_id", gallery.id);

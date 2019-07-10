@@ -2,6 +2,7 @@
 using Discord.Commands;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,148 @@ namespace OurFoodChain {
 
     public class GalleryCommands :
         ModuleBase {
+
+        [Command("setpic"), Alias("setspeciespic", "setspic")]
+        public async Task SetPic(string species, string imageUrl) {
+            await SetPic("", species, imageUrl);
+        }
+        [Command("setpic"), Alias("setspeciespic", "setspic")]
+        public async Task SetPic(string genus, string species, string imageUrl) {
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
+                return;
+
+            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+                return;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$url", imageUrl);
+                cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", sp.GetShortName()));
+
+        }
+
+        [Command("+pic")]
+        public async Task PlusPic(string species, string imageUrl) {
+            await PlusPic("", species, imageUrl, "");
+        }
+        [Command("+pic")]
+        public async Task PlusPic(string arg0, string arg1, string arg2) {
+
+            // This command can be used in the following ways:
+            // +pic <genus> <species> <url>
+            // +pic <species> <url> <description>
+
+            string genus = "";
+            string species = "";
+            string url = "";
+            string description = "";
+
+            if (StringUtils.IsUrl(arg1)) {
+
+                // <species> <url> <description>
+
+                genus = "";
+                species = arg0;
+                url = arg1;
+                description = arg2;
+
+            }
+            else {
+
+                // <genus> <species> <url>
+
+                genus = arg0;
+                species = arg1;
+                url = arg2;
+
+            }
+
+            await PlusPic(genus, species, url, description);
+
+        }
+        [Command("+pic")]
+        public async Task PlusPic(string genus, string species, string imageUrl, string description) {
+
+            // Get the species.
+
+            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+
+            if (sp is null)
+                return;
+
+            // Validate the image URL.
+
+            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+                return;
+
+            // If the species doesn't have a picture yet, use this as the picture for that species.
+
+            if (string.IsNullOrEmpty(sp.pics)) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
+
+                    cmd.Parameters.AddWithValue("$url", imageUrl);
+                    cmd.Parameters.AddWithValue("$species_id", sp.id);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+            // Create a gallery for the species if it doesn't already exist.
+
+            string gallery_name = "species" + sp.id.ToString();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Gallery(name) VALUES($name);")) {
+
+                cmd.Parameters.AddWithValue("$name", gallery_name);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            // Get the gallery for the species.
+
+            Gallery gallery = await BotUtils.GetGalleryFromDb(gallery_name);
+
+            if (gallery is null) {
+
+                await BotUtils.ReplyAsync_Error(Context, string.Format("Could not create a picture gallery for **{0}**.", sp.GetShortName()));
+
+                return;
+
+            }
+
+            // Add the new picture to the gallery.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, artist, description) VALUES($url, $gallery_id, $artist, $description);")) {
+
+                cmd.Parameters.AddWithValue("$url", imageUrl);
+                cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+                cmd.Parameters.AddWithValue("$artist", Context.User.Username);
+                cmd.Parameters.AddWithValue("$description", description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new picture for **{0}**.", sp.GetShortName()));
+
+        }
 
         [Command("gallery"), Alias("pic", "pics", "pictures")]
         public async Task Gallery(string speciesOrTaxon) {

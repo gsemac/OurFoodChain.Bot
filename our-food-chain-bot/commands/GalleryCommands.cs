@@ -17,30 +17,25 @@ namespace OurFoodChain {
             await SetPic("", species, imageUrl);
         }
         [Command("setpic"), Alias("setspeciespic", "setspic")]
-        public async Task SetPic(string genus, string species, string imageUrl) {
+        public async Task SetPic(string genusName, string speciesName, string imageUrl) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            // Updates the default picture for the given species.
+            // While any users can add pictures for species, only moderators can update the default picture.
 
-            if (sp is null)
+            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+
+            if (species is null)
                 return;
 
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
-                return;
+            if (await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species) && await BotUtils.ReplyIsImageUrlValidAsync(Context, imageUrl)) {
 
-            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
-                return;
+                await SpeciesUtils.SetPictureAsync(species, new Picture {
+                    url = imageUrl
+                });
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$url", imageUrl);
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
-
-                await Database.ExecuteNonQuery(cmd);
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", species.GetShortName()));
 
             }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", sp.GetShortName()));
 
         }
 
@@ -84,74 +79,128 @@ namespace OurFoodChain {
 
         }
         [Command("+pic")]
-        public async Task PlusPic(string genus, string species, string imageUrl, string description) {
+        public async Task PlusPic(string genusName, string speciesName, string imageUrl, string description) {
 
             // Get the species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
 
-            if (sp is null)
+            if (species is null)
                 return;
 
             // Validate the image URL.
 
-            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+            if (!await BotUtils.ReplyIsImageUrlValidAsync(Context, imageUrl))
                 return;
-
-            // If the species doesn't have a picture yet, use this as the picture for that species.
-
-            if (string.IsNullOrEmpty(sp.pics)) {
-
-                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics=$url WHERE id=$species_id;")) {
-
-                    cmd.Parameters.AddWithValue("$url", imageUrl);
-                    cmd.Parameters.AddWithValue("$species_id", sp.id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-            }
-
-            // Create a gallery for the species if it doesn't already exist.
-
-            string gallery_name = "species" + sp.id.ToString();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Gallery(name) VALUES($name);")) {
-
-                cmd.Parameters.AddWithValue("$name", gallery_name);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            // Get the gallery for the species.
-
-            Gallery gallery = await BotUtils.GetGalleryFromDb(gallery_name);
-
-            if (gallery is null) {
-
-                await BotUtils.ReplyAsync_Error(Context, string.Format("Could not create a picture gallery for **{0}**.", sp.GetShortName()));
-
-                return;
-
-            }
 
             // Add the new picture to the gallery.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, artist, description) VALUES($url, $gallery_id, $artist, $description);")) {
+            bool picture_already_exists = (await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species))).Any(x => x.url == imageUrl);
 
-                cmd.Parameters.AddWithValue("$url", imageUrl);
-                cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
-                cmd.Parameters.AddWithValue("$artist", Context.User.Username);
-                cmd.Parameters.AddWithValue("$description", description);
+            await SpeciesUtils.AddPictureAsync(species, new Picture {
+                url = imageUrl,
+                description = description,
+                artist = Context.User.Username
+            });
 
-                await Database.ExecuteNonQuery(cmd);
+            if (picture_already_exists)
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
+            else
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
+
+
+        }
+
+        [Command("-pic")]
+        public async Task MinusPic(string speciesName) {
+            await MinusPic(string.Empty, speciesName);
+        }
+        [Command("-pic")]
+        public async Task MinusPic(string genusName, string speciesName) {
+            await MinusPic(genusName, speciesName, 1);
+        }
+        [Command("-pic")]
+        public async Task MinusPic(string speciesName, int pictureIndex) {
+            await MinusPic(string.Empty, speciesName, pictureIndex);
+        }
+        [Command("-pic")]
+        public async Task MinusPic(string genusName, string speciesName, int pictureIndex) {
+
+            // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
+            --pictureIndex;
+
+            if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) {
+
+                // Get the species.
+
+                Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+
+                if (species is null)
+                    return;
+
+                Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
+                Picture picture = (pictureIndex >= 0 && pictureIndex < pictures.Count()) ? pictures[pictureIndex] : null;
+
+                // If the image was removed from anywhere (gallery or default species picture), this is set to "true".
+                bool success = await SpeciesUtils.RemovePictureAsync(species, picture);
+
+                if (success)
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed [picture]({1}) from **{0}**.", species.GetShortName(), picture.url));
+                else
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has no picture at this index.", species.GetShortName()));
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new picture for **{0}**.", sp.GetShortName()));
+        }
 
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string speciesName, int pictureIndex, string artist) {
+            await SetArtist(string.Empty, speciesName, pictureIndex, artist);
+        }
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string genusName, string speciesName, int pictureIndex, string artist) {
+
+            // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
+            --pictureIndex;
+
+            if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) {
+
+                Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+
+                if (species is null)
+                    return;
+
+                Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
+
+                if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
+
+                    Picture picture = pictures[pictureIndex];
+
+                    string former_artist = picture.artist;
+
+                    picture.artist = artist;
+
+                    await SpeciesUtils.AddPictureAsync(species, picture);
+
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist credit for [picture]({0}) to **{1}**{2}.", 
+                        picture.url, 
+                        artist,
+                        !string.IsNullOrEmpty(former_artist) ? string.Format(" (formerly \"{0}\")", former_artist) : ""));
+
+                }
+                else
+                    await BotUtils.ReplyAsync_Error(Context, string.Format("**{0}** has no picture at this index.", species.GetShortName()));
+
+            }
+
+        }
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string speciesName, int pictureIndex, IUser user) {
+            await SetArtist(string.Empty, speciesName, pictureIndex, user);
+        }
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string genusName, string speciesName, int pictureIndex, IUser user) {
+            await SetArtist(genusName, speciesName, pictureIndex, user.Username);
         }
 
         [Command("gallery"), Alias("pic", "pics", "pictures")]
@@ -184,7 +233,7 @@ namespace OurFoodChain {
                         pictures.Add(new Picture(taxon.pics));
 
                     foreach (Species sp in await BotUtils.GetSpeciesInTaxonFromDb(taxon))
-                        pictures.AddRange(await _getGallery(sp));
+                        pictures.AddRange(await SpeciesUtils.GetPicturesAsync(sp));
 
                     await _showGallery(taxon.GetName(), pictures.ToArray());
 
@@ -211,49 +260,11 @@ namespace OurFoodChain {
 
         }
 
-        private async Task<List<Picture>> _getGallery(Species species) {
-
-            List<Picture> pictures = new List<Picture>();
-
-            // If the species has a picture assigned to it, add that as the first picture.
-
-            if (!string.IsNullOrEmpty(species.pics))
-                pictures.Add(new Picture {
-                    url = species.pics,
-                    artist = await species.GetOwnerOrDefault(Context),
-                    footer = string.Format("Depiction of {0}", species.GetShortName())
-                });
-
-            // Check the database for additional pictures to add to the gallery.
-            // We'll do this by generating a default gallery name for the species, and then checking that gallery.
-
-            string gallery_name = "species" + species.id.ToString();
-
-            Gallery gallery = await BotUtils.GetGalleryFromDb(gallery_name);
-
-            if (!(gallery is null))
-                foreach (Picture p in await BotUtils.GetPicsFromDb(gallery)) {
-
-                    // Make sure we don't add the default picture twice.
-                    // However, if we come across it and it has a description, set the description for the default picture.
-
-                    p.footer = string.Format("Depiction of {0}", species.GetShortName());
-
-                    if (p.url != species.pics)
-                        pictures.Add(p);
-                    else if (pictures.Count() > 0 && p.url == pictures[0].url)
-                        pictures[0].description = p.description;
-
-                }
-
-            return pictures;
-
-        }
         private async Task _showGallery(Species species) {
 
-            List<Picture> pictures = await _getGallery(species);
+            Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
 
-            await _showGallery(species.GetShortName(), pictures.ToArray());
+            await _showGallery(species.GetShortName(), pictures);
 
         }
         private async Task _showGallery(string galleryName, Picture[] pictures) {

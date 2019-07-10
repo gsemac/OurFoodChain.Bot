@@ -207,7 +207,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task AddCommonName(Species species, string commonName, bool overwriteSpeciesTable) {
+        public static async Task AddCommonNameAsync(Species species, string commonName, bool overwriteSpeciesTable) {
 
             commonName = _formatCommonNameForDatabase(commonName);
 
@@ -228,7 +228,7 @@ namespace OurFoodChain {
                 await _setCommonNameInSpeciesTable(species, commonName);
 
         }
-        public static async Task RemoveCommonName(Species species, string commonName) {
+        public static async Task RemoveCommonNameAsync(Species species, string commonName) {
 
             commonName = _formatCommonNameForDatabase(commonName);
 
@@ -249,7 +249,7 @@ namespace OurFoodChain {
                 await _setCommonNameInSpeciesTable(species, string.Empty);
 
         }
-        public static async Task RemoveCommonNames(Species species) {
+        public static async Task RemoveCommonNamesAsync(Species species) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesCommonNames WHERE species_id = $species_id")) {
 
@@ -263,7 +263,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<SpeciesZone[]> GetZones(Species species) {
+        public static async Task<SpeciesZone[]> GetZonesAsync(Species species) {
 
             List<SpeciesZone> zones = new List<SpeciesZone>();
 
@@ -292,10 +292,10 @@ namespace OurFoodChain {
             return zones.ToArray();
 
         }
-        public static async Task AddZones(Species species, Zone[] zones) {
-            await AddZones(species, zones, string.Empty);
+        public static async Task AddZonesAsync(Species species, Zone[] zones) {
+            await AddZonesAsync(species, zones, string.Empty);
         }
-        public static async Task AddZones(Species species, Zone[] zones, string notes) {
+        public static async Task AddZonesAsync(Species species, Zone[] zones, string notes) {
 
             foreach (Zone zone in zones) {
 
@@ -312,7 +312,7 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task RemoveZones(Species species, Zone[] zones) {
+        public static async Task RemoveZonesAsync(Species species, Zone[] zones) {
 
             foreach (Zone zone in zones) {
 
@@ -326,6 +326,103 @@ namespace OurFoodChain {
                 }
 
             }
+
+        }
+
+        public static async Task SetPictureAsync(Species species, Picture picture) {
+
+            // Set the given picture as the default picture for the species.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics = $url WHERE id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$url", picture is null ? string.Empty : picture.url);
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            // Update the "pics" value for the species so we don't run into an infinite loop below.
+            // "AddPicture" will call this function if the "pics" value is empty.
+            species.pics = picture is null ? string.Empty : picture.url;
+
+            // Add the picture to this species' picture gallery (does nothing if it's already been added).
+
+            if (!(picture is null))
+                await AddPictureAsync(species, picture);
+
+        }
+        public static async Task AddPictureAsync(Species species, Picture picture) {
+
+            if (!(picture is null)) {
+
+                // Add the picture to this species' picture gallery (does nothing if it's already been added).
+
+                await GalleryUtils.AddGalleryAsync(species);
+
+                Gallery gallery = await GalleryUtils.GetGalleryAsync(species);
+
+                await GalleryUtils.AddPictureAsync(gallery, picture);
+
+                // If the species doesn't have a default picture yet, use this picture as the default picture.
+
+                if (string.IsNullOrEmpty(species.pics))
+                    await SetPictureAsync(species, picture);
+
+            }
+
+        }
+        public static async Task<bool> RemovePictureAsync(Species species, Picture picture) {
+
+            // Remove this picture from the species' picture gallery.
+            // Additionally, if this picture is the species' default picture, remove that as well.
+
+            if (picture is null)
+                return false;
+
+            bool success = false;
+
+            Gallery gallery = await GalleryUtils.GetGalleryAsync(species);
+            Picture[] gallery_pictures = await GalleryUtils.GetPicturesAsync(gallery);
+
+            if (gallery_pictures.Count() >= 0 && gallery_pictures.Any(x => x.id == picture.id)) {
+
+                await GalleryUtils.RemovePictureAsync(gallery, picture);
+
+                success = true;
+
+            }
+
+            if (species.pics == picture.url) {
+
+                await SetPictureAsync(species, null);
+
+                success = true;
+
+            }
+
+            return success;
+
+        }
+        public static async Task<Picture[]> GetPicturesAsync(Species species) {
+
+            List<Picture> pictures = new List<Picture>();
+
+            Gallery gallery = await GalleryUtils.GetGalleryAsync(species);
+
+            pictures.AddRange(await GalleryUtils.GetPicturesAsync(gallery));
+
+            if (!string.IsNullOrEmpty(species.pics) && !pictures.Any(x => x.url == species.pics))
+                pictures.Insert(0, new Picture {
+                    url = species.pics,
+                    artist = species.owner
+                });
+
+            pictures.ForEach(x => {
+                x.footer = string.Format("Depiction of {0}", species.GetShortName());
+            });
+
+            return pictures.ToArray();
 
         }
 

@@ -400,7 +400,7 @@ namespace OurFoodChain {
             if (string.IsNullOrWhiteSpace(commonName)) {
 
                 // If the given common name is empty, erase all common names associated with this species.
-                await SpeciesUtils.RemoveCommonNames(species_info);
+                await SpeciesUtils.RemoveCommonNamesAsync(species_info);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed all common names from **{0}**.",
                     species_info.GetShortName()));
@@ -413,7 +413,7 @@ namespace OurFoodChain {
                 // The difference between this and the "+common" command is that this one overwrites the value stored in the "Species" table.
                 // This field is pretty much deprected at this point, but it is still accessed through some generic taxon commands.
 
-                await SpeciesUtils.AddCommonName(species_info, commonName, overwriteSpeciesTable: true);
+                await SpeciesUtils.AddCommonNameAsync(species_info, commonName, overwriteSpeciesTable: true);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
                     species_info.GetShortName(),
@@ -446,7 +446,7 @@ namespace OurFoodChain {
             }
             else {
 
-                await SpeciesUtils.AddCommonName(species_info, commonName, overwriteSpeciesTable: false);
+                await SpeciesUtils.AddCommonNameAsync(species_info, commonName, overwriteSpeciesTable: false);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
                     species_info.GetShortName(),
@@ -483,7 +483,7 @@ namespace OurFoodChain {
             }
             else {
 
-                await SpeciesUtils.RemoveCommonName(species_info, commonName);
+                await SpeciesUtils.RemoveCommonNameAsync(species_info, commonName);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is no longer known as the **{1}**.",
                     species_info.GetShortName(),

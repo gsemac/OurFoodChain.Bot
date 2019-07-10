@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    class Gallery {
+    public class Gallery {
 
         public long id;
         public string name;

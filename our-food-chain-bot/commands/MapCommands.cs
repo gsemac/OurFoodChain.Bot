@@ -19,7 +19,7 @@ namespace OurFoodChain {
 
             // Get map images from the database.
 
-            Gallery gallery = await BotUtils.GetGalleryFromDb(MAP_GALLERY_NAME);
+            Gallery gallery = await GalleryUtils.GetGalleryAsync(MAP_GALLERY_NAME);
             Picture primary = null;
             Picture labeled = null;
 
@@ -101,7 +101,7 @@ namespace OurFoodChain {
 
             }
 
-            Gallery gallery = await BotUtils.GetGalleryFromDb(MAP_GALLERY_NAME);
+            Gallery gallery = await GalleryUtils.GetGalleryAsync(MAP_GALLERY_NAME);
 
             // Remove existing images from the gallery.
 
@@ -115,7 +115,7 @@ namespace OurFoodChain {
 
             // Insert the primary map image.
 
-            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, primaryImageUrl))
+            if (!await BotUtils.ReplyIsImageUrlValidAsync(Context, primaryImageUrl))
                 return;
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, name, artist) VALUES($url, $gallery_id, $name, $artist);")) {
@@ -133,7 +133,7 @@ namespace OurFoodChain {
 
             if (!string.IsNullOrEmpty(labeledImageUrl)) {
 
-                if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, labeledImageUrl))
+                if (!await BotUtils.ReplyIsImageUrlValidAsync(Context, labeledImageUrl))
                     return;
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, name, artist) VALUES($url, $gallery_id, $name, $artist);")) {

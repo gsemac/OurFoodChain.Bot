@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    class Picture {
+    public class Picture {
 
-        public long id = 0;
+        public const long NULL_ID = 0;
+
+        public long id = NULL_ID;
         public string url;
         public long galleryId = 0;
         public string name;

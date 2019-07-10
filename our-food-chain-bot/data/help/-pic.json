@@ -1,0 +1,9 @@
+﻿{
+  "name": "-pic",
+  "aliases": [],
+  "category": "update",
+  "description": "Removes a picture from the given species by index. To determine an image's index, use the `?gallery` command.",
+  "examples": [
+    "-pic cornu aspersum 1"
+  ]
+}

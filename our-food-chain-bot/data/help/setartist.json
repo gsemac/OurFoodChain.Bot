@@ -1,0 +1,9 @@
+﻿{
+  "name": "setartist",
+  "aliases": [ "setcredit" ],
+  "category": "update",
+  "description": "Sets the artist credit for the picture at the given index in the given species' gallery.",
+  "examples": [
+    "setartist cornu asperum 1 user"
+  ]
+}

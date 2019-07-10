@@ -91,7 +91,7 @@ namespace OurFoodChain {
 
             List<string> zones_value_builder = new List<string>();
 
-            SpeciesZone[] zone_list = await SpeciesUtils.GetZones(sp);
+            SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(sp);
             zone_list.GroupBy(x => string.IsNullOrEmpty(x.Notes) ? "" : x.Notes)
                 .OrderBy(x => x.Key)
                 .ToList()
@@ -854,7 +854,7 @@ namespace OurFoodChain {
             ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
 
             // Add the zones to the species.
-            await SpeciesUtils.AddZones(species, zones.Zones, notes);
+            await SpeciesUtils.AddZonesAsync(species, zones.Zones, notes);
 
             if (zones.Invalid.Count() > 0) {
 
@@ -904,7 +904,7 @@ namespace OurFoodChain {
             ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
 
             // Remove the zones from the species.
-            await SpeciesUtils.RemoveZones(sp, zones.Zones);
+            await SpeciesUtils.RemoveZonesAsync(sp, zones.Zones);
 
             if (zones.Invalid.Count() > 0) {
 
@@ -991,7 +991,7 @@ namespace OurFoodChain {
 
             // Make sure the image URL is valid.
 
-            if (!await BotUtils.ReplyAsync_ValidateImageUrl(Context, imageUrl))
+            if (!await BotUtils.ReplyIsImageUrlValidAsync(Context, imageUrl))
                 return;
 
             // Update the zone.

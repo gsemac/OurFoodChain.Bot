@@ -894,43 +894,6 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Gallery> GetGalleryFromDb(string name) {
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gallery WHERE name=$name;")) {
-
-                cmd.Parameters.AddWithValue("$name", name);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    return Gallery.FromDataRow(row);
-
-            }
-
-            return null;
-
-        }
-        public static async Task<Picture[]> GetPicsFromDb(Gallery gallery) {
-
-            List<Picture> pictures = new List<Picture>();
-
-            if (!(gallery is null) && gallery.id > 0) {
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Picture WHERE gallery_id=$gallery_id;")) {
-
-                    cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
-
-                    using (DataTable rows = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in rows.Rows)
-                            pictures.Add(Picture.FromDataRow(row));
-
-                }
-
-            }
-
-            return pictures.ToArray();
-
-        }
         public static async Task<Picture> GetPicFromDb(Gallery gallery, string name) {
 
             if (!(gallery is null) && gallery.id > 0) {
@@ -1318,9 +1281,9 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyAsync_ValidateImageUrl(ICommandContext context, string imageUrl) {
+        public static async Task<bool> ReplyIsImageUrlValidAsync(ICommandContext context, string imageUrl) {
 
-            if (!StringUtils.IsUrl(imageUrl)) {
+            if (!GalleryUtils.IsImageUrl(imageUrl)) {
 
                 await ReplyAsync_Error(context, "The image URL is invalid.");
 
@@ -1705,7 +1668,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the image URL appears to be valid.
-            if (!await ReplyAsync_ValidateImageUrl(context, url))
+            if (!await ReplyIsImageUrlValidAsync(context, url))
                 return;
 
             taxon.pics = url;
@@ -1724,7 +1687,7 @@ namespace OurFoodChain {
                 return;
 
             // Ensure that the image URL appears to be valid.
-            if (!await ReplyAsync_ValidateImageUrl(context, url))
+            if (!await ReplyIsImageUrlValidAsync(context, url))
                 return;
 
             Taxon taxon = await GetTaxonFromDb(name, type);

@@ -105,6 +105,9 @@ namespace OurFoodChainWikiBot {
 
                             }
 
+                            if (!result.Success && result.ErrorCode != ErrorCode.FileExistsNoChange)
+                                picture_filename = string.Empty;
+
                         }
                         catch (Exception ex) {
 
@@ -173,7 +176,12 @@ namespace OurFoodChainWikiBot {
             if (string.IsNullOrEmpty(species.pics))
                 return string.Empty;
 
-            return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(species.pics).ToLower());
+            string image_url = species.pics;
+
+            if (image_url.Contains("?"))
+                image_url = image_url.Substring(0, image_url.LastIndexOf("?"));
+
+            return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(image_url).ToLower());
 
         }
         private static async Task<Dictionary<string, string>> _generateLinkDictionary() {

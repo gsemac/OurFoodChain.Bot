@@ -76,16 +76,26 @@ namespace OurFoodChainWikiBot {
 
     public enum ErrorCode {
         VerificationError = 1,
-        FileExistsNoChange
+        FileExistsNoChange,
+        MissingTitle
     }
 
     public class MediaWikiApiRequestResult {
 
         public MediaWikiApiRequestResult() { }
         public MediaWikiApiRequestResult(string errorCode, string errorMessage) {
+            SetError(errorCode, errorMessage);
+        }
+
+        public bool Success { get; set; } = true;
+        public ErrorCode ErrorCode { get; set; } = 0;
+        public string ErrorMessage { get; set; }
+
+        public void SetError(string errorCode, string errorMessage) {
 
             Success = false;
             ErrorMessage = errorMessage;
+            ErrorCode = 0;
 
             switch (errorCode.ToLower()) {
 
@@ -97,13 +107,20 @@ namespace OurFoodChainWikiBot {
                     ErrorCode = ErrorCode.FileExistsNoChange;
                     break;
 
-            }
+                case "missingtitle":
+                    ErrorCode = ErrorCode.MissingTitle;
+                    break;
+
+            }          
 
         }
 
-        public bool Success { get; set; } = true;
-        public ErrorCode ErrorCode { get; set; } = 0;
-        public string ErrorMessage { get; set; }
+    }
+
+    public class MediaWikiApiParseRequestResult :
+        MediaWikiApiRequestResult {
+
+        public string Text { get; set; } = "";
 
     }
 
@@ -166,17 +183,22 @@ namespace OurFoodChainWikiBot {
             return new MediaWikiApiRequestResult { Success = IsLoggedIn };
 
         }
-        public string Parse(string title, ParseParameters parameters) {
+        public MediaWikiApiParseRequestResult Parse(string title, ParseParameters parameters) {
 
             _logInfo(string.Format("parsing page \"{0}\"", title));
 
             string data = _http_get(_get_api_url() + string.Format("?action=parse&page={0}&prop=wikitext&format=json", title));
             JObject json = JObject.Parse(data);
 
-            if (json.ContainsKey("parse"))
-                return json["parse"]["wikitext"]["*"].Value<string>();
-            else
-                return string.Empty;
+            MediaWikiApiParseRequestResult result = new MediaWikiApiParseRequestResult();
+
+            if (json.ContainsKey("parse")) {
+                result.Text = json["parse"]["wikitext"]["*"].Value<string>();
+            }
+            else if (json.ContainsKey("error")) 
+                result.SetError(json["error"]["code"].Value<string>(), json["error"]["info"].Value<string>());
+
+            return result;
 
         }
         public MediaWikiApiRequestResult Edit(string title, EditParameters parameters) {

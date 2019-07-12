@@ -153,6 +153,8 @@ namespace OurFoodChainWikiBot {
 
             _log("synchronizing complete");
 
+            await Task.Delay(-1);
+
         }
 
         private const string BOT_FLAG_STRING = "{{BotGenerated}}";
@@ -217,11 +219,14 @@ namespace OurFoodChainWikiBot {
             // This allows us to make sure that no one has removed the "{{BotGenerated}}" flag.
             // If it has been removed, do not modify the page.
 
-            string existing_page_content = client.Parse(pageTitle, new ParseParameters());
+            MediaWikiApiParseRequestResult parse_result = client.Parse(pageTitle, new ParseParameters());
 
-            if (existing_page_content.Contains(BOT_FLAG_STRING)) {
+            if (parse_result.ErrorCode == ErrorCode.MissingTitle || parse_result.Text.Contains(BOT_FLAG_STRING)) {
 
-                _log(string.Format("editing page \"{0}\"", pageTitle));
+                if (parse_result.ErrorCode == ErrorCode.MissingTitle)
+                    _log(string.Format("creating page \"{0}\"", pageTitle));
+                else
+                    _log(string.Format("editing page \"{0}\"", pageTitle));
 
                 try {
 

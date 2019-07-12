@@ -115,7 +115,15 @@ namespace OurFoodChainWikiBot {
                     continue;
 
                 content = Regex.Replace(content, string.Format(unlinked_pattern_format, Regex.Escape(key)), m => {
-                    return string.Format("[[{0}|{1}]]", data.LinkDictionary[key], m.Value);
+
+                    string page_title = data.LinkDictionary[key];
+                    string match_value = m.Value;
+
+                    if (page_title == match_value)
+                        return string.Format("[[{0}]]", match_value);
+                    else
+                        return string.Format("[[{0}|{1}]]", page_title, match_value);
+
                 }, RegexOptions.IgnoreCase);
 
             }

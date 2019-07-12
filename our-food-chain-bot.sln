@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28306.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "our-food-chain-bot", "our-food-chain-bot\our-food-chain-bot.csproj", "{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ourfoodchainwiki-bot", "ourfoodchainwiki-bot\ourfoodchainwiki-bot.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

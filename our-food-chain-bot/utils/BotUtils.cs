@@ -27,6 +27,17 @@ namespace OurFoodChain {
         public ZoneType type;
         public string pics;
 
+        public string ShortName {
+            get {
+                return GetShortName();
+            }
+        }
+        public string FullName {
+            get {
+                return GetFullName();
+            }
+        }
+
         public static Zone FromDataRow(DataRow row) {
 
             Zone zone = new Zone();
@@ -164,6 +175,38 @@ namespace OurFoodChain {
         public string genus;
         public bool isExtinct;
 
+        public string GenusName {
+            get {
+                return StringUtils.ToTitleCase(genus);
+            }
+        }
+
+        public string CommonName {
+            get {
+                return new CommonName(commonName).Value;
+            }
+        }
+        public string FullName {
+            get {
+                return GetFullName();
+            }
+        }
+        public string ShortName {
+            get {
+                return GetShortName();
+            }
+        }
+        public string Name {
+            get {
+
+                if (string.IsNullOrEmpty(name))
+                    return "";
+
+                return name.ToLower();
+
+            }
+        }
+
         public static async Task<Species> FromDataRow(DataRow row, Genus genusInfo) {
 
             Species species = new Species {
@@ -211,7 +254,7 @@ namespace OurFoodChain {
         }
         public string GetFullName() {
 
-            return string.Format("{0} {1}", StringUtils.ToTitleCase(genus), name);
+            return string.Format("{0} {1}", StringUtils.ToTitleCase(genus), name.ToLower());
 
         }
         public string GetTimeStampAsDateString() {
@@ -259,6 +302,10 @@ namespace OurFoodChain {
         public string description;
 
         public string notes;
+
+        public string Name {
+            get { return StringUtils.ToSentenceCase(name); }
+        }
 
         public string GetDescriptionOrDefault() {
 
@@ -584,53 +631,6 @@ namespace OurFoodChain {
             roles.Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
             return roles.ToArray();
-
-        }
-        public static async Task<Role[]> GetRolesFromDbBySpecies(long speciesId) {
-
-            // Return all roles assigned to the given species.
-
-            List<Role> roles = new List<Role>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE id IN (SELECT role_id FROM SpeciesRoles WHERE species_id=$species_id) ORDER BY name ASC;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", speciesId);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows)
-                        roles.Add(Role.FromDataRow(row));
-
-            }
-
-            // Get role notes.
-            // #todo Get the roles and notes using a single query.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesRoles WHERE species_id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", speciesId);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in rows.Rows) {
-
-                        long role_id = row.Field<long>("role_id");
-                        string notes = row.Field<string>("notes");
-
-                        foreach (Role role in roles)
-                            if (role.id == role_id) {
-                                role.notes = notes;
-                                break;
-                            }
-
-                    }
-
-            }
-
-            return roles.ToArray();
-
-        }
-        public static async Task<Role[]> GetRolesFromDbBySpecies(Species species) {
-
-            return await GetRolesFromDbBySpecies(species.id);
 
         }
         public static async Task<Role> GetRoleFromDb(string roleName) {

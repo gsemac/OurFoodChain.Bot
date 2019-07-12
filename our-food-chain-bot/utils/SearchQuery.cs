@@ -457,7 +457,7 @@ namespace OurFoodChain {
 
                         case "role":
                             await result.GroupByAsync(async (x) => {
-                                return (await BotUtils.GetRolesFromDbBySpecies(x.id)).Select(z => z.name).ToArray();
+                                return (await SpeciesUtils.GetRolesAsync(x.id)).Select(z => z.name).ToArray();
                             });
                             break;
 
@@ -524,7 +524,7 @@ namespace OurFoodChain {
                     string[] role_list = value.Split(',').Select(x => x.Trim().ToLower()).ToArray();
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetRolesFromDbBySpecies(x.id)).Any(r => role_list.Contains(r.name.ToLower()));
+                        return !(await SpeciesUtils.GetRolesAsync(x.id)).Any(r => role_list.Contains(r.name.ToLower()));
                     }, subtract);
 
                     break;

@@ -120,7 +120,7 @@ namespace OurFoodChain.gotchi {
             if (sp is null)
                 return set;
 
-            Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp);
+            Role[] roles = await SpeciesUtils.GetRolesAsync(sp);
 
             // Add all moves that the gotchi meets the requirements for.
 

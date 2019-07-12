@@ -465,7 +465,7 @@ namespace OurFoodChain {
 
                     foreach (Species sp in species_list) {
 
-                        Role[] roles_list = await BotUtils.GetRolesFromDbBySpecies(sp);
+                        Role[] roles_list = await SpeciesUtils.GetRolesAsync(sp);
 
                         if (roles_list.Count() <= 0) {
 

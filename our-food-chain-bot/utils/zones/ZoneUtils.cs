@@ -48,6 +48,22 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Zone[]> GetZonesAsync() {
+
+            List<Zone> zone_list = new List<Zone>();
+
+            using (SQLiteConnection conn = await Database.GetConnectionAsync())
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones"))
+            using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
+                foreach (DataRow row in rows.Rows)
+                    zone_list.Add(Zone.FromDataRow(row));
+
+            zone_list.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.name, rhs.name));
+
+            return zone_list.ToArray();
+
+        }
+
         public static async Task<ZoneListResult> GetZonesByZoneListAsync(string zoneList) {
 
             List<Zone> valid = new List<Zone>();

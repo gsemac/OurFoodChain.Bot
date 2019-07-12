@@ -1,0 +1,16 @@
+﻿{{BotGenerated}}
+{{Infobox_Species
+|image=%picture%
+|Creator=%owner%
+|Status=%status%
+|Common Name=%common_names%
+|Habitat=%zones%
+|Roles=%roles%
+|Genus=%genus%
+|Species=%species%
+|Ancestor=%ancestor%
+|CreationDate=%creation_date%
+|ExtinctionDate=%extinction_date%
+|ExtinctionReason=%extinction_reason%
+}}
+%description%

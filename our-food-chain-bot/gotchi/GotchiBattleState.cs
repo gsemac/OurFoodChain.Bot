@@ -425,7 +425,7 @@ namespace OurFoodChain.gotchi {
             // Check role match-up to see if the move is super-effective.
             // #todo Role match-ups should be defined in an external file.
 
-            Role[] target_roles = await BotUtils.GetRolesFromDbBySpecies(target.gotchi.species_id);
+            Role[] target_roles = await SpeciesUtils.GetRolesAsync(target.gotchi.species_id);
             double weakness_multiplier = user.selectedMove.info.canMatchup ? _getWeaknessMultiplier(user.selectedMove.info.role, target_roles) : 1.0;
             Species target_species = await BotUtils.GetSpeciesFromDb(target.gotchi.species_id);
 

@@ -1,0 +1,14 @@
+{
+
+  "protocol": "https",
+  "server": "",
+  "api_path": "/w",
+  "user_agent": "ourfoodchainwiki-bot/0.1",
+
+  "username": "",
+  "password": "",
+
+  "max_image_width": 0,
+  "max_image_height": 0
+
+}

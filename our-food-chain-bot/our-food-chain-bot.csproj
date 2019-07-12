@@ -200,6 +200,7 @@
     <Compile Include="commands\RelationshipCommands.cs" />
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="commands\TaxonCommands.cs" />
+    <Compile Include="utils\ExtinctionInfo.cs" />
     <Compile Include="utils\galleries\Gallery.cs" />
     <Compile Include="gotchi\GotchiBattleState.cs" />
     <Compile Include="gotchi\Gotchi.cs" />

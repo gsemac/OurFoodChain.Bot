@@ -76,7 +76,7 @@ namespace OurFoodChain.gotchi {
 
             // Calculate base stat multipliers, which depend on the species' role(s).
 
-            Role[] roles = await BotUtils.GetRolesFromDbBySpecies(sp);
+            Role[] roles = await SpeciesUtils.GetRolesAsync(sp);
 
             if (roles.Count() > 0) {
 

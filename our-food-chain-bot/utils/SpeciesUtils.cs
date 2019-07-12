@@ -36,6 +36,18 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Species[]> GetSpeciesAsync() {
+
+            List<Species> species = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species"))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows)
+                    species.Add(await Species.FromDataRow(row));
+
+            return species.ToArray();
+
+        }
         public static async Task<Species[]> GetSpeciesAsync(string name) {
 
             GenusSpeciesPair input = _parseGenusAndSpeciesFromUserInput(string.Empty, name);
@@ -289,6 +301,8 @@ namespace OurFoodChain {
 
             }
 
+            zones.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.Zone.name, rhs.Zone.name));
+
             return zones.ToArray();
 
         }
@@ -423,6 +437,76 @@ namespace OurFoodChain {
             });
 
             return pictures.ToArray();
+
+        }
+
+        public static async Task<Role[]> GetRolesAsync(long speciesId) {
+
+            // Return all roles assigned to the given species.
+
+            List<Role> roles = new List<Role>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE id IN (SELECT role_id FROM SpeciesRoles WHERE species_id=$species_id) ORDER BY name ASC;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        roles.Add(Role.FromDataRow(row));
+
+            }
+
+            // Get role notes.
+            // #todo Get the roles and notes using a single query.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesRoles WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows) {
+
+                        long role_id = row.Field<long>("role_id");
+                        string notes = row.Field<string>("notes");
+
+                        foreach (Role role in roles)
+                            if (role.id == role_id) {
+                                role.notes = notes;
+                                break;
+                            }
+
+                    }
+
+            }
+
+            return roles.ToArray();
+
+        }
+        public static async Task<Role[]> GetRolesAsync(Species species) {
+            return await GetRolesAsync(species.id);
+        }
+
+        public static async Task<ExtinctionInfo> GetExtinctionInfoAsync(Species species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                if (row is null)
+                    return new ExtinctionInfo { IsExtinct = false };
+                else {
+
+                    return new ExtinctionInfo {
+                        IsExtinct = true,
+                        Reason = row.Field<string>("reason"),
+                        Timestamp = (long)row.Field<decimal>("timestamp")
+                    };
+
+                }
+
+            }
 
         }
 

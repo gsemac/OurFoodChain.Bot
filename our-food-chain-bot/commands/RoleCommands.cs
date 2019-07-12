@@ -200,7 +200,7 @@ namespace OurFoodChain {
 
             // Get the role(s) assigned to this species.
 
-            Role[] roles = await BotUtils.GetRolesFromDbBySpecies(species);
+            Role[] roles = await SpeciesUtils.GetRolesAsync(species);
 
             if (roles.Count() <= 0) {
                 await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not been assigned any roles.", species.GetShortName()));

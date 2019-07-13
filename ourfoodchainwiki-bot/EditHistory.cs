@@ -104,21 +104,27 @@ namespace OurFoodChainWikiBot {
         }
         public async Task<EditRecord> GetEditRecordAsync(string title, string content) {
 
+            // Returns the latest upload record for a page, but only if the content hash matches.
+
+            string content_hash = OurFoodChain.StringUtils.CreateMD5(content).ToLower();
+
             using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM PageEditHistory WHERE title = $title AND content_hash = $content_hash")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM PageEditHistory WHERE title = $title ORDER BY timestamp DESC LIMIT 1")) {
 
                 cmd.Parameters.AddWithValue("$title", title);
-                cmd.Parameters.AddWithValue("$content_hash", OurFoodChain.StringUtils.CreateMD5(content).ToLower());
 
                 using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
                     if (table.Rows.Count > 0) {
 
-                        return new EditRecord {
+                        EditRecord record = new EditRecord {
                             Id = table.Rows[0].Field<long>("id"),
                             Timestamp = table.Rows[0].Field<long>("timestamp"),
                             Title = table.Rows[0].Field<string>("title"),
                             ContentHash = table.Rows[0].Field<string>("content_hash")
                         };
+
+                        if (record.ContentHash == content_hash)
+                            return record;
 
                     }
 

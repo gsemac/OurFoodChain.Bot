@@ -279,6 +279,20 @@ namespace OurFoodChainWikiBot {
 
         private static async Task _editSpeciesPageAsync(MediaWikiClient client, EditHistory history, OurFoodChain.Species species, string pageTitle, string pageContent) {
 
+            if (await _editPageAsync(client, history, pageTitle, pageContent)) {
+
+                // If the edit was successful, associated it with this species.
+
+                EditRecord record = await history.GetEditRecordAsync(pageTitle, pageContent);
+
+                if (!(record is null))
+                    await history.AddEditRecordAsync(species.id, record);
+
+            }
+
+        }
+        private static async Task<bool> _editPageAsync(MediaWikiClient client, EditHistory history, string pageTitle, string pageContent) {
+
             // Check to see if we've made this edit before.
             // If we've already made this page before, don't do anything.
 
@@ -286,59 +300,47 @@ namespace OurFoodChainWikiBot {
 
             if (record is null) {
 
-                await _editPageAsync(client, history, pageTitle, pageContent);
+                // Get existing page content.
+                // This allows us to make sure that no one has removed the "{{BotGenerated}}" flag.
+                // If it has been removed, do not modify the page.
 
-                // If the edit was successful, associated it with this species.
+                MediaWikiApiParseRequestResult parse_result = client.Parse(pageTitle, new ParseParameters());
 
-                record = await history.GetEditRecordAsync(pageTitle, pageContent);
+                if (parse_result.ErrorCode == ErrorCode.MissingTitle || parse_result.Text.Contains(BOT_FLAG_STRING)) {
 
-                if (!(record is null))
-                    await history.AddEditRecordAsync(species.id, record);
+                    if (parse_result.ErrorCode == ErrorCode.MissingTitle)
+                        _log(string.Format("creating page \"{0}\"", pageTitle));
+                    else
+                        _log(string.Format("editing page \"{0}\"", pageTitle));
+
+                    try {
+
+                        client.Edit(pageTitle, new EditParameters {
+                            Action = EditAction.Text,
+                            Text = pageContent
+                        });
+
+                        // Make a record of the edit.
+                        await history.AddEditRecordAsync(pageTitle, pageContent);
+
+                        // Return true to indicate that edits have occurred.
+                        return true;
+
+                    }
+                    catch (Exception ex) {
+                        _log(ex.ToString());
+                    }
+
+                }
+                else {
+
+                    _log(string.Format("skipping page \"{0}\" (manually edited)", pageTitle));
+
+                }
 
             }
             else
                 _log(string.Format("skipping page \"{0}\" (previously edited)", pageTitle));
-
-        }
-        private static async Task<bool> _editPageAsync(MediaWikiClient client, EditHistory history, string pageTitle, string pageContent) {
-
-            // Get existing page content.
-            // This allows us to make sure that no one has removed the "{{BotGenerated}}" flag.
-            // If it has been removed, do not modify the page.
-
-            MediaWikiApiParseRequestResult parse_result = client.Parse(pageTitle, new ParseParameters());
-
-            if (parse_result.ErrorCode == ErrorCode.MissingTitle || parse_result.Text.Contains(BOT_FLAG_STRING)) {
-
-                if (parse_result.ErrorCode == ErrorCode.MissingTitle)
-                    _log(string.Format("creating page \"{0}\"", pageTitle));
-                else
-                    _log(string.Format("editing page \"{0}\"", pageTitle));
-
-                try {
-
-                    client.Edit(pageTitle, new EditParameters {
-                        Action = EditAction.Text,
-                        Text = pageContent
-                    });
-
-                    // Make a record of the edit.
-                    await history.AddEditRecordAsync(pageTitle, pageContent);
-
-                    // Return true to indicate that edits have occurred.
-                    return true;
-
-                }
-                catch (Exception ex) {
-                    _log(ex.ToString());
-                }
-
-            }
-            else {
-
-                _log(string.Format("skipping page \"{0}\" (manually edited)", pageTitle));
-
-            }
 
             // Return false to indicate that no edits have occurred.
             return false;

@@ -38,6 +38,23 @@ namespace OurFoodChainWikiBot {
 
         }
 
+        public static async Task<string> GenerateTitleAsync(OurFoodChain.Species species) {
+
+            string page_title = string.Empty;
+            OurFoodChain.CommonName[] commonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(species);
+
+            if (!string.IsNullOrWhiteSpace(species.CommonName))
+                page_title = species.CommonName;
+            else if (commonNames.Count() > 0)
+                page_title = commonNames[0].Value;
+
+            if (string.IsNullOrEmpty(page_title))
+                page_title = species.GetFullName();
+
+            return page_title;
+
+        }
+
         private const string unlinked_pattern_format = @"(?<!\[\[|\|)\b{0}\b(?!\||\]\])";
 
         private string _replaceTokens(string content, SpeciesPageData data) {
@@ -76,7 +93,7 @@ namespace OurFoodChainWikiBot {
 
                             OurFoodChain.Species ancestor = OurFoodChain.SpeciesUtils.GetAncestorAsync(data.Species).Result;
 
-                            return ancestor is null ? "Unknown" : ancestor.GetFullName();
+                            return ancestor is null ? "Unknown" : GenerateTitleAsync(ancestor).Result;
 
                         }
 
@@ -109,7 +126,10 @@ namespace OurFoodChainWikiBot {
         }
         private string _replaceLinks(string content, SpeciesPageData data) {
 
-            foreach (string key in data.LinkDictionary.Keys) {
+            // Keys to be replaced are sorted by length so longer strings are replaced before their substrings.
+            // For example, "one two" should have higher priority over "one" and "two" individually.
+
+            foreach (string key in data.LinkDictionary.Keys.OrderByDescending(x => x.Length)) {
 
                 if (_stringMatchesSpeciesName(key, data.Species))
                     continue;

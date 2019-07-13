@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    class StringUtils {
+    public class StringUtils {
 
         public static string ToTitleCase(string input) {
 

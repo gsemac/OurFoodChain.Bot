@@ -57,14 +57,35 @@ namespace OurFoodChainWikiBot {
             }
             set {
 
-                if (string.IsNullOrEmpty(FileName) && !string.IsNullOrEmpty(value))
-                    FileName = System.IO.Path.GetFileName(value);
-
                 _file_path = value;
+
+                if (string.IsNullOrEmpty(UploadFileName) && !string.IsNullOrEmpty(FilePath))
+                    UploadFileName = System.IO.Path.GetFileName(FilePath);
+
+                if (string.IsNullOrEmpty(Comment))
+                    Comment = OriginalFileName;
 
             }
         }
-        public string FileName { get; set; }
+        public string UploadFileName { get; set; }
+        public string Text { get; set; } = "";
+        public string Comment { get; set; } = "";
+        public string PageTitle {
+            get {
+                return string.Format("File:{0}", UploadFileName);
+            }
+        }
+
+        public string OriginalFileName {
+            get {
+
+                if (string.IsNullOrEmpty(FilePath))
+                    return "";
+
+                return System.IO.Path.GetFileName(FilePath);
+
+            }
+        }
 
         private string _file_path;
 
@@ -111,7 +132,7 @@ namespace OurFoodChainWikiBot {
                     ErrorCode = ErrorCode.MissingTitle;
                     break;
 
-            }          
+            }
 
         }
 
@@ -195,7 +216,7 @@ namespace OurFoodChainWikiBot {
             if (json.ContainsKey("parse")) {
                 result.Text = json["parse"]["wikitext"]["*"].Value<string>();
             }
-            else if (json.ContainsKey("error")) 
+            else if (json.ContainsKey("error"))
                 result.SetError(json["error"]["code"].Value<string>(), json["error"]["info"].Value<string>());
 
             return result;
@@ -262,9 +283,9 @@ namespace OurFoodChainWikiBot {
             if (!string.IsNullOrEmpty(token)) {
 
                 if (!IsLoggedIn)
-                    _logWarn(string.Format("uploading file \"{0}\" anonymously", parameters.FileName));
+                    _logWarn(string.Format("uploading file \"{0}\" anonymously", parameters.UploadFileName));
                 else
-                    _logInfo(string.Format("uploading file \"{0}\"", parameters.FileName));
+                    _logInfo(string.Format("uploading file \"{0}\"", parameters.UploadFileName));
 
                 if (Regex.IsMatch(parameters.FilePath, @"^https?://")) {
 
@@ -273,10 +294,12 @@ namespace OurFoodChainWikiBot {
                     NameValueCollection values = new NameValueCollection {
                         ["action"] = "upload",
                         ["format"] = "json",
-                        ["filename"] = parameters.FileName,
+                        ["filename"] = parameters.UploadFileName,
                         ["url"] = parameters.FilePath,
                         ["token"] = token,
                         ["ignorewarnings"] = "1",
+                        ["text"] = parameters.Text,
+                        ["comment"] = parameters.Comment,
                     };
 
                     string data = _http_post(_get_api_url(), values);
@@ -304,9 +327,9 @@ namespace OurFoodChainWikiBot {
             }
 
             if (success)
-                _logInfo(string.Format("uploaded file \"{0}\"", parameters.FileName));
+                _logInfo(string.Format("uploaded file \"{0}\"", parameters.UploadFileName));
             else
-                _logError(string.Format("failed to upload file \"{0}\"", parameters.FileName));
+                _logError(string.Format("failed to upload file \"{0}\"", parameters.UploadFileName));
 
             return new MediaWikiApiRequestResult { Success = success };
 

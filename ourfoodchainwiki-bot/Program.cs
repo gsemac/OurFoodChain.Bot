@@ -28,6 +28,10 @@ namespace OurFoodChainWikiBot {
                 UserAgent = config.UserAgent
             };
 
+            client.Log += _log;
+
+            EditHistory history = new EditHistory();
+
             if (client.Login(config.Username, config.Password).Success) {
 
                 _log("generating link dictionary");
@@ -48,78 +52,11 @@ namespace OurFoodChainWikiBot {
                     // Pages are created based on the first/primary common name (where available).
                     // The full species name is added as a redirect.
 
-                    string page_title = string.Empty;
-                    bool create_redirect = true;
-
-                    OurFoodChain.CommonName[] commonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(species);
-
-                    if (!string.IsNullOrWhiteSpace(species.CommonName))
-                        page_title = species.CommonName;
-                    else if (commonNames.Count() > 0)
-                        page_title = commonNames[0].Value;
-
-                    if (string.IsNullOrEmpty(page_title)) {
-
-                        page_title = species.GetFullName();
-
-                        create_redirect = false;
-
-                    }
+                    string page_title = await SpeciesPageGenerator.GenerateTitleAsync(species);
+                    bool create_redirect = page_title != species.GetFullName();
 
                     // Attempt to upload the species' picture.
-
-                    string picture_filename = _generateSpeciesPictureFileName(species);
-
-                    if (!string.IsNullOrEmpty(species.pics)) {
-
-                        UploadParameters upload_parameters = new UploadParameters {
-                            FileName = picture_filename,
-                            FilePath = species.pics
-                        };
-
-                        _log(string.Format("uploading {0}", upload_parameters.FilePath));
-
-                        try {
-
-                            MediaWikiApiRequestResult result = client.Upload(upload_parameters);
-
-                            if (!result.Success)
-                                _log(result.ErrorMessage);
-
-                            if (result.ErrorCode == ErrorCode.VerificationError) {
-
-                                // This means that the file extension didn't match (e.g., filename has ".png" when the file format is actually ".jpg").
-                                // Try changing the file extension and reuploading.
-
-                                string ext = System.IO.Path.GetExtension(picture_filename);
-                                ext = (ext == ".png") ? ".jpg" : ".png";
-
-                                picture_filename = System.IO.Path.ChangeExtension(picture_filename, ext);
-
-                                upload_parameters.FileName = picture_filename;
-
-                                result = client.Upload(upload_parameters);
-
-                                if (!result.Success)
-                                    _log(result.ErrorMessage);
-
-                            }
-
-                            if (!result.Success && result.ErrorCode != ErrorCode.FileExistsNoChange)
-                                picture_filename = string.Empty;
-
-                        }
-                        catch (Exception ex) {
-
-                            picture_filename = string.Empty;
-
-                            _log(ex.ToString());
-
-                        }
-
-                    }
-                    else
-                        _log("no picture to upload");
+                    string picture_filename = await _uploadSpeciesPictureAsync(client, history, species);
 
                     // Generate page content.
 
@@ -132,9 +69,7 @@ namespace OurFoodChainWikiBot {
 
                     // Upload page content.
 
-                    _log(string.Format("creating page \"{0}\"", page_title));
-
-                    _editPage(client, page_title, page_content);
+                    await _editSpeciesPageAsync(client, history, species, page_title, page_content);
 
                     // Attempt to create the redirect page for the species (if applicable).
 
@@ -142,7 +77,8 @@ namespace OurFoodChainWikiBot {
 
                         string redirect_page_title = species.GetFullName();
 
-                        _editPage(client, redirect_page_title, string.Format("#REDIRECT [[{0}]]", page_title) + "\n" + BOT_FLAG_STRING);
+                        if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", page_title) + "\n" + BOT_FLAG_STRING))
+                            await history.AddRedirectRecordAsync(page_title, redirect_page_title);
 
                     }
 
@@ -162,12 +98,29 @@ namespace OurFoodChainWikiBot {
 
         private const string BOT_FLAG_STRING = "{{BotGenerated}}";
 
+        private static string LOG_FILE_PATH = "";
+
         private static void _log(string message) {
 
-            Console.WriteLine(new LogMessage {
+            _log(new LogMessage {
                 Source = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
                 Message = message
             });
+
+        }
+        private static void _log(LogMessage message) {
+
+            if (string.IsNullOrEmpty(LOG_FILE_PATH)) {
+
+                System.IO.Directory.CreateDirectory("log");
+
+                LOG_FILE_PATH = string.Format("log/wiki_log_{0}.txt", DateTimeOffset.Now.ToUnixTimeSeconds());
+
+            }
+
+            Console.WriteLine(message.ToString());
+
+            System.IO.File.AppendAllText(LOG_FILE_PATH, message.ToString() + Environment.NewLine);
 
         }
 
@@ -219,9 +172,135 @@ namespace OurFoodChainWikiBot {
 
         }
 
-        private static void _editPage(MediaWikiClient client, string pageTitle, string pageContent) {
+        private static async Task<string> _uploadSpeciesPictureAsync(MediaWikiClient client, EditHistory history, OurFoodChain.Species species) {
 
-            _log(string.Format("parsing page \"{0}\"", pageTitle));
+            // Generate a filename for the image, which will be the filename when it's uploaded to the wiki.
+            string upload_filename = _generateSpeciesPictureFileName(species);
+
+            if (!string.IsNullOrEmpty(upload_filename)) {
+
+                // Attempt to upload the image.
+
+                UploadParameters upload_parameters = new UploadParameters {
+                    UploadFileName = upload_filename,
+                    FilePath = species.pics
+                };
+
+                return await _uploadPictureAsync(client, history, upload_parameters, true);
+
+            }
+
+            return string.Empty;
+
+        }
+        private static async Task<string> _uploadPictureAsync(MediaWikiClient client, EditHistory history, UploadParameters parameters, bool allowRetry) {
+
+            // Check if we've already uploaded this file before. 
+            // If we've uploaded it before, return the filename that we uploaded it with.
+
+            UploadRecord record = await history.GetUploadRecordAsync(parameters.FilePath);
+
+            if (record is null) {
+
+                // Get page for the file and check for the bot flag.
+                // This prevents us from overwriting images that users uploaded manually.
+
+                MediaWikiApiParseRequestResult page_content = client.Parse(parameters.PageTitle, new ParseParameters());
+
+                if (page_content.ErrorCode == ErrorCode.MissingTitle || page_content.Text.Contains(BOT_FLAG_STRING)) {
+
+                    // Attempt to upload the file.
+
+                    try {
+
+                        MediaWikiApiRequestResult result = client.Upload(parameters);
+
+                        if (!result.Success)
+                            _log(result.ErrorMessage);
+
+                        if (result.ErrorCode == ErrorCode.VerificationError && allowRetry) {
+
+                            // This means that the file extension didn't match (e.g., filename has ".png" when the file format is actually ".jpg").
+                            // Try changing the file extension and reuploading, because sometimes URLs stored in the bot will have this problem.
+
+                            string ext = System.IO.Path.GetExtension(parameters.UploadFileName);
+                            ext = (ext == ".png") ? ".jpg" : ".png";
+
+                            parameters.UploadFileName = System.IO.Path.ChangeExtension(parameters.UploadFileName, ext);
+
+                            _log("file extension didn't match, retrying upload");
+
+                            return await _uploadPictureAsync(client, history, parameters, false);
+
+                        }
+                        else {
+
+                            if (result.Success || result.ErrorCode == ErrorCode.FileExistsNoChange) {
+
+                                // If the upload succeeded, record the file upload so that we can skip it in the future.
+                                await history.AddUploadRecordAsync(parameters.FilePath, parameters.UploadFileName);
+
+                                // Add the bot flag to the page content.
+                                client.Edit(parameters.PageTitle, new EditParameters { Text = BOT_FLAG_STRING });
+
+                            }
+                            else
+                                parameters.UploadFileName = string.Empty;
+
+                        }
+
+                    }
+                    catch (Exception ex) {
+
+                        parameters.UploadFileName = string.Empty;
+
+                        _log(ex.ToString());
+
+                    }
+
+                }
+                else
+                    _log(string.Format("skipping file \"{0}\" (manually edited)", parameters.UploadFileName));
+
+            }
+            else {
+
+                // This image has been uploaded previously, so just return its path.
+
+                _log(string.Format("skipping file \"{0}\" (previously uploaded)", parameters.UploadFileName));
+
+                parameters.UploadFileName = record.UploadFileName;
+
+            }
+
+            return parameters.UploadFileName;
+
+        }
+
+        private static async Task _editSpeciesPageAsync(MediaWikiClient client, EditHistory history, OurFoodChain.Species species, string pageTitle, string pageContent) {
+
+            // Check to see if we've made this edit before.
+            // If we've already made this page before, don't do anything.
+
+            EditRecord record = await history.GetEditRecordAsync(pageTitle, pageContent);
+
+            if (record is null) {
+
+                await _editPageAsync(client, history, pageTitle, pageContent);
+
+                // If the edit was successful, associated it with this species.
+
+                record = await history.GetEditRecordAsync(pageTitle, pageContent);
+
+                if (!(record is null))
+                    await history.AddEditRecordAsync(species.id, record);
+
+            }
+            else
+                _log(string.Format("skipping page \"{0}\" (previously edited)", pageTitle));
+
+        }
+        private static async Task<bool> _editPageAsync(MediaWikiClient client, EditHistory history, string pageTitle, string pageContent) {
 
             // Get existing page content.
             // This allows us to make sure that no one has removed the "{{BotGenerated}}" flag.
@@ -243,6 +322,12 @@ namespace OurFoodChainWikiBot {
                         Text = pageContent
                     });
 
+                    // Make a record of the edit.
+                    await history.AddEditRecordAsync(pageTitle, pageContent);
+
+                    // Return true to indicate that edits have occurred.
+                    return true;
+
                 }
                 catch (Exception ex) {
                     _log(ex.ToString());
@@ -254,6 +339,9 @@ namespace OurFoodChainWikiBot {
                 _log(string.Format("skipping page \"{0}\" (manually edited)", pageTitle));
 
             }
+
+            // Return false to indicate that no edits have occurred.
+            return false;
 
         }
 

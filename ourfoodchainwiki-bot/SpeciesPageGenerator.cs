@@ -57,6 +57,18 @@ namespace OurFoodChainWikiBot {
 
         private const string unlinked_pattern_format = @"(?<!\[\[|\|)\b{0}\b(?!\||\]\])";
 
+        private string _formatSpeciesDescription(SpeciesPageData data) {
+
+            string desc = data.Species.GetDescriptionOrDefault();
+
+            desc = _italicizeBinomialNames(desc, data); // do this before replacing links so that links can be italicized more easily
+            desc = _replaceLinks(desc, data);
+            desc = _emboldenFirstMentionOfSpecies(desc, data);
+            desc = _replaceMarkup(desc);
+
+            return desc;
+
+        }
         private string _replaceTokens(string content, SpeciesPageData data) {
 
             content = Regex.Replace(content, "%([^%]+)%", m => {
@@ -189,17 +201,35 @@ namespace OurFoodChainWikiBot {
             return content;
 
         }
-        private string _formatSpeciesDescription(SpeciesPageData data) {
+        private string _replaceMarkup(string content) {
 
-            string desc = data.Species.GetDescriptionOrDefault();
+            // Replace lines beginning with whitespace, which get formatted as code blocks by MediaWiki.
+            content = Regex.Replace(content, @"^[ \t]+", string.Empty, RegexOptions.Multiline);
 
-            desc = _italicizeBinomialNames(desc, data); // do this before replacing links so that links can be italicized more easily
-            desc = _replaceLinks(desc, data);
-            desc = _emboldenFirstMentionOfSpecies(desc, data);
+            // Replace bold text (formatted with markdown).
+            content = Regex.Replace(content, @"\*\*(.+?)\*\*", m => m.Value.Contains("'") ? m.Groups[1].Value : string.Format("'''{0}'''", m.Groups[1].Value));
 
-            return desc;
+            // Replace underlined text (formatted with markdown).
+            content = Regex.Replace(content, @"__(.+?)__", m => string.Format("<u>{0}</u>", m.Groups[1].Value));
+
+            // Replace strike-through text (formatted with markdown).
+            content = Regex.Replace(content, @"~~(.+?)~~", m => string.Format("<s>{0}</s>", m.Groups[1].Value));
+
+            // Replace italic text (formatted with markdown).
+
+            content = Regex.Replace(content, @"\*(.+?)\*", m => m.Value.Contains("'") ? m.Groups[1].Value : string.Format("''{0}''", m.Groups[1].Value));
+            content = Regex.Replace(content, @"_(.+?)_", m => m.Value.Contains("'") ? m.Groups[1].Value : string.Format("''{0}''", m.Groups[1].Value));
+
+            // Replace single newlines with line breaks so that MediaWiki will create a line break.
+            content = Regex.Replace(content, @"(?<!\n)\n[^\n]", m => string.Format("<br />{0}", m.Value));
+
+            // Format lists made with "-" instead of "*".
+            content = Regex.Replace(content, @"^-\s*", "* ", RegexOptions.Multiline);
+
+            return content;
 
         }
+
 
         private string _formatDate(DateTime date) {
 

@@ -33,6 +33,17 @@ namespace OurFoodChain {
             return str[0].ToString().ToUpper() + str.Substring(1);
 
         }
+        public static string ToPossessive(string input) {
+
+            if (string.IsNullOrEmpty(input))
+                return string.Empty;
+
+            if (input.ToLower().EndsWith("s"))
+                return input + "'";
+
+            return input + "'s";
+
+        }
         public static bool IsNumeric(string str) {
 
             double num;

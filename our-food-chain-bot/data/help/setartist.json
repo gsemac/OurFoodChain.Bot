@@ -2,8 +2,9 @@
   "name": "setartist",
   "aliases": [ "setcredit" ],
   "category": "update",
-  "description": "Sets the artist credit for the picture at the given index in the given species' gallery.",
+  "description": "Sets the artist credit for the picture at the given index in the given species' gallery. If no index is provided, sets the artist credit for the first image (at index 1).",
   "examples": [
-    "setartist cornu asperum 1 user"
+    "setartist cornu asperum 1 user",
+    "setartist cornu asperum user"
   ]
 }

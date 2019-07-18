@@ -29,8 +29,12 @@ namespace OurFoodChain {
 
             if (await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species) && await BotUtils.ReplyIsImageUrlValidAsync(Context, imageUrl)) {
 
+                Picture[] pictures = await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species));
+                bool first_picture = pictures.Count() <= 0;
+
                 await SpeciesUtils.SetPictureAsync(species, new Picture {
-                    url = imageUrl
+                    url = imageUrl,
+                    artist = first_picture ? species.owner : Context.User.Username
                 });
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", species.GetShortName()));
@@ -95,19 +99,24 @@ namespace OurFoodChain {
 
             // Add the new picture to the gallery.
 
-            bool picture_already_exists = (await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species))).Any(x => x.url == imageUrl);
+            // If this is the first picture we've added to the species, set the artist as the species' owner.
+            // Otherwise, set the artist to the person submitting the image.
+
+            Picture[] pictures = await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species));
+
+            bool first_picture = pictures.Count() <= 0;
+            bool picture_already_exists = pictures.Any(x => x.url == imageUrl);
 
             await SpeciesUtils.AddPictureAsync(species, new Picture {
                 url = imageUrl,
                 description = description,
-                artist = Context.User.Username
+                artist = first_picture ? species.owner : Context.User.Username
             });
 
             if (picture_already_exists)
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
             else
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
-
 
         }
 
@@ -158,6 +167,14 @@ namespace OurFoodChain {
             await SetArtist(string.Empty, speciesName, pictureIndex, artist);
         }
         [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string speciesName, string artist) {
+            await SetArtist(string.Empty, speciesName, 1, artist);
+        }
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string genusName, string speciesName, string artist) {
+            await SetArtist(genusName, speciesName, 1, artist);
+        }
+        [Command("setartist"), Alias("setcredit")]
         public async Task SetArtist(string genusName, string speciesName, int pictureIndex, string artist) {
 
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
@@ -175,17 +192,14 @@ namespace OurFoodChain {
                 if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
 
                     Picture picture = pictures[pictureIndex];
-
-                    string former_artist = picture.artist;
-
                     picture.artist = artist;
 
                     await SpeciesUtils.AddPictureAsync(species, picture);
 
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist credit for [picture]({0}) to **{1}**{2}.", 
-                        picture.url, 
-                        artist,
-                        !string.IsNullOrEmpty(former_artist) ? string.Format(" (formerly \"{0}\")", former_artist) : ""));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist for {0} [picture]({1}) to **{2}**.",
+                        StringUtils.ToPossessive(species.ShortName),
+                        picture.url,
+                        artist));
 
                 }
                 else
@@ -194,9 +208,19 @@ namespace OurFoodChain {
             }
 
         }
+
         [Command("setartist"), Alias("setcredit")]
         public async Task SetArtist(string speciesName, int pictureIndex, IUser user) {
             await SetArtist(string.Empty, speciesName, pictureIndex, user);
+        }
+
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string speciesName, IUser user) {
+            await SetArtist(string.Empty, speciesName, user);
+        }
+        [Command("setartist"), Alias("setcredit")]
+        public async Task SetArtist(string genusName, string speciesName, IUser user) {
+            await SetArtist(genusName, speciesName, 1, user);
         }
         [Command("setartist"), Alias("setcredit")]
         public async Task SetArtist(string genusName, string speciesName, int pictureIndex, IUser user) {

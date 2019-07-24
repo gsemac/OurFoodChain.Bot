@@ -41,6 +41,10 @@ namespace OurFoodChain {
 
                     info = _review_info.Last();
 
+                }
+
+                if (info.ReviewerUserId <= 0) {
+
                     // Check the message reactions to determine the state of the review, as well as the reviewer.
 
                     ulong reviewer_id = 0;
@@ -61,17 +65,13 @@ namespace OurFoodChain {
 
         }
 
-        public ReviewInfo[] Reviews
-        {
-            get
-            {
+        public ReviewInfo[] Reviews {
+            get {
                 return _review_info.ToArray();
             }
         }
-        public int Count
-        {
-            get
-            {
+        public int Count {
+            get {
                 return Reviews.Count();
             }
         }

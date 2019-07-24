@@ -37,8 +37,7 @@ namespace OurFoodChain {
                 ulong discussion_channel_id = 0;
 
                 foreach (ReviewChannelInfo info in channel_info_array) {
-                    Console.WriteLine(info.SubmissionChannelId);
-                    Console.WriteLine(info.ReviewChannelId);
+
                     if (info.ReviewChannelId == Context.Channel.Id || info.SubmissionChannelId == Context.Channel.Id) {
 
                         submission_channel_id = info.SubmissionChannelId;
@@ -49,8 +48,6 @@ namespace OurFoodChain {
                     }
 
                 }
-                Console.WriteLine(submission_channel_id);
-                Console.WriteLine(discussion_channel_id);
 
                 if (submission_channel_id == 0 || discussion_channel_id == 0) {
 
@@ -63,7 +60,7 @@ namespace OurFoodChain {
                     // In the future, perhaps we should cache this result and update the status of reviews dynamically.
 
                     IMessage[] submission_messages = await DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(submission_channel_id) as IMessageChannel, 100);
-                    IMessage[] discussion_messages = await DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(discussion_channel_id) as IMessageChannel, 150);
+                    IMessage[] discussion_messages = await DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(discussion_channel_id) as IMessageChannel, 100);
 
                     ReviewCache cache = new ReviewCache();
                     await cache.AddSubmissionMessagesAsync(submission_messages);
@@ -73,7 +70,7 @@ namespace OurFoodChain {
                     EmbedBuilder embed = new EmbedBuilder {
                         Title = string.Format("{0}'s Reviews", Context.User.Username)
                     };
-
+                    
                     ReviewInfo[] under_review = cache.Reviews.Where(x => x.SubmitterUserId == Context.User.Id && !x.IsFinished).ToArray();
                     ReviewInfo[] reviewing = cache.Reviews.Where(x => x.ReviewerUserId == Context.User.Id && !x.IsFinished).ToArray();
 

@@ -198,9 +198,12 @@
     <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\PeriodCommands.cs" />
     <Compile Include="commands\RelationshipCommands.cs" />
+    <Compile Include="commands\ReviewCommands.cs" />
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="commands\TaxonCommands.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="utils\DatabaseUtils.cs" />
+    <Compile Include="utils\DiscordUtils.cs" />
     <Compile Include="utils\ExtinctionInfo.cs" />
     <Compile Include="utils\galleries\Gallery.cs" />
     <Compile Include="gotchi\GotchiBattleState.cs" />
@@ -239,6 +242,9 @@
     <Compile Include="utils\HelpUtils.cs" />
     <Compile Include="utils\IoUtils.cs" />
     <Compile Include="utils\MultistageCommand.cs" />
+    <Compile Include="utils\reviews\ReviewCache.cs" />
+    <Compile Include="utils\reviews\ReviewChannelInfo.cs" />
+    <Compile Include="utils\reviews\ReviewInfo.cs" />
     <Compile Include="utils\SpeciesSizeMatch.cs" />
     <Compile Include="utils\EmbedUtils.cs" />
     <Compile Include="utils\LevenshteinDistance.cs" />

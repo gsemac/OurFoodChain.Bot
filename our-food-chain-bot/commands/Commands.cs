@@ -363,7 +363,7 @@ namespace OurFoodChain {
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
                     string embed_title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", name, zone_list.Count()));
-                    string embed_description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.GetInstance().GetConfig().prefix);
+                    string embed_description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.GetInstance().GetConfig().Prefix);
                     int zones_per_page = 20;
                     int max_line_length = (EmbedUtils.MAX_EMBED_LENGTH - embed_title.Length - embed_description.Length) / zones_per_page;
 
@@ -1974,7 +1974,7 @@ namespace OurFoodChain {
                 embed.WithDescription(string.Format("{1} made their first species on **{2}**.{0}Since then, they have submitted **{3:0.0}** species per day.{0}{0}Their submissions make up **{4:0.0}%** of all species.",
                     Environment.NewLine,
                     user.Username,
-                    BotUtils.GetTimeStampAsDateString(timestamp_min, "MMMM dd, yyyy"),
+                    BotUtils.TimestampToLongDateString(timestamp_min),
                     timestamp_diff_days == 0 ? user_species_count : (double)user_species_count / timestamp_diff_days,
                     ((double)user_species_count / species_count) * 100.0));
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);

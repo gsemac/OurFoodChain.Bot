@@ -163,15 +163,15 @@ namespace OurFoodChain {
 
             // If there are no privileges set up in the configuration file, grant all users full privileges.
 
-            OurFoodChainBot.Config config = OurFoodChainBot.GetInstance().GetConfig();
+            Config config = OurFoodChainBot.GetInstance().GetConfig();
 
-            if ((config.bot_admin_user_ids is null || config.bot_admin_user_ids.Count() <= 0) &&
-               (config.mod_role_ids is null || config.mod_role_ids.Count() <= 0))
+            if ((config.BotAdminUserIds is null || config.BotAdminUserIds.Count() <= 0) &&
+               (config.ModRoleIds is null || config.ModRoleIds.Count() <= 0))
                 return 0;
 
             // Check for Bot Admin privileges.
 
-            if (!(config.bot_admin_user_ids is null) && config.bot_admin_user_ids.Contains(user.Id))
+            if (!(config.BotAdminUserIds is null) && config.BotAdminUserIds.Contains(user.Id))
                 return PrivilegeLevel.BotAdmin;
 
             // Attempt to case the user to a guild user so we can get their roles.
@@ -183,8 +183,8 @@ namespace OurFoodChain {
 
                 // Check for Server Moderator privileges.
 
-                if (!(config.mod_role_ids is null))
-                    foreach (ulong id in config.mod_role_ids)
+                if (!(config.ModRoleIds is null))
+                    foreach (ulong id in config.ModRoleIds)
                         if (g_user.RoleIds.Contains(id))
                             return PrivilegeLevel.ServerModerator;
 

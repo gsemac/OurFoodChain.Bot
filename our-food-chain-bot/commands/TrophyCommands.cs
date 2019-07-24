@@ -27,7 +27,7 @@ namespace OurFoodChain.trophies {
 
             StringBuilder description_builder = new StringBuilder();
 
-            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", OurFoodChainBot.GetInstance().GetConfig().prefix));
+            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", OurFoodChainBot.GetInstance().GetConfig().Prefix));
 
             foreach (UnlockedTrophyInfo info in unlocked) {
 
@@ -74,7 +74,7 @@ namespace OurFoodChain.trophies {
                     embed = new EmbedBuilder();
                     embed.WithTitle(string.Format("All Trophies ({0})", (await TrophyRegistry.GetTrophiesAsync()).Count));
                     embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).",
-                        OurFoodChainBot.GetInstance().GetConfig().prefix,
+                        OurFoodChainBot.GetInstance().GetConfig().Prefix,
                         trophy_list.First().GetName()));
                     embed.WithFooter(string.Format("Page {0} of {1}", current_page, total_pages));
                     embed.WithColor(new Color(255, 204, 77));

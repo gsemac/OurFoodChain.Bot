@@ -14,17 +14,13 @@ namespace OurFoodChain {
 
     public class OurFoodChainBot {
 
-        private const string DEFAULT_PREFIX = "?";
-        private const string DEFAULT_PLAYING = "";
+
 
         public OurFoodChainBot() {
 
             // Set up a default configuration.
 
-            _config = new Config {
-                prefix = DEFAULT_PREFIX,
-                playing = DEFAULT_PLAYING
-            };
+            _config = new Config();
 
             _discord_client = new DiscordSocketClient(
                 new DiscordSocketConfig() {
@@ -57,13 +53,13 @@ namespace OurFoodChain {
 
             _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(filePath));
 
-            if (string.IsNullOrEmpty(_config.token)) {
+            if (string.IsNullOrEmpty(_config.Token)) {
                 await Log(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
                 Environment.Exit(-1);
             }
 
-            if (string.IsNullOrEmpty(_config.prefix))
-                _config.token = DEFAULT_PREFIX;
+            if (string.IsNullOrEmpty(_config.Prefix))
+                _config.Prefix = Config.DEFAULT_PREFIX;
 
         }
 
@@ -75,12 +71,12 @@ namespace OurFoodChain {
 
             // Login to Discord.
 
-            await _discord_client.LoginAsync(TokenType.Bot, _config.token);
+            await _discord_client.LoginAsync(TokenType.Bot, _config.Token);
             await _discord_client.StartAsync();
 
             // Set the bot's "Now Playing".
 
-            await _discord_client.SetGameAsync(_config.playing);
+            await _discord_client.SetGameAsync(_config.Playing);
 
         }
         public async Task Log(LogSeverity severity, string source, string message) {
@@ -99,16 +95,6 @@ namespace OurFoodChain {
 
             return _discord_client;
 
-        }
-
-        public struct Config {
-            public ulong[] bot_admin_user_ids;
-            public ulong[] mod_role_ids;
-            public string playing;
-            public string prefix;
-            public ulong scratch_channel;
-            public ulong scratch_server;
-            public string token;
         }
 
         public static OurFoodChainBot GetInstance() {
@@ -165,7 +151,7 @@ namespace OurFoodChain {
             if (message == null)
                 return pos;
 
-            message.HasStringPrefix(_config.prefix, ref pos, StringComparison.InvariantCultureIgnoreCase);
+            message.HasStringPrefix(_config.Prefix, ref pos, StringComparison.InvariantCultureIgnoreCase);
             message.HasMentionPrefix(_discord_client.CurrentUser, ref pos);
 
             return pos;
@@ -180,7 +166,7 @@ namespace OurFoodChain {
 
             // If the message is just the bot's prefix, don't attempt to respond to it (this reduces "Unknown command" spam).
 
-            if (message.Content == _config.prefix)
+            if (message.Content == _config.Prefix)
                 return false;
 
             int pos = _getCommandArgumentsPosition(message);
@@ -211,7 +197,7 @@ namespace OurFoodChain {
                     embed.WithColor(Color.Red);
                     embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", command_m.Value));
                     embed.WithDescription("❌ " + result.ErrorReason);
-                    embed.AddField("Example(s) of correct usage:", command_info.ExamplesToString(_config.prefix));
+                    embed.AddField("Example(s) of correct usage:", command_info.ExamplesToString(_config.Prefix));
 
                     await context.Channel.SendMessageAsync("", false, embed.Build());
 

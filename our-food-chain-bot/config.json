@@ -1,9 +1,15 @@
 ﻿{
-  "bot_admin_user_ids": [],
-  "mod_role_ids": [],
+
+  "token": "",
   "playing": "",
   "prefix": "?",
+
+  "bot_admin_user_ids": [],
+  "mod_role_ids": [],
+
   "scratch_channel": 0,
   "scratch_server": 0,
-  "token": ""
+
+  "review_channels": []
+
 }

@@ -540,8 +540,19 @@ namespace OurFoodChain {
             await SetExtinct("", species, "");
         }
         [Command("+extinct"), Alias("setextinct")]
-        public async Task SetExtinct(string genus, string species) {
-            await SetExtinct(genus, species, "");
+        public async Task SetExtinct(string arg0, string arg1) {
+
+            // We either have a genus/species, or a species/description.
+
+            Species[] species_list = await SpeciesUtils.GetSpeciesAsync(arg0, arg1);
+
+            if (species_list.Count() > 0)
+                // If such a species does exist, assume we have a genus/species.
+                await SetExtinct(arg0, arg1, string.Empty);
+            else
+                // If no such species exists, assume we have a species/description.
+                await SetExtinct(string.Empty, arg0, arg1);
+
         }
         [Command("+extinct"), Alias("setextinct")]
         public async Task SetExtinct(string genus, string species, string reason) {
@@ -551,21 +562,26 @@ namespace OurFoodChain {
             if (sp is null)
                 return;
 
+            await SetExtinct(sp, reason);
+
+        }
+        private async Task SetExtinct(Species species, string reason) {
+
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
                 return;
 
-            await SpeciesUtils.SetExtinctionInfoAsync(sp, new ExtinctionInfo {
+            await SpeciesUtils.SetExtinctionInfoAsync(species, new ExtinctionInfo {
                 IsExtinct = true,
                 Reason = reason,
                 Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             });
 
             await BotUtils.ReplyAsync_Success(Context, string.Format(
-                sp.isExtinct ?
+                species.isExtinct ?
                 "Updated extinction details for **{0}**." :
                 "The last **{0}** has perished, and the species is now extinct.",
-                sp.GetShortName()));
+                species.GetShortName()));
 
         }
         [Command("-extinct"), Alias("setextant", "unextinct")]

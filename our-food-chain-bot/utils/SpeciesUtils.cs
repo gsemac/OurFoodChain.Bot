@@ -513,9 +513,9 @@ namespace OurFoodChain {
 
             if (extinctionInfo.IsExtinct) {
 
-                if (await GetExtinctionInfoAsync(species) is null) {
+                if (!(await GetExtinctionInfoAsync(species)).IsExtinct) {
 
-                    // Add a new extinction record for this species.
+                    // If the species is not already extinct, add a new extinction record for this species.
 
                     using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp)")) {
 

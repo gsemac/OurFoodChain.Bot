@@ -128,10 +128,10 @@ namespace OurFoodChain {
                     embed_color = Color.Red;
 
                     string reason = row.Field<string>("reason");
-                    string ts = BotUtils.GetTimeStampAsDateString((long)row.Field<decimal>("timestamp"));
+                    long timestamp = (long)row.Field<decimal>("timestamp");
 
                     if (!string.IsNullOrEmpty(reason))
-                        description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", ts, reason));
+                        description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", BotUtils.TimestampToLongDateString(timestamp), reason));
 
                 }
 
@@ -555,17 +555,17 @@ namespace OurFoodChain {
             if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, sp))
                 return;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp);")) {
+            await SpeciesUtils.SetExtinctionInfoAsync(sp, new ExtinctionInfo {
+                IsExtinct = true,
+                Reason = reason,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            });
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
-                cmd.Parameters.AddWithValue("$reason", reason);
-                cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("The last **{0}** has perished, and the species is now extinct.", sp.GetShortName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format(
+                sp.isExtinct ?
+                "Updated extinction details for **{0}**." :
+                "The last **{0}** has perished, and the species is now extinct.",
+                sp.GetShortName()));
 
         }
         [Command("-extinct"), Alias("setextant", "unextinct")]
@@ -596,13 +596,7 @@ namespace OurFoodChain {
 
             // Delete the extinction from the database.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE species_id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
+            await SpeciesUtils.SetExtinctionInfoAsync(sp, new ExtinctionInfo { IsExtinct = false });
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("A population of **{0}** has been discovered! The species is no longer considered extinct.", sp.GetShortName()));
 

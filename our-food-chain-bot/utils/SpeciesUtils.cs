@@ -509,6 +509,56 @@ namespace OurFoodChain {
             }
 
         }
+        public static async Task SetExtinctionInfoAsync(Species species, ExtinctionInfo extinctionInfo) {
+
+            if (extinctionInfo.IsExtinct) {
+
+                if (await GetExtinctionInfoAsync(species) is null) {
+
+                    // Add a new extinction record for this species.
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp)")) {
+
+                        cmd.Parameters.AddWithValue("$species_id", species.id);
+                        cmd.Parameters.AddWithValue("$reason", extinctionInfo.Reason);
+                        cmd.Parameters.AddWithValue("$timestamp", extinctionInfo.Timestamp);
+
+                        await Database.ExecuteNonQuery(cmd);
+
+                    }
+
+                }
+                else {
+
+                    // If the species has an existing extinction record, update the description only.
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Extinctions SET reason = $reason WHERE species_id = $species_id")) {
+
+                        cmd.Parameters.AddWithValue("$species_id", species.id);
+                        cmd.Parameters.AddWithValue("$reason", extinctionInfo.Reason);
+
+                        await Database.ExecuteNonQuery(cmd);
+
+                    }
+
+                }
+
+            }
+            else {
+
+                // If the species is no longer extinct, delete its extinction record (if it exists).
+
+                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.id);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+            }
+
+        }
 
         private static GenusSpeciesPair _parseGenusAndSpeciesFromUserInput(string inputGenus, string inputSpecies) {
 

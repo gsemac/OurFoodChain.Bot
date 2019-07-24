@@ -26,22 +26,17 @@ namespace OurFoodChain {
         public ulong SubmissionMessageId { get; set; } = 0;
         public ReviewStatus Status { get; set; } = ReviewStatus.PendingReview;
 
-        public string Title
-        {
-            get
-            {
-                return StringUtils.ToTitleCase(string.IsNullOrWhiteSpace(_review_title) ? DEFAULT_REVIEW_TITLE : _review_title);
+        public string Title {
+            get {
+                return string.IsNullOrWhiteSpace(_review_title) ? DEFAULT_REVIEW_TITLE : _review_title;
             }
-            set
-            {
+            set {
                 _review_title = value;
             }
         }
         public string SubmissionMessageUrl { get; set; } = "";
-        public bool IsFinished
-        {
-            get
-            {
+        public bool IsFinished {
+            get {
                 return Status == ReviewStatus.Accepted || Status == ReviewStatus.Denied;
             }
         }

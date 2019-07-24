@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
+    public enum SpeciesNameFormat {
+        Full,
+        Abbreviated
+    }
+
     public static class SpeciesUtils {
 
         // Ideally, all utility functions related to species should be located here.
@@ -557,6 +562,34 @@ namespace OurFoodChain {
                 }
 
             }
+
+        }
+
+        public static string FormatSpeciesName(string speciesName, SpeciesNameFormat format) {
+
+            string[] words = speciesName.Split(' ')
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .ToArray();
+
+            if (words.Count() <= 1)
+                // If the name only contains one word, assume it's the specific epithet.
+                return speciesName.ToLower();
+            else if (words.Count() > 2)
+                // If the name contains more than two words, treat it as a common name.
+                return StringUtils.ToTitleCase(string.Join(" ", words));
+
+            switch (format) {
+
+                case SpeciesNameFormat.Full:
+                    return string.Format("{0} {1}", StringUtils.ToTitleCase(words[0]), words[1].ToLower());
+
+                case SpeciesNameFormat.Abbreviated:
+                    return string.Format("{0}. {1}", StringUtils.ToTitleCase(words[0]).First(), words[1].ToLower());
+
+            }
+
+            return speciesName;
 
         }
 

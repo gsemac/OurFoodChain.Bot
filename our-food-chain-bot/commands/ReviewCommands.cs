@@ -70,8 +70,8 @@ namespace OurFoodChain {
                     EmbedBuilder embed = new EmbedBuilder {
                         Title = string.Format("{0}'s Reviews", Context.User.Username)
                     };
-                    
-                    ReviewInfo[] under_review = cache.Reviews.Where(x => x.SubmitterUserId == Context.User.Id && !x.IsFinished).ToArray();
+
+                    ReviewInfo[] under_review = cache.Reviews.Where(x => x.SubmitterUserId == Context.User.Id && x.Status == ReviewStatus.InReview).ToArray();
                     ReviewInfo[] reviewing = cache.Reviews.Where(x => x.ReviewerUserId == Context.User.Id && !x.IsFinished).ToArray();
 
                     if (under_review.Count() > 0) {
@@ -83,10 +83,10 @@ namespace OurFoodChain {
                             // Find the last message where the submitter mentioned the reviewer.
 
                             var mentions_reviewer = discussion_messages.Where(x => x.Author.Id == info.SubmitterUserId && x.MentionedUserIds.Contains(Context.User.Id));
-                            var mentions_submitter = discussion_messages.Where(x => x.Author.Id == info.ReviewerUserId && x.MentionedUserIds.Contains(info.ReviewerUserId));
+                            var mentions_submitter = discussion_messages.Where(x => x.Author.Id == info.ReviewerUserId && x.MentionedUserIds.Contains(info.SubmitterUserId));
 
-                            string question_link = mentions_submitter.Count() > 0 ? string.Format("[[Question]]({0})", mentions_submitter.Last().GetJumpUrl()) : "[Question]";
-                            string answer_link = mentions_reviewer.Count() > 0 ? string.Format("[[Answer]]({0})", mentions_reviewer.Last().GetJumpUrl()) : "[Answer]";
+                            string question_link = mentions_submitter.Count() > 0 ? string.Format("[[Q]]({0})", mentions_submitter.Last().GetJumpUrl()) : "[Q]";
+                            string answer_link = mentions_reviewer.Count() > 0 ? string.Format("[[A]]({0})", mentions_reviewer.Last().GetJumpUrl()) : "[A]";
 
                             string append = string.Format("[**{0}**]({1}) ⁠— {2} {3}", info.Title, info.SubmissionMessageUrl, question_link, answer_link);
 
@@ -109,10 +109,10 @@ namespace OurFoodChain {
                             // #todo Fix code duplication.
 
                             var mentions_reviewer = discussion_messages.Where(x => x.Author.Id == info.SubmitterUserId && x.MentionedUserIds.Contains(Context.User.Id));
-                            var mentions_submitter = discussion_messages.Where(x => x.Author.Id == info.ReviewerUserId && x.MentionedUserIds.Contains(info.ReviewerUserId));
+                            var mentions_submitter = discussion_messages.Where(x => x.Author.Id == info.ReviewerUserId && x.MentionedUserIds.Contains(info.SubmitterUserId));
 
-                            string question_link = mentions_submitter.Count() > 0 ? string.Format("[[Question]]({0})", mentions_submitter.Last().GetJumpUrl()) : "[Question]";
-                            string answer_link = mentions_reviewer.Count() > 0 ? string.Format("[[Answer]]({0})", mentions_reviewer.Last().GetJumpUrl()) : "[Answer]";
+                            string question_link = mentions_submitter.Count() > 0 ? string.Format("[[Q]]({0})", mentions_submitter.Last().GetJumpUrl()) : "[Q]";
+                            string answer_link = mentions_reviewer.Count() > 0 ? string.Format("[[A]]({0})", mentions_reviewer.Last().GetJumpUrl()) : "[A]";
 
                             string append = string.Format("[**{0}**]({1}) ⁠— {2} {3}", info.Title, info.SubmissionMessageUrl, question_link, answer_link);
 

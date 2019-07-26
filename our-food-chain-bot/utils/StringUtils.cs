@@ -18,7 +18,7 @@ namespace OurFoodChain {
 
             // Fix possessive "'s" so it's not capitalized (since "ToTitleCase" capitalizes it).
             // E.g. Widow'S Peak -> Widow's Peak
-            output = Regex.Replace(output, @"\b['’]S\b", "'s");
+            output = Regex.Replace(output, @"\b(['’])S\b", "$1s");
 
             return output;
 

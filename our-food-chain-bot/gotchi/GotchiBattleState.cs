@@ -473,7 +473,12 @@ namespace OurFoodChain.gotchi {
                     // Check if this was a critical hit, or if the move missed.
 
                     bool is_hit = target.status != "blinding" && (!user.selectedMove.info.canMiss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hitRate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
-                    bool is_critical = user.selectedMove.info.canCritical && (BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.criticalRate)) == 0);
+                    bool is_critical =
+                        BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.criticalRate)) == 0 ||
+                        (await SpeciesUtils.GetPreyAsync(user.gotchi.species_id)).Any(x => x.id == target.gotchi.id);
+
+                    if (!user.selectedMove.info.canCritical)
+                        is_critical = false;
 
                     if (is_hit) {
 

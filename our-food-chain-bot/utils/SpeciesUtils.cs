@@ -170,12 +170,15 @@ namespace OurFoodChain {
 
         }
         public static async Task<Species[]> GetPreyAsync(Species species) {
+            return await GetPreyAsync(species.id);
+        }
+        public static async Task<Species[]> GetPreyAsync(long speciesId) {
 
             List<Species> result = new List<Species>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows)

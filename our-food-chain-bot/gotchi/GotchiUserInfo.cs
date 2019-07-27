@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
-    public class GotchiUser {
+    public class GotchiUserInfo {
 
         // Public methods
 
-        public GotchiUser(ulong userId) {
+        public GotchiUserInfo(ulong userId) {
 
             UserId = userId;
 
         }
 
-        public static GotchiUser FromDataRow(DataRow row) {
+        public static GotchiUserInfo FromDataRow(DataRow row) {
 
-            return new GotchiUser((ulong)row.Field<long>("user_id")) {
+            return new GotchiUserInfo((ulong)row.Field<long>("user_id")) {
                 G = row.Field<long>("g"),
                 GotchiLimit = (ulong)row.Field<long>("gotchi_limit"),
                 PrimaryGotchiId = row.Field<long>("primary_gotchi_id")

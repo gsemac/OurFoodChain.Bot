@@ -19,6 +19,22 @@ namespace OurFoodChain.gotchi {
         Visiting
     }
 
+    public class GotchiGifCreatorParams {
+
+        public Gotchi gotchi = null;
+        public int x = 0;
+        public int y = 0;
+        public GotchiState state = GotchiState.Happy;
+        public bool auto = true;
+
+    }
+    public class GotchiGifCreatorExtraParams {
+
+        public string backgroundFileName = "home_aquatic.png";
+        public Action<Graphics> overlay = null;
+
+    }
+
     class GotchiGifCreator :
         IDisposable {
 

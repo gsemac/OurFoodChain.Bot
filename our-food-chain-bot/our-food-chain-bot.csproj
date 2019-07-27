@@ -202,6 +202,8 @@
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
+    <Compile Include="gotchi\GotchiTradeRequest.cs" />
     <Compile Include="utils\DatabaseUtils.cs" />
     <Compile Include="utils\DiscordUtils.cs" />
     <Compile Include="utils\ExtinctionInfo.cs" />
@@ -216,7 +218,7 @@
     <Compile Include="gotchi\GotchiMoveset.cs" />
     <Compile Include="gotchi\GotchiStatsUtils.cs" />
     <Compile Include="gotchi\GotchiBattleStatus.cs" />
-    <Compile Include="gotchi\GotchiUser.cs" />
+    <Compile Include="gotchi\GotchiUserInfo.cs" />
     <Compile Include="gotchi\GotchiUtils.cs" />
     <Compile Include="Period.cs" />
     <Compile Include="utils\galleries\GalleryUtils.cs" />

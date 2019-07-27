@@ -14,165 +14,15 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.gotchi {
 
-    public class GotchiTradeRequest {
-
-        public Gotchi requesterGotchi;
-        public Gotchi partnerGotchi;
-        public long timestamp = 0;
-
-        public enum GotchiTradeRequestResult {
-            Success,
-            Invalid,
-            RequestPending
-        }
-
-        public bool IsExpired() {
-
-            long minutes_until_expired = 5;
-
-            return ((DateTimeOffset.UtcNow.ToUnixTimeSeconds() - timestamp) / 60) > minutes_until_expired;
-
-        }
-        public async Task<bool> IsValid(ICommandContext context) {
-
-            // The request is invalid if:
-            // - Either user involved in the trade has gotten a new gotchi since the trade was initiated
-            // - Either gotchi has died since the trade was initiated
-            // - The request has expired
-
-            if (IsExpired() || requesterGotchi is null || partnerGotchi is null)
-                return false;
-
-            IUser user1 = await context.Guild.GetUserAsync(requesterGotchi.owner_id);
-            Gotchi gotchi1 = user1 is null ? null : await GotchiUtils.GetPrimaryGotchiByUserAsync(user1);
-
-            if (gotchi1 is null || gotchi1.IsDead() || gotchi1.id != requesterGotchi.id)
-                return false;
-
-            IUser user2 = await context.Guild.GetUserAsync(partnerGotchi.owner_id);
-            Gotchi gotchi2 = user2 is null ? null : await GotchiUtils.GetPrimaryGotchiByUserAsync(user2);
-
-            if (gotchi2 is null || gotchi2.IsDead() || gotchi2.id != partnerGotchi.id)
-                return false;
-
-            return true;
-
-        }
-        public async Task ExecuteRequest(ICommandContext context) {
-
-            // Get both users and their gotchis.
-
-            IUser user1 = await context.Guild.GetUserAsync(requesterGotchi.owner_id);
-            Gotchi gotchi1 = await GotchiUtils.GetPrimaryGotchiByUserAsync(user1);
-
-            IUser user2 = await context.Guild.GetUserAsync(partnerGotchi.owner_id);
-            Gotchi gotchi2 = await GotchiUtils.GetPrimaryGotchiByUserAsync(user2);
-
-            // Swap the owners of the gotchis.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET owner_id = $owner_id WHERE id = $id;")) {
-
-                cmd.Parameters.AddWithValue("$owner_id", user1.Id);
-                cmd.Parameters.AddWithValue("$id", gotchi2.id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET owner_id = $owner_id WHERE id = $id;")) {
-
-                cmd.Parameters.AddWithValue("$owner_id", user2.Id);
-                cmd.Parameters.AddWithValue("$id", gotchi1.id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            // Remove all existing trade requests involving either user.
-            TRADE_REQUESTS.RemoveAll(x => x.requesterGotchi.owner_id == user1.Id || x.partnerGotchi.owner_id == user2.Id);
-
-        }
-
-        public static async Task<GotchiTradeRequestResult> MakeTradeRequest(ICommandContext context, Gotchi requesterGotchi, Gotchi partnerGotchi) {
-
-            // If either gotchi passed in is null, the request is invalid.
-
-            if (requesterGotchi is null || partnerGotchi is null)
-                return GotchiTradeRequestResult.Invalid;
-
-            // If the user has made previous trade requests, remove them.
-            TRADE_REQUESTS.RemoveAll(x => x.requesterGotchi.owner_id == requesterGotchi.owner_id);
-
-            // If their partner already has an open trade request that hasn't been accepted, don't allow a new trade request to be made.
-            // This is so users cannot make a new trade request right before one is accepted and snipe the trade.
-
-            GotchiTradeRequest request = GetTradeRequest(partnerGotchi);
-
-            if (!(request is null)) {
-
-                if (request.IsExpired())
-                    TRADE_REQUESTS.RemoveAll(x => x.partnerGotchi.owner_id == partnerGotchi.owner_id);
-                else
-                    return GotchiTradeRequestResult.RequestPending;
-
-            }
-
-            request = new GotchiTradeRequest {
-                requesterGotchi = requesterGotchi,
-                partnerGotchi = partnerGotchi,
-                timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            };
-
-            if (!await request.IsValid(context))
-                return GotchiTradeRequestResult.Invalid;
-
-            TRADE_REQUESTS.Add(request);
-
-            return GotchiTradeRequestResult.Success;
-
-        }
-        public static GotchiTradeRequest GetTradeRequest(Gotchi partnerGotchi) {
-
-            // Returns the trade request that this user is a partner in.
-            // If the partner has changed gotchis since the request was initiated, the request is invalid and thus not returned.
-
-            foreach (GotchiTradeRequest req in TRADE_REQUESTS)
-                if (req.partnerGotchi.owner_id == partnerGotchi.owner_id && req.partnerGotchi.id == partnerGotchi.id)
-                    return req;
-
-            return null;
-
-        }
-
-        private static List<GotchiTradeRequest> TRADE_REQUESTS = new List<GotchiTradeRequest>();
-
-    }
-
     public class GotchiUtils {
 
-        public class GotchiGifCreatorParams {
-
-            public Gotchi gotchi = null;
-            public int x = 0;
-            public int y = 0;
-            public GotchiState state = GotchiState.Happy;
-            public bool auto = true;
-
-        }
-        public class GotchiGifCreatorExtraParams {
-
-            public string backgroundFileName = "home_aquatic.png";
-            public Action<Graphics> overlay = null;
-
-        }
-
-        static public async Task AddGotchiAsync(IUser user, Species species) {
+        public static async Task CreateGotchiAsync(IUser user, Species species) {
 
             // We need to generate a name for this Gotchi that doesn't already exist for this user.
 
             string name = GenerateGotchiName(user, species);
 
-            while (!(await GetGotchiByNameAsync(user.Id, name) is null))
+            while (!(await GetGotchiAsync(user.Id, name) is null))
                 name = GenerateGotchiName(user, species);
 
             // Add the Gotchi to the database.
@@ -195,7 +45,7 @@ namespace OurFoodChain.gotchi {
 
             // Set this gotchi as the user's primary Gotchi.
 
-            GotchiUser user_data = await GetGotchiUserAsync(user);
+            GotchiUserInfo user_data = await GetUserInfoAsync(user);
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT id FROM Gotchi WHERE owner_id = $owner_id AND born_ts = $born_ts")) {
 
@@ -206,10 +56,10 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            await UpdateGotchiUserAsync(user_data);
+            await UpdateUserInfoAsync(user_data);
 
         }
-        static public async Task<Gotchi> GetGotchiByIdAsync(long gotchiId) {
+        public static async Task<Gotchi> GetGotchiAsync(long gotchiId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE id = $id;")) {
 
@@ -222,7 +72,7 @@ namespace OurFoodChain.gotchi {
             }
 
         }
-        static public async Task<Gotchi> GetGotchiByNameAsync(ulong userId, string name) {
+        public static async Task<Gotchi> GetGotchiAsync(ulong userId, string name) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id = $owner_id AND name = $name;")) {
 
@@ -236,7 +86,7 @@ namespace OurFoodChain.gotchi {
             }
 
         }
-        static public async Task<Gotchi[]> GetGotchisByUserIdAsync(ulong userId) {
+        public static async Task<Gotchi[]> GetUserGotchisAsync(ulong userId) {
 
             List<Gotchi> gotchis = new List<Gotchi>();
 
@@ -253,19 +103,19 @@ namespace OurFoodChain.gotchi {
             return gotchis.ToArray();
 
         }
-        static public async Task<Gotchi> GetPrimaryGotchiByUserAsync(IUser user) {
+        public static async Task<Gotchi> GetUserGotchiAsync(IUser user) {
 
             // Get this user's Gotchi user data.
-            GotchiUser user_data = await GetGotchiUserAsync(user);
+            GotchiUserInfo user_data = await GetUserInfoAsync(user);
 
             // Get this user's primary Gotchi.
-            Gotchi gotchi = await GetGotchiByIdAsync(user_data.PrimaryGotchiId);
+            Gotchi gotchi = await GetGotchiAsync(user_data.PrimaryGotchiId);
 
             // If this user's primary gotchi doesn't exist (either it was never set or no longer exists), pick a primary gotchi from their current gotchis.
 
             if (gotchi is null) {
 
-                Gotchi[] gotchis = await GetGotchisByUserIdAsync(user_data.UserId);
+                Gotchi[] gotchis = await GetUserGotchisAsync(user_data.UserId);
 
                 if (gotchis.Count() > 0) {
 
@@ -273,7 +123,7 @@ namespace OurFoodChain.gotchi {
 
                     user_data.PrimaryGotchiId = gotchi.id;
 
-                    await UpdateGotchiUserAsync(user_data);
+                    await UpdateUserInfoAsync(user_data);
 
                 }
 
@@ -282,7 +132,7 @@ namespace OurFoodChain.gotchi {
             return gotchi;
 
         }
-        static public async Task DeleteGotchiByIdAsync(long gotchiId) {
+        public static async Task DeleteGotchiAsync(long gotchiId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE id = $id")) {
 
@@ -294,7 +144,7 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        static public async Task<GotchiUser> GetGotchiUserByUserIdAsync(ulong userId) {
+        public static async Task<GotchiUserInfo> GetUserInfoAsync(ulong userId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM GotchiUser WHERE user_id = $user_id;")) {
 
@@ -303,32 +153,18 @@ namespace OurFoodChain.gotchi {
                 DataRow row = await Database.GetRowAsync(cmd);
 
                 if (!(row is null))
-                    return GotchiUser.FromDataRow(row);
+                    return GotchiUserInfo.FromDataRow(row);
 
             }
 
             // If the user is not yet in the database, return a default user object.
-            return new GotchiUser(userId);
+            return new GotchiUserInfo(userId);
 
         }
-        static public async Task<GotchiUser> GetGotchiUserAsync(IUser user) {
-            return await GetGotchiUserByUserIdAsync(user.Id);
+        public static async Task<GotchiUserInfo> GetUserInfoAsync(IUser user) {
+            return await GetUserInfoAsync(user.Id);
         }
-        static public async Task UpdateGotchiUserAsync(GotchiUser userData) {
-
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO GotchiUser(user_id, g, gotchi_limit, primary_gotchi_id) VALUES ($user_id, $g, $gotchi_limit, $primary_gotchi_id);")) {
-
-                cmd.Parameters.AddWithValue("$user_id", userData.UserId);
-                cmd.Parameters.AddWithValue("$g", userData.G);
-                cmd.Parameters.AddWithValue("$gotchi_limit", userData.GotchiLimit);
-                cmd.Parameters.AddWithValue("$primary_gotchi_id", userData.PrimaryGotchiId);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-        }
-        static public async Task<ulong> GetGotchiCountAsync(IUser user) {
+        public static async Task<ulong> GetUserGotchiCountAsync(IUser user) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Gotchi WHERE owner_id = $user_id;")) {
 
@@ -343,10 +179,25 @@ namespace OurFoodChain.gotchi {
             }
 
         }
-        static public async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi) {
+        public static async Task UpdateUserInfoAsync(GotchiUserInfo userData) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO GotchiUser(user_id, g, gotchi_limit, primary_gotchi_id) VALUES ($user_id, $g, $gotchi_limit, $primary_gotchi_id);")) {
+
+                cmd.Parameters.AddWithValue("$user_id", userData.UserId);
+                cmd.Parameters.AddWithValue("$g", userData.G);
+                cmd.Parameters.AddWithValue("$gotchi_limit", userData.GotchiLimit);
+                cmd.Parameters.AddWithValue("$primary_gotchi_id", userData.PrimaryGotchiId);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+
+        public static async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi) {
             return await EvolveAndUpdateGotchiAsync(gotchi, string.Empty);
         }
-        static public async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi, string desiredEvo) {
+        public static async Task<bool> EvolveAndUpdateGotchiAsync(Gotchi gotchi, string desiredEvo) {
 
             bool evolved = false;
 
@@ -420,7 +271,71 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        static public GotchiItem[] GetAllGotchiItems() {
+        public static async Task<Gotchi> GenerateGotchiAsync(GotchiGenerationParameters parameters) {
+
+            Gotchi result = new Gotchi();
+
+            if (!(parameters.Base is null)) {
+
+                // If a base gotchi was provided, copy over some of its characteristics.
+
+                result.born_ts = parameters.Base.born_ts;
+                result.died_ts = parameters.Base.died_ts;
+                result.evolved_ts = parameters.Base.evolved_ts;
+                result.fed_ts = parameters.Base.fed_ts;
+
+            }
+
+            // Select a random base species to start with.
+
+            Species species = parameters.Species;
+
+            if (species is null) {
+
+                Species[] base_species_list = await SpeciesUtils.GetBaseSpeciesAsync();
+
+
+                if (base_species_list.Count() > 0)
+                    species = base_species_list.ElementAt(BotUtils.RandomInteger(0, base_species_list.Count()));
+
+            }
+
+            if (!(species is null))
+                result.species_id = species.id;
+
+            // Evolve it the given number of times.
+
+            for (int i = 0; i < parameters.MaxEvolutions; ++i)
+                if (!await EvolveAndUpdateGotchiAsync(result))
+                    break;
+
+            // Generate stats (if applicable).
+
+            if (parameters.GenerateStats) {
+
+                result.Stats = new LuaGotchiStats {
+                    level = Math.Max(1, BotUtils.RandomInteger(parameters.MinLevel, parameters.MaxLevel + 1)),
+                    exp = (parameters.Base is null) ? 0 : (parameters.Base.Stats is null ? 0 : parameters.Base.Stats.exp)
+                };
+
+                await GotchiStatsUtils.CalculateStats(result, result.Stats);
+
+            }
+
+            // Generate moveset (if applicable).
+
+            if (parameters.GenerateMoveset)
+                result.Moveset = await GotchiMoveset.GetMovesetAsync(result, result.Stats);
+
+            // Generate a name for the gotchi.
+
+            result.name = (species is null ? "Wild Gotchi" : species.GetShortName()) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.level);
+
+            return result;
+
+        }
+
+        public static GotchiItem[] GetGotchiItems() {
 
             List<GotchiItem> items = new List<GotchiItem>();
             string[] files = System.IO.Directory.GetFiles(Constants.GOTCHI_ITEMS_DIRECTORY, "*.json");
@@ -436,9 +351,9 @@ namespace OurFoodChain.gotchi {
             return items.ToArray();
 
         }
-        static public GotchiItem GetGotchiItemByNameOrId(string nameOrId) {
+        public static GotchiItem GetGotchiItem(string nameOrId) {
 
-            GotchiItem[] items = GetAllGotchiItems();
+            GotchiItem[] items = GetGotchiItems();
             long id = -1;
 
             if (StringUtils.IsNumeric(nameOrId))
@@ -452,7 +367,7 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        static public bool ValidateGotchi(Gotchi gotchi) {
+        public static bool ValidateGotchi(Gotchi gotchi) {
 
             if (gotchi is null)
                 return false;
@@ -460,7 +375,7 @@ namespace OurFoodChain.gotchi {
             return true;
 
         }
-        static public async Task<bool> Reply_ValidateGotchiAsync(ICommandContext context, Gotchi gotchi) {
+        public static async Task<bool> ValidateUserGotchiAndReplyAsync(ICommandContext context, Gotchi gotchi) {
 
             if (!ValidateGotchi(gotchi)) {
 
@@ -474,7 +389,7 @@ namespace OurFoodChain.gotchi {
 
         }
 
-        static public async Task<string> DownloadGotchiImage(Gotchi gotchi) {
+        public static async Task<string> DownloadGotchiImageAsync(Gotchi gotchi) {
 
             // Get the species.
 
@@ -518,7 +433,7 @@ namespace OurFoodChain.gotchi {
             return gotchi_pic;
 
         }
-        static public async Task<string> GenerateGotchiGif(GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        public static async Task<string> GenerateGotchiGifAsync(GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
             // Create the temporary directory where the GIF will be saved.
 
@@ -534,7 +449,7 @@ namespace OurFoodChain.gotchi {
 
             foreach (GotchiGifCreatorParams p in gifParams) {
 
-                string gotchi_image_path = await DownloadGotchiImage(p.gotchi);
+                string gotchi_image_path = await DownloadGotchiImageAsync(p.gotchi);
 
                 gotchi_image_paths.Add(gotchi_image_path);
                 gotchi_images[p.gotchi.id] = System.IO.File.Exists(gotchi_image_path) ? new Bitmap(gotchi_image_path) : null;
@@ -574,19 +489,19 @@ namespace OurFoodChain.gotchi {
             return output_path;
 
         }
-        static public async Task<string> Reply_GenerateAndUploadGotchiGifAsync(ICommandContext context, Gotchi gotchi) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, Gotchi gotchi) {
 
             GotchiGifCreatorParams p = new GotchiGifCreatorParams {
                 gotchi = gotchi,
                 auto = true
             };
 
-            return await Reply_GenerateAndUploadGotchiGifAsync(context, new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
+            return await GenerateAndUploadGotchiGifAndReplyAsync(context, new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
 
         }
-        static public async Task<string> Reply_GenerateAndUploadGotchiGifAsync(ICommandContext context, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
-            string file_path = await GenerateGotchiGif(gifParams, extraParams);
+            string file_path = await GenerateGotchiGifAsync(gifParams, extraParams);
 
             if (!string.IsNullOrEmpty(file_path))
                 return await BotUtils.Reply_UploadFileToScratchServerAsync(context, file_path, deleteAfterUpload: true);
@@ -617,6 +532,125 @@ namespace OurFoodChain.gotchi {
             }
 
             return defaultFileName;
+
+        }
+
+        public static async Task<bool> ValidateTradeRequestAsync(ICommandContext context, GotchiTradeRequest tradeRequest) {
+
+            // The request is invalid if:
+            // - Either user involved in the trade has gotten a new gotchi since the trade was initiated
+            // - Either gotchi has died since the trade was initiated
+            // - The request has expired
+
+            if (tradeRequest.IsExpired || tradeRequest.OfferedGotchi is null || tradeRequest.ReceivedGotchi is null)
+                return false;
+
+            IUser user1 = await context.Guild.GetUserAsync(tradeRequest.OfferedGotchi.owner_id);
+            Gotchi gotchi1 = user1 is null ? null : await GetUserGotchiAsync(user1);
+
+            if (gotchi1 is null || gotchi1.IsDead() || gotchi1.id != tradeRequest.OfferedGotchi.id)
+                return false;
+
+            IUser user2 = await context.Guild.GetUserAsync(tradeRequest.ReceivedGotchi.owner_id);
+            Gotchi gotchi2 = user2 is null ? null : await GetUserGotchiAsync(user2);
+
+            if (gotchi2 is null || gotchi2.IsDead() || gotchi2.id != tradeRequest.ReceivedGotchi.id)
+                return false;
+
+            return true;
+
+        }
+        public static async Task ExecuteTradeRequestAsync(ICommandContext context, GotchiTradeRequest tradeRequest) {
+
+            // Get both users and their gotchis.
+
+            IUser user1 = await context.Guild.GetUserAsync(tradeRequest.OfferedGotchi.owner_id);
+            Gotchi gotchi1 = await GetUserGotchiAsync(user1);
+            GotchiUserInfo userInfo1 = await GetUserInfoAsync(user1);
+
+            IUser user2 = await context.Guild.GetUserAsync(tradeRequest.ReceivedGotchi.owner_id);
+            Gotchi gotchi2 = await GetUserGotchiAsync(user2);
+            GotchiUserInfo userInfo2 = await GetUserInfoAsync(user2);
+
+            // Swap the owners of the gotchis.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET owner_id = $owner_id WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", user1.Id);
+                cmd.Parameters.AddWithValue("$id", gotchi2.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            userInfo1.PrimaryGotchiId = gotchi2.id;
+
+            await UpdateUserInfoAsync(userInfo1);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET owner_id = $owner_id WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$owner_id", user2.Id);
+                cmd.Parameters.AddWithValue("$id", gotchi1.id);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            userInfo2.PrimaryGotchiId = gotchi1.id;
+
+            await UpdateUserInfoAsync(userInfo2);
+
+            // Remove all existing trade requests involving either user.
+            _trade_requests.RemoveAll(x => x.OfferedGotchi.owner_id == user1.Id || x.ReceivedGotchi.owner_id == user2.Id);
+
+        }
+        public static async Task<GotchiTradeRequestResult> MakeTradeRequestAsync(ICommandContext context, Gotchi offeredGotchi, Gotchi recievedGotchi) {
+
+            // If either gotchi passed in is null, the request is invalid.
+
+            if (offeredGotchi is null || recievedGotchi is null)
+                return GotchiTradeRequestResult.Invalid;
+
+            // If the user has made previous trade requests, remove them.
+            _trade_requests.RemoveAll(x => x.OfferedGotchi.owner_id == offeredGotchi.owner_id);
+
+            // If their partner already has an open trade request that hasn't been accepted, don't allow a new trade request to be made.
+            // This is so users cannot make a new trade request right before one is accepted and snipe the trade.
+
+            GotchiTradeRequest request = GetTradeRequest(recievedGotchi);
+
+            if (!(request is null)) {
+
+                if (request.IsExpired)
+                    _trade_requests.RemoveAll(x => x.ReceivedGotchi.owner_id == recievedGotchi.owner_id);
+                else
+                    return GotchiTradeRequestResult.RequestPending;
+
+            }
+
+            request = new GotchiTradeRequest {
+                OfferedGotchi = offeredGotchi,
+                ReceivedGotchi = recievedGotchi
+            };
+
+            if (!await ValidateTradeRequestAsync(context, request))
+                return GotchiTradeRequestResult.Invalid;
+
+            _trade_requests.Add(request);
+
+            return GotchiTradeRequestResult.Success;
+
+        }
+        public static GotchiTradeRequest GetTradeRequest(Gotchi recievedGotchi) {
+
+            // Returns the trade request that this user is a partner in.
+            // If the partner has changed gotchis since the request was initiated, the request is invalid and thus not returned.
+
+            foreach (GotchiTradeRequest request in _trade_requests)
+                if (request.ReceivedGotchi.owner_id == recievedGotchi.owner_id && request.ReceivedGotchi.id == recievedGotchi.id)
+                    return request;
+
+            return null;
 
         }
 
@@ -670,6 +704,8 @@ namespace OurFoodChain.gotchi {
             return name_options.Select(x => StringUtils.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
 
         }
+
+        private static List<GotchiTradeRequest> _trade_requests = new List<GotchiTradeRequest>();
 
     }
 

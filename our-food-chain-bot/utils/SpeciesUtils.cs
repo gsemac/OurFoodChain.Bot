@@ -139,6 +139,19 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Species[]> GetBaseSpeciesAsync() {
+
+            List<Species> species = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors)"))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows)
+                    species.Add(await Species.FromDataRow(row));
+
+            return species.ToArray();
+
+        }
+
         public static async Task<Species[]> GetPredatorsAsync(Species species) {
 
             List<Species> result = new List<Species>();

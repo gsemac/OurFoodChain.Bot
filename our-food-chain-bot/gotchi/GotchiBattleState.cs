@@ -322,6 +322,16 @@ namespace OurFoodChain.gotchi {
                 // Otherwise, generate an opponent for the user.
                 await state._generateOpponentAsync();
 
+                // If the opponent is null (no species available as opponents), abort.
+
+                if (state.player2.gotchi is null) {
+
+                    await BotUtils.ReplyAsync_Info(context, "There are no opponents available.");
+
+                    return;
+
+                }
+
                 // Since the user is battling a CPU, accept the battle immediately.
                 state.accepted = true;
 
@@ -372,7 +382,7 @@ namespace OurFoodChain.gotchi {
 
             string gif_url = "";
 
-            GotchiUtils.GotchiGifCreatorParams p1 = new GotchiUtils.GotchiGifCreatorParams {
+            GotchiGifCreatorParams p1 = new GotchiGifCreatorParams {
                 gotchi = state.player1.gotchi,
                 x = 50,
                 y = 150,
@@ -380,7 +390,7 @@ namespace OurFoodChain.gotchi {
                 auto = false
             };
 
-            GotchiUtils.GotchiGifCreatorParams p2 = new GotchiUtils.GotchiGifCreatorParams {
+            GotchiGifCreatorParams p2 = new GotchiGifCreatorParams {
                 gotchi = state.player2.gotchi,
                 x = 250,
                 y = 150,
@@ -388,7 +398,7 @@ namespace OurFoodChain.gotchi {
                 auto = false
             };
 
-            gif_url = await GotchiUtils.Reply_GenerateAndUploadGotchiGifAsync(context, new GotchiUtils.GotchiGifCreatorParams[] { p1, p2 }, new GotchiUtils.GotchiGifCreatorExtraParams {
+            gif_url = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(context, new GotchiGifCreatorParams[] { p1, p2 }, new GotchiGifCreatorExtraParams {
                 backgroundFileName = await GotchiUtils.GetGotchiBackgroundFileNameAsync(state.player2.gotchi, "home_battle.png"),
                 overlay = (Graphics gfx) => {
 
@@ -807,60 +817,41 @@ namespace OurFoodChain.gotchi {
         }
         private async Task _generateOpponentAsync() {
 
+            // Pick a random species from the same zone as the player's gotchi.
+
+            List<Species> species_list = new List<Species>();
+
+            foreach (SpeciesZone zone in await SpeciesUtils.GetZonesAsync(await SpeciesUtils.GetSpeciesAsync(player1.gotchi.species_id)))
+                species_list.AddRange((await ZoneUtils.GetSpeciesAsync(zone.Zone)).Where(x => !x.isExtinct));
+
             player2 = new PlayerState();
+            Gotchi opponent = null;
 
-            Gotchi opp = new Gotchi {
-                born_ts = player1.gotchi.born_ts,
-                died_ts = player1.gotchi.died_ts,
-                evolved_ts = player1.gotchi.evolved_ts,
-                fed_ts = player1.gotchi.fed_ts,
-                owner_id = WILD_GOTCHI_USER_ID,
-                id = WILD_GOTCHI_ID
-            };
+            if (species_list.Count() > 0) {
 
-            // Pick a random base species for the user to battle.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors) ORDER BY RANDOM() LIMIT 1;")) {
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null))
-                    opp.species_id = (await Species.FromDataRow(row)).id;
+                opponent = await GotchiUtils.GenerateGotchiAsync(new GotchiGenerationParameters {
+                    Base = player1.gotchi,
+                    Species = species_list[BotUtils.RandomInteger(species_list.Count())],
+                    MinLevel = (int)player1.stats.level - 3,
+                    MaxLevel = (int)player1.stats.level + 3,
+                    GenerateMoveset = true,
+                    GenerateStats = true
+                });
 
             }
 
-            // Evolve it to the same point as the user's gotchi.
-
-            long evolved_times = 0;
-            long evolved_max = player1.stats.level / 10;
-
-            for (evolved_times = 0; evolved_times < evolved_max; ++evolved_times)
-                if (!await GotchiUtils.EvolveAndUpdateGotchiAsync(opp))
-                    break;
-
-            // Calculate stats.
-
-            LuaGotchiStats opp_stats = new LuaGotchiStats {
-                level = Math.Max(1, player1.stats.level + BotUtils.RandomInteger(-3, 4)), // up to 3 levels in either direction
-                exp = player1.stats.exp
-            };
-
-            // For each time the species was not able to evolve to match up to its opponent, add a level.
-            if (evolved_times < evolved_max)
-                opp_stats.level += evolved_max - evolved_times;
-
-            opp_stats = await GotchiStatsUtils.CalculateStats(opp, opp_stats);
-
-            // Name the gotchi.
-
-            Species opp_species = await BotUtils.GetSpeciesFromDb(opp.species_id);
-            opp.name = (opp_species is null ? "Wild Gotchi" : opp_species.GetShortName()) + string.Format(" (Lv. {0})", opp_stats.level);
-
             // Set the opponent.
 
-            player2.gotchi = opp;
-            player2.stats = opp_stats;
-            player2.moves = await GotchiMoveset.GetMovesetAsync(player2.gotchi, player2.stats);
+            if (!(opponent is null)) {
+
+                opponent.owner_id = WILD_GOTCHI_USER_ID;
+                opponent.id = WILD_GOTCHI_ID;
+
+                player2.gotchi = opponent;
+                player2.stats = opponent.Stats;
+                player2.moves = opponent.Moveset;
+
+            }
 
         }
         private async Task _pickCpuMoveAsync(PlayerState player) {
@@ -916,11 +907,11 @@ namespace OurFoodChain.gotchi {
 
                 // Update the winner's G.
 
-                GotchiUser user_data = await GotchiUtils.GetGotchiUserByUserIdAsync(winner.gotchi.owner_id);
+                GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(winner.gotchi.owner_id);
 
                 user_data.G += winner_g;
 
-                await GotchiUtils.UpdateGotchiUserAsync(user_data);
+                await GotchiUtils.UpdateUserInfoAsync(user_data);
 
                 sb.AppendLine();
 

@@ -23,6 +23,9 @@ namespace OurFoodChain.gotchi {
         public long died_ts = 0;
         public long evolved_ts = 0;
 
+        public LuaGotchiStats Stats { get; set; }
+        public GotchiMoveset Moveset { get; set; }
+
         public bool IsSleeping() {
 
             return (HoursSinceBirth() % HOURS_PER_DAY) >= (HOURS_PER_DAY - HOURS_OF_SLEEP_PER_DAY);
@@ -64,7 +67,7 @@ namespace OurFoodChain.gotchi {
         }
         public bool IsDead() {
 
-            return HoursSinceFed() > (HOURS_PER_DAY * MAXIMUM_STARVATION_DAYS); 
+            return HoursSinceFed() > (HOURS_PER_DAY * MAXIMUM_STARVATION_DAYS);
 
         }
         public long HoursSinceBirth() {

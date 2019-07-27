@@ -87,6 +87,27 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Species[]> GetSpeciesAsync(Zone zone) {
+
+            List<Species> species = new List<Species>();
+
+            if (zone is null || zone.id <= 0)
+                return species.ToArray();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id = $zone_id)")) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.id);
+
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        species.Add(await Species.FromDataRow(row));
+
+            }
+
+            return species.ToArray();
+
+        }
+
         public static string FormatZoneName(string name) {
 
             if (StringUtils.IsNumeric(name) || name.Length == 1)

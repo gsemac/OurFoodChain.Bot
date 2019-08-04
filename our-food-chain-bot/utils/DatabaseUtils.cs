@@ -39,6 +39,22 @@ namespace OurFoodChain {
             }
 
         }
+
+        public static async Task<T> GetScalarAsync<T>(SQLiteConnection conn, SQLiteCommand command) {
+
+            DataRow row = await GetRowAsync(conn, command);
+
+            return (T)row[0];
+
+        }
+        public static async Task<T> GetScalarOrDefaultAsync<T>(SQLiteConnection conn, SQLiteCommand command, T defaultValue) {
+
+            DataRow row = await GetRowAsync(conn, command);
+
+            return row is null ? defaultValue : (T)row[0];
+
+        }
+
         public static async Task ExecuteNonQuery(SQLiteConnection conn, string query) {
 
             using (SQLiteCommand cmd = new SQLiteCommand(query))

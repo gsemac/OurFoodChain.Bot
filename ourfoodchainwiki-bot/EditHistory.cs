@@ -174,7 +174,9 @@ namespace OurFoodChainWikiBot {
             await _executeNonQueryAsync("CREATE TABLE IF NOT EXISTS SpeciesPageEditHistory(timestamp INTEGER, edit_id INTEGER, species_id INTEGER, FOREIGN KEY(edit_id) REFERENCES PageEditHistory(id))");
 
             await _executeNonQueryAsync("CREATE TABLE IF NOT EXISTS Meta(version INTEGER)");
-            await _executeNonQueryAsync("INSERT INTO Meta(version) VALUES(1)");
+
+            if (await _getDatabaseVersionAsync() <= 0)
+                await _executeNonQueryAsync("INSERT INTO Meta(version) VALUES(1)");
 
         }
         private async Task _executeNonQueryAsync(string command) {
@@ -198,6 +200,13 @@ namespace OurFoodChainWikiBot {
                 return (long)result > 0;
 
             }
+
+        }
+        private async Task<long> _getDatabaseVersionAsync() {
+
+            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT version FROM Meta"))
+                return await OurFoodChain.DatabaseUtils.GetScalarOrDefaultAsync<long>(conn, cmd, 0);
 
         }
 

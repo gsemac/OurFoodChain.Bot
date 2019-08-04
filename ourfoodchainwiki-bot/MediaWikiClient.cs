@@ -91,6 +91,12 @@ namespace OurFoodChainWikiBot {
 
     }
 
+    public class DeleteParameters {
+
+        public string Reason { get; set; } = "";
+
+    }
+
     public class ParseParameters {
 
     }
@@ -332,6 +338,43 @@ namespace OurFoodChainWikiBot {
                 _logError(string.Format("failed to upload file \"{0}\"", parameters.UploadFileName));
 
             return new MediaWikiApiRequestResult { Success = success };
+
+        }
+        public MediaWikiApiRequestResult Delete(string title, DeleteParameters parameters) {
+
+            string token = _get_csrf_token();
+
+            if (!string.IsNullOrEmpty(token)) {
+
+                if (!IsLoggedIn)
+                    _logWarn(string.Format("deleting page \"{0}\" anonymously", title));
+                else
+                    _logInfo(string.Format("deleting page \"{0}\"", title));
+
+                // POST edit.
+
+                NameValueCollection values = new NameValueCollection {
+                    ["action"] = "delete",
+                    ["format"] = "json",
+                    ["title"] = title,
+                    ["token"] = token,
+                    ["reason"] = parameters.Reason
+                };
+
+                string data = _http_post(_get_api_url(), values);
+
+                bool success = !JObject.Parse(data).ContainsKey("error");
+
+                if (success)
+                    _logInfo(string.Format("deleted page \"{0}\"", title));
+                else
+                    _logError(string.Format("failed to deleted page \"{0}\"", title));
+
+                return new MediaWikiApiRequestResult { Success = success };
+
+            }
+
+            return new MediaWikiApiRequestResult { Success = false };
 
         }
 

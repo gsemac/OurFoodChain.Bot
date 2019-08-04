@@ -133,6 +133,32 @@ namespace OurFoodChainWikiBot {
             return null;
 
         }
+        public async Task<EditRecord[]> GetEditRecordsAsync(long speciesId) {
+
+            List<EditRecord> records = new List<EditRecord>();
+
+            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesPageEditHistory INNER JOIN PageEditHistory ON PageEditHistory.id = SpeciesPageEditHistory.edit_id WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
+                    foreach (DataRow row in table.Rows) {
+
+                        records.Add(new EditRecord {
+                            Id = row.Field<long>("id"),
+                            Timestamp = row.Field<long>("timestamp"),
+                            Title = row.Field<string>("title"),
+                            ContentHash = row.Field<string>("content_hash")
+                        });
+
+                    }
+
+            }
+
+            return records.ToArray();
+
+        }
 
         public async Task AddRedirectRecordAsync(string title, string target) {
 
@@ -146,6 +172,31 @@ namespace OurFoodChainWikiBot {
                 await cmd.ExecuteNonQueryAsync();
 
             }
+
+        }
+        public async Task<RedirectRecord[]> GetRedirectRecordsAsync(string redirectsToTitle) {
+
+            List<RedirectRecord> records = new List<RedirectRecord>();
+
+            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM RedirectHistory WHERE target = $target")) {
+
+                cmd.Parameters.AddWithValue("$target", redirectsToTitle);
+
+                using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
+                    foreach (DataRow row in table.Rows) {
+
+                        records.Add(new RedirectRecord {
+                            Timestamp = row.Field<long>("timestamp"),
+                            Title = row.Field<string>("title"),
+                            Target = row.Field<string>("target")
+                        });
+
+                    }
+
+            }
+
+            return records.ToArray();
 
         }
 

@@ -285,8 +285,52 @@ namespace OurFoodChainWikiBot {
 
                 EditRecord record = await history.GetEditRecordAsync(pageTitle, pageContent);
 
-                if (!(record is null))
+                if (!(record is null)) {
+
                     await history.AddEditRecordAsync(species.id, record);
+
+                    // Because it's possible that the species was renamed, we need to look at past edits to find previous titles of the same page.
+                    // Old pages for renamed species will be deleted.
+
+                    EditRecord[] previous_records = (await history.GetEditRecordsAsync(species.id))
+                        .Where(x => x.Id != record.Id && x.Title.ToLower() != record.Title.ToLower())
+                        .ToArray();
+
+                    foreach (EditRecord i in previous_records) {
+
+                        MediaWikiApiParseRequestResult parse_result = client.Parse(i.Title, new ParseParameters());
+
+                        if (parse_result.Text.Contains(BOT_FLAG_STRING)) {
+
+                            // Only delete pages that haven't been manually edited. 
+
+                            client.Delete(i.Title, new DeleteParameters {
+                                Reason = "species page moved to " + pageTitle
+                            });
+
+                        }
+
+                        // For each page we delete, delete any redirects that point to this page as well.
+
+                        foreach (RedirectRecord j in await history.GetRedirectRecordsAsync(i.Title)) {
+
+                            parse_result = client.Parse(j.Title, new ParseParameters());
+
+                            if (parse_result.Text.Contains(BOT_FLAG_STRING)) {
+
+                                // Only delete pages that haven't been manually edited. 
+
+                                client.Delete(j.Title, new DeleteParameters {
+                                    Reason = "outdated redirect"
+                                });
+
+                            }
+
+                        }
+
+                    }
+
+                }
 
             }
 

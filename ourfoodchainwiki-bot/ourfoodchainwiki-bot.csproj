@@ -77,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="data\wiki\modules\ofc_functions.lua" />
     <None Include="wikibot-config.json" />
     <None Include="packages.config" />
   </ItemGroup>

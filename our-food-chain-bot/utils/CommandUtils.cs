@@ -203,6 +203,9 @@ namespace OurFoodChain {
 
         public static async Task<IUser> GetUserFromUsernameOrMentionAsync(ICommandContext context, string usernameOrMention) {
 
+            if (context is null || context.Guild is null)
+                return null;
+
             IReadOnlyCollection<IGuildUser> users = await context.Guild.GetUsersAsync();
 
             foreach (IGuildUser user in users)

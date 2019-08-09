@@ -761,6 +761,16 @@ namespace OurFoodChain {
 
                                 break;
 
+                            case "descendants":
+                            case "evo":
+                            case "evos":
+
+                                await result.FilterByAsync(async (x) => {
+                                    return await SpeciesUtils.GetDirectDescendantsAsync(x) is null;
+                                }, subtract);
+
+                                break;
+
                         }
 
                     }

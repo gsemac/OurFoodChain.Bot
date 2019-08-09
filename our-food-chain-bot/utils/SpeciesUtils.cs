@@ -240,6 +240,20 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Species> GetDirectDescendantsAsync(Species species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id")) {
+
+                cmd.Parameters.AddWithValue("$ancestor_id", species.id);
+
+                DataRow row = await Database.GetRowAsync(cmd);
+
+                return row is null ? null : await GetSpeciesAsync(row.Field<long>("species_id"));
+
+            }
+
+        }
+
         public static async Task AddCommonNameAsync(Species species, string commonName, bool overwriteSpeciesTable) {
 
             commonName = _formatCommonNameForDatabase(commonName);

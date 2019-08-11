@@ -55,7 +55,7 @@ namespace OurFoodChain {
             return _joinWithUniqueEndSeparator(separator, " or ", values);
         }
         public static string ConjunctiveJoin(string separator, IEnumerable<string> values) {
-            return _joinWithUniqueEndSeparator(separator, separator.EndsWith(" ") ? "and " : " and ", values);
+            return _joinWithUniqueEndSeparator(separator, separator.EndsWith(" ") && values.Count() > 2 ? "and " : " and ", values);
         }
         public static string GetFirstSentence(string value) {
 

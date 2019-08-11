@@ -948,6 +948,68 @@ namespace OurFoodChain {
 
         }
 
+        [Command("migration"), Alias("spread")]
+        public async Task Migration(string speciesName) {
+            await Migration("", speciesName);
+        }
+        [Command("migration"), Alias("spread")]
+        public async Task Migration(string genusName, string speciesName) {
+
+            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+
+            if (species is null)
+                return;
+
+            // Group zones changes that happened closely together (12 hours).
+
+            SpeciesZone[] zones = (await SpeciesUtils.GetZonesAsync(species)).OrderBy(x => x.Timestamp).ToArray();
+            List<List<SpeciesZone>> zone_groups = new List<List<SpeciesZone>>();
+
+            long last_timestamp = zones.Count() > 0 ? zones.First().Timestamp : 0;
+
+            foreach (SpeciesZone zone in zones) {
+                Console.WriteLine(zone.Timestamp);
+                if (zone_groups.Count() <= 0)
+                    zone_groups.Add(new List<SpeciesZone>());
+
+                if (zone_groups.Last().Count() <= 0 || Math.Abs(zone_groups.Last().Last().Timestamp - zone.Timestamp) < 60 * 60 * 12) 
+                    zone_groups.Last().Add(zone);
+                else {
+
+                    last_timestamp = zone.Timestamp;
+                    zone_groups.Add(new List<SpeciesZone> { zone });
+
+                }
+
+
+            }
+
+            StringBuilder result = new StringBuilder();
+
+            for (int i = 0; i < zone_groups.Count(); ++i) {
+
+                if (zone_groups[i].Count() <= 0)
+                    continue;
+
+                long ts = i == 0 ? species.timestamp : zone_groups[i].First().Timestamp;
+
+                if (ts <= 0)
+                    ts = species.timestamp;
+
+                result.Append(string.Format("{0} - ", BotUtils.GetTimeStampAsDateString(ts)));
+                result.Append(i == 0 ? "Started in " : "Spread to ");
+                result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
+                result.Append(StringUtils.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
+
+                result.AppendLine();
+
+            }
+
+
+            await ReplyAsync(string.Format("```{0}```", result.ToString()));
+
+        }
+
         [Command("setzone"), Alias("setzones")]
         public async Task SetZone(string genus, string species, string zone = "") {
 

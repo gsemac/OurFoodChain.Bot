@@ -796,7 +796,7 @@ namespace OurFoodChain.gotchi {
                                 if (item.id == 3 && string.IsNullOrEmpty(desired_evo)) {
 
                                     await BotUtils.ReplyAsync_Error(Context,
-                                        string.Format("Please specify the desired species when buying this item.\n\nEx: `{0}gotchi buy 3 asperum`", OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                                        string.Format("Please specify the desired species when buying this item.\n\nEx: `{0}gotchi buy 3 aspersum`", OurFoodChainBot.GetInstance().GetConfig().Prefix));
 
                                     item_failed = true;
 

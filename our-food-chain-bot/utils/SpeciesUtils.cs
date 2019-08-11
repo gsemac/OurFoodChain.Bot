@@ -329,7 +329,8 @@ namespace OurFoodChain {
 
                         zones.Add(new SpeciesZone {
                             Zone = zone,
-                            Notes = row.Field<string>("notes")
+                            Notes = row.Field<string>("notes"),
+                            Timestamp = row.IsNull("timestamp") ? 0 : row.Field<long>("timestamp")
                         });
 
                     }
@@ -348,11 +349,12 @@ namespace OurFoodChain {
 
             foreach (Zone zone in zones) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesZones(species_id, zone_id, notes) VALUES($species_id, $zone_id, $notes)")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesZones(species_id, zone_id, notes, timestamp) VALUES($species_id, $zone_id, $notes, $timestamp)")) {
 
                     cmd.Parameters.AddWithValue("$species_id", species.id);
                     cmd.Parameters.AddWithValue("$zone_id", zone.id);
                     cmd.Parameters.AddWithValue("$notes", string.IsNullOrEmpty(notes) ? "" : notes.Trim().ToLower());
+                    cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
                     await Database.ExecuteNonQuery(cmd);
 
@@ -641,7 +643,7 @@ namespace OurFoodChain {
             }
 
             // Strip all periods from the genus/species names.
-            // This allows us to process inputs like "c aspersum" and "c. asperum" in the same way.
+            // This allows us to process inputs like "c aspersum" and "c. aspersum" in the same way.
             // At the same time, convert to lowercase to match how the values are stored in the database, and trim any excess whitespace.
 
             if (!string.IsNullOrEmpty(genus))

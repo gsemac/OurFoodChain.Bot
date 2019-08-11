@@ -256,7 +256,7 @@
     <Compile Include="utils\PaginatedEmbedBuilder.cs" />
     <Compile Include="utils\SearchQuery.cs" />
     <Compile Include="utils\SpeciesUtils.cs" />
-    <Compile Include="utils\SpeciesZone.cs" />
+    <Compile Include="utils\zones\SpeciesZone.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\TaxonUtils.cs" />
     <Compile Include="utils\TimeAmount.cs" />
@@ -289,6 +289,7 @@
     <None Include="data\help\gotchi\set.json" />
     <None Include="data\help\gotchi\shop.json" />
     <None Include="data\help\leaderboard.json" />
+    <None Include="data\help\migration.json" />
     <None Include="data\help\roll.json" />
     <None Include="data\help\setartist.json" />
     <None Include="data\help\size.json" />

@@ -7,6 +7,6 @@
   "description": "Sets the common name for a given taxon.\n\nIf two different taxa have the same name, you can use the commands `setspeciescommon`, `setgenuscommon`, `setfamilycommon`, and so on. These commands all have shorthand equivalents, e.g. `setscommon`, `setgcommon`, `setfcommon`, etc.",
   "examples": [
     "setcommon cornu \"snail\"",
-    "setcommon cornu asperum \"garden snail\""
+    "setcommon cornu aspersum \"garden snail\""
   ]
 }

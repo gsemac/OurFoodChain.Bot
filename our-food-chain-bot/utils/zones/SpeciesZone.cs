@@ -22,6 +22,7 @@ namespace OurFoodChain {
                 _notes = value;
             }
         }
+        public long Timestamp { get; set; } = 0;
 
         private string _notes = "";
 

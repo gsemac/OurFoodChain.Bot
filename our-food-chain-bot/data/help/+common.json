@@ -6,6 +6,6 @@
   "category": "update",
   "description": "Adds a common name for the given species, updating the default common name only if one hasn't already been set (e.g. by `setcommon`).",
   "examples": [
-    "+common cornu asperum \"garden snail\""
+    "+common cornu aspersum \"garden snail\""
   ]
 }

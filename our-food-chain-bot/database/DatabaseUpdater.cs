@@ -11,7 +11,7 @@ namespace OurFoodChain {
 
     public class DatabaseUpdater {
 
-        public const int LATEST_VERSION = 22;
+        public const int LATEST_VERSION = 23;
 
         public DatabaseUpdater(SQLiteConnection conn) {
             Connection = conn;
@@ -42,6 +42,8 @@ namespace OurFoodChain {
 
         }
         public async Task<int> UpdateToLatestVersionAsync() {
+
+            Debug.Assert(Connection != null);
 
             int version = await GetDatabaseVersionAsync();
 
@@ -160,6 +162,10 @@ namespace OurFoodChain {
 
                 case 22:
                     await _update022(conn);
+                    break;
+
+                case 23:
+                    await _update023(conn);
                     break;
 
             }
@@ -469,6 +475,16 @@ namespace OurFoodChain {
                 await cmd.ExecuteNonQueryAsync();
 
             await _setDatabaseVersionAsync(conn, 22);
+
+        }
+        private static async Task _update023(SQLiteConnection conn) {
+
+            // Adds timestamps for species zone additions.
+
+            using (SQLiteCommand cmd = new SQLiteCommand("ALTER TABLE SpeciesZones ADD COLUMN timestamp INTEGER;", conn))
+                await cmd.ExecuteNonQueryAsync();
+
+            await _setDatabaseVersionAsync(conn, 23);
 
         }
 

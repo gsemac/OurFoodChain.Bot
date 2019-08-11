@@ -1,0 +1,12 @@
+﻿{
+  "name": "migration",
+  "aliases": [
+    "spread"
+  ],
+  "category": "info",
+  "description": "Lists the species' range changes throughout time.",
+  "examples": [
+    "migration <genus> <species>",
+    "migration cornu aspersum"
+  ]
+}

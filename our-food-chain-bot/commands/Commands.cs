@@ -968,7 +968,7 @@ namespace OurFoodChain {
             long last_timestamp = zones.Count() > 0 ? zones.First().Timestamp : 0;
 
             foreach (SpeciesZone zone in zones) {
-                Console.WriteLine(zone.Timestamp);
+               
                 if (zone_groups.Count() <= 0)
                     zone_groups.Add(new List<SpeciesZone>());
 

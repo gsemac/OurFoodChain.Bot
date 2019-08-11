@@ -1649,77 +1649,88 @@ namespace OurFoodChain {
 
         [Command("recent")]
         public async Task Recent() {
+            await Recent("48h");
+        }
+        [Command("recent")]
+        public async Task Recent(string timespan) {
 
-            double hours = 48;
-            long start_ts = DateTimeOffset.UtcNow.AddHours(-hours).ToUnixTimeSeconds();
+            TimeAmount time_amount = TimeAmount.Parse(timespan);
 
-            // Get all species created recently.
+            if (time_amount != null) {
 
-            List<Species> new_species = new List<Species>();
+                long start_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - time_amount.ToUnixTimeSeconds();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp >= $start_ts;")) {
+                // Get all species created recently.
 
-                cmd.Parameters.AddWithValue("$start_ts", start_ts);
+                List<Species> new_species = new List<Species>();
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        new_species.Add(await Species.FromDataRow(row));
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp >= $start_ts;")) {
+
+                    cmd.Parameters.AddWithValue("$start_ts", start_ts);
+
+                    using (DataTable table = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in table.Rows)
+                            new_species.Add(await Species.FromDataRow(row));
+
+                }
+
+                new_species.Sort();
+
+                // Get all extinctions that occurred recently.
+
+                List<Species> extinct_species = new List<Species>();
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE timestamp >= $start_ts;")) {
+
+                    cmd.Parameters.AddWithValue("$start_ts", start_ts);
+
+                    using (DataTable table = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in table.Rows)
+                            extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
+
+                }
+
+                extinct_species.Sort();
+
+                // Build embed.
+
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+                List<EmbedBuilder> pages = new List<EmbedBuilder>();
+                List<string> field_lines = new List<string>();
+
+                if (new_species.Count() > 0) {
+
+                    foreach (Species sp in new_species)
+                        field_lines.Add(sp.GetFullName());
+
+                    EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
+
+                    field_lines.Clear();
+
+                }
+
+                if (extinct_species.Count() > 0) {
+
+                    foreach (Species sp in extinct_species)
+                        field_lines.Add(sp.GetFullName());
+
+                    EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
+
+                    field_lines.Clear();
+
+                }
+
+                embed.AddPages(pages);
+
+                embed.SetTitle(string.Format("Recent events ({0})", time_amount.ToString()));
+                embed.SetFooter(string.Empty); // remove page numbers added automatically
+                embed.AddPageNumbers();
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
             }
-
-            new_species.Sort();
-
-            // Get all extinctions that occurred recently.
-
-            List<Species> extinct_species = new List<Species>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE timestamp >= $start_ts;")) {
-
-                cmd.Parameters.AddWithValue("$start_ts", start_ts);
-
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
-
-            }
-
-            extinct_species.Sort();
-
-            // Build embed.
-
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
-            List<EmbedBuilder> pages = new List<EmbedBuilder>();
-            List<string> field_lines = new List<string>();
-
-            if (new_species.Count() > 0) {
-
-                foreach (Species sp in new_species)
-                    field_lines.Add(sp.GetFullName());
-
-                EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
-
-                field_lines.Clear();
-
-            }
-
-            if (extinct_species.Count() > 0) {
-
-                foreach (Species sp in extinct_species)
-                    field_lines.Add(sp.GetFullName());
-
-                EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
-
-                field_lines.Clear();
-
-            }
-
-            embed.AddPages(pages);
-
-            embed.SetTitle(string.Format("Recent events ({0} hours)", hours));
-            embed.SetFooter(string.Empty); // remove page numbers added automatically
-            embed.AddPageNumbers();
-
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+            else
+                await BotUtils.ReplyAsync_Error(Context, "Invalid timespan provided.");
 
         }
 

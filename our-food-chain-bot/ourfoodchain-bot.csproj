@@ -259,6 +259,7 @@
     <Compile Include="utils\SpeciesZone.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="utils\TaxonUtils.cs" />
+    <Compile Include="utils\TimeAmount.cs" />
     <Compile Include="utils\Tree.cs" />
     <Compile Include="utils\Utils.cs" />
     <Compile Include="utils\zones\ZoneListResult.cs" />

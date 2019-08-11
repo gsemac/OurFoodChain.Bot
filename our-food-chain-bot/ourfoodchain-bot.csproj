@@ -202,9 +202,10 @@
     <Compile Include="commands\RoleCommands.cs" />
     <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
     <Compile Include="gotchi\GotchiTradeRequest.cs" />
-    <Compile Include="utils\DatabaseUtils.cs" />
+    <Compile Include="database\DatabaseUtils.cs" />
     <Compile Include="utils\DiscordUtils.cs" />
     <Compile Include="utils\ExtinctionInfo.cs" />
     <Compile Include="utils\galleries\Gallery.cs" />
@@ -233,7 +234,7 @@
     <Compile Include="trophies\TrophyScanner.cs" />
     <Compile Include="utils\ArrayUtils.cs" />
     <Compile Include="commands\Commands.cs" />
-    <Compile Include="Database.cs" />
+    <Compile Include="database\Database.cs" />
     <Compile Include="OurFoodChainBot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -250,7 +251,7 @@
     <Compile Include="utils\SpeciesSizeMatch.cs" />
     <Compile Include="utils\EmbedUtils.cs" />
     <Compile Include="utils\LevenshteinDistance.cs" />
-    <Compile Include="utils\CommandUtils.cs" />
+    <Compile Include="commands\CommandUtils.cs" />
     <Compile Include="utils\GraphicsUtils.cs" />
     <Compile Include="utils\PaginatedEmbedBuilder.cs" />
     <Compile Include="utils\SearchQuery.cs" />

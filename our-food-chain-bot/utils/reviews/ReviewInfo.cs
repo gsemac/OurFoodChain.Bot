@@ -24,6 +24,7 @@ namespace OurFoodChain {
         public ulong LastSubmitterResponseMessageId { get; set; } = 0;
         public ulong LastReviewerResponseMessageId { get; set; } = 0;
         public ulong SubmissionMessageId { get; set; } = 0;
+        public long SubmissionTimestamp { get; set; } = 0;
         public ReviewStatus Status { get; set; } = ReviewStatus.PendingReview;
 
         public string Title {

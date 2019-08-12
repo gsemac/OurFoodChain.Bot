@@ -28,15 +28,18 @@ namespace OurFoodChain {
                     continue;
 
                 // Consider sequences of messages by the same user to be part of the same submission.
+                // If there is a signficant amount of time between messages, consider them separate submissions.
+                long max_seconds_difference = 60 * 60 * 1; // 1 hour
 
-                if (info is null || info.SubmitterUserId != user_message.Author.Id) {
+                if (info is null || info.SubmitterUserId != user_message.Author.Id || Math.Abs(user_message.Timestamp.ToUnixTimeSeconds() - info.SubmissionTimestamp) > max_seconds_difference) {
 
                     _review_info.Add(new ReviewInfo {
                         SubmissionMessageUrl = user_message.GetJumpUrl(),
                         SubmissionChannelId = user_message.Channel.Id,
                         SubmissionMessageId = user_message.Id,
                         SubmitterUserId = user_message.Author.Id,
-                        Title = _generateReviewTitle(user_message.Content)
+                        Title = _generateReviewTitle(user_message.Content),
+                        SubmissionTimestamp = user_message.Timestamp.ToUnixTimeSeconds()
                     });
 
                     info = _review_info.Last();

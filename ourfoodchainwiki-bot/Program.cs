@@ -78,7 +78,7 @@ namespace OurFoodChainWikiBot {
                         string redirect_page_title = species.GetFullName();
 
                         if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", page_title) + "\n" + BOT_FLAG_STRING))
-                            await history.AddRedirectRecordAsync(page_title, redirect_page_title);
+                            await history.AddRedirectRecordAsync(redirect_page_title, page_title);
 
                     }
 
@@ -292,11 +292,13 @@ namespace OurFoodChainWikiBot {
                     // Because it's possible that the species was renamed, we need to look at past edits to find previous titles of the same page.
                     // Old pages for renamed species will be deleted.
 
-                    EditRecord[] previous_records = (await history.GetEditRecordsAsync(species.id))
+                    EditRecord[] edit_records = (await history.GetEditRecordsAsync(species.id))
                         .Where(x => x.Id != record.Id && x.Title.ToLower() != record.Title.ToLower())
                         .ToArray();
 
-                    foreach (EditRecord i in previous_records) {
+                    // Delete all created pages where the old title does not match the current title.
+
+                    foreach (EditRecord i in edit_records) {
 
                         MediaWikiApiParseRequestResult parse_result = client.Parse(i.Title, new ParseParameters());
 
@@ -310,21 +312,27 @@ namespace OurFoodChainWikiBot {
 
                         }
 
-                        // For each page we delete, delete any redirects that point to this page as well.
+                    }
 
-                        foreach (RedirectRecord j in await history.GetRedirectRecordsAsync(i.Title)) {
+                    // We also need to delete any redirect pages that are now invalid (i.e. when specific epithet that points to a common name is changed).
+                    // Delete all redirects that point to this page (or one of this page's previous titles).
 
-                            parse_result = client.Parse(j.Title, new ParseParameters());
+                    RedirectRecord[] redirect_records = (await history.GetRedirectRecordsAsync())
+                        .Where(i => i.Target == pageTitle || edit_records.Any(j => j.Title == i.Target)) // points to the title of this page, or one of its previous titles
+                        .Where(i => i.Title != species.FullName) // the title doesn't match this species' full name (the species has been renamed)
+                        .ToArray();
 
-                            if (parse_result.Text.Contains(BOT_FLAG_STRING)) {
+                    foreach (RedirectRecord j in redirect_records) {
 
-                                // Only delete pages that haven't been manually edited. 
+                        MediaWikiApiParseRequestResult parse_result = client.Parse(j.Title, new ParseParameters());
 
-                                client.Delete(j.Title, new DeleteParameters {
-                                    Reason = "outdated redirect"
-                                });
+                        if (parse_result.IsRedirect && parse_result.Text.Contains(BOT_FLAG_STRING)) {
 
-                            }
+                            // Only delete pages that haven't been manually edited. 
+
+                            client.Delete(j.Title, new DeleteParameters {
+                                Reason = "outdated redirect"
+                            });
 
                         }
 

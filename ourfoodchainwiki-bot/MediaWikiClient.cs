@@ -149,6 +149,12 @@ namespace OurFoodChainWikiBot {
 
         public string Text { get; set; } = "";
 
+        public bool IsRedirect {
+            get {
+                return Text.StartsWith("#REDIRECT");
+            }
+        }
+
     }
 
     public class MediaWikiClient {

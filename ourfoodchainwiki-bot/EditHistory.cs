@@ -174,6 +174,26 @@ namespace OurFoodChainWikiBot {
             }
 
         }
+        public async Task<RedirectRecord[]> GetRedirectRecordsAsync() {
+
+            List<RedirectRecord> records = new List<RedirectRecord>();
+
+            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM RedirectHistory;"))
+            using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
+                foreach (DataRow row in table.Rows) {
+
+                    records.Add(new RedirectRecord {
+                        Timestamp = row.Field<long>("timestamp"),
+                        Title = row.Field<string>("title"),
+                        Target = row.Field<string>("target")
+                    });
+
+                }
+
+            return records.ToArray();
+
+        }
         public async Task<RedirectRecord[]> GetRedirectRecordsAsync(string redirectsToTitle) {
 
             List<RedirectRecord> records = new List<RedirectRecord>();

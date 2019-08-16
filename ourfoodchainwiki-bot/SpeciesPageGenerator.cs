@@ -18,7 +18,7 @@ namespace OurFoodChainWikiBot {
 
     public class SpeciesPageGenerator {
 
-        public string TemplateFilePath { get; set; } = "data/wiki/templates/species_template.txt";
+        public string TemplateFilePath { get; set; } = "data/templates/species_template.txt";
 
         public string Generate(SpeciesPageData data) {
 

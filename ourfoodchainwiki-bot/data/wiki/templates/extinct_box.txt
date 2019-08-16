@@ -1,0 +1,1 @@
+﻿<div style="background-color:#D46A6A; color:white; padding: 7px 12px  7px 12px; border-radius:10px; margin:3px; margin-bottom:10px; font-size:10pt">'''{{#if:{{{date|}}}|Extinct ({{{date}}}): |Extinct: }}''' {{#if:{{{reason|}}}|{{{reason}}}|No reason provided.}}</div>

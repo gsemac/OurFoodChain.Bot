@@ -9,7 +9,9 @@
   "description": "Sets a species eaten by another species. Successive calls are additive, and do not replace existing relationships.",
   "examples": [
     "setprey <predator species> <prey species>",
-    "setprey P. filterarious H. quattuorus",
-    "setprey P. filterarious H. quattuorus \"babies only\""
+    "setprey aspersum sativa",
+    "setprey C. aspersum L. sativa",
+    "setprey C. aspersum L. sativa \"some notes\"",
+    "setprey asperum prey1,prey2,prey3"
   ]
 }

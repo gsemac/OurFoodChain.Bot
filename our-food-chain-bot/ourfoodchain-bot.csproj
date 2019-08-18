@@ -197,6 +197,7 @@
     <Compile Include="commands\IdeasCommands.cs" />
     <Compile Include="commands\MapCommands.cs" />
     <Compile Include="commands\PeriodCommands.cs" />
+    <Compile Include="commands\PreyCommands.cs" />
     <Compile Include="commands\RelationshipCommands.cs" />
     <Compile Include="commands\ReviewCommands.cs" />
     <Compile Include="commands\RoleCommands.cs" />

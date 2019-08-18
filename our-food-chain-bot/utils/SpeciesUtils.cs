@@ -139,6 +139,21 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Species> GetUniqueSpeciesAsync(string name) {
+
+            Species[] result = await GetSpeciesAsync(name);
+
+            return result.Count() == 1 ? result[0] : null;
+
+        }
+        public static async Task<Species> GetUniqueSpeciesAsync(string genus, string species) {
+
+            Species[] result = await GetSpeciesAsync(genus, species);
+
+            return result.Count() == 1 ? result[0] : null;
+
+        }
+
         public static async Task<Species[]> GetBaseSpeciesAsync() {
 
             List<Species> species = new List<Species>();

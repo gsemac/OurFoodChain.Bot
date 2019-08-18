@@ -175,6 +175,47 @@ namespace OurFoodChain {
 
         }
 
+        public static string CollapseAlphanumericList(string input, string delimiter = ",") {
+
+            string[] values = input.Split(new string[] { delimiter }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToArray();
+
+            List<List<string>> ranges = new List<List<string>>();
+
+            foreach (string value in values) {
+
+                if (ranges.Count() <= 0)
+                    ranges.Add(new List<string> { value });
+                else {
+
+                    string last_part = ranges.Last().Last();
+
+                    if ((int.TryParse(value, out int intValue) && int.TryParse(last_part, out int intPrev) && intValue == intPrev + 1) ||
+                        (value.Length == 1 && last_part.Length == 1 && value[0] == last_part[0] + 1)) {
+
+                        // Merge values that are numerically sequential.
+
+                        // Merge values that alphabetically sequential.
+                        // For now, only do this for single characters.
+
+                        ranges.Last().Add(value);
+
+                    }
+                    else
+                        ranges.Add(new List<string> { value });
+
+                }
+
+
+            }
+
+            return string.Join(", ", ranges
+                .Select(x => x.Count() <= 2 ? string.Join(", ", x) : string.Format("{0}-{1}", x.First(), x.Last()))
+                .ToArray());
+
+        }
+
         private static string _joinWithUniqueEndSeparator(string separator, string endSeparator, IEnumerable<string> values) {
 
             if (values.Count() <= 0)

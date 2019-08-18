@@ -105,9 +105,9 @@ namespace OurFoodChain {
                     zones_array.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
                     if (string.IsNullOrEmpty(x.Key))
-                        zones_value_builder.Add(string.Join(", ", zones_array));
+                        zones_value_builder.Add(StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "));
                     else
-                        zones_value_builder.Add(string.Format("{0} ({1})", string.Join(", ", zones_array), x.Key.ToLower()));
+                        zones_value_builder.Add(string.Format("{0} ({1})", StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "), x.Key.ToLower()));
 
                 });
 

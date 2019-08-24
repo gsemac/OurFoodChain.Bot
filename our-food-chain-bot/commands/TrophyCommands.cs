@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.trophies {
+namespace OurFoodChain.Trophies {
 
     public class TrophyCommands :
         ModuleBase {
@@ -17,21 +17,21 @@ namespace OurFoodChain.trophies {
             if (user is null)
                 user = Context.User;
 
-            UnlockedTrophyInfo[] unlocked = await TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
+            UnlockedTrophyInfo[] unlocked = await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
 
             Array.Sort(unlocked, (x, y) => x.timestamp.CompareTo(y.timestamp));
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.#}%)", user.Username, await TrophyRegistry.GetUserCompletionRateAsync(user.Id)));
+            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.#}%)", user.Username, await Global.TrophyRegistry.GetUserCompletionRateAsync(user.Id)));
             embed.WithColor(new Color(255, 204, 77));
 
             StringBuilder description_builder = new StringBuilder();
 
-            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", OurFoodChainBot.GetInstance().GetConfig().Prefix));
+            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", OurFoodChainBot.Instance.Config.Prefix));
 
             foreach (UnlockedTrophyInfo info in unlocked) {
 
-                Trophy trophy = await TrophyRegistry.GetTrophyByIdentifierAsync(info.identifier);
+                Trophy trophy = await Global.TrophyRegistry.GetTrophyByIdentifierAsync(info.identifier);
 
                 if (trophy is null)
                     continue;
@@ -40,7 +40,7 @@ namespace OurFoodChain.trophies {
                    trophy.GetIcon(),
                    trophy.GetName(),
                    BotUtils.GetTimeStampAsDateString(info.timestamp),
-                   await TrophyRegistry.GetCompletionRateAsync(trophy)
+                   await Global.TrophyRegistry.GetCompletionRateAsync(trophy)
                   ));
 
             }
@@ -54,7 +54,7 @@ namespace OurFoodChain.trophies {
         [Command("trophylist"), Alias("achievementlist")]
         public async Task TrophyList() {
 
-            int total_trophies = (await TrophyRegistry.GetTrophiesAsync()).Count;
+            int total_trophies = (await Global.TrophyRegistry.GetTrophiesAsync()).Count;
             int trophies_per_page = 8;
             int total_pages = (int)Math.Ceiling((float)total_trophies / trophies_per_page);
             int current_page = 0;
@@ -63,7 +63,7 @@ namespace OurFoodChain.trophies {
             CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
             EmbedBuilder embed = null;
 
-            IReadOnlyCollection<Trophy> trophy_list = await TrophyRegistry.GetTrophiesAsync();
+            IReadOnlyCollection<Trophy> trophy_list = await Global.TrophyRegistry.GetTrophiesAsync();
 
             foreach (Trophy trophy in trophy_list) {
 
@@ -72,23 +72,23 @@ namespace OurFoodChain.trophies {
                     ++current_page;
 
                     embed = new EmbedBuilder();
-                    embed.WithTitle(string.Format("All Trophies ({0})", (await TrophyRegistry.GetTrophiesAsync()).Count));
+                    embed.WithTitle(string.Format("All Trophies ({0})", (await Global.TrophyRegistry.GetTrophiesAsync()).Count));
                     embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).",
-                        OurFoodChainBot.GetInstance().GetConfig().Prefix,
+                        OurFoodChainBot.Instance.Config.Prefix,
                         trophy_list.First().GetName()));
                     embed.WithFooter(string.Format("Page {0} of {1}", current_page, total_pages));
                     embed.WithColor(new Color(255, 204, 77));
 
                 }
 
-                double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy);
-                string description = (trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0) ? string.Format("_{0}_", trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION) : trophy.GetDescription();
+                double completion_rate = await Global.TrophyRegistry.GetCompletionRateAsync(trophy);
+                string description = (trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0) ? string.Format("_{0}_", OurFoodChain.Trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION) : trophy.GetDescription();
 
                 // If this was a first-time trophy, show who unlocked it.
 
                 if (trophy.Flags.HasFlag(TrophyFlags.OneTime) && completion_rate > 0.0) {
 
-                    TrophyUser[] user_ids = await TrophyRegistry.GetUsersUnlockedAsync(trophy);
+                    TrophyUser[] user_ids = await Global.TrophyRegistry.GetUsersUnlockedAsync(trophy);
 
                     if (user_ids.Count() > 0 && !(Context.Guild is null)) {
 
@@ -127,7 +127,7 @@ namespace OurFoodChain.trophies {
         public async Task Trophy(string name) {
 
             // Find the trophy with this name.
-            Trophy trophy = await TrophyRegistry.GetTrophyByNameAsync(name);
+            Trophy trophy = await Global.TrophyRegistry.GetTrophyByNameAsync(name);
 
             // If no such trophy exists, return an error.
 
@@ -141,12 +141,12 @@ namespace OurFoodChain.trophies {
 
             // Show trophy information.
 
-            double completion_rate = await TrophyRegistry.GetCompletionRateAsync(trophy);
+            double completion_rate = await Global.TrophyRegistry.GetCompletionRateAsync(trophy);
             bool hide_description = trophy.Flags.HasFlag(TrophyFlags.Hidden) && completion_rate <= 0.0;
 
             string embed_title = string.Format("{0} {1} ({2:0.#}%)", trophy.GetIcon(), trophy.GetName(), completion_rate);
-            string embed_description = string.Format("_{0}_", hide_description ? trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
-            long times_unlocked = await TrophyRegistry.GetTimesUnlockedAsync(trophy);
+            string embed_description = string.Format("_{0}_", hide_description ? OurFoodChain.Trophies.Trophy.HIDDEN_TROPHY_DESCRIPTION : trophy.GetDescription());
+            long times_unlocked = await Global.TrophyRegistry.GetTimesUnlockedAsync(trophy);
 
             embed_description += string.Format("\n\nThis trophy has been earned by **{0}** user{1} ({2:0.#}%).",
                 times_unlocked,
@@ -160,7 +160,7 @@ namespace OurFoodChain.trophies {
 
             // Show first/latest earners.
 
-            TrophyUser[] earners = (await TrophyRegistry.GetUsersUnlockedAsync(trophy)).OrderBy(x => x.EarnedTimestamp).ToArray();
+            TrophyUser[] earners = (await Global.TrophyRegistry.GetUsersUnlockedAsync(trophy)).OrderBy(x => x.EarnedTimestamp).ToArray();
             string date_format = "MMMM dd, yyyy";
 
             if (!(Context.Guild is null)) {
@@ -205,7 +205,7 @@ namespace OurFoodChain.trophies {
             if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
-            Trophy t = await TrophyRegistry.GetTrophyByNameAsync(trophy);
+            Trophy t = await Global.TrophyRegistry.GetTrophyByNameAsync(trophy);
 
             if (t is null) {
 
@@ -217,7 +217,7 @@ namespace OurFoodChain.trophies {
 
             // #todo Show warning and do nothing if the user already has the trophy
 
-            await TrophyRegistry.UnlockAsync(user.Id, t);
+            await Global.TrophyRegistry.UnlockAsync(user.Id, t);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", t.GetName(), user.Mention));
 
@@ -230,7 +230,8 @@ namespace OurFoodChain.trophies {
             else if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) // Mod privileges are required to scan someone else's trophies
                 return;
 
-            await TrophyScanner.AddToQueueAsync(Context, user.Id, TrophyScanner.NO_DELAY);
+            if (OurFoodChainBot.Instance.Config.TrophiesEnabled)
+                await Global.TrophyScanner.AddToQueueAsync(Context, user.Id, TrophyScanner.NO_DELAY);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added user **{0}** to the trophy scanner queue.", user.Username));
 

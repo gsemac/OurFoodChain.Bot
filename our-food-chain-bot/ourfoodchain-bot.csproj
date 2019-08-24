@@ -204,6 +204,7 @@
     <Compile Include="commands\TaxonCommands.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
+    <Compile Include="Global.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
     <Compile Include="gotchi\GotchiTradeRequest.cs" />
     <Compile Include="database\DatabaseUtils.cs" />

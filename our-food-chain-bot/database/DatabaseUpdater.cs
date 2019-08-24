@@ -72,7 +72,7 @@ namespace OurFoodChain {
             if (versionNumber <= 0)
                 return;
 
-            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updating database to version {0}", versionNumber));
+            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Database", string.Format("Updating database to version {0}", versionNumber));
 
             switch (versionNumber) {
 
@@ -170,7 +170,7 @@ namespace OurFoodChain {
 
             }
 
-            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", versionNumber));
+            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", versionNumber));
 
         }
 

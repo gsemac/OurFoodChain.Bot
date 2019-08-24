@@ -1941,9 +1941,9 @@ namespace OurFoodChain {
 
         public static async Task<string> Reply_UploadFileToScratchServerAsync(ICommandContext context, string filePath, bool deleteAfterUpload = false) {
 
-            var client = OurFoodChainBot.GetInstance().GetClient();
-            ulong serverId = OurFoodChainBot.GetInstance().GetConfig().ScratchServer;
-            ulong channelId = OurFoodChainBot.GetInstance().GetConfig().ScratchChannel;
+            var client = OurFoodChainBot.Instance.Client;
+            ulong serverId = OurFoodChainBot.Instance.Config.ScratchServer;
+            ulong channelId = OurFoodChainBot.Instance.Config.ScratchChannel;
 
             if (serverId <= 0 || channelId <= 0) {
 

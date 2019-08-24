@@ -9,16 +9,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.trophies {
+namespace OurFoodChain.Trophies {
 
     public class TrophyRegistry {
 
-        public static async Task InitializeAsync() {
+        // Public methods
+
+        public async Task InitializeAsync() {
 
             await _registerAllAsync();
 
         }
-        public static async Task<long> GetTimesUnlockedAsync(Trophy trophy) {
+        public async Task<long> GetTimesUnlockedAsync(Trophy trophy) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Trophies WHERE trophy_name=$trophy_name;")) {
 
@@ -29,7 +31,7 @@ namespace OurFoodChain.trophies {
             }
 
         }
-        public static async Task<TrophyUser[]> GetUsersUnlockedAsync(Trophy trophy) {
+        public async Task<TrophyUser[]> GetUsersUnlockedAsync(Trophy trophy) {
 
             List<TrophyUser> user_ids = new List<TrophyUser>();
 
@@ -46,7 +48,7 @@ namespace OurFoodChain.trophies {
             return user_ids.ToArray();
 
         }
-        public static async Task<double> GetCompletionRateAsync(Trophy trophy) {
+        public async Task<double> GetCompletionRateAsync(Trophy trophy) {
 
             // The completion rate is determined from the number of users who have earned the trophy and the number of users who have submitted species.
 
@@ -59,7 +61,7 @@ namespace OurFoodChain.trophies {
             return (total_users <= 0) ? 0.0 : (100.0 * times_unlocked / total_users);
 
         }
-        public static async Task<UnlockedTrophyInfo[]> GetUnlockedTrophiesAsync(ulong userId) {
+        public async Task<UnlockedTrophyInfo[]> GetUnlockedTrophiesAsync(ulong userId) {
 
             List<UnlockedTrophyInfo> unlocked = new List<UnlockedTrophyInfo>();
 
@@ -99,7 +101,7 @@ namespace OurFoodChain.trophies {
             return unlocked.ToArray();
 
         }
-        public static async Task<Trophy> GetTrophyByIdentifierAsync(string identifier) {
+        public async Task<Trophy> GetTrophyByIdentifierAsync(string identifier) {
 
             foreach (Trophy trophy in await GetTrophiesAsync())
                 if (trophy.GetIdentifier() == identifier)
@@ -108,7 +110,7 @@ namespace OurFoodChain.trophies {
             return null;
 
         }
-        public static async Task<Trophy> GetTrophyByNameAsync(string name) {
+        public async Task<Trophy> GetTrophyByNameAsync(string name) {
 
             foreach (Trophy trophy in await GetTrophiesAsync())
                 if (trophy.name.ToLower() == name.ToLower())
@@ -117,7 +119,7 @@ namespace OurFoodChain.trophies {
             return null;
 
         }
-        public static async Task UnlockAsync(ulong userId, Trophy trophy) {
+        public async Task UnlockAsync(ulong userId, Trophy trophy) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Trophies(user_id, trophy_name, timestamp) VALUES($user_id, $trophy_name, $timestamp);")) {
 
@@ -130,33 +132,37 @@ namespace OurFoodChain.trophies {
             }
 
         }
-        public static async Task<IReadOnlyCollection<Trophy>> GetTrophiesAsync() {
+        public async Task<IReadOnlyCollection<Trophy>> GetTrophiesAsync() {
 
             await InitializeAsync();
 
             return _registry.AsReadOnly();
 
         }
-        public static async Task<double> GetUserCompletionRateAsync(ulong userId, bool includeOneTimeTrophies = false) {
+        public async Task<double> GetUserCompletionRateAsync(ulong userId, bool includeOneTimeTrophies = false) {
 
             UnlockedTrophyInfo[] unlocked = await GetUnlockedTrophiesAsync(userId);
 
             int unlocked_count = unlocked.Where(x => includeOneTimeTrophies || !GetTrophyByIdentifierAsync(x.identifier).Result.Flags.HasFlag(TrophyFlags.OneTime)).Count();
             int trophy_count = (await GetTrophiesAsync()).Where(x => includeOneTimeTrophies || !x.Flags.HasFlag(TrophyFlags.OneTime)).Count();
-   
+
             return trophy_count <= 0 ? 0.0 : (100.0 * unlocked_count / trophy_count);
 
         }
 
-        private static List<Trophy> _registry = new List<Trophy>();
+        // Private members
 
-        private static async Task _registerAllAsync() {
+        private List<Trophy> _registry = new List<Trophy>();
+
+        // Private methods
+
+        private async Task _registerAllAsync() {
 
             // Don't bother if we've already registered the trophies.
             if (_registry.Count > 0)
                 return;
 
-            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Trophies", "Registering trophies");
+            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Registering trophies");
 
             // Creation achievements
 
@@ -202,98 +208,98 @@ namespace OurFoodChain.trophies {
             _registry.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Imposter", "Be the first to create a species that mimics another species.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
 
-            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Trophies", "Finished registering trophies");
+            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Finished registering trophies");
 
         }
 
-        private static async Task<bool> _checkTrophy_Placeholder(TrophyScanner.ScannerQueueItem item) { return await Task.FromResult(false); }
-        private static async Task<bool> _checkTrophy_polarPower(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_Placeholder(TrophyScanner.ScannerQueueItem item) { return await Task.FromResult(false); }
+        private async Task<bool> _checkTrophy_polarPower(TrophyScanner.ScannerQueueItem item) {
             return await _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(item, "frigid|arctic|cold");
         }
-        private static async Task<bool> _checkTrophy_heatingUp(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_heatingUp(TrophyScanner.ScannerQueueItem item) {
             return await _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(item, "warm|hot|desert|tropical");
         }
-        private static async Task<bool> _checkTrophy_atlantean(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_atlantean(TrophyScanner.ScannerQueueItem item) {
             return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, ZoneType.Aquatic);
         }
-        private static async Task<bool> _checkTrophy_kissTheGround(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_kissTheGround(TrophyScanner.ScannerQueueItem item) {
             return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, ZoneType.Terrestrial);
         }
-        private static async Task<bool> _checkTrophy_bestOfBothWorlds(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_bestOfBothWorlds(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner 
                 AND id IN(SELECT species_id FROM SpeciesZones WHERE zone_id IN(SELECT id FROM Zones WHERE type =""aquatic""))
                 AND id IN(SELECT species_id FROM SpeciesZones WHERE zone_id IN(SELECT id FROM Zones WHERE type =""terrestrial""))");
 
         }
-        private static async Task<bool> _checkTrophy_hunter(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_hunter(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""predator"" OR name = ""carnivore""))");
 
         }
-        private static async Task<bool> _checkTrophy_pacifist(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_pacifist(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""base-consumer"" OR name = ""herbivore""))");
 
         }
-        private static async Task<bool> _checkTrophy_twoCourseMeal(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_twoCourseMeal(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""base-consumer"" OR name = ""herbivore""))
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""predator"" OR name = ""carnivore""))");
 
         }
-        private static async Task<bool> _checkTrophy_basics(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_basics(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""producer""))");
 
         }
-        private static async Task<bool> _checkTrophy_deathBringsLife(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_deathBringsLife(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""scavenger"" OR name = ""decomposer"" OR name = ""detritivore""))");
 
         }
-        private static async Task<bool> _checkTrophy_allMine(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_allMine(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
                 AND id IN(SELECT species_id FROM SpeciesRoles WHERE role_id IN(SELECT id FROM Roles WHERE name = ""parasite""))");
 
         }
-        private static async Task<bool> _checkTrophy_scrapThat(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_scrapThat(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner
 	            AND id IN (SELECT ancestor_id FROM Ancestors WHERE species_id IN (SELECT id FROM Species WHERE owner=$owner))");
 
         }
-        private static async Task<bool> _checkTrophy_liftOff(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_liftOff(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
                 @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND (description LIKE ""%can fly%"" OR description LIKE ""%flies%"")");
 
         }
-        private static async Task<bool> _checkTrophy_trademarked(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_trademarked(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
                 @"SELECT COUNT(*) FROM (SELECT owner, genus_id, MIN(timestamp) FROM Species GROUP BY genus_id) WHERE owner = $owner");
 
         }
-        private static async Task<bool> _checkTrophy_beneathYou(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_beneathYou(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
                 @"SELECT COUNT(*) FROM Species WHERE owner=$owner AND description LIKE ""%burrow%"";");
 
         }
-        private static async Task<bool> _checkTrophy_naturalSelection(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_naturalSelection(TrophyScanner.ScannerQueueItem item) {
 
             return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item,
                 @"SELECT COUNT(*) FROM Extinctions WHERE species_id IN (SELECT id FROM Species WHERE owner = $owner);");
 
         }
-        private static async Task<bool> _checkTrophy_superiorSurvivor(TrophyScanner.ScannerQueueItem item) {
+        private async Task<bool> _checkTrophy_superiorSurvivor(TrophyScanner.ScannerQueueItem item) {
 
             // The minimum number of simultaneous extinctions to be considered an "exinction event"
             long extinction_threshold = 5;
@@ -326,7 +332,7 @@ namespace OurFoodChain.trophies {
 
                             using (SQLiteCommand cmd2 = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner = $owner AND timestamp <= $timestamp AND id NOT IN (SELECT species_id FROM Extinctions);")) {
 
-                                cmd2.Parameters.AddWithValue("$owner", (await item.context.Guild.GetUserAsync(item.userId)).Username);
+                                cmd2.Parameters.AddWithValue("$owner", (await item.Context.Guild.GetUserAsync(item.UserId)).Username);
                                 cmd2.Parameters.AddWithValue("$timestamp", current_ts);
 
                                 if (await Database.GetScalar<long>(cmd2) > 0)
@@ -353,11 +359,11 @@ namespace OurFoodChain.trophies {
 
         }
 
-        private static async Task<bool> _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(TrophyScanner.ScannerQueueItem item, string query) {
+        private async Task<bool> _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(TrophyScanner.ScannerQueueItem item, string query) {
 
             using (SQLiteCommand cmd = new SQLiteCommand(query)) {
 
-                cmd.Parameters.AddWithValue("$owner", (await item.context.Guild.GetUserAsync(item.userId)).Username);
+                cmd.Parameters.AddWithValue("$owner", (await item.Context.Guild.GetUserAsync(item.UserId)).Username);
 
                 if (await Database.GetScalar<long>(cmd) > 0)
                     return true;
@@ -367,7 +373,7 @@ namespace OurFoodChain.trophies {
             return false;
 
         }
-        private static async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(TrophyScanner.ScannerQueueItem item, string regexPattern) {
+        private async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(TrophyScanner.ScannerQueueItem item, string regexPattern) {
 
             // Get all zones.
             List<Zone> zones = new List<Zone>(await BotUtils.GetZonesFromDb());
@@ -377,7 +383,7 @@ namespace OurFoodChain.trophies {
 
             // Check if the user has any species in these zones.
 
-            string username = (await item.context.Guild.GetUserAsync(item.userId)).Username;
+            string username = (await item.Context.Guild.GetUserAsync(item.UserId)).Username;
             bool unlocked = false;
 
             foreach (Zone zone in zones) {
@@ -401,7 +407,7 @@ namespace OurFoodChain.trophies {
             return unlocked;
 
         }
-        private static async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(TrophyScanner.ScannerQueueItem item, ZoneType type) {
+        private async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(TrophyScanner.ScannerQueueItem item, ZoneType type) {
 
             string type_string = "";
 
@@ -416,7 +422,7 @@ namespace OurFoodChain.trophies {
                     return false;
             }
 
-            string username = (await item.context.Guild.GetUserAsync(item.userId)).Username;
+            string username = (await item.Context.Guild.GetUserAsync(item.UserId)).Username;
             bool unlocked = false;
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner=$owner AND id IN (SELECT species_id FROM SpeciesZones WHERE zone_id IN (SELECT id FROM Zones WHERE type=$type))")) {

@@ -35,13 +35,13 @@ namespace OurFoodChain.gotchi {
         }
         private static async Task _registerAllMovesAsync() {
 
-            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Gotchi", "Registering moves");
+            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Gotchi", "Registering moves");
 
             _move_registry.Clear();
 
             await _registerLuaMovesAsync();
 
-            await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Info, "Gotchi", "Registered moves");
+            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Gotchi", "Registered moves");
 
         }
         private static async Task _registerLuaMovesAsync() {
@@ -71,7 +71,7 @@ namespace OurFoodChain.gotchi {
 
                 }
                 catch (Exception) {
-                    await OurFoodChainBot.GetInstance().Log(Discord.LogSeverity.Error, "Gotchi", "Failed to register move: " + System.IO.Path.GetFileName(file));
+                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "Gotchi", "Failed to register move: " + System.IO.Path.GetFileName(file));
                 }
 
             }

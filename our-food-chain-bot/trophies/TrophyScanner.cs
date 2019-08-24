@@ -8,49 +8,62 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.trophies {
+namespace OurFoodChain.Trophies {
 
     public class TrophyScanner {
+
+        // Public members
 
         public const long NO_DELAY = 0;
 
         public class ScannerQueueItem {
-            public ICommandContext context;
-            public ulong userId;
-            public long timestamp;
+            public ICommandContext Context { get; set; }
+            public ulong UserId { get; set; }
+            public long Timestamp { get; set; }
         }
 
-        public static async Task AddToQueueAsync(ICommandContext context, ulong userId) {
+        // Public methods
+
+        public TrophyScanner(TrophyRegistry trophyRegistry) {
+            _trophy_registry = trophyRegistry;
+        }
+
+        public async Task AddToQueueAsync(ICommandContext context, ulong userId) {
             await AddToQueueAsync(context, userId, DateTimeOffset.Now.ToUnixTimeSeconds());
         }
-        public static async Task AddToQueueAsync(ICommandContext context, ulong userId, long timestamp) {
+        public async Task AddToQueueAsync(ICommandContext context, ulong userId, long timestamp) {
 
             // If the user already exists in the queue, don't add them again.
             foreach (ScannerQueueItem item in _scan_queue)
-                if (item.userId == userId)
+                if (item.UserId == userId)
                     return;
 
             // Add the user to the scanner queue.
             _scan_queue.Enqueue(new ScannerQueueItem {
-                context = context,
-                userId = userId,
-                timestamp = timestamp
+                Context = context,
+                UserId = userId,
+                Timestamp = timestamp
             });
 
             // Initialize the trophy registry (nothing will happen if it's already initialized).
-            await TrophyRegistry.InitializeAsync();
+            await _trophy_registry.InitializeAsync();
 
             // Since there's something in the queue, start the trophy scanner (nothing will happen if it's already active).
             _startScanner();
 
         }
 
+        // Private members
+
         // The scan delay is how long to wait before scanning trophies for the next user in the queue.
         private const long SCAN_DELAY = 60 * 5; // 5 minutes
-        private static ConcurrentQueue<ScannerQueueItem> _scan_queue = new ConcurrentQueue<ScannerQueueItem>();
-        private static bool _scanner_running = false;
+        private ConcurrentQueue<ScannerQueueItem> _scan_queue = new ConcurrentQueue<ScannerQueueItem>();
+        private bool _scanner_running = false;
+        private TrophyRegistry _trophy_registry = null;
 
-        private static void _startScanner() {
+        // Private methods
+
+        private void _startScanner() {
 
             if (_scanner_running)
                 return;
@@ -59,14 +72,14 @@ namespace OurFoodChain.trophies {
 
             Task.Run(async () => {
 
-                await OurFoodChainBot.GetInstance().Log(LogSeverity.Info, "Trophies", "Starting trophy scanner");
+                await OurFoodChainBot.Instance.LogAsync(LogSeverity.Info, "Trophies", "Starting trophy scanner");
 
                 while (_scan_queue.Count > 0) {
 
                     // Wait until the next item in the queue has been sitting for at least SCAN_DELAY.
 
                     long current_ts = DateTimeOffset.Now.ToUnixTimeSeconds();
-                    long item_ts = _scan_queue.First().timestamp;
+                    long item_ts = _scan_queue.First().Timestamp;
 
                     if (current_ts - item_ts < SCAN_DELAY)
                         await Task.Delay(TimeSpan.FromSeconds(SCAN_DELAY - (current_ts - item_ts)));
@@ -81,16 +94,16 @@ namespace OurFoodChain.trophies {
                 // When we've processed all users in the queue, shut down the scanner.
                 _scanner_running = false;
 
-                await OurFoodChainBot.GetInstance().Log(LogSeverity.Info, "Trophies", "Shutting down trophy scanner");
+                await OurFoodChainBot.Instance.LogAsync(LogSeverity.Info, "Trophies", "Shutting down trophy scanner");
 
             });
 
         }
-        private static async Task _scanTrophiesAsync(ScannerQueueItem item) {
+        private async Task _scanTrophiesAsync(ScannerQueueItem item) {
 
             // Get the trophies the user has already unlocked so we don't pop trophies that have already been popped.
 
-            UnlockedTrophyInfo[] already_unlocked = await TrophyRegistry.GetUnlockedTrophiesAsync(item.userId);
+            UnlockedTrophyInfo[] already_unlocked = await _trophy_registry.GetUnlockedTrophiesAsync(item.UserId);
             HashSet<string> already_unlocked_identifiers = new HashSet<string>();
 
             foreach (UnlockedTrophyInfo info in already_unlocked)
@@ -98,14 +111,14 @@ namespace OurFoodChain.trophies {
 
             // Check for new trophies that the user has just unlocked.
 
-            foreach (Trophy trophy in await TrophyRegistry.GetTrophiesAsync())
+            foreach (Trophy trophy in await _trophy_registry.GetTrophiesAsync())
 
                 try {
 
                     if (!already_unlocked_identifiers.Contains(trophy.GetIdentifier()) && await trophy.IsUnlocked(item)) {
 
                         // Insert new trophy into the database.
-                        await TrophyRegistry.UnlockAsync(item.userId, trophy);
+                        await _trophy_registry.UnlockAsync(item.UserId, trophy);
 
                         // Pop the new trophy.
                         await _popTrophyAsync(item, trophy);
@@ -116,7 +129,7 @@ namespace OurFoodChain.trophies {
                 // If an error occurs when checking a trophy, we'll just move on to the next one.
                 catch (Exception ex) {
 
-                    await OurFoodChainBot.GetInstance().Log(LogSeverity.Error, "Trophies", string.Format("Exception occured while checking \"{0}\" trophy: {1}",
+                    await OurFoodChainBot.Instance.LogAsync(LogSeverity.Error, "Trophies", string.Format("Exception occured while checking \"{0}\" trophy: {1}",
                         trophy.GetName(),
                         ex.ToString()
                         ));
@@ -124,15 +137,15 @@ namespace OurFoodChain.trophies {
                 }
 
         }
-        private static async Task _popTrophyAsync(ScannerQueueItem item, Trophy trophy) {
+        private async Task _popTrophyAsync(ScannerQueueItem item, Trophy trophy) {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithTitle(string.Format("🏆 Trophy unlocked!"));
-            embed.WithDescription(string.Format("Congratulations {0}! You've earned the **{1}** trophy.", (await item.context.Guild.GetUserAsync(item.userId)).Mention, trophy.GetName()));
+            embed.WithDescription(string.Format("Congratulations {0}! You've earned the **{1}** trophy.", (await item.Context.Guild.GetUserAsync(item.UserId)).Mention, trophy.GetName()));
             embed.WithFooter(trophy.GetDescription());
             embed.WithColor(new Color(255, 204, 77));
 
-            await item.context.Channel.SendMessageAsync("", false, embed.Build());
+            await item.Context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
 

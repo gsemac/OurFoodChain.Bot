@@ -106,7 +106,7 @@ namespace OurFoodChain {
 
             // If the reaction was added by the bot, quit.
 
-            if (reaction.UserId == OurFoodChainBot.GetInstance().GetUserId())
+            if (reaction.UserId == OurFoodChainBot.Instance.UserId)
                 return;
 
             // Get the paginated message data.
@@ -163,7 +163,7 @@ namespace OurFoodChain {
 
             // If there are no privileges set up in the configuration file, grant all users full privileges.
 
-            Config config = OurFoodChainBot.GetInstance().GetConfig();
+            Config config = OurFoodChainBot.Instance.Config;
 
             if ((config.BotAdminUserIds is null || config.BotAdminUserIds.Count() <= 0) &&
                (config.ModRoleIds is null || config.ModRoleIds.Count() <= 0))

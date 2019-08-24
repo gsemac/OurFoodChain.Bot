@@ -262,7 +262,9 @@ namespace OurFoodChain {
             await PlusZone(sp, zone, string.Empty, onlyShowErrors: true);
 
             // Add the user to the trophy scanner queue in case their species earned them any new trophies.
-            await trophies.TrophyScanner.AddToQueueAsync(Context, Context.User.Id);
+
+            if (OurFoodChainBot.Instance.Config.TrophiesEnabled)
+                await Global.TrophyScanner.AddToQueueAsync(Context, Context.User.Id);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
@@ -363,7 +365,7 @@ namespace OurFoodChain {
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
                     string embed_title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", name, zone_list.Count()));
-                    string embed_description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.GetInstance().GetConfig().Prefix);
+                    string embed_description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.Instance.Config.Prefix);
                     int zones_per_page = 20;
                     int max_line_length = (EmbedUtils.MAX_EMBED_LENGTH - embed_title.Length - embed_description.Length) / zones_per_page;
 
@@ -968,11 +970,11 @@ namespace OurFoodChain {
             long last_timestamp = zones.Count() > 0 ? zones.First().Timestamp : 0;
 
             foreach (SpeciesZone zone in zones) {
-               
+
                 if (zone_groups.Count() <= 0)
                     zone_groups.Add(new List<SpeciesZone>());
 
-                if (zone_groups.Last().Count() <= 0 || Math.Abs(zone_groups.Last().Last().Timestamp - zone.Timestamp) < 60 * 60 * 12) 
+                if (zone_groups.Last().Count() <= 0 || Math.Abs(zone_groups.Last().Last().Timestamp - zone.Timestamp) < 60 * 60 * 12)
                     zone_groups.Last().Add(zone);
                 else {
 
@@ -1144,7 +1146,9 @@ namespace OurFoodChain {
             }
 
             // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
-            await trophies.TrophyScanner.AddToQueueAsync(Context, user.Id);
+
+            if (OurFoodChainBot.Instance.Config.TrophiesEnabled)
+                await Global.TrophyScanner.AddToQueueAsync(Context, user.Id);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", sp.GetShortName(), owner));
 
@@ -1837,13 +1841,13 @@ namespace OurFoodChain {
 
             string rarest_trophy = "N/A";
 
-            trophies.UnlockedTrophyInfo[] unlocked = await trophies.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
+            Trophies.UnlockedTrophyInfo[] unlocked = await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
 
             if (unlocked.Count() > 0) {
 
                 Array.Sort(unlocked, (lhs, rhs) => lhs.timesUnlocked.CompareTo(rhs.timesUnlocked));
 
-                trophies.Trophy trophy = await trophies.TrophyRegistry.GetTrophyByIdentifierAsync(unlocked[0].identifier);
+                Trophies.Trophy trophy = await Global.TrophyRegistry.GetTrophyByIdentifierAsync(unlocked[0].identifier);
 
                 rarest_trophy = trophy.GetName();
 
@@ -1867,8 +1871,8 @@ namespace OurFoodChain {
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);
                 embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
                 embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
-                    (await trophies.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id)).Count(),
-                    await trophies.TrophyRegistry.GetUserCompletionRateAsync(user.Id)
+                    (await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id)).Count(),
+                    await Global.TrophyRegistry.GetUserCompletionRateAsync(user.Id)
                     ), inline: true);
                 embed.AddField("Rarest trophy", rarest_trophy, inline: true);
 

@@ -10,6 +10,9 @@
   "scratch_channel": 0,
   "scratch_server": 0,
 
-  "review_channels": []
+  "review_channels": [],
+
+  "trophies_enabled": true,
+  "gotchis_enabled": true
 
 }

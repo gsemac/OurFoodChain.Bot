@@ -35,7 +35,7 @@ namespace OurFoodChain {
             if (primary is null) {
 
                 await BotUtils.ReplyAsync_Error(Context, string.Format("No map images have been set. Use the \"{0}setmap\" command to set map images.",
-                    OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                    OurFoodChainBot.Instance.Config.Prefix));
 
                 return;
 

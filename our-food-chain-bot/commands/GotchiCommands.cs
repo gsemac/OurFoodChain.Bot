@@ -394,7 +394,7 @@ namespace OurFoodChain.gotchi {
                 await ReplyAsync(string.Format("{0}, **{1}** is challenging you to a battle! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their challenge.",
                     user.Mention,
                     Context.User.Username,
-                    OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                    OurFoodChainBot.Instance.Config.Prefix));
 
             }
 
@@ -681,7 +681,7 @@ namespace OurFoodChain.gotchi {
                         await ReplyAsync(string.Format("{0}, **{1}** wants to trade gotchis with you! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their trade request.",
                             user.Mention,
                             Context.User.Username,
-                            OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                            OurFoodChainBot.Instance.Config.Prefix));
 
                         break;
 
@@ -739,7 +739,7 @@ namespace OurFoodChain.gotchi {
             embed.AddPages(EmbedUtils.FieldsToEmbedPages(item_fields));
             embed.SetTitle("🛒 Gotchi Shop");
             embed.SetDescription(string.Format("Welcome to the Gotchi Shop! Purchase an item with `{0}gotchi buy <item>`.",
-               OurFoodChainBot.GetInstance().GetConfig().Prefix));
+               OurFoodChainBot.Instance.Config.Prefix));
             embed.SetFooter(string.Format("You currently have {0:n0}G.", user_data.G));
             embed.SetColor(Color.LightOrange);
             embed.AddPageNumbers();
@@ -796,7 +796,7 @@ namespace OurFoodChain.gotchi {
                                 if (item.id == 3 && string.IsNullOrEmpty(desired_evo)) {
 
                                     await BotUtils.ReplyAsync_Error(Context,
-                                        string.Format("Please specify the desired species when buying this item.\n\nEx: `{0}gotchi buy 3 aspersum`", OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                                        string.Format("Please specify the desired species when buying this item.\n\nEx: `{0}gotchi buy 3 aspersum`", OurFoodChainBot.Instance.Config.Prefix));
 
                                     item_failed = true;
 

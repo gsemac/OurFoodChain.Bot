@@ -14,13 +14,11 @@ namespace OurFoodChain {
 
     public class OurFoodChainBot {
 
-
-
         public OurFoodChainBot() {
 
             // Set up a default configuration.
 
-            _config = new Config();
+            Config = new Config();
 
             _discord_client = new DiscordSocketClient(
                 new DiscordSocketConfig() {
@@ -32,90 +30,101 @@ namespace OurFoodChain {
 
                 });
 
-            _command_service = new CommandService();
-            _service_provider = new ServiceCollection().BuildServiceProvider();
-
-            _discord_client.Log += _log;
-            _discord_client.MessageReceived += _messageReceived;
-            _discord_client.ReactionAdded += _reactionReceived;
-            _discord_client.ReactionRemoved += _reactionRemoved;
+            _discord_client.Log += _logAsync;
+            _discord_client.MessageReceived += _onMessageReceivedAsync;
+            _discord_client.ReactionAdded += _onReactionReceivedAsync;
+            _discord_client.ReactionRemoved += _onReactionRemovedAsync;
 
             _instance = this;
 
         }
 
-        public async Task LoadSettings(string filePath) {
+        public async Task LoadConfigAsync(string filePath) {
 
             if (!System.IO.File.Exists(filePath)) {
-                await Log(LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
+                await LogAsync(LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
                 Environment.Exit(-1);
             }
 
-            _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(filePath));
+            Config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(filePath));
 
-            if (string.IsNullOrEmpty(_config.Token)) {
-                await Log(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
+            if (string.IsNullOrEmpty(Config.Token)) {
+                await LogAsync(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
                 Environment.Exit(-1);
             }
 
-            if (string.IsNullOrEmpty(_config.Prefix))
-                _config.Prefix = Config.DEFAULT_PREFIX;
+            if (string.IsNullOrEmpty(Config.Prefix))
+                Config.Prefix = Config.DEFAULT_PREFIX;
 
         }
 
-        public async Task Connect() {
+        public async Task ConnectAsync() {
 
-            // Install commands.
-
-            await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), _service_provider);
+            await InstallCommandsAsync();
 
             // Login to Discord.
 
-            await _discord_client.LoginAsync(TokenType.Bot, _config.Token);
+            await _discord_client.LoginAsync(TokenType.Bot, Config.Token);
             await _discord_client.StartAsync();
 
             // Set the bot's "Now Playing".
 
-            await _discord_client.SetGameAsync(_config.Playing);
+            await _discord_client.SetGameAsync(Config.Playing);
 
         }
-        public async Task Log(LogSeverity severity, string source, string message) {
-            await _log(new LogMessage(severity, source, message));
+        public async Task LogAsync(LogSeverity severity, string source, string message) {
+            await _logAsync(new LogMessage(severity, source, message));
+        }
+        public async Task InstallCommandsAsync() {
+            await _installCommandsAsync();
         }
 
-        public Config GetConfig() {
-            return _config;
+        public ulong UserId {
+            get {
+                return _discord_client.CurrentUser.Id;
+            }
         }
-        public ulong GetUserId() {
-
-            return _discord_client.CurrentUser.Id;
-
+        public IDiscordClient Client {
+            get {
+                return _discord_client;
+            }
         }
-        public IDiscordClient GetClient() {
+        public Config Config { get; set; } = new Config();
 
-            return _discord_client;
-
-        }
-
-        public static OurFoodChainBot GetInstance() {
-            return _instance;
+        public static OurFoodChainBot Instance {
+            get {
+                return _instance;
+            }
         }
 
-        static OurFoodChainBot _instance = null;
-        Config _config;
+        // Private members
+
+        private static OurFoodChainBot _instance = null;
 
         private DiscordSocketClient _discord_client;
         private CommandService _command_service;
         private IServiceProvider _service_provider;
 
-        private async Task _log(LogMessage message) {
+        private async Task _installCommandsAsync() {
+
+            _command_service = new CommandService();
+            _service_provider = new ServiceCollection().BuildServiceProvider();
+
+            await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), _service_provider);
+
+            if (!Config.TrophiesEnabled)
+                await _command_service.RemoveModuleAsync<Trophies.TrophyCommands>();
+
+        }
+
+        private async Task _logAsync(LogMessage message) {
 
             Console.WriteLine(message.ToString());
 
             await Task.FromResult(false);
 
         }
-        private async Task _messageReceived(SocketMessage message) {
+        private async Task _onMessageReceivedAsync(SocketMessage message) {
 
             // If the message was not sent by a user (e.g., Discord, bot, etc.), ignore it.
             if (!_isUserMessage(message))
@@ -130,10 +139,10 @@ namespace OurFoodChain {
             await _executeCommand(message as SocketUserMessage);
 
         }
-        private async Task _reactionReceived(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
+        private async Task _onReactionReceivedAsync(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
             await CommandUtils.HandlePaginatedMessageReaction(cached, channel, reaction, true);
         }
-        private async Task _reactionRemoved(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
+        private async Task _onReactionRemovedAsync(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
             await CommandUtils.HandlePaginatedMessageReaction(cached, channel, reaction, false);
         }
 
@@ -151,7 +160,7 @@ namespace OurFoodChain {
             if (message == null)
                 return pos;
 
-            message.HasStringPrefix(_config.Prefix, ref pos, StringComparison.InvariantCultureIgnoreCase);
+            message.HasStringPrefix(Config.Prefix, ref pos, StringComparison.InvariantCultureIgnoreCase);
             message.HasMentionPrefix(_discord_client.CurrentUser, ref pos);
 
             return pos;
@@ -166,7 +175,7 @@ namespace OurFoodChain {
 
             // If the message is just the bot's prefix, don't attempt to respond to it (this reduces "Unknown command" spam).
 
-            if (message.Content == _config.Prefix)
+            if (message.Content == Config.Prefix)
                 return false;
 
             int pos = _getCommandArgumentsPosition(message);
@@ -197,7 +206,7 @@ namespace OurFoodChain {
                     embed.WithColor(Color.Red);
                     embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", command_m.Value));
                     embed.WithDescription("❌ " + result.ErrorReason);
-                    embed.AddField("Example(s) of correct usage:", command_info.ExamplesToString(_config.Prefix));
+                    embed.AddField("Example(s) of correct usage:", command_info.ExamplesToString(Config.Prefix));
 
                     await context.Channel.SendMessageAsync("", false, embed.Build());
 

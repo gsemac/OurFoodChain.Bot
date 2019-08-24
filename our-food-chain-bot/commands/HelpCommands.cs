@@ -39,10 +39,10 @@ namespace OurFoodChain {
                 description_builder.AppendLine(string.Format("Commands listed must be prefaced with `{0}` (e.g. `{2}{0} {1}`).",
                     category,
                     commandInfo[0].name,
-                    OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                    OurFoodChainBot.Instance.Config.Prefix));
 
             description_builder.AppendLine((string.Format("To learn more about a command, use `{0}help <command>` (e.g. `{0}help {1}{2}`).",
-                OurFoodChainBot.GetInstance().GetConfig().Prefix,
+                OurFoodChainBot.Instance.Config.Prefix,
                 string.IsNullOrEmpty(category) ? "" : category + " ",
                 commandInfo[0].name)));
 
@@ -144,7 +144,7 @@ namespace OurFoodChain {
 
                     builder.WithTitle(string.Format("Help: {0}", info.name));
 
-                    builder.AddField("Description", info.description.Replace("\\prefix", OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                    builder.AddField("Description", info.description.Replace("\\prefix", OurFoodChainBot.Instance.Config.Prefix));
 
                     if (info.aliases.Count() > 0)
                         builder.AddField("Aliases", string.Join(", ", info.aliases));
@@ -152,7 +152,7 @@ namespace OurFoodChain {
                     if (info.examples.Count() > 0) {
 
                         for (int i = 0; i < info.examples.Count(); ++i)
-                            info.examples[i] = "`" + OurFoodChainBot.GetInstance().GetConfig().Prefix + (string.IsNullOrEmpty(nestedCommand) ? "" : command.Trim() + " ") + info.examples[i] + "`";
+                            info.examples[i] = "`" + OurFoodChainBot.Instance.Config.Prefix + (string.IsNullOrEmpty(nestedCommand) ? "" : command.Trim() + " ") + info.examples[i] + "`";
 
                         builder.AddField("Example(s)", string.Join(Environment.NewLine, info.examples));
 

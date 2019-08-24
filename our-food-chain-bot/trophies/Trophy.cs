@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.trophies {
+namespace OurFoodChain.Trophies {
 
     public enum TrophyFlags {
         Hidden = 1,
@@ -64,8 +64,7 @@ namespace OurFoodChain.trophies {
 
         public string name;
 
-
-        private string _description;
+        private readonly string _description;
         private Func<TrophyScanner.ScannerQueueItem, Task<bool>> _checkUnlocked;
 
     }

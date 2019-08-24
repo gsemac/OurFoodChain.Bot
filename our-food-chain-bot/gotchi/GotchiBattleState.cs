@@ -350,7 +350,7 @@ namespace OurFoodChain.gotchi {
             sb.AppendLine("The battle has begun!");
             sb.AppendLine();
             sb.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
-                OurFoodChainBot.GetInstance().GetConfig().Prefix));
+                OurFoodChainBot.Instance.Config.Prefix));
 
             state.battleText = sb.ToString();
 

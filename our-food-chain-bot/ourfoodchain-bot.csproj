@@ -265,6 +265,7 @@
     <Compile Include="utils\TimeAmount.cs" />
     <Compile Include="utils\Tree.cs" />
     <Compile Include="utils\Utils.cs" />
+    <Compile Include="utils\zones\Zone.cs" />
     <Compile Include="utils\zones\ZoneListResult.cs" />
     <Compile Include="utils\zones\ZoneUtils.cs" />
   </ItemGroup>

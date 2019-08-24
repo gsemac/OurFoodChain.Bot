@@ -352,7 +352,7 @@ namespace OurFoodChain {
 
             }
 
-            zones.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.Zone.name, rhs.Zone.name));
+            zones.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.Zone.Name, rhs.Zone.Name));
 
             return zones.ToArray();
 
@@ -367,7 +367,7 @@ namespace OurFoodChain {
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesZones(species_id, zone_id, notes, timestamp) VALUES($species_id, $zone_id, $notes, $timestamp)")) {
 
                     cmd.Parameters.AddWithValue("$species_id", species.id);
-                    cmd.Parameters.AddWithValue("$zone_id", zone.id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
                     cmd.Parameters.AddWithValue("$notes", string.IsNullOrEmpty(notes) ? "" : notes.Trim().ToLower());
                     cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
@@ -385,7 +385,7 @@ namespace OurFoodChain {
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id = $species_id AND zone_id = $zone_id")) {
 
                     cmd.Parameters.AddWithValue("$species_id", species.id);
-                    cmd.Parameters.AddWithValue("$zone_id", zone.id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
 
                     await Database.ExecuteNonQuery(cmd);
 

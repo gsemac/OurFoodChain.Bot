@@ -38,7 +38,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id NOT IN (SELECT zone_id FROM SpeciesZones);"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
-                    ideas.Add(string.Format("**{0}** does not contain any species yet. Why not make one?", Zone.FromDataRow(row).GetFullName()));
+                    ideas.Add(string.Format("**{0}** does not contain any species yet. Why not make one?", ZoneUtils.FromDataRow(row).GetFullName()));
 
             return ideas.ToArray();
 

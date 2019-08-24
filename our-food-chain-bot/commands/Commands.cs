@@ -92,13 +92,11 @@ namespace OurFoodChain.Commands {
             List<string> zones_value_builder = new List<string>();
 
             SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(sp);
+
             zone_list.GroupBy(x => string.IsNullOrEmpty(x.Notes) ? "" : x.Notes)
                 .OrderBy(x => x.Key)
                 .ToList()
                 .ForEach(x => {
-
-                    if (x.Any(y => y.Zone.type == ZoneType.Terrestrial))
-                        embed_color = Color.DarkGreen;
 
                     // Create an array of zone names, and sort them according to name.
                     List<string> zones_array = x.Select(y => y.Zone.GetShortName()).ToList();
@@ -110,6 +108,16 @@ namespace OurFoodChain.Commands {
                         zones_value_builder.Add(string.Format("{0} ({1})", StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "), x.Key.ToLower()));
 
                 });
+
+            if (zone_list.Count() > 0) {
+
+                embed_color = zone_list
+                    .GroupBy(x => ZoneUtils.GetZoneColor(x.Zone.Type))
+                    .OrderBy(x => x.Count())
+                    .Last()
+                    .Key;
+
+            }
 
             string zones_value = string.Join("; ", zones_value_builder);
 
@@ -283,7 +291,10 @@ namespace OurFoodChain.Commands {
 
             // If an invalid type was provided, assume the user meant it as a description instead.
             // i.e., "addzone <name> <description>"
-            if (type.ToLower() != "aquatic" && type.ToLower() != "terrestrial") {
+
+            ZoneType zone_type = ZoneUtils.ParseZoneType(type);
+
+            if (zone_type == ZoneType.Unknown) {
 
                 description = type;
                 type = "";
@@ -310,7 +321,7 @@ namespace OurFoodChain.Commands {
             Zone zone = await ZoneUtils.GetZoneAsync(name);
 
             if (!(zone is null)) {
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", StringUtils.ToTitleCase(zone.name)));
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", StringUtils.ToTitleCase(zone.Name)));
                 return;
             }
 
@@ -334,7 +345,7 @@ namespace OurFoodChain.Commands {
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string name = "") {
 
-            if (string.IsNullOrEmpty(name) || name == "aquatic" || name == "terrestrial") {
+            if (string.IsNullOrEmpty(name) || ZoneUtils.ParseZoneType(name) != ZoneType.Unknown) {
 
                 // If no zone was provided, list all zones.
 
@@ -344,17 +355,22 @@ namespace OurFoodChain.Commands {
                 string cmd_str = "SELECT * FROM Zones;";
 
                 if (!string.IsNullOrEmpty(name))
-                    cmd_str = string.Format("SELECT * FROM Zones WHERE type=\"{0}\";", name);
+                    cmd_str = string.Format("SELECT * FROM Zones WHERE type=\"{0}\"", name);
 
                 List<Zone> zone_list = new List<Zone>();
 
                 using (SQLiteConnection conn = await Database.GetConnectionAsync())
-                using (SQLiteCommand cmd = new SQLiteCommand(cmd_str))
-                using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
-                    foreach (DataRow row in rows.Rows)
-                        zone_list.Add(OurFoodChain.Zone.FromDataRow(row));
+                using (SQLiteCommand cmd = new SQLiteCommand(string.IsNullOrEmpty(name) ? "SELECT * FROM Zones" : "SELECT * FROM Zones WHERE type=$type")) {
 
-                zone_list.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.name, rhs.name));
+                    cmd.Parameters.AddWithValue("$type", name);
+
+                    using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
+                        foreach (DataRow row in rows.Rows)
+                            zone_list.Add(ZoneUtils.FromDataRow(row));
+
+                }
+
+                zone_list.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs.Name, rhs.Name));
 
                 if (zone_list.Count() > 0) {
 
@@ -371,7 +387,7 @@ namespace OurFoodChain.Commands {
 
                     foreach (Zone zone in zone_list) {
 
-                        string line = string.Format("{1} **{0}**\t-\t{2}", StringUtils.ToTitleCase(zone.name), zone.type == ZoneType.Aquatic ? "🌊" : "🌳", zone.GetShortDescription());
+                        string line = string.Format("{1} **{0}**\t-\t{2}", StringUtils.ToTitleCase(zone.Name), zone.Icon, zone.GetShortDescription());
 
                         if (line.Length > max_line_length)
                             line = line.Substring(0, max_line_length - 3) + "...";
@@ -387,10 +403,8 @@ namespace OurFoodChain.Commands {
 
                     if (string.IsNullOrEmpty(name))
                         name = "all";
-                    else if (name == "aquatic")
-                        embed.SetColor(Color.Blue);
-                    else if (name == "terrestrial")
-                        embed.SetColor(Color.DarkGreen);
+                    else
+                        embed.SetColor(ZoneUtils.GetZoneColor(ZoneUtils.ParseZoneType(name)));
 
                     embed.SetTitle(embed_title);
                     embed.PrependDescription(embed_description);
@@ -416,18 +430,9 @@ namespace OurFoodChain.Commands {
 
                 List<Embed> pages = new List<Embed>();
 
-                string title = string.Format("{0} {1}", zone.type == ZoneType.Aquatic ? "🌊" : "🌳", StringUtils.ToTitleCase(zone.name));
+                string title = string.Format("{0} {1}", zone.Icon, zone.FullName);
                 string description = zone.GetDescriptionOrDefault();
-                Color color = Color.Blue;
-
-                switch (zone.type) {
-                    case ZoneType.Aquatic:
-                        color = Color.Blue;
-                        break;
-                    case ZoneType.Terrestrial:
-                        color = Color.DarkGreen;
-                        break;
-                }
+                Color color = ZoneUtils.GetZoneColor(zone.Type);
 
                 // Get all species living in this zone.
 
@@ -448,7 +453,7 @@ namespace OurFoodChain.Commands {
 
                 paginated.SetTitle(title);
                 paginated.SetDescription(description);
-                paginated.SetThumbnailUrl(zone.pics);
+                paginated.SetThumbnailUrl(zone.Pics);
                 paginated.SetColor(color);
 
                 // This page will have species organized by role.
@@ -910,7 +915,7 @@ namespace OurFoodChain.Commands {
             // Get the zones that the species currently resides in.
             // These will be used to show warning messages (e.g., doesn't exist in the given zone).
 
-            long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.id)).Select(x => x.id).ToArray();
+            long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.id)).Select(x => x.Id).ToArray();
 
             // Get the zones from user input.
             ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
@@ -928,23 +933,23 @@ namespace OurFoodChain.Commands {
 
             }
 
-            if (zones.Zones.Any(x => !current_zone_ids.Contains(x.id))) {
+            if (zones.Zones.Any(x => !current_zone_ids.Contains(x.Id))) {
 
                 // Show a warning if the species wasn't in one or more of the zones provided.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.",
                     sp.GetShortName(),
-                    StringUtils.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtils.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 
-            if (zones.Zones.Any(x => current_zone_ids.Contains(x.id))) {
+            if (zones.Zones.Any(x => current_zone_ids.Contains(x.Id))) {
 
                 // Show a confirmation of all valid zones.
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.",
                     sp.GetShortName(),
-                    StringUtils.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtils.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 
@@ -1073,7 +1078,7 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET pics=$pics WHERE id=$id;")) {
 
                 cmd.Parameters.AddWithValue("$pics", imageUrl);
-                cmd.Parameters.AddWithValue("$id", z.id);
+                cmd.Parameters.AddWithValue("$id", z.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -1102,7 +1107,7 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET description=$description WHERE id=$id;")) {
 
                 cmd.Parameters.AddWithValue("$description", description);
-                cmd.Parameters.AddWithValue("$id", zone.id);
+                cmd.Parameters.AddWithValue("$id", zone.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 

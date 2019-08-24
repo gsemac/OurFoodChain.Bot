@@ -13,87 +13,6 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public enum ZoneType {
-        Unknown,
-        Aquatic,
-        Terrestrial
-    }
-
-    public class Zone {
-
-        public long id;
-        public string name;
-        public string description;
-        public ZoneType type;
-        public string pics;
-
-        public string ShortName {
-            get {
-                return GetShortName();
-            }
-        }
-        public string FullName {
-            get {
-                return GetFullName();
-            }
-        }
-
-        public static Zone FromDataRow(DataRow row) {
-
-            Zone zone = new Zone();
-            zone.id = row.Field<long>("id");
-            zone.name = StringUtils.ToTitleCase(row.Field<string>("name"));
-            zone.description = row.Field<string>("description");
-            zone.pics = row.Field<string>("pics");
-
-            // Since the "pics" column was added later, it may be null for some zones.
-            // To prevent issues witha accessing a null string, replace it with the empty string.
-
-            if (string.IsNullOrEmpty(zone.pics))
-                zone.pics = "";
-
-            switch (row.Field<string>("type")) {
-                case "aquatic":
-                    zone.type = ZoneType.Aquatic;
-                    break;
-                case "terrestrial":
-                    zone.type = ZoneType.Terrestrial;
-                    break;
-                default:
-                    zone.type = ZoneType.Unknown;
-                    break;
-            }
-
-            return zone;
-
-        }
-
-        public string GetShortDescription() {
-            return GetShortDescription(GetDescriptionOrDefault());
-        }
-        public string GetDescriptionOrDefault() {
-
-            if (string.IsNullOrEmpty(description))
-                return BotUtils.DEFAULT_ZONE_DESCRIPTION;
-
-            return description;
-
-        }
-        public string GetShortName() {
-
-            return Regex.Replace(name, "^zone\\s+", "", RegexOptions.IgnoreCase);
-
-        }
-        public string GetFullName() {
-            return ZoneUtils.FormatZoneName(name);
-        }
-
-        public static string GetShortDescription(string description) {
-            return StringUtils.GetFirstSentence(description);
-        }
-
-    }
-
     class Family {
 
         public long id;
@@ -352,7 +271,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones;"))
             using (DataTable rows = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in rows.Rows)
-                    zones.Add(Zone.FromDataRow(row));
+                    zones.Add(ZoneUtils.FromDataRow(row));
 
             return zones.ToArray();
 
@@ -414,7 +333,7 @@ namespace OurFoodChain {
 
             List<Species> species = new List<Species>();
 
-            if (zone is null || zone.id <= 0)
+            if (zone is null || zone.Id <= 0)
                 return species.ToArray();
 
             string query_all = "SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesZones WHERE zone_id=$zone_id) ORDER BY name ASC;";
@@ -422,7 +341,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand(extantOnly ? query_extant : query_all)) {
 
-                cmd.Parameters.AddWithValue("$zone_id", zone.id);
+                cmd.Parameters.AddWithValue("$zone_id", zone.Id);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
@@ -1182,7 +1101,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyAsync_ValidateZone(ICommandContext context, Zone zone) {
 
-            if (zone is null || zone.id <= 0) {
+            if (zone is null || zone.Id <= 0) {
 
                 await context.Channel.SendMessageAsync("No such zone exists.");
 

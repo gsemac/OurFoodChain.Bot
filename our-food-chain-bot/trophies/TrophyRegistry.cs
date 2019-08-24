@@ -390,7 +390,7 @@ namespace OurFoodChain.Trophies {
             List<Zone> zones = new List<Zone>(await BotUtils.GetZonesFromDb());
 
             // Filter list so we only have zones with cold climates.
-            zones.RemoveAll(zone => !Regex.IsMatch(zone.description, regexPattern));
+            zones.RemoveAll(zone => !Regex.IsMatch(zone.Description, regexPattern));
 
             // Check if the user has any species in these zones.
 
@@ -401,7 +401,7 @@ namespace OurFoodChain.Trophies {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesZones WHERE zone_id=$zone_id AND species_id IN (SELECT id FROM Species WHERE owner=$owner);")) {
 
-                    cmd.Parameters.AddWithValue("$zone_id", zone.id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
                     cmd.Parameters.AddWithValue("$owner", username);
 
                     if (await Database.GetScalar<long>(cmd) > 0) {
@@ -420,19 +420,10 @@ namespace OurFoodChain.Trophies {
         }
         private async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(TrophyScanner.ScannerQueueItem item, ZoneType type) {
 
-            string type_string = "";
+            if (type == ZoneType.Unknown)
+                return false;
 
-            switch (type) {
-                case ZoneType.Aquatic:
-                    type_string = "aquatic";
-                    break;
-                case ZoneType.Terrestrial:
-                    type_string = "terrestrial";
-                    break;
-                default:
-                    return false;
-            }
-
+            string type_string = ZoneUtils.ZoneTypeToString(type);
             string username = (await item.Context.Guild.GetUserAsync(item.UserId)).Username;
             bool unlocked = false;
 

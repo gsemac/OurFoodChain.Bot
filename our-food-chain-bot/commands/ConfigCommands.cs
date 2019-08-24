@@ -28,6 +28,19 @@ namespace OurFoodChain.Commands {
 
         }
 
+        [Command("save")]
+        public async Task Save() {
+
+            if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.BotAdmin)) {
+
+                OurFoodChainBot.Instance.Config.Save("config.json");
+
+                await BotUtils.ReplyAsync_Success(Context, "Successfully saved config to **config.json**.");
+
+            }
+
+        }
+
     }
 
 }

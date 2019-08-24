@@ -62,6 +62,11 @@ namespace OurFoodChain {
             return true;
 
         }
+        public void Save(string filePath) {
+
+            System.IO.File.WriteAllText(filePath, JsonConvert.SerializeObject(this, Formatting.Indented));
+
+        }
 
         public static Config FromFile(string filePath) {
             return FromJson(System.IO.File.ReadAllText(filePath));

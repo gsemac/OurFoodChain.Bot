@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Trophies {
 
-    public class TrophyCommands :
+    public class Commands :
         ModuleBase {
 
         [Command("trophies"), Alias("achievements")]

@@ -12,7 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.gotchi {
+namespace OurFoodChain.Gotchi {
 
     public class GotchiUtils {
 

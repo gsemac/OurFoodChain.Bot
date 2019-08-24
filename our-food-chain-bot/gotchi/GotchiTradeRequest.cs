@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.gotchi {
+namespace OurFoodChain.Gotchi {
 
     public enum GotchiTradeRequestResult {
         Success,

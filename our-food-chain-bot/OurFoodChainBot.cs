@@ -121,7 +121,10 @@ namespace OurFoodChain {
             await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), _service_provider);
 
             if (!Config.TrophiesEnabled)
-                await _command_service.RemoveModuleAsync<Trophies.TrophyCommands>();
+                await _command_service.RemoveModuleAsync<Trophies.Commands>();
+
+            if (!Config.GotchisEnabled)
+                await _command_service.RemoveModuleAsync<Gotchi.Commands>();
 
         }
 

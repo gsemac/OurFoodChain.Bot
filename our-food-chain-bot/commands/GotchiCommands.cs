@@ -7,7 +7,7 @@ using System.Data.SQLite;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.gotchi {
+namespace OurFoodChain.Gotchi {
 
     [Group("gotchi")]
     public class Commands :
@@ -927,7 +927,7 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            long gotchi_id = OurFoodChain.gotchi.Gotchi.NULL_GOTCHI_ID;
+            long gotchi_id = OurFoodChain.Gotchi.Gotchi.NULL_GOTCHI_ID;
             string name = "";
 
             if (StringUtils.IsNumeric(nameOrIndex)) {
@@ -944,7 +944,7 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            if (gotchi_id == OurFoodChain.gotchi.Gotchi.NULL_GOTCHI_ID) {
+            if (gotchi_id == OurFoodChain.Gotchi.Gotchi.NULL_GOTCHI_ID) {
 
                 Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User.Id, nameOrIndex.ToLower());
 
@@ -957,7 +957,7 @@ namespace OurFoodChain.gotchi {
 
             }
 
-            if (gotchi_id == OurFoodChain.gotchi.Gotchi.NULL_GOTCHI_ID) {
+            if (gotchi_id == OurFoodChain.Gotchi.Gotchi.NULL_GOTCHI_ID) {
 
                 await BotUtils.ReplyAsync_Error(Context, string.Format("No Gotchi with the name \"{0}\" exists.", nameOrIndex));
 

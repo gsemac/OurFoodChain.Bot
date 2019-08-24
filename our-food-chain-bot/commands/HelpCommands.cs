@@ -63,7 +63,8 @@ namespace OurFoodChain {
                 commands_lists[cat].Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
 
                 foreach (HelpUtils.CommandInfo c in commands_lists[cat])
-                    command_str_list.Add(string.Format("`{0}`", c.name));
+                    if (OurFoodChainBot.Instance.CommandIsLoaded(c.name))
+                        command_str_list.Add(string.Format("`{0}`", c.name));
 
                 builder.AddField(StringUtils.ToTitleCase(cat), string.Join("  ", command_str_list));
 

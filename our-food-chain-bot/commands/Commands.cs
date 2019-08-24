@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Commands {
 
     public class Commands :
         ModuleBase {

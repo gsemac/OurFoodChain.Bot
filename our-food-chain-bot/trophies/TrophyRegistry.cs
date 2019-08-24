@@ -143,7 +143,18 @@ namespace OurFoodChain.Trophies {
 
             UnlockedTrophyInfo[] unlocked = await GetUnlockedTrophiesAsync(userId);
 
-            int unlocked_count = unlocked.Where(x => includeOneTimeTrophies || !GetTrophyByIdentifierAsync(x.identifier).Result.Flags.HasFlag(TrophyFlags.OneTime)).Count();
+            int unlocked_count = unlocked
+                .Where(x => {
+
+                    if (includeOneTimeTrophies)
+                        return true;
+
+                    Trophy t = GetTrophyByIdentifierAsync(x.identifier).Result;
+
+                    return t != null && !t.Flags.HasFlag(TrophyFlags.OneTime);
+
+                })
+                .Count();
             int trophy_count = (await GetTrophiesAsync()).Where(x => includeOneTimeTrophies || !x.Flags.HasFlag(TrophyFlags.OneTime)).Count();
 
             return trophy_count <= 0 ? 0.0 : (100.0 * unlocked_count / trophy_count);

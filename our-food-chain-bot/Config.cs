@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +43,32 @@ namespace OurFoodChain {
         public bool TrophiesEnabled { get; set; } = true;
         [JsonProperty("gotchis_enabled")]
         public bool GotchisEnabled { get; set; } = true;
+
+        public bool SetProperty(string name, string value) {
+
+            PropertyInfo property = typeof(Config).GetProperties().FirstOrDefault(x => {
+
+                JsonPropertyAttribute attribute = Attribute.GetCustomAttribute(x, typeof(JsonPropertyAttribute)) as JsonPropertyAttribute;
+
+                return attribute.PropertyName == name.ToLower();
+
+            });
+
+            if (property != null)
+                property.SetValue(this, Convert.ChangeType(value, property.PropertyType), null);
+            else
+                return false;
+
+            return true;
+
+        }
+
+        public static Config FromFile(string filePath) {
+            return FromJson(System.IO.File.ReadAllText(filePath));
+        }
+        public static Config FromJson(string json) {
+            return JsonConvert.DeserializeObject<Config>(json);
+        }
 
     }
 

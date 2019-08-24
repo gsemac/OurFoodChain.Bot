@@ -46,7 +46,7 @@ namespace OurFoodChain {
                 Environment.Exit(-1);
             }
 
-            Config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(filePath));
+            Config = Config.FromFile(filePath);
 
             if (string.IsNullOrEmpty(Config.Token)) {
                 await LogAsync(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
@@ -60,23 +60,31 @@ namespace OurFoodChain {
 
         public async Task ConnectAsync() {
 
-            await InstallCommandsAsync();
-
-            // Login to Discord.
-
             await _discord_client.LoginAsync(TokenType.Bot, Config.Token);
             await _discord_client.StartAsync();
 
-            // Set the bot's "Now Playing".
-
-            await _discord_client.SetGameAsync(Config.Playing);
+            await ReloadConfigAsync();
 
         }
         public async Task LogAsync(LogSeverity severity, string source, string message) {
             await _logAsync(new LogMessage(severity, source, message));
         }
-        public async Task InstallCommandsAsync() {
+        public async Task ReloadConfigAsync() {
+
             await _installCommandsAsync();
+
+            await _discord_client.SetGameAsync(Config.Playing);
+
+        }
+
+        public bool CommandIsLoaded(string commandName) {
+
+            if (_command_service is null)
+                return false;
+
+            return _command_service.Commands
+                .Any(x => x.Name.ToLower() == commandName.ToLower() || x.Aliases.Any(y => y.ToLower() == commandName.ToLower()));
+
         }
 
         public ulong UserId {

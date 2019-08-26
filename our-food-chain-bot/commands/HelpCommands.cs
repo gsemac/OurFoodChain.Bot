@@ -19,16 +19,16 @@ namespace OurFoodChain {
 
         }
 
-        private static async Task _showHelpCategory(ICommandContext context, List<HelpUtils.CommandInfo> commandInfo, string category) {
+        private static async Task _showHelpCategory(ICommandContext context, CommandHelpInfoCollection commands, string category) {
 
-            SortedDictionary<string, List<HelpUtils.CommandInfo>> commands_lists = new SortedDictionary<string, List<HelpUtils.CommandInfo>>();
+            SortedDictionary<string, List<CommandHelpInfo>> commands_lists = new SortedDictionary<string, List<CommandHelpInfo>>();
 
-            foreach (HelpUtils.CommandInfo c in commandInfo) {
+            foreach (CommandHelpInfo command in commands) {
 
-                if (!commands_lists.ContainsKey(c.category))
-                    commands_lists[c.category] = new List<HelpUtils.CommandInfo>();
+                if (!commands_lists.ContainsKey(command.Category))
+                    commands_lists[command.Category] = new List<CommandHelpInfo>();
 
-                commands_lists[c.category].Add(c);
+                commands_lists[command.Category].Add(command);
 
             }
 
@@ -38,13 +38,13 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(category))
                 description_builder.AppendLine(string.Format("Commands listed must be prefaced with `{0}` (e.g. `{2}{0} {1}`).",
                     category,
-                    commandInfo[0].name,
+                    commands.First().Name,
                     OurFoodChainBot.Instance.Config.Prefix));
 
-            description_builder.AppendLine((string.Format("To learn more about a command, use `{0}help <command>` (e.g. `{0}help {1}{2}`).",
+            description_builder.AppendLine(string.Format("To learn more about a command, use `{0}help <command>` (e.g. `{0}help {1}{2}`).",
                 OurFoodChainBot.Instance.Config.Prefix,
                 string.IsNullOrEmpty(category) ? "" : category + " ",
-                commandInfo[0].name)));
+                commands.First().Name));
 
             string version_string = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
@@ -58,15 +58,28 @@ namespace OurFoodChain {
 
             foreach (string cat in commands_lists.Keys) {
 
+                // Sort commands, and filter out commands that aren't currently loaded.
+                // As well, filter out commands that the current user does not have access to.
+
                 List<string> command_str_list = new List<string>();
 
-                commands_lists[cat].Sort((lhs, rhs) => lhs.name.CompareTo(rhs.name));
+                foreach (CommandHelpInfo c in commands_lists[cat]
+                    .Where(x => {
 
-                foreach (HelpUtils.CommandInfo c in commands_lists[cat])
-                    if (OurFoodChainBot.Instance.CommandIsLoaded(c.name))
-                        command_str_list.Add(string.Format("`{0}`", c.name));
+                        CommandInfo commandInfo = OurFoodChainBot.Instance.GetInstalledCommandByName(x.Name);
 
-                builder.AddField(StringUtils.ToTitleCase(cat), string.Join("  ", command_str_list));
+                        return commandInfo != null && CommandUtils.HasPrivilege(context.User, CommandUtils.GetPrivilegeLevel(commandInfo));
+
+                    })) {
+
+                    command_str_list.Add(string.Format("`{0}`", c.Name));
+
+                }
+
+                command_str_list.Sort((lhs, rhs) => lhs.CompareTo(rhs));
+
+                if (command_str_list.Count() > 0)
+                    builder.AddField(StringUtils.ToTitleCase(cat), string.Join("  ", command_str_list));
 
             }
 
@@ -83,13 +96,7 @@ namespace OurFoodChain {
 
             }
 
-            List<HelpUtils.CommandInfo> command_info = new List<HelpUtils.CommandInfo>();
-            string[] fnames = System.IO.Directory.GetFiles(commandInfoDirectory, "*.json", System.IO.SearchOption.TopDirectoryOnly);
-
-            foreach (string fname in fnames)
-                command_info.Add(JsonConvert.DeserializeObject<HelpUtils.CommandInfo>(System.IO.File.ReadAllText(fname)));
-
-            await _showHelpCategory(context, command_info, category);
+            await _showHelpCategory(context, HelpUtils.GetCommandInfoFromDirectory(commandInfoDirectory), category);
 
         }
         public static async Task ShowHelp(ICommandContext context, string command, string nestedCommand) {
@@ -97,75 +104,59 @@ namespace OurFoodChain {
             // Load the .json files containing command information.
             // If there is a subdirectory in the help directory with the same name as the command, load files in that subdirectory instead.
 
-            List<HelpUtils.CommandInfo> command_info = new List<HelpUtils.CommandInfo>();
-            string help_directory = Constants.HELP_DIRECTORY;
+            string help_directory = HelpUtils.HELP_DIRECTORY;
 
             if (!string.IsNullOrEmpty(nestedCommand) && System.IO.Directory.Exists(System.IO.Path.Combine(help_directory, command)))
                 help_directory = System.IO.Path.Combine(help_directory, command);
 
-            if (!System.IO.Directory.Exists(help_directory)) {
+            if (System.IO.Directory.Exists(help_directory)) {
 
-                await BotUtils.ReplyAsync_Error(context, string.Format("Help information cannot be displayed, because the help directory \"{0}\" does not exist.", help_directory));
+                CommandHelpInfoCollection commands = HelpUtils.GetCommandInfoFromDirectory(help_directory);
 
-                return;
+                if (!string.IsNullOrEmpty(command)) {
 
-            }
+                    // If the user provided a specific command name, show information about that command.
 
-            string[] fnames = System.IO.Directory.GetFiles(help_directory, "*.json", System.IO.SearchOption.TopDirectoryOnly);
+                    CommandHelpInfo info = commands.FindCommandByName(string.IsNullOrEmpty(nestedCommand) ? command : nestedCommand);
 
-            foreach (string fname in fnames)
-                command_info.Add(JsonConvert.DeserializeObject<HelpUtils.CommandInfo>(System.IO.File.ReadAllText(fname)));
+                    if (info is null)
+                        await context.Channel.SendMessageAsync("The given command does not exist, or is not yet documented.");
+                    else {
 
-            if (!string.IsNullOrEmpty(command)) {
-
-                // Find the requested command.
-
-                command = command.ToLower();
-                nestedCommand = nestedCommand.ToLower();
-
-                HelpUtils.CommandInfo info = null;
-
-                foreach (HelpUtils.CommandInfo c in command_info)
-                    if (string.IsNullOrEmpty(nestedCommand) ? (c.name == command || c.aliases.Contains(command)) : (c.name == nestedCommand || c.aliases.Contains(nestedCommand))) {
-
-                        info = c;
+                        // Prefix the command with is parent if applicable.
 
                         if (!string.IsNullOrEmpty(nestedCommand))
-                            info.name = command.Trim() + " " + info.name;
+                            info.Name = command.Trim() + " " + info.Name;
 
-                        break;
+                        EmbedBuilder builder = new EmbedBuilder();
 
-                    }
+                        builder.WithTitle(string.Format("Help: {0}", info.Name));
 
-                if (info is null)
-                    await context.Channel.SendMessageAsync("The given command does not exist, or is not yet documented.");
-                else {
+                        builder.AddField("Description", info.Description.Replace("\\prefix", OurFoodChainBot.Instance.Config.Prefix));
 
-                    EmbedBuilder builder = new EmbedBuilder();
+                        if (info.Aliases.Count() > 0)
+                            builder.AddField("Aliases", string.Join(", ", info.Aliases));
 
-                    builder.WithTitle(string.Format("Help: {0}", info.name));
+                        if (info.Examples.Count() > 0) {
 
-                    builder.AddField("Description", info.description.Replace("\\prefix", OurFoodChainBot.Instance.Config.Prefix));
+                            for (int i = 0; i < info.Examples.Count(); ++i)
+                                info.Examples[i] = "`" + OurFoodChainBot.Instance.Config.Prefix + (string.IsNullOrEmpty(nestedCommand) ? "" : command.Trim() + " ") + info.Examples[i] + "`";
 
-                    if (info.aliases.Count() > 0)
-                        builder.AddField("Aliases", string.Join(", ", info.aliases));
+                            builder.AddField("Example(s)", string.Join(Environment.NewLine, info.Examples));
 
-                    if (info.examples.Count() > 0) {
+                        }
 
-                        for (int i = 0; i < info.examples.Count(); ++i)
-                            info.examples[i] = "`" + OurFoodChainBot.Instance.Config.Prefix + (string.IsNullOrEmpty(nestedCommand) ? "" : command.Trim() + " ") + info.examples[i] + "`";
-
-                        builder.AddField("Example(s)", string.Join(Environment.NewLine, info.examples));
+                        await context.Channel.SendMessageAsync("", false, builder.Build());
 
                     }
-
-                    await context.Channel.SendMessageAsync("", false, builder.Build());
 
                 }
+                else
+                    await _showHelpCategory(context, commands, "");
 
             }
             else
-                await _showHelpCategory(context, command_info, "");
+                await BotUtils.ReplyAsync_Error(context, string.Format("Help information cannot be displayed, because the help directory \"{0}\" does not exist.", help_directory));
 
         }
 

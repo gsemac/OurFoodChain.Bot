@@ -199,11 +199,8 @@ namespace OurFoodChain.Trophies {
 
         }
 
-        [Command("awardtrophy"), Alias("award", "awardachievement")]
+        [Command("awardtrophy"), Alias("award", "awardachievement"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AwardTrophy(IGuildUser user, string trophy) {
-
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             Trophy t = await Global.TrophyRegistry.GetTrophyByNameAsync(trophy);
 

@@ -55,7 +55,7 @@ namespace OurFoodChain.Gotchi {
 
             // Register all moves.
 
-            foreach (string file in System.IO.Directory.GetFiles(Constants.GOTCHI_MOVES_DIRECTORY, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
+            foreach (string file in System.IO.Directory.GetFiles(Global.GOTCHI_MOVES_DIRECTORY, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
 
                 try {
 

@@ -19,12 +19,8 @@ namespace OurFoodChain {
         public async Task Genus(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Genus, name);
         }
-        [Command("addgenus")]
+        [Command("addgenus"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddGenus(string genus, string description = "") {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             // Make sure that the genus doesn't already exist.
 
@@ -45,12 +41,8 @@ namespace OurFoodChain {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new genus, **{0}**.", StringUtils.ToTitleCase(genus)));
 
         }
-        [Command("setgenus")]
+        [Command("setgenus"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetGenus(string genus, string species, string newGenus = "") {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             // If there is no argument for "newGenus", assume the user omitted the original genus.
             // e.g.: setgenus <species> <newGenus>
@@ -89,23 +81,23 @@ namespace OurFoodChain {
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(genus_info.name)));
 
         }
-        [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
+        [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetGenusDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Genus, name);
         }
-        [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc")]
+        [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetGenusDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Genus, name, description);
         }
-        [Command("setgenuspic"), Alias("setgpic")]
+        [Command("setgenuspic"), Alias("setgpic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetGenusPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Genus, name, url);
         }
-        [Command("setgenuscommonname"), Alias("setgenuscommon", "setgcommon")]
+        [Command("setgenuscommonname"), Alias("setgenuscommon", "setgcommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetGenuscommonName(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Genus, name, commonName);
         }
-        [Command("deletegenus")]
+        [Command("deletegenus"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteGenus(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Genus);
         }
@@ -116,31 +108,31 @@ namespace OurFoodChain {
         public async Task Family(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Family, name);
         }
-        [Command("addfamily")]
+        [Command("addfamily"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddFamily(string name, string description = "") {
             await BotUtils.Command_AddTaxon(Context, TaxonRank.Family, name, description);
         }
-        [Command("setfamily")]
+        [Command("setfamily"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetFamily(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonRank.Family, child, parent);
         }
-        [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
+        [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetFamilyDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Family, name);
         }
-        [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc")]
+        [Command("setfamilydesc"), Alias("setfamilydescription", "setfdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetFamilyDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Family, name, description);
         }
-        [Command("setfamilypic"), Alias("setfpic")]
+        [Command("setfamilypic"), Alias("setfpic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetFamilyPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Family, name, url);
         }
-        [Command("setfamilycommonname"), Alias("setfamilycommon", "setfcommon")]
+        [Command("setfamilycommonname"), Alias("setfamilycommon", "setfcommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetFamilyCommonName(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Family, name, commonName);
         }
-        [Command("deletefamily")]
+        [Command("deletefamily"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteFamily(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Family);
         }
@@ -151,31 +143,31 @@ namespace OurFoodChain {
         public async Task Order(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Order, name);
         }
-        [Command("addorder")]
+        [Command("addorder"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddOrder(string name, string description = "") {
             await BotUtils.Command_AddTaxon(Context, TaxonRank.Order, name, description);
         }
-        [Command("setorder")]
+        [Command("setorder"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOrder(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonRank.Order, child, parent);
         }
-        [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
+        [Command("setorderdesc"), Alias("setorderdescription", "setodesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOrderDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Order, name);
         }
-        [Command("setorderdesc"), Alias("setorderdescription", "setodesc")]
+        [Command("setorderdesc"), Alias("setorderdescription", "setodesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOrderDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Order, name, description);
         }
-        [Command("setorderpic"), Alias("setopic")]
+        [Command("setorderpic"), Alias("setopic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOrderPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Order, name, url);
         }
-        [Command("setordercommonname"), Alias("setordercommon", "setocommon")]
+        [Command("setordercommonname"), Alias("setordercommon", "setocommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOrderCommon(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Order, name, commonName);
         }
-        [Command("deleteorder")]
+        [Command("deleteorder"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteOrder(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Order);
         }
@@ -186,31 +178,31 @@ namespace OurFoodChain {
         public async Task Class(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Class, name);
         }
-        [Command("addclass")]
+        [Command("addclass"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddClass(string name, string description = "") {
             await BotUtils.Command_AddTaxon(Context, TaxonRank.Class, name, description);
         }
-        [Command("setclass")]
+        [Command("setclass"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetClass(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonRank.Class, child, parent);
         }
-        [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
+        [Command("setclassdesc"), Alias("setclassdescription", "setcdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetClassDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Class, name);
         }
-        [Command("setclassdesc"), Alias("setclassdescription", "setcdesc")]
+        [Command("setclassdesc"), Alias("setclassdescription", "setcdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetClassDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Class, name, description);
         }
-        [Command("setclasspic"), Alias("setcpic")]
+        [Command("setclasspic"), Alias("setcpic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetClassPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Class, name, url);
         }
-        [Command("setclasscommonname"), Alias("setclasscommon", "setccommon")]
+        [Command("setclasscommonname"), Alias("setclasscommon", "setccommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetClassCommon(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Class, name, commonName);
         }
-        [Command("deleteclass")]
+        [Command("deleteclass"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteClass(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Class);
         }
@@ -221,31 +213,31 @@ namespace OurFoodChain {
         public async Task Phylum(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Phylum, name);
         }
-        [Command("addphylum")]
+        [Command("addphylum"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPhylum(string name, string description = "") {
             await BotUtils.Command_AddTaxon(Context, TaxonRank.Phylum, name, description);
         }
-        [Command("setphylum")]
+        [Command("setphylum"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPhylum(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonRank.Phylum, child, parent);
         }
-        [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
+        [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPhylumDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Phylum, name);
         }
-        [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc")]
+        [Command("setphylumdesc"), Alias("setphylumdescription", "setpdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPhylumDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Phylum, name, description);
         }
-        [Command("setphylumpic"), Alias("setppic")]
+        [Command("setphylumpic"), Alias("setppic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPhylumPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Phylum, name, url);
         }
-        [Command("setphylumcommonname"), Alias("setphylumcommon", "setpcommon")]
+        [Command("setphylumcommonname"), Alias("setphylumcommon", "setpcommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPhylumCommon(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Phylum, name, commonName);
         }
-        [Command("deletephylum")]
+        [Command("deletephylum"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeletePhylum(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Phylum);
         }
@@ -254,31 +246,31 @@ namespace OurFoodChain {
         public async Task Kingdom(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Kingdom, name);
         }
-        [Command("addkingdom")]
+        [Command("addkingdom"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddKingdom(string name, string description = "") {
             await BotUtils.Command_AddTaxon(Context, TaxonRank.Kingdom, name, description);
         }
-        [Command("setkingdom")]
+        [Command("setkingdom"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetKingdom(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonRank.Kingdom, child, parent);
         }
-        [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
+        [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetKingdomDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Kingdom, name);
         }
-        [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc")]
+        [Command("setkingdomdesc"), Alias("setkingdomdescription", "setkdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetKingdomDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Kingdom, name, description);
         }
-        [Command("setkingdompic"), Alias("setkpic")]
+        [Command("setkingdompic"), Alias("setkpic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetKingdomPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Kingdom, name, url);
         }
-        [Command("setkingdomcommonname"), Alias("setkingdomcommon", "setkcommon")]
+        [Command("setkingdomcommonname"), Alias("setkingdomcommon", "setkcommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetKingdomCommon(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Kingdom, name, commonName);
         }
-        [Command("deletekingdom")]
+        [Command("deletekingdom"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteKingdom(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Kingdom);
         }
@@ -289,31 +281,31 @@ namespace OurFoodChain {
         public async Task Domain(string name = "") {
             await BotUtils.Command_ShowTaxon(Context, TaxonRank.Domain, name);
         }
-        [Command("adddomain")]
+        [Command("adddomain"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddDomain(string name, string description = "") {
             await BotUtils.Command_AddTaxon(Context, TaxonRank.Domain, name, description);
         }
-        [Command("setdomain")]
+        [Command("setdomain"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetDomain(string child, string parent) {
             await BotUtils.Command_SetTaxon(Context, TaxonRank.Domain, child, parent);
         }
-        [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
+        [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetDomainDescription(string name) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Domain, name);
         }
-        [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc")]
+        [Command("setdomaindesc"), Alias("setdomaindescription", "setddesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetDomainDescription(string name, string description) {
             await BotUtils.Command_SetTaxonDescription(Context, TaxonRank.Domain, name, description);
         }
-        [Command("setdomainpic"), Alias("setdpic")]
+        [Command("setdomainpic"), Alias("setdpic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetDomainPic(string name, string url) {
             await BotUtils.Command_SetTaxonPic(Context, TaxonRank.Domain, name, url);
         }
-        [Command("setdomaincommonname"), Alias("setdomaincommon", "setdcommon")]
+        [Command("setdomaincommonname"), Alias("setdomaincommon", "setdcommon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetDomainCommon(string name, string commonName) {
             await BotUtils.Command_SetTaxonCommonName(Context, TaxonRank.Domain, name, commonName);
         }
-        [Command("deletedomain")]
+        [Command("deletedomain"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteDomain(string name) {
             await _deleteTaxonAsync(name, TaxonRank.Domain);
         }
@@ -686,12 +678,8 @@ namespace OurFoodChain {
             await SetSpeciesCommonName(genus, species, commonName);
         }
 
-        [Command("delete"), Alias("deletetaxon")]
+        [Command("delete"), Alias("deletetaxon"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task DeleteTaxon(string name) {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             Taxon[] taxa = await TaxonUtils.GetTaxaAsync(name);
 

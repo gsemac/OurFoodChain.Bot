@@ -120,19 +120,19 @@ namespace OurFoodChain {
 
         }
 
-        [Command("-pic")]
+        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string speciesName) {
             await MinusPic(string.Empty, speciesName);
         }
-        [Command("-pic")]
+        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string genusName, string speciesName) {
             await MinusPic(genusName, speciesName, 1);
         }
-        [Command("-pic")]
+        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string speciesName, int pictureIndex) {
             await MinusPic(string.Empty, speciesName, pictureIndex);
         }
-        [Command("-pic")]
+        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string genusName, string speciesName, int pictureIndex) {
 
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
@@ -162,67 +162,61 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, int pictureIndex, string artist) {
             await SetArtist(string.Empty, speciesName, pictureIndex, artist);
         }
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, string artist) {
             await SetArtist(string.Empty, speciesName, 1, artist);
         }
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, string artist) {
             await SetArtist(genusName, speciesName, 1, artist);
         }
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, int pictureIndex, string artist) {
 
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
             --pictureIndex;
 
-            if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) {
+            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
 
-                Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+            if (species is null)
+                return;
 
-                if (species is null)
-                    return;
+            Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
 
-                Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
+            if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
 
-                if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
+                Picture picture = pictures[pictureIndex];
+                picture.artist = artist;
 
-                    Picture picture = pictures[pictureIndex];
-                    picture.artist = artist;
+                await SpeciesUtils.AddPictureAsync(species, picture);
 
-                    await SpeciesUtils.AddPictureAsync(species, picture);
-
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist for {0} [picture]({1}) to **{2}**.",
-                        StringUtils.ToPossessive(species.ShortName),
-                        picture.url,
-                        artist));
-
-                }
-                else
-                    await BotUtils.ReplyAsync_Error(Context, string.Format("**{0}** has no picture at this index.", species.GetShortName()));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist for {0} [picture]({1}) to **{2}**.",
+                    StringUtils.ToPossessive(species.ShortName),
+                    picture.url,
+                    artist));
 
             }
+            else
+                await BotUtils.ReplyAsync_Error(Context, string.Format("**{0}** has no picture at this index.", species.GetShortName()));
 
         }
-
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, int pictureIndex, IUser user) {
             await SetArtist(string.Empty, speciesName, pictureIndex, user);
         }
-
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, IUser user) {
             await SetArtist(string.Empty, speciesName, user);
         }
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, IUser user) {
             await SetArtist(genusName, speciesName, 1, user);
         }
-        [Command("setartist"), Alias("setcredit")]
+        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, int pictureIndex, IUser user) {
             await SetArtist(genusName, speciesName, pictureIndex, user.Username);
         }

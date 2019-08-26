@@ -77,13 +77,19 @@ namespace OurFoodChain {
 
         }
 
-        public bool CommandIsLoaded(string commandName) {
+        public bool CommandIsInstalled(string commandName) {
+            return GetInstalledCommandByName(commandName) != null;
+        }
+        public CommandInfo GetInstalledCommandByName(string commandName) {
 
             if (_command_service is null)
-                return false;
+                return null;
 
-            return _command_service.Commands
-                .Any(x => x.Name.ToLower() == commandName.ToLower() || x.Aliases.Any(y => y.ToLower() == commandName.ToLower()));
+            foreach (CommandInfo info in _command_service.Commands)
+                if (info.Name.ToLower() == commandName.ToLower() || info.Aliases.Any(y => y.ToLower() == commandName.ToLower()))
+                    return info;
+
+            return null;
 
         }
 
@@ -95,6 +101,11 @@ namespace OurFoodChain {
         public IDiscordClient Client {
             get {
                 return _discord_client;
+            }
+        }
+        public CommandService CommandService {
+            get {
+                return _command_service;
             }
         }
         public Config Config { get; set; } = new Config();
@@ -209,7 +220,7 @@ namespace OurFoodChain {
 
                 // If help documentation exists for this command, display it.
 
-                HelpUtils.CommandInfo command_info = HelpUtils.GetCommandInfo(command_m.Value);
+                CommandHelpInfo command_info = HelpUtils.GetCommandInfo(command_m.Value);
 
                 if (!(command_info is null)) {
 

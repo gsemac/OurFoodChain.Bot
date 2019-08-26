@@ -192,19 +192,14 @@ namespace OurFoodChain {
 
         }
 
-        [Command("addrelationship"), Alias("addrelation")]
+        [Command("addrelationship"), Alias("addrelation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddRelationship(string name) {
 
             await AddRelationship(name, "");
 
         }
-        [Command("addrelationship"), Alias("addrelation")]
+        [Command("addrelationship"), Alias("addrelation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddRelationship(string name, string description) {
-
-            // Ensure that the user has necessary privileges to use this command.
-
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             // If the relationship already exists, warn the user and do not modify the database.
 
@@ -231,19 +226,14 @@ namespace OurFoodChain {
 
         }
 
-        [Command("+relationship"), Alias("+relation")]
+        [Command("+relationship"), Alias("+relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusRelationship(string species1, string species2, string relationship) {
 
             await PlusRelationship("", species1, "", species2, relationship);
 
         }
-        [Command("+relationship"), Alias("+relation")]
+        [Command("+relationship"), Alias("+relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusRelationship(string genus1, string species1, string genus2, string species2, string relationship) {
-
-            // Ensure that the user has necessary privileges to use this command.
-
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             // Get the relationship from the DB.
 
@@ -290,20 +280,15 @@ namespace OurFoodChain {
                 sp1.GetShortName()));
 
         }
-        [Command("-relationship"), Alias("-relation")]
+        [Command("-relationship"), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusRelationship(string species1, string species2, string relationship) {
 
             await MinusRelationship("", species1, "", species2, relationship);
 
 
         }
-        [Command("-relationship"), Alias("-relation")]
+        [Command("-relationship"), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusRelationship(string genus1, string species1, string genus2, string species2, string relationship) {
-
-            // Ensure that the user has necessary privileges to use this command.
-
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             // Get the relationship from the DB.
 

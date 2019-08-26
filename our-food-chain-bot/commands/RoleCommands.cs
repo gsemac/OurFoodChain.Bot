@@ -13,12 +13,8 @@ namespace OurFoodChain {
     public class RoleCommands :
         ModuleBase {
 
-        [Command("addrole")]
+        [Command("addrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddRole(string name, string description = "") {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             Role role = new Role {
                 name = name,
@@ -31,11 +27,11 @@ namespace OurFoodChain {
 
         }
 
-        [Command("+role"), Alias("setrole")]
+        [Command("+role"), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetRole(string species, string role) {
             await SetRole("", species, role, "");
         }
-        [Command("+role"), Alias("setrole")]
+        [Command("+role"), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetRole(string genus, string species, string role, string notes = "") {
 
             // Get the species.
@@ -68,11 +64,11 @@ namespace OurFoodChain {
 
         }
 
-        [Command("-role"), Alias("unsetrole")]
+        [Command("-role"), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemoveRole(string species, string role) {
             await RemoveRole("", species, role);
         }
-        [Command("-role"), Alias("unsetrole")]
+        [Command("-role"), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemoveRole(string genus, string species, string role) {
 
             // Get the species.
@@ -231,12 +227,8 @@ namespace OurFoodChain {
 
         }
 
-        [Command("setroledescription"), Alias("setroledesc")]
+        [Command("setroledescription"), Alias("setroledesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetRoleDescription(string name, string description) {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
-                return;
 
             Role role = await BotUtils.GetRoleFromDb(name);
 

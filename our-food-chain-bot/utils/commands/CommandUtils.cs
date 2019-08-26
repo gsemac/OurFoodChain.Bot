@@ -10,14 +10,9 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public enum PrivilegeLevel {
-        BotAdmin = 0,
-        ServerAdmin,
-        ServerModerator,
-        ServerMember
-    }
-
     public class CommandUtils {
+
+        public const int MAX_EMBED_LENGTH = 2048;
 
         private const int MAX_PAGINATED_MESSAGES = 50;
 
@@ -198,6 +193,45 @@ namespace OurFoodChain {
         public static bool HasPrivilege(IUser user, PrivilegeLevel level) {
 
             return GetPrivilegeLevel(user) <= level;
+
+        }
+        public static PrivilegeLevel GetPrivilegeLevel(CommandInfo commandInfo) {
+
+            if (commandInfo != null) {
+
+                foreach (Attribute attribute in commandInfo.Preconditions) {
+                    
+                    if (attribute is RequirePrivilegeAttribute privilege_attribute)
+                        return privilege_attribute.PrivilegeLevel;
+
+                }
+
+            }
+
+            return PrivilegeLevel.ServerMember;
+
+        }
+
+        public static string PrivilegeLevelToString(PrivilegeLevel privilegeLevel) {
+
+            switch (privilegeLevel) {
+
+                case PrivilegeLevel.BotAdmin:
+                    return "Bot Admin";
+
+                case PrivilegeLevel.ServerAdmin:
+                    return "Admin";
+
+                case PrivilegeLevel.ServerMember:
+                    return "Member";
+
+                case PrivilegeLevel.ServerModerator:
+                    return "Moderator";
+
+                default:
+                    return "Unknown";
+
+            }
 
         }
 

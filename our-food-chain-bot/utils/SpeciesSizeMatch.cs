@@ -11,18 +11,53 @@ namespace OurFoodChain {
 
         Unknown = 0,
 
+        Yoctometers,
+        Zeptometers,
+        Attometers,
+        Femtometers,
+        Picometers,
         Nanometers,
         Micrometers,
         Millimeters,
         Centimeters,
+        Decimeters,
         Meters,
+        Dekameters,
+        Hectometers,
+        Kilometers,
+        Megameters,
+        Gigameters,
+        Terameters,
+        Petameters,
+        Exameters,
+        Zettameters,
+        Yottameters,
 
         METRIC_END,
 
         Inches,
+        Hands,
         Feet,
+        Yards,
+        Fathoms,
+        Perch,
+        Poles,
+        Rods,
+        Chains,
+        Furlongs,
+        Miles,
+        Leagues,
 
-        IMPERIAL_END
+        IMPERIAL_END,
+
+        Angstrom,
+
+        NauticalMiles,
+
+        LightYears,
+        AstronomicalUnits,
+
+        PlankLength
 
     }
 
@@ -240,6 +275,16 @@ namespace OurFoodChain {
 
             switch (Units) {
 
+                case LengthUnit.Yoctometers:
+                    return "ym";
+                case LengthUnit.Zeptometers:
+                    return "zm";
+                case LengthUnit.Attometers:
+                    return "am";
+                case LengthUnit.Femtometers:
+                    return "fm";
+                case LengthUnit.Picometers:
+                    return "pm";
                 case LengthUnit.Nanometers:
                     return "nm";
                 case LengthUnit.Micrometers:
@@ -248,13 +293,69 @@ namespace OurFoodChain {
                     return "mm";
                 case LengthUnit.Centimeters:
                     return "cm";
+                case LengthUnit.Decimeters:
+                    return "dm";
                 case LengthUnit.Meters:
                     return "m";
+                case LengthUnit.Dekameters:
+                    return "dam";
+                case LengthUnit.Hectometers:
+                    return "hm";
+                case LengthUnit.Kilometers:
+                    return "km";
+                case LengthUnit.Megameters:
+                    return "Mm";
+                case LengthUnit.Gigameters:
+                    return "Gm";
+                case LengthUnit.Terameters:
+                    return "Tm";
+                case LengthUnit.Petameters:
+                    return "Pm";
+                case LengthUnit.Exameters:
+                    return "Em";
+                case LengthUnit.Zettameters:
+                    return "Zm";
+                case LengthUnit.Yottameters:
+                    return "Ym";
 
                 case LengthUnit.Inches:
                     return "in";
+                case LengthUnit.Hands:
+                    return "h";
                 case LengthUnit.Feet:
                     return "ft";
+                case LengthUnit.Yards:
+                    return "yd";
+                case LengthUnit.Fathoms:
+                    return "fathoms";
+                case LengthUnit.Perch:
+                    return "perches";
+                case LengthUnit.Poles:
+                    return "poles";
+                case LengthUnit.Rods:
+                    return "rods";
+                case LengthUnit.Chains:
+                    return "chains";
+                case LengthUnit.Furlongs:
+                    return "furlongs";
+                case LengthUnit.Miles:
+                    return "mi";
+                case LengthUnit.Leagues:
+                    return "leagues";
+
+                case LengthUnit.Angstrom:
+                    return "Å";
+
+                case LengthUnit.NauticalMiles:
+                    return "nmi";
+
+                case LengthUnit.LightYears:
+                    return "ly";
+                case LengthUnit.AstronomicalUnits:
+                    return "AU";
+
+                case LengthUnit.PlankLength:
+                    return "ℓP";
 
                 default:
                     return "units";
@@ -265,8 +366,38 @@ namespace OurFoodChain {
         private LengthUnit _parseUnits(string value) {
 
             LengthUnit units = LengthUnit.Unknown;
-
+            
             switch (value.ToLower()) {
+
+                case "ym":
+                case "yoctometer":
+                case "yoctometers":
+                    units = LengthUnit.Yoctometers;
+                    break;
+
+                case "zm":
+                case "zeptometer":
+                case "zeptometers":
+                    units = LengthUnit.Zeptometers;
+                    break;
+
+                case "am":
+                case "attometer":
+                case "attometers":
+                    units = LengthUnit.Attometers;
+                    break;
+
+                case "fm":
+                case "femtometer":
+                case "femtometers":
+                    units = LengthUnit.Femtometers;
+                    break;
+
+                case "pm":
+                case "picometer":
+                case "picometers":
+                    units = LengthUnit.Picometers;
+                    break;
 
                 case "nm":
                 case "nanometer":
@@ -292,10 +423,76 @@ namespace OurFoodChain {
                     units = LengthUnit.Centimeters;
                     break;
 
+                case "dm":
+                case "decimeter":
+                case "decimeters":
+                    units = LengthUnit.Decimeters;
+                    break;
+
                 case "m":
                 case "meter":
                 case "meters":
                     units = LengthUnit.Meters;
+                    break;
+
+                case "dam":
+                case "dekameter":
+                case "dekameters":
+                    units = LengthUnit.Dekameters;
+                    break;
+
+                case "hm":
+                case "hectometer":
+                case "hectometers":
+                    units = LengthUnit.Hectometers;
+                    break;
+
+                case "km":
+                case "kilometer":
+                case "kilometers":
+                    units = LengthUnit.Kilometers;
+                    break;
+
+                case "Mm":
+                case "megameter":
+                case "megameters":
+                    units = LengthUnit.Megameters;
+                    break;
+
+                case "Gm":
+                case "gigameter":
+                case "gigameters":
+                    units = LengthUnit.Gigameters;
+                    break;
+
+                case "Tm":
+                case "terameter":
+                case "terameters":
+                    units = LengthUnit.Terameters;
+                    break;
+
+                case "Pm":
+                case "petameter":
+                case "petameters":
+                    units = LengthUnit.Petameters;
+                    break;
+
+                case "Em":
+                case "exameter":
+                case "exameters":
+                    units = LengthUnit.Exameters;
+                    break;
+
+                case "Zm":
+                case "zettameter":
+                case "zettameters":
+                    units = LengthUnit.Zettameters;
+                    break;
+
+                case "Ym":
+                case "yottameter":
+                case "yottameters":
+                    units = LengthUnit.Yottameters;
                     break;
 
                 case "in":
@@ -304,10 +501,98 @@ namespace OurFoodChain {
                     units = LengthUnit.Inches;
                     break;
 
+                case "h":
+                case "hand":
+                case "hands":
+                    units = LengthUnit.Hands;
+                    break;
+
                 case "ft":
                 case "foot":
                 case "feet":
                     units = LengthUnit.Feet;
+                    break;
+
+                case "yd":
+                case "yard":
+                case "yards":
+                    units = LengthUnit.Yards;
+                    break;
+
+                case "fathom":
+                case "fathoms":
+                    units = LengthUnit.Fathoms;
+                    break;
+
+                case "perch":
+                case "perches":
+                    units = LengthUnit.Perch;
+                    break;
+
+                case "pole":
+                case "poles":
+                    units = LengthUnit.Poles;
+                    break;
+
+                case "rd":
+                case "rod":
+                case "rods":
+                    units = LengthUnit.Rods;
+                    break;
+
+                case "chain":
+                case "chains":
+                    units = LengthUnit.Chains;
+                    break;
+
+                case "furlong":
+                case "furlongs":
+                    units = LengthUnit.Furlongs;
+                    break;
+
+                case "mi":
+                case "mile":
+                case "miles":
+                    units = LengthUnit.Miles;
+                    break;
+
+                case "league":
+                case "leagues":
+                    units = LengthUnit.Leagues;
+                    break;
+
+                case "ångström":
+                case "angstrom":
+                case "Å":
+                    units = LengthUnit.Angstrom;
+                    break;
+
+                case "nautical mile":
+                case "nautical miles":
+                case "nmi":
+                    units = LengthUnit.NauticalMiles;
+                    break;
+
+                case "light-year":
+                case "light year":
+                case "light-years":
+                case "light years":
+                case "ly":
+                    units = LengthUnit.LightYears;
+                    break;
+
+                case "astronomical unit":
+                case "astronomical units":
+                case "au":
+                    units = LengthUnit.AstronomicalUnits;
+                    break;
+
+                case "planck length":
+                case "planck lengths":
+                case "plancks":
+                case "planck":
+                case "ℓp":
+                    units = LengthUnit.PlankLength;
                     break;
 
             }
@@ -319,6 +604,16 @@ namespace OurFoodChain {
 
             switch (units) {
 
+                case LengthUnit.Yoctometers:
+                    return ToMeters() * Math.Pow(10, 24);
+                case LengthUnit.Zeptometers:
+                    return ToMeters() * Math.Pow(10, 21);
+                case LengthUnit.Attometers:
+                    return ToMeters() * Math.Pow(10, 18);
+                case LengthUnit.Femtometers:
+                    return ToMeters() * Math.Pow(10, 15);
+                case LengthUnit.Picometers:
+                    return ToMeters() * Math.Pow(10, 12);
                 case LengthUnit.Nanometers:
                     return ToNanometers();
                 case LengthUnit.Micrometers:
@@ -329,14 +624,68 @@ namespace OurFoodChain {
                     return ToCentimeters();
                 case LengthUnit.Meters:
                     return ToMeters();
+                case LengthUnit.Dekameters:
+                    return ToMeters() / Math.Pow(10, 1);
+                case LengthUnit.Hectometers:
+                    return ToMeters() / Math.Pow(10, 2);
+                case LengthUnit.Kilometers:
+                    return ToMeters() / Math.Pow(10, 3);
+                case LengthUnit.Megameters:
+                    return ToMeters() / Math.Pow(10, 6);
+                case LengthUnit.Gigameters:
+                    return ToMeters() / Math.Pow(10, 9);
+                case LengthUnit.Terameters:
+                    return ToMeters() / Math.Pow(10, 12);
+                case LengthUnit.Petameters:
+                    return ToMeters() / Math.Pow(10, 15);
+                case LengthUnit.Exameters:
+                    return ToMeters() / Math.Pow(10, 18);
+                case LengthUnit.Zettameters:
+                    return ToMeters() / Math.Pow(10, 21);
+                case LengthUnit.Yottameters:
+                    return ToMeters() / Math.Pow(10, 24);
 
-                case LengthUnit.Feet:
-                    return ToFeet();
                 case LengthUnit.Inches:
                     return ToInches();
+                case LengthUnit.Hands:
+                    return ToFeet() * 3.0;
+                case LengthUnit.Feet:
+                    return ToFeet();
+                case LengthUnit.Yards:
+                    return ToFeet() / 3.0;
+                case LengthUnit.Fathoms:
+                    return ToFeet() / 6.0;
+                case LengthUnit.Perch:
+                    return ToFeet() / 16.5;
+                case LengthUnit.Poles:
+                    return _convertValueTo(LengthUnit.Rods);
+                case LengthUnit.Rods:
+                    return ToFeet() / 5.5;
+                case LengthUnit.Chains:
+                    return ToFeet() / 66.0;
+                case LengthUnit.Furlongs:
+                    return _convertValueTo(LengthUnit.Rods) / 40.0;
+                case LengthUnit.Miles:
+                    return _convertValueTo(LengthUnit.Furlongs) / 8.0;
+                case LengthUnit.Leagues:
+                    return _convertValueTo(LengthUnit.Miles) / 3.0;
+
+                case LengthUnit.Angstrom:
+                    return ToInches() * 3.9 * Math.Pow(10, -5);
+
+                case LengthUnit.NauticalMiles:
+                    return _convertValueTo(LengthUnit.Kilometers) / 1.9;
+
+                case LengthUnit.LightYears:
+                    return _convertValueTo(LengthUnit.AstronomicalUnits) / 63000.0;
+                case LengthUnit.AstronomicalUnits:
+                    return _convertValueTo(LengthUnit.Kilometers) / 150000000.0;
+
+                case LengthUnit.PlankLength:
+                    return ToNanometers() * 6.25e+25;
 
                 default:
-                    throw new ArgumentException("Invalid units");
+                    throw new ArgumentException("Invalid units: " + units.ToString());
 
             }
 

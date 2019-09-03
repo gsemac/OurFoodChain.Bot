@@ -1063,10 +1063,10 @@ namespace OurFoodChain {
             EmbedBuilder embed = new EmbedBuilder();
             List<string> lines = new List<string>();
 
-            embed.WithTitle("Matching species");
+            embed.WithTitle(string.Format("Matching species ({0})", speciesList.Count()));
 
             foreach (Species sp in speciesList)
-                lines.Add(GenerateSpeciesName(sp));
+                lines.Add(sp.FullName);
 
             embed.WithDescription(string.Join(Environment.NewLine, lines));
 

@@ -56,7 +56,7 @@ namespace OurFoodChain {
 
             // Get the species from the DB.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -244,12 +244,12 @@ namespace OurFoodChain {
 
             // Get the species from the DB.
 
-            Species sp1 = await BotUtils.ReplyAsync_FindSpecies(Context, genus1, species1);
+            Species sp1 = await BotUtils.ReplyFindSpeciesAsync(Context, genus1, species1);
 
             if (sp1 is null)
                 return;
 
-            Species sp2 = await BotUtils.ReplyAsync_FindSpecies(Context, genus2, species2);
+            Species sp2 = await BotUtils.ReplyFindSpeciesAsync(Context, genus2, species2);
 
             if (sp2 is null)
                 return;
@@ -299,12 +299,12 @@ namespace OurFoodChain {
 
             // Get the species from the DB.
 
-            Species sp1 = await BotUtils.ReplyAsync_FindSpecies(Context, genus1, species1);
+            Species sp1 = await BotUtils.ReplyFindSpeciesAsync(Context, genus1, species1);
 
             if (sp1 is null)
                 return;
 
-            Species sp2 = await BotUtils.ReplyAsync_FindSpecies(Context, genus2, species2);
+            Species sp2 = await BotUtils.ReplyFindSpeciesAsync(Context, genus2, species2);
 
             if (sp2 is null)
                 return;

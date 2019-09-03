@@ -55,7 +55,7 @@ namespace OurFoodChain {
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -336,7 +336,7 @@ namespace OurFoodChain {
                     await BotUtils.ReplyAsync_SpeciesSuggestions(Context, speciesOrGenus, descriptionOrSpecies);
 
             }
-            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {
+            else if (await BotUtils.ReplyValidateSpeciesAsync(Context, species_list)) {
 
                 // A species exists with the given genus/species, so initiate a two-part command.
 
@@ -350,7 +350,7 @@ namespace OurFoodChain {
 
                         Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
 
-                        if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
+                        if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
                             await _setSpeciesDescription(species[0], args.MessageContent);
 
                     }
@@ -365,7 +365,7 @@ namespace OurFoodChain {
         [Command("setspeciesdesc"), Alias("setspeciesdescription", "setsdesc")]
         public async Task SetSpeciesDescription(string genus, string species, string description) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -380,7 +380,7 @@ namespace OurFoodChain {
         [Command("setspeciescommonname"), Alias("setspeciescommon", "setscommon")]
         private async Task SetSpeciesCommonName(string genus, string species, string commonName) {
 
-            Species species_info = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species species_info = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (species_info is null)
                 return;
@@ -422,7 +422,7 @@ namespace OurFoodChain {
         [Command("+commonname"), Alias("+common")]
         private async Task PlusCommonName(string genus, string species, string commonName) {
 
-            Species species_info = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species species_info = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (species_info is null)
                 return;
@@ -454,7 +454,7 @@ namespace OurFoodChain {
         [Command("-commonname"), Alias("-common")]
         private async Task MinusCommonName(string genus, string species, string commonName) {
 
-            Species species_info = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species species_info = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (species_info is null)
                 return;
@@ -536,7 +536,7 @@ namespace OurFoodChain {
                 // If we didn't get any matches, show the user species suggestions.
 
                 if (taxa.Count() <= 0)
-                    await BotUtils.ReplyAsync_FindSpecies(Context, "", taxonNameOrGenus);
+                    await BotUtils.ReplyFindSpeciesAsync(Context, "", taxonNameOrGenus);
 
                 else {
 
@@ -560,7 +560,7 @@ namespace OurFoodChain {
                 }
 
             }
-            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {
+            else if (await BotUtils.ReplyValidateSpeciesAsync(Context, species_list)) {
 
                 // A species exists with the given genus/species, so initiate a two-part command.
 
@@ -574,7 +574,7 @@ namespace OurFoodChain {
 
                         Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
 
-                        if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
+                        if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
                             await _setSpeciesDescription(species[0], args.MessageContent);
 
                     }
@@ -611,7 +611,7 @@ namespace OurFoodChain {
                 await AppendDescription("", species: arg0, description: arg1);
 
             }
-            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list)) {
+            else if (await BotUtils.ReplyValidateSpeciesAsync(Context, species_list)) {
 
                 // Initialize a multistage update for the given species.
 
@@ -629,7 +629,7 @@ namespace OurFoodChain {
         [Command("appenddescription"), Alias("appenddesc", "+desc", "+description")]
         public async Task AppendDescription(string genus, string species, string description) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -713,7 +713,7 @@ namespace OurFoodChain {
             MultistageCommand p = new MultistageCommand(Context) {
                 Callback = async (MultistageCommandCallbackArgs args) => {
 
-                    if (await BotUtils.ReplyAsync_ValidateSpecies(args.Command.Context, species))
+                    if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
                         await _appendDescriptionAsync(species, args.MessageContent);
 
                 }

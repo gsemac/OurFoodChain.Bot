@@ -22,7 +22,7 @@ namespace OurFoodChain {
             // Updates the default picture for the given species.
             // While any users can add pictures for species, only moderators can update the default picture.
 
-            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
             if (species is null)
                 return;
@@ -87,7 +87,7 @@ namespace OurFoodChain {
 
             // Get the species.
 
-            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
             if (species is null)
                 return;
@@ -142,7 +142,7 @@ namespace OurFoodChain {
 
                 // Get the species.
 
-                Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+                Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
                 if (species is null)
                     return;
@@ -180,7 +180,7 @@ namespace OurFoodChain {
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
             --pictureIndex;
 
-            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
             if (species is null)
                 return;
@@ -258,7 +258,7 @@ namespace OurFoodChain {
                 }
 
             }
-            else if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species)) {
+            else if (await BotUtils.ReplyValidateSpeciesAsync(Context, species)) {
 
                 // The requested species does exist, so show its gallery.
                 await _showGallery(species[0]);
@@ -269,7 +269,7 @@ namespace OurFoodChain {
         [Command("gallery"), Alias("pic", "pics", "pictures")]
         public async Task Gallery(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;

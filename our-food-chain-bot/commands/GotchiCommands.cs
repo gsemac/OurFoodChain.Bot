@@ -111,7 +111,7 @@ namespace OurFoodChain.Gotchi {
 
             // Get the species that the user specified.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -259,7 +259,7 @@ namespace OurFoodChain.Gotchi {
 
             Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp))
+            if (!await BotUtils.ReplyValidateSpeciesAsync(Context, sp))
                 return;
 
             // Calculate stats for this gotchi.
@@ -305,7 +305,7 @@ namespace OurFoodChain.Gotchi {
 
             Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
 
-            if (!await BotUtils.ReplyAsync_ValidateSpecies(Context, sp))
+            if (!await BotUtils.ReplyValidateSpeciesAsync(Context, sp))
                 return;
 
             // Get moveset for this gotchi.

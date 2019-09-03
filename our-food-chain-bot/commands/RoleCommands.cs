@@ -36,7 +36,7 @@ namespace OurFoodChain {
 
             // Get the species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -73,7 +73,7 @@ namespace OurFoodChain {
 
             // Get the species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -154,7 +154,7 @@ namespace OurFoodChain {
                 else if (matching_species.Count() > 1)
 
                     // If multiple species were returned, provide a list of matching species for the user to choose from.
-                    await BotUtils.ReplyAsync_ValidateSpecies(Context, matching_species);
+                    await BotUtils.ReplyValidateSpeciesAsync(Context, matching_species);
 
                 if (matching_species.Count() > 0)
                     return;
@@ -186,7 +186,7 @@ namespace OurFoodChain {
         [Command("roles"), Alias("role")]
         public async Task Roles(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (!(sp is null))
                 await Roles(sp);

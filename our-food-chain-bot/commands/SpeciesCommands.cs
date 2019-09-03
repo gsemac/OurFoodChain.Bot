@@ -278,7 +278,7 @@ namespace OurFoodChain.Commands {
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -359,7 +359,7 @@ namespace OurFoodChain.Commands {
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -400,7 +400,7 @@ namespace OurFoodChain.Commands {
             else if (species_list.Count() > 1) {
 
                 // If there are species matches but no unique result, show the user.
-                await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list);
+                await BotUtils.ReplyValidateSpeciesAsync(Context, species_list);
 
             }
             else if (species_list.Count() <= 0) {
@@ -409,7 +409,7 @@ namespace OurFoodChain.Commands {
 
                 species_list = await SpeciesUtils.GetSpeciesAsync(string.Empty, arg0);
 
-                if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species_list))
+                if (await BotUtils.ReplyValidateSpeciesAsync(Context, species_list))
                     await _plusZone(species_list[0], zoneList: arg1, notes: arg2, onlyShowErrors: false);
 
             }
@@ -426,7 +426,7 @@ namespace OurFoodChain.Commands {
             if (!await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator))
                 return;
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (!(sp is null))
                 await _plusZone(sp, zoneList: zoneList, notes: notes, onlyShowErrors: false);
@@ -446,7 +446,7 @@ namespace OurFoodChain.Commands {
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;

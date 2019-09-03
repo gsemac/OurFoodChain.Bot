@@ -26,7 +26,7 @@ namespace OurFoodChain.Commands {
 
             if (species.Count() > 0) {
 
-                if (await BotUtils.ReplyAsync_ValidateSpecies(Context, species))
+                if (await BotUtils.ReplyValidateSpeciesAsync(Context, species))
                     await SpeciesCommandsUtils.ReplySpeciesInfoAsync(Context, species[0]);
 
             }
@@ -328,7 +328,7 @@ namespace OurFoodChain.Commands {
         [Command("+extinct"), Alias("setextinct")]
         public async Task SetExtinct(string genus, string species, string reason) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -363,7 +363,7 @@ namespace OurFoodChain.Commands {
         [Command("-extinct"), Alias("setextant", "unextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusExtinct(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -493,7 +493,7 @@ namespace OurFoodChain.Commands {
         [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
         public async Task Lineage(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -537,7 +537,7 @@ namespace OurFoodChain.Commands {
         [Command("ancestry2"), Alias("lineage2", "anc2")]
         public async Task Lineage2(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -555,7 +555,7 @@ namespace OurFoodChain.Commands {
         [Command("evolution"), Alias("evo")]
         public async Task Evolution(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -573,7 +573,7 @@ namespace OurFoodChain.Commands {
         [Command("migration"), Alias("spread")]
         public async Task Migration(string genusName, string speciesName) {
 
-            Species species = await BotUtils.ReplyAsync_FindSpecies(Context, genusName, speciesName);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
             if (species is null)
                 return;
@@ -697,7 +697,7 @@ namespace OurFoodChain.Commands {
 
             string owner = user.Username;
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -740,13 +740,13 @@ namespace OurFoodChain.Commands {
             Species[] species_array = await BotUtils.GetSpeciesFromDb(genusOrSpecies, speciesOrUnits);
 
             if (species_array.Count() > 1)
-                await BotUtils.ReplyAsync_ValidateSpecies(Context, species_array);
+                await BotUtils.ReplyValidateSpeciesAsync(Context, species_array);
             else if (species_array.Count() == 1)
                 species = species_array[0];
             else if (species_array.Count() <= 0) {
 
                 // If we didn't get any species by treating the arguments as <genus> <species>, attempt to get the species by <species> only.         
-                species = await BotUtils.ReplyAsync_FindSpecies(Context, "", genusOrSpecies);
+                species = await BotUtils.ReplyFindSpeciesAsync(Context, "", genusOrSpecies);
 
                 // If this still fails, there's nothing left to do.
 
@@ -801,7 +801,7 @@ namespace OurFoodChain.Commands {
         [Command("size"), Alias("sz")]
         public async Task Size(string genus, string species, string units) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (!(species is null))
                 await Size(sp, units);
@@ -1048,7 +1048,7 @@ namespace OurFoodChain.Commands {
         [Command("taxonomy"), Alias("taxon")]
         public async Task Taxonomy(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -1426,7 +1426,7 @@ namespace OurFoodChain.Commands {
 
             // Get the requested species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;
@@ -1456,7 +1456,7 @@ namespace OurFoodChain.Commands {
 
             // Get the requested species.
 
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
 
             if (sp is null)
                 return;

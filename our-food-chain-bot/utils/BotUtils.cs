@@ -936,7 +936,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Species> ReplyAsync_FindSpecies(ICommandContext context, string genus, string species) {
+        public static async Task<Species> ReplyFindSpeciesAsync(ICommandContext context, string genus, string species) {
             return await ReplyAsync_FindSpecies(context, genus, species, null);
         }
         public static async Task<Species> ReplyAsync_FindSpecies(ICommandContext context, string genus, string species, Func<ConfirmSuggestionArgs, Task> onConfirmSuggestion) {
@@ -1059,7 +1059,7 @@ namespace OurFoodChain {
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
-        public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species species) {
+        public static async Task<bool> ReplyValidateSpeciesAsync(ICommandContext context, Species species) {
 
             if (species is null || species.id < 0) {
 
@@ -1072,7 +1072,7 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyAsync_ValidateSpecies(ICommandContext context, Species[] speciesList) {
+        public static async Task<bool> ReplyValidateSpeciesAsync(ICommandContext context, Species[] speciesList) {
 
             if (speciesList.Count() <= 0) {
                 await ReplyAsync_NoSuchSpeciesExists(context);

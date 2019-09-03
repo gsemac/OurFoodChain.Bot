@@ -251,6 +251,20 @@ namespace OurFoodChain {
 
     }
 
+    public enum Resolve3ArgumentFindSpeciesAmbiguityCase {
+        Unknown,
+        GenusSpeciesSpecies,
+        SpeciesGenusSpecies
+    }
+
+    public class Resolve3ArgumentFindSpeciesAmbiguityResult {
+
+        public Resolve3ArgumentFindSpeciesAmbiguityCase Case { get; set; } = Resolve3ArgumentFindSpeciesAmbiguityCase.Unknown;
+        public Species Species1 { get; set; } = null;
+        public Species Species2 { get; set; } = null;
+
+    }
+
     class BotUtils {
 
         public const string DEFAULT_SPECIES_DESCRIPTION = "No description provided.";
@@ -1914,6 +1928,124 @@ namespace OurFoodChain {
         public static int RandomInteger(int min, int max) {
 
             return RANDOM.Next(min, max);
+
+        }
+
+
+
+        /// <summary>
+        /// Given three arguments that may be genus/species/species or species/genus/species, resolves the ambiguity and returns the two species.
+        /// </summary>
+        /// <param name="context">Current command context.</param>
+        /// <param name="arg0">First genus or first species.</param>
+        /// <param name="arg1">First species or second genus.</param>
+        /// <param name="arg2">Second species.</param>
+        /// <returns>The pair of species matched by the query arguments.</returns>
+        public static async Task<Resolve3ArgumentFindSpeciesAmbiguityResult> ReplyResolve3ArgumentSpeciesQueryAmbiguityAsync(ICommandContext context, string arg0, string arg1, string arg2) {
+
+            // <genus> <species> <species>
+
+            Species[] query_result = await SpeciesUtils.GetSpeciesAsync(arg0, arg1);
+            Species species_1 = null;
+            Species species_2 = null;
+            Species[] species_2_ambiguous_matches = null;
+
+            if (query_result.Count() > 1) {
+
+                // If the first species is ambiguous even with the genus, it will be without as well.
+
+                await ReplyValidateSpeciesAsync(context, query_result);
+
+                return new Resolve3ArgumentFindSpeciesAmbiguityResult();
+
+            }
+            else if (query_result.Count() == 1) {
+
+                species_1 = query_result[0];
+
+                query_result = await SpeciesUtils.GetSpeciesAsync(arg2);
+
+                if (query_result.Count() > 1) {
+
+                    // If the second species is ambiguous, store the query result to show later.
+                    // It's possible that it won't be ambiguous on the second attempt, so we won't show it for now.
+
+                    species_2_ambiguous_matches = query_result;
+
+                }
+                else if (query_result.Count() == 1) {
+
+                    species_2 = query_result[0];
+
+                    if (species_1 != null && species_2 != null)
+                        return new Resolve3ArgumentFindSpeciesAmbiguityResult {
+                            Case = Resolve3ArgumentFindSpeciesAmbiguityCase.GenusSpeciesSpecies,
+                            Species1 = species_1,
+                            Species2 = species_2
+                        };
+
+                }
+
+            }
+
+            // <species> <genus> <species>
+
+            query_result = await SpeciesUtils.GetSpeciesAsync(arg0);
+
+            if (query_result.Count() > 1) {
+
+                // If the first species is ambiguous, there's nothing we can do.
+
+                await ReplyValidateSpeciesAsync(context, query_result);
+
+                return new Resolve3ArgumentFindSpeciesAmbiguityResult();
+
+            }
+            else if (query_result.Count() == 1) {
+
+                // In this case, we will show if the second species is ambiguous, as there are no further cases to check.
+
+                species_1 = query_result[0];
+
+                query_result = await SpeciesUtils.GetSpeciesAsync(arg1, arg2);
+
+                if (query_result.Count() > 1) {
+
+                    await ReplyValidateSpeciesAsync(context, query_result);
+
+                    return new Resolve3ArgumentFindSpeciesAmbiguityResult();
+
+                }
+                else if (query_result.Count() == 1) {
+
+                    species_2 = query_result[0];
+
+                    return new Resolve3ArgumentFindSpeciesAmbiguityResult {
+                        Case = Resolve3ArgumentFindSpeciesAmbiguityCase.SpeciesGenusSpecies,
+                        Species1 = species_1,
+                        Species2 = species_2
+                    };
+
+                }
+
+            }
+
+            // If we get here, we were not able to unambiguously figure out what the intended species are, or one of them didn't exist.
+
+            if (species_1 is null && species_2 is null)
+                await ReplyAsync_Error(context, "The given species could not be determined.");
+            else if (species_1 is null)
+                await ReplyAsync_Error(context, "The first species could not be determined.");
+            else if (species_2 is null) {
+
+                if (species_2_ambiguous_matches != null)
+                    await ReplyValidateSpeciesAsync(context, species_2_ambiguous_matches);
+                else
+                    await ReplyAsync_Error(context, "The second species could not be determined.");
+
+            }
+
+            return new Resolve3ArgumentFindSpeciesAmbiguityResult();
 
         }
 

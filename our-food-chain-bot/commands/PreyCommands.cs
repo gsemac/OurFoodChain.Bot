@@ -97,36 +97,29 @@ namespace OurFoodChain {
         }
 
         [Command("-prey")]
-        public async Task RemovePrey(string species, string eatsSpecies) {
-            await RemovePrey("", species, "", eatsSpecies);
+        public async Task RemovePrey(string speciesName, string preySpeciesName) {
+            await RemovePrey(string.Empty, speciesName, string.Empty, preySpeciesName);
         }
         [Command("-prey")]
-        public async Task RemovePrey(string genus, string species, string eatsGenus, string eatsSpecies) {
+        public async Task RemovePrey(string arg0, string arg1, string arg2) {
 
-            // Get the predator and prey species.
+            // We have the following possibilities:
+            // <genusName> <speciesName> <preySpeciesName>
+            // <speciesName> <preyGenusName> <preySpeciesName>
 
-            Species predator = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-            Species prey = await BotUtils.ReplyFindSpeciesAsync(Context, eatsGenus, eatsSpecies);
+            Resolve3ArgumentFindSpeciesAmbiguityResult result = await BotUtils.ReplyResolve3ArgumentSpeciesQueryAmbiguityAsync(Context, arg0, arg1, arg2);
 
-            if (predator is null || prey is null)
-                return;
+            if (result.Case != Resolve3ArgumentFindSpeciesAmbiguityCase.Unknown)
+                await _removePrey(result.Species1, result.Species2);
 
-            // Remove the relationship.
+        }
+        [Command("-prey")]
+        public async Task RemovePrey(string genusName, string speciesName, string preyGenusName, string preySpeciesName) {
 
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, predator))
-                return;
+            Species predator = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            Species prey = predator is null ? null : await BotUtils.ReplyFindSpeciesAsync(Context, preyGenusName, preySpeciesName);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Predates WHERE species_id=$species_id AND eats_id=$eats_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", predator.id);
-                cmd.Parameters.AddWithValue("$eats_id", prey.id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer preys upon **{1}**.", predator.GetShortName(), prey.GetShortName()));
+            await _removePrey(predator, prey);
 
         }
 
@@ -318,6 +311,45 @@ namespace OurFoodChain {
                 species.GetShortName(),
                 StringUtils.ConjunctiveJoin(", ", preySpecies.Select(x => string.Format("**{0}**", x.GetShortName())).ToArray())
                 ));
+
+        }
+
+        private async Task _removePrey(Species predatorSpecies, Species preySpecies) {
+
+            if (predatorSpecies is null || preySpecies is null)
+                return;
+
+            // Remove the relationship.
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, predatorSpecies))
+                return;
+
+            Species[] existing_prey = await SpeciesUtils.GetPreyAsync(predatorSpecies);
+
+            if (existing_prey.Any(x => x.id == preySpecies.id)) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Predates WHERE species_id = $species_id AND eats_id = $eats_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", predatorSpecies.id);
+                    cmd.Parameters.AddWithValue("$eats_id", preySpecies.id);
+
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer preys upon **{1}**.",
+                    predatorSpecies.GetShortName(),
+                    preySpecies.GetShortName()));
+
+            }
+            else {
+
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** does not prey upon **{1}**.",
+                   predatorSpecies.GetShortName(),
+                   preySpecies.GetShortName()));
+
+            }
 
         }
 

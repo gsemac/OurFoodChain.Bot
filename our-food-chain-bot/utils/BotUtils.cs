@@ -13,244 +13,6 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    class Family {
-
-        public long id;
-        public long order_id;
-        public string name;
-        public string description;
-
-        public Family() {
-
-            id = -1;
-            order_id = 0;
-
-        }
-
-        public string GetDescriptionOrDefault() {
-
-            if (string.IsNullOrEmpty(description))
-                return BotUtils.DEFAULT_DESCRIPTION;
-
-            return description;
-
-        }
-
-        public static Family FromDataRow(DataRow row) {
-
-            Family result = new Family {
-                id = row.Field<long>("id"),
-                name = row.Field<string>("name"),
-                description = row.Field<string>("description")
-            };
-
-            result.order_id = (row["order_id"] == DBNull.Value) ? 0 : row.Field<long>("order_id");
-
-            return result;
-
-        }
-
-    }
-
-    public class Genus {
-
-        public long id;
-        public long family_id;
-        public string name;
-        public string description;
-        public string pics;
-
-        public static Genus FromDataRow(DataRow row) {
-
-            Genus result = new Genus {
-                id = row.Field<long>("id"),
-                name = row.Field<string>("name"),
-                description = row.Field<string>("description"),
-                pics = row.Field<string>("pics")
-            };
-
-            result.family_id = (row["family_id"] == DBNull.Value) ? 0 : row.Field<long>("family_id");
-
-            return result;
-
-        }
-
-    }
-
-    public class Species :
-        IComparable<Species> {
-
-        public long id;
-        public long genusId;
-        public string name;
-        public string description;
-        public string owner;
-        public long user_id;
-        public long timestamp;
-        public string pics;
-        public string commonName;
-
-        // fields that stored directly in the table
-        public string genus;
-        public bool isExtinct;
-
-        public string GenusName {
-            get {
-                return StringUtils.ToTitleCase(genus);
-            }
-        }
-
-        public string CommonName {
-            get {
-                return new CommonName(commonName).Value;
-            }
-        }
-        public string FullName {
-            get {
-                return GetFullName();
-            }
-        }
-        public string ShortName {
-            get {
-                return GetShortName();
-            }
-        }
-        public string Name {
-            get {
-
-                if (string.IsNullOrEmpty(name))
-                    return "";
-
-                return name.ToLower();
-
-            }
-        }
-
-        public static async Task<Species> FromDataRow(DataRow row, Genus genusInfo) {
-
-            Species species = new Species {
-                id = row.Field<long>("id"),
-                genusId = row.Field<long>("genus_id"),
-                name = row.Field<string>("name"),
-                // The genus should never be null, but there was instance where a user manually edited the database and the genus ID was invalid.
-                // We should at least try to handle this situation gracefully.
-                genus = genusInfo is null ? "?" : genusInfo.name,
-                description = row.Field<string>("description"),
-                owner = row.Field<string>("owner"),
-                timestamp = (long)row.Field<decimal>("timestamp"),
-                commonName = row.Field<string>("common_name"),
-                pics = row.Field<string>("pics")
-            };
-
-            species.user_id = row.IsNull("user_id") ? -1 : row.Field<long>("user_id");
-            species.isExtinct = false;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", species.id);
-
-                if (!(await Database.GetRowAsync(cmd) is null))
-                    species.isExtinct = true;
-
-            }
-
-            return species;
-
-        }
-        public static async Task<Species> FromDataRow(DataRow row) {
-
-            long genus_id = row.Field<long>("genus_id");
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus_id);
-
-            return await FromDataRow(row, genus_info);
-
-        }
-
-        public string GetShortName() {
-
-            return BotUtils.GenerateSpeciesName(this);
-
-        }
-        public string GetFullName() {
-
-            return string.Format("{0} {1}", StringUtils.ToTitleCase(genus), name.ToLower());
-
-        }
-        public string GetTimeStampAsDateString() {
-            return BotUtils.GetTimeStampAsDateString(timestamp);
-        }
-        public string GetDescriptionOrDefault() {
-
-            if (string.IsNullOrEmpty(description))
-                return BotUtils.DEFAULT_SPECIES_DESCRIPTION;
-
-            return description;
-
-        }
-        public async Task<string> GetOwnerOrDefault(ICommandContext context) {
-
-            string result = owner;
-
-            if (!(context is null || context.Guild is null) && user_id > 0) {
-
-                IUser user = await context.Guild.GetUserAsync((ulong)user_id);
-
-                if (!(user is null))
-                    result = user.Username;
-
-            }
-
-            if (string.IsNullOrEmpty(result))
-                result = "?";
-
-            return result;
-
-        }
-
-        public int CompareTo(Species other) {
-
-            return GetShortName().CompareTo(other.GetShortName());
-
-        }
-    }
-
-    public class Role {
-
-        public long id;
-        public string name;
-        public string description;
-
-        public string notes;
-
-        public string Name {
-            get { return StringUtils.ToSentenceCase(name); }
-        }
-
-        public string GetDescriptionOrDefault() {
-
-            if (string.IsNullOrEmpty(description))
-                return BotUtils.DEFAULT_DESCRIPTION;
-
-            return description;
-
-        }
-        public string GetShortDescription() {
-            return StringUtils.GetFirstSentence(GetDescriptionOrDefault());
-        }
-
-        public static Role FromDataRow(DataRow row) {
-
-            Role role = new Role();
-            role.id = row.Field<long>("id");
-            role.name = row.Field<string>("name");
-            role.description = row.Field<string>("description");
-
-            return role;
-
-        }
-
-    }
-
     public enum Resolve3ArgumentFindSpeciesAmbiguityCase {
         Unknown,
         GenusSpeciesSpecies,
@@ -402,13 +164,14 @@ namespace OurFoodChain {
 
         public static async Task AddGenusToDb(string genus) {
 
-            Genus genus_info = new Genus();
-            genus_info.name = genus;
+            Taxon genus_info = new Taxon(TaxonRank.Genus) {
+                name = genus
+            };
 
             await AddGenusToDb(genus_info);
 
         }
-        public static async Task AddGenusToDb(Genus genus) {
+        public static async Task AddGenusToDb(Taxon genus) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Genus(name, description) VALUES($name, $description);")) {
 
@@ -420,7 +183,7 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task<Genus> GetGenusFromDb(string genus) {
+        public static async Task<Taxon> GetGenusFromDb(string genus) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE name=$genus;")) {
 
@@ -429,14 +192,14 @@ namespace OurFoodChain {
                 DataRow row = await Database.GetRowAsync(cmd);
 
                 if (!(row is null))
-                    return Genus.FromDataRow(row);
+                    return Taxon.FromDataRow(row, TaxonRank.Genus);
 
             }
 
             return null;
 
         }
-        public static async Task<Genus> GetGenusFromDb(long genusId) {
+        public static async Task<Taxon> GetGenusFromDb(long genusId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE id=$genus_id;")) {
 
@@ -445,16 +208,16 @@ namespace OurFoodChain {
                 DataRow row = await Database.GetRowAsync(cmd);
 
                 if (!(row is null))
-                    return Genus.FromDataRow(row);
+                    return Taxon.FromDataRow(row, TaxonRank.Genus);
 
             }
 
             return null;
 
         }
-        public static async Task<Genus[]> GetGeneraFromDb(Family family) {
+        public static async Task<Taxon[]> GetGeneraFromDb(Taxon family) {
 
-            List<Genus> genera = new List<Genus>();
+            List<Taxon> genera = new List<Taxon>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE family_id=$family_id ORDER BY name ASC;")) {
 
@@ -463,7 +226,7 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     foreach (DataRow row in rows.Rows)
-                        genera.Add(Genus.FromDataRow(row));
+                        genera.Add(Taxon.FromDataRow(row, TaxonRank.Genus));
 
                 }
 
@@ -472,13 +235,13 @@ namespace OurFoodChain {
             return genera.ToArray();
 
         }
-        public static async Task UpdateGenusInDb(Genus genus) {
+        public static async Task UpdateGenusInDb(Taxon genus) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Genus SET name=$name, description=$description, family_id=$family_id WHERE id=$genus_id;")) {
 
                 cmd.Parameters.AddWithValue("$name", genus.name);
                 cmd.Parameters.AddWithValue("$description", genus.description);
-                cmd.Parameters.AddWithValue("$family_id", genus.family_id);
+                cmd.Parameters.AddWithValue("$family_id", genus.parent_id);
                 cmd.Parameters.AddWithValue("$genus_id", genus.id);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -1126,7 +889,7 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyAsync_ValidateGenus(ICommandContext context, Genus genus) {
+        public static async Task<bool> ReplyAsync_ValidateGenus(ICommandContext context, Taxon genus) {
 
             if (genus is null || genus.id <= 0) {
 

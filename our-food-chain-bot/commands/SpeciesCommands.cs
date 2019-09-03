@@ -310,7 +310,7 @@ namespace OurFoodChain.Commands {
 
             await BotUtils.AddGenusToDb(genus);
 
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
+            Taxon genus_info = await BotUtils.GetGenusFromDb(genus);
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp, user_id) VALUES($name, $description, $genus_id, $owner, $timestamp, $user_id);")) {
 

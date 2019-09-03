@@ -1290,7 +1290,7 @@ namespace OurFoodChain.Commands {
                     long genus_id = row.Field<long>("genus_id");
                     genus_count = row.Field<long>("count");
 
-                    Genus genus = await BotUtils.GetGenusFromDb(genus_id);
+                    Taxon genus = await BotUtils.GetGenusFromDb(genus_id);
 
                     favorite_genus = genus.name;
 

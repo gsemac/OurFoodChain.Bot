@@ -32,9 +32,10 @@ namespace OurFoodChain {
 
             }
 
-            Genus genus_info = new Genus();
-            genus_info.name = genus;
-            genus_info.description = description;
+            Taxon genus_info = new Taxon(TaxonRank.Genus) {
+                name = genus,
+                description = description
+            };
 
             await BotUtils.AddGenusToDb(genus_info);
 
@@ -62,7 +63,7 @@ namespace OurFoodChain {
 
             // Get the specified genus.
 
-            Genus genus_info = await BotUtils.GetGenusFromDb(newGenus);
+            Taxon genus_info = await BotUtils.GetGenusFromDb(newGenus);
 
             if (!await BotUtils.ReplyAsync_ValidateGenus(Context, genus_info))
                 return;

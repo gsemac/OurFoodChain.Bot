@@ -675,7 +675,7 @@ namespace OurFoodChain {
         }
         private static async Task<Species> _getSpeciesByGenusAndSpeciesNameAsync(string genus, string species) {
 
-            Genus genus_info = await BotUtils.GetGenusFromDb(genus);
+            Taxon genus_info = await BotUtils.GetGenusFromDb(genus);
 
             // If the genus doesn't exist, the species cannot possibly exist either.
 

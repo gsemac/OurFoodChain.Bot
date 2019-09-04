@@ -801,7 +801,7 @@ namespace OurFoodChain {
                 Message = sb.ToString()
             };
 
-            if (!(onConfirmSuggestion is null)) {
+            if (onConfirmSuggestion != null && !string.IsNullOrEmpty(suggestion)) {
 
                 message_content.AddReaction("👍");
                 message_content.SetCallback(async (CommandUtils.PaginatedMessageCallbackArgs args) => {

@@ -1,0 +1,1 @@
+﻿CREATE TABLE IF NOT EXISTS Period(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_ts TEXT, end_ts TEXT, description TEXT, UNIQUE(name));

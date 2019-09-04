@@ -1,0 +1,1 @@
+﻿ALTER TABLE SpeciesRoles ADD COLUMN notes TEXT;

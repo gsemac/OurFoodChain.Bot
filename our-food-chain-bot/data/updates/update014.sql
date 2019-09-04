@@ -1,0 +1,1 @@
+﻿ALTER TABLE Zones ADD COLUMN pics TEXT;

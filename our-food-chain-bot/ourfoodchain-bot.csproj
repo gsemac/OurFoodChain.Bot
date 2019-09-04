@@ -404,6 +404,7 @@
     <None Include="data\help\trophy.json" />
     <None Include="data\help\trophylist.json" />
     <None Include="data\help\zone.json" />
+    <None Include="data\updates\config.json" />
     <None Include="packages.config" />
     <None Include="data\gotchi\moves\infest.lua" />
     <None Include="data\gotchi\moves\leaf-bite.lua" />
@@ -444,6 +445,29 @@
     <None Include="data\help\+prey.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="data\updates\update001.sql" />
+    <Content Include="data\updates\update010.sql" />
+    <Content Include="data\updates\update002.sql" />
+    <Content Include="data\updates\update003.sql" />
+    <Content Include="data\updates\update004.sql" />
+    <Content Include="data\updates\update005.sql" />
+    <Content Include="data\updates\update006.sql" />
+    <Content Include="data\updates\update007.sql" />
+    <Content Include="data\updates\update008.sql" />
+    <Content Include="data\updates\update009.sql" />
+    <Content Include="data\updates\update011.sql" />
+    <Content Include="data\updates\update012.sql" />
+    <Content Include="data\updates\update013.sql" />
+    <Content Include="data\updates\update014.sql" />
+    <Content Include="data\updates\update015.sql" />
+    <Content Include="data\updates\update016.sql" />
+    <Content Include="data\updates\update017.sql" />
+    <Content Include="data\updates\update018.sql" />
+    <Content Include="data\updates\update019.sql" />
+    <Content Include="data\updates\update020.sql" />
+    <Content Include="data\updates\update021.sql" />
+    <Content Include="data\updates\update022.sql" />
+    <Content Include="data\updates\update023.sql" />
     <None Include="data\gotchi\moves\seed_drop.lua" />
     <None Include="data\gotchi\moves\vine_strangle.lua" />
     <Content Include="data\gotchi\images\bubble_dead.png" />

@@ -1,0 +1,2 @@
+﻿-- Adds support for storing Gotchi user information (currency, gotchi limit, etc.).
+CREATE TABLE IF NOT EXISTS GotchiUser(user_id INTEGER PRIMARY KEY, g INTEGER, gotchi_limit INTEGER, primary_gotchi_id INTEGER);

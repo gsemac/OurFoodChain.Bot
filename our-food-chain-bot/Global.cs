@@ -16,6 +16,8 @@ namespace OurFoodChain {
         public static string GotchiItemsDirectory { get; } = GotchiDataDirectory + "items/";
         public static string GotchiImagesDirectory { get; } = GotchiDataDirectory + "images/";
 
+        public static string DatabaseUpdatesDirectory { get; } = DataDirectory + "updates/";
+
         public static Trophies.TrophyRegistry TrophyRegistry { get; } = new Trophies.TrophyRegistry();
         public static Trophies.TrophyScanner TrophyScanner { get; } = new Trophies.TrophyScanner(TrophyRegistry);
 

@@ -1,0 +1,1 @@
+﻿ALTER TABLE Species ADD COLUMN owner TEXT;

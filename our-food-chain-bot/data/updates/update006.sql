@@ -1,0 +1,1 @@
+﻿ALTER TABLE Predates ADD COLUMN notes TEXT;

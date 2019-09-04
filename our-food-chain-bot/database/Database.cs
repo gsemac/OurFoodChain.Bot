@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -145,7 +146,14 @@ namespace OurFoodChain {
 
                 await conn.OpenAsync();
 
-                await new DatabaseUpdater(conn).UpdateToLatestVersionAsync();
+                // Load database updater config.
+
+                string config_fname = System.IO.Path.Combine(Global.DatabaseUpdatesDirectory, "config.json");
+                DatabaseUpdaterConfig config = JsonConvert.DeserializeObject<DatabaseUpdaterConfig>(System.IO.File.ReadAllText(config_fname));
+
+                config.UpdatesDirectory = Global.DatabaseUpdatesDirectory;
+
+                await new DatabaseUpdater(conn, config).UpdateToLatestVersionAsync();
 
                 conn.Close();
 

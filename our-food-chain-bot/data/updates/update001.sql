@@ -1,0 +1,7 @@
+﻿CREATE TABLE IF NOT EXISTS Zones(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, description TEXT, UNIQUE(name, type));
+CREATE TABLE IF NOT EXISTS Phylum(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);
+CREATE TABLE IF NOT EXISTS Genus(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, description TEXT);
+CREATE TABLE IF NOT EXISTS Species(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, genus_id INTEGER, timestamp NUMERIC, UNIQUE(name, genus_id), FOREIGN KEY(genus_id) REFERENCES Genus(id));
+CREATE TABLE IF NOT EXISTS SpeciesZones(species_id INTEGER, zone_id INTEGER, notes TEXT, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(zone_id) REFERENCES Zones(id), PRIMARY KEY(species_id, zone_id));
+CREATE TABLE IF NOT EXISTS Extinctions(species_id INTEGER PRIMARY KEY, reason TEXT, timestamp NUMERIC, FOREIGN KEY(species_id) REFERENCES Species(id));
+CREATE TABLE IF NOT EXISTS Ancestors(species_id INTEGER PRIMARY KEY, ancestor_id INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(ancestor_id) REFERENCES Species(id));

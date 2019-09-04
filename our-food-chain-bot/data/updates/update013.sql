@@ -1,0 +1,7 @@
+﻿ALTER TABLE Genus ADD COLUMN common_name TEXT;
+ALTER TABLE Family ADD COLUMN common_name TEXT;
+ALTER TABLE Ord ADD COLUMN common_name TEXT;
+ALTER TABLE Class ADD COLUMN common_name TEXT;
+ALTER TABLE Phylum ADD COLUMN common_name TEXT;
+ALTER TABLE Kingdom ADD COLUMN common_name TEXT;
+ALTER TABLE Domain ADD COLUMN common_name TEXT;

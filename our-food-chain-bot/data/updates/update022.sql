@@ -1,0 +1,2 @@
+﻿-- Adds support for multiple common names for species.
+CREATE TABLE IF NOT EXISTS SpeciesCommonNames(species_id INTEGER, name TEXT, FOREIGN KEY(species_id) REFERENCES Species(id), UNIQUE(species_id, name));

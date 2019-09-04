@@ -349,7 +349,7 @@ namespace OurFoodChain.Gotchi {
             if (string.IsNullOrEmpty(fname))
                 return;
 
-            fname = System.IO.Path.Combine(Global.GOTCHI_DATA_DIRECTORY, fname);
+            fname = System.IO.Path.Combine(Global.GotchiImagesDirectory, fname);
 
             if (!System.IO.File.Exists(fname))
                 return;
@@ -420,7 +420,7 @@ namespace OurFoodChain.Gotchi {
         }
         private void _drawFood(Graphics gfx) {
 
-            string food_fname = Global.GOTCHI_DATA_DIRECTORY + "flakes.png";
+            string food_fname = Global.GotchiImagesDirectory + "flakes.png";
 
             if (System.IO.File.Exists(food_fname))
                 using (Bitmap food_image = new Bitmap(food_fname))

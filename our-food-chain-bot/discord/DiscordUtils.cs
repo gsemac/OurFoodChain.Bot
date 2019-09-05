@@ -43,7 +43,7 @@ namespace OurFoodChain {
         public static Color ConvertColor(System.Drawing.Color color) {
             return new Color(color.R, color.G, color.B);
         }
-        public static bool StringIsEmoji(string input) {
+        public static bool IsEmoji(string input) {
 
             // This regex was taken from https://stackoverflow.com/a/40950241/5383169
 

@@ -1812,6 +1812,29 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task ZonesToEmbedPagesAsync(PaginatedEmbedBuilder embed, Zone[] zones, bool showIcon = true) {
+
+            List<string> lines = new List<string>();
+            int zones_per_page = 20;
+            int max_line_length = Math.Min(showIcon ? 78 : 80, (EmbedUtils.MAX_EMBED_LENGTH - embed.Length) / zones_per_page);
+
+            foreach (Zone zone in zones) {
+
+                ZoneType type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId);
+
+                string line = string.Format("{1} **{0}**\t-\t{2}", StringUtils.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.GetShortDescription());
+
+                if (line.Length > max_line_length)
+                    line = line.Substring(0, max_line_length - 3) + "...";
+
+                lines.Add(line);
+
+            }
+
+            embed.AddPages(EmbedUtils.LinesToEmbedPages(lines, 20));
+
+        }
+
     }
 
 }

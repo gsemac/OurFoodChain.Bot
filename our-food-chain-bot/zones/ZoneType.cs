@@ -15,29 +15,40 @@ namespace OurFoodChain {
         public const string DefaultIcon = "❓";
 
         public long Id { get; set; } = NullZoneTypeId;
-        public string Name { get; set; } = "Unclassified";
+        public string Name {
+            get {
+                return StringUtils.ToTitleCase(_name);
+            }
+            set {
+                _name = value;
+            }
+        }
         public string Icon { get; set; } = DefaultIcon;
         public Color Color { get; set; } = DefaultColor;
         public string Description { get; set; } = "";
 
         public bool SetColor(string colorHex) {
 
-            try {
+            if (StringUtils.TryParseColor(colorHex, out Color result)) {
 
-                Color = ColorTranslator.FromHtml(colorHex);
+                Color = result;
 
                 return true;
 
             }
-            catch (Exception) {
 
-                Color = DefaultColor;
-
-                return false;
-
-            }
+            return false;
 
         }
+        public bool SetColor(Color color) {
+
+            Color = color;
+
+            return true;
+
+        }
+
+        private string _name = "Unclassified";
 
     }
 

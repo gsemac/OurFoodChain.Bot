@@ -159,11 +159,11 @@ namespace OurFoodChain {
 
         public static async Task AddZoneTypeAsync(ZoneType type) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO ZoneTypes(name, icon, color, description) VALUES($name, $icon, $color, $description)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO ZoneTypes(name, icon, color, description) VALUES($name, $icon, $color, $description)")) {
 
-                cmd.Parameters.AddWithValue("$name", type.Name);
+                cmd.Parameters.AddWithValue("$name", type.Name.ToLower());
                 cmd.Parameters.AddWithValue("$icon", type.Icon);
-                cmd.Parameters.AddWithValue("$color", ColorTranslator.ToHtml(type.Color));
+                cmd.Parameters.AddWithValue("$color", ColorTranslator.ToHtml(type.Color).ToLower());
                 cmd.Parameters.AddWithValue("$description", type.Description);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -240,6 +240,14 @@ namespace OurFoodChain {
             catch (Exception) { }
 
             return result;
+
+        }
+        public static bool ZoneTypeIsValid(ZoneType zoneType) {
+
+            if (zoneType is null || zoneType.Id == ZoneType.NullZoneTypeId)
+                return false;
+
+            return true;
 
         }
 

@@ -407,6 +407,7 @@
     <None Include="data\help\trophy.json" />
     <None Include="data\help\trophylist.json" />
     <None Include="data\help\zone.json" />
+    <None Include="data\help\zonetype.json" />
     <None Include="data\updates\config.json" />
     <None Include="packages.config" />
     <None Include="data\gotchi\moves\infest.lua" />

@@ -9,6 +9,37 @@ namespace OurFoodChain {
 
     public class PaginatedEmbedBuilder {
 
+        public string Message { get; set; }
+        public string Title {
+            get {
+                return _title;
+            }
+            set {
+                _title = value;
+            }
+        }
+        public string Description {
+            get {
+                return _description;
+            }
+            set {
+                _description = value;
+            }
+        }
+        public int Length {
+            get {
+                return _pages.Count > 0 ? _pages[0].Length : 0;
+            }
+        }
+        public Color Color {
+            get {
+                return _color;
+            }
+            set {
+                _color = value;
+            }
+        }
+
         public PaginatedEmbedBuilder() { }
         public PaginatedEmbedBuilder(List<EmbedBuilder> pages) {
 
@@ -84,6 +115,22 @@ namespace OurFoodChain {
 
         public void AddPages(IEnumerable<EmbedBuilder> pages) {
 
+            if (!string.IsNullOrEmpty(Title))
+                pages.ToList().ForEach(x => {
+                    x.Title = string.IsNullOrEmpty(x.Title) ? Title : x.Title;
+                });
+
+            if (!string.IsNullOrEmpty(Description))
+                pages.ToList().ForEach(x => {
+                    if (!x.Description.StartsWith(Description))
+                        x.Description = Description + x.Description;
+                });
+
+            if (Color != Color.DarkGrey)
+                pages.ToList().ForEach(x => {
+                    x.Color = Color;
+                });
+
             _pages.AddRange(pages);
 
         }
@@ -134,7 +181,9 @@ namespace OurFoodChain {
 
         }
 
-        public string Message { get; set; }
+        private string _title = "";
+        private string _description = "";
+        private Color _color = Color.DarkGrey;
 
         private List<EmbedBuilder> _pages = new List<EmbedBuilder>();
         private Action<CommandUtils.PaginatedMessageCallbackArgs> _callback;

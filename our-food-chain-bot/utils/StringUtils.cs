@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -213,6 +214,25 @@ namespace OurFoodChain {
             return string.Join(", ", ranges
                 .Select(x => x.Count() <= 2 ? string.Join(", ", x) : string.Format("{0}-{1}", x.First(), x.Last()))
                 .ToArray());
+
+        }
+
+        public static bool TryParseColor(string input, out Color result) {
+
+            try {
+
+                result = ColorTranslator.FromHtml(input);
+
+                return true;
+
+            }
+            catch (Exception) {
+
+                result = Color.Black;
+
+                return false;
+
+            }
 
         }
 

@@ -39,6 +39,10 @@ namespace OurFoodChain {
 
         }
 
+        public static Color ConvertColor(System.Drawing.Color color) {
+            return new Color(color.R, color.G, color.B);
+        }
+
     }
 
 }

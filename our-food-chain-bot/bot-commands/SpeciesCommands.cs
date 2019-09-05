@@ -51,11 +51,11 @@ namespace OurFoodChain.Commands {
 
             if (zone_list.Count() > 0) {
 
-                embed_color = zone_list
-                    .GroupBy(x => ZoneUtils.GetZoneColor(x.Zone.Type))
+                embed_color = DiscordUtils.ConvertColor((await ZoneUtils.GetZoneTypeAsync(zone_list
+                    .GroupBy(x => x.Zone.ZoneTypeId)
                     .OrderBy(x => x.Count())
                     .Last()
-                    .Key;
+                    .Key)).Color);
 
             }
 

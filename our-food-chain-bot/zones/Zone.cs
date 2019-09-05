@@ -8,18 +8,12 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public enum ZoneType {
-        Unknown,
-        Aquatic,
-        Terrestrial
-    }
-
     public class Zone {
 
         public long Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public ZoneType Type { get; set; }
+        public long ZoneTypeId { get; set; } = ZoneType.NullZoneTypeId;
         public string Pics { get; set; }
 
         public string ShortName {
@@ -35,24 +29,6 @@ namespace OurFoodChain {
         public string ShortDescription {
             get {
                 return GetShortDescription();
-            }
-        }
-        public string Icon {
-            get {
-
-                switch (Type) {
-
-                    case ZoneType.Aquatic:
-                        return "🌊";
-
-                    case ZoneType.Terrestrial:
-                        return "🌳";
-
-                    default:
-                        return "❓";
-
-                }
-
             }
         }
 

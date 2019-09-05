@@ -47,7 +47,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones;"))
             using (DataTable rows = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in rows.Rows)
-                    zones.Add(ZoneUtils.FromDataRow(row));
+                    zones.Add(ZoneUtils.ZoneFromDataRow(row));
 
             return zones.ToArray();
 

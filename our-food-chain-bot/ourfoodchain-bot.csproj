@@ -204,6 +204,7 @@
     <Compile Include="bot-commands\RoleCommands.cs" />
     <Compile Include="bot-commands\SpeciesCommands.cs" />
     <Compile Include="bot-commands\TaxonCommands.cs" />
+    <Compile Include="bot-commands\ZoneCommands.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
@@ -271,6 +272,7 @@
     <Compile Include="utils\Utils.cs" />
     <Compile Include="zones\Zone.cs" />
     <Compile Include="zones\ZoneListResult.cs" />
+    <Compile Include="zones\ZoneType.cs" />
     <Compile Include="zones\ZoneUtils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -468,6 +470,7 @@
     <Content Include="data\updates\update021.sql" />
     <Content Include="data\updates\update022.sql" />
     <Content Include="data\updates\update023.sql" />
+    <Content Include="data\updates\update024.sql" />
     <None Include="data\gotchi\moves\seed_drop.lua" />
     <None Include="data\gotchi\moves\vine_strangle.lua" />
     <Content Include="data\gotchi\images\bubble_dead.png" />

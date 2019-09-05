@@ -231,17 +231,13 @@ namespace OurFoodChain.Trophies {
             return await _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(item, "warm|hot|desert|tropical");
         }
         private async Task<bool> _checkTrophy_atlantean(TrophyScanner.ScannerQueueItem item) {
-            return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, ZoneType.Aquatic);
+            return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, new string[] { "aquatic" });
         }
         private async Task<bool> _checkTrophy_kissTheGround(TrophyScanner.ScannerQueueItem item) {
-            return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, ZoneType.Terrestrial);
+            return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, new string[] { "terrestrial" });
         }
         private async Task<bool> _checkTrophy_bestOfBothWorlds(TrophyScanner.ScannerQueueItem item) {
-
-            return await _checkTrophy_helper_hasSpeciesMatchingSQLiteCountQuery(item, @"SELECT COUNT(*) FROM Species WHERE owner=$owner 
-                AND id IN(SELECT species_id FROM SpeciesZones WHERE zone_id IN(SELECT id FROM Zones WHERE type =""aquatic""))
-                AND id IN(SELECT species_id FROM SpeciesZones WHERE zone_id IN(SELECT id FROM Zones WHERE type =""terrestrial""))");
-
+            return await _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(item, new string[] { "aquatic", "terrestrial" });
         }
         private async Task<bool> _checkTrophy_hunter(TrophyScanner.ScannerQueueItem item) {
 
@@ -418,19 +414,33 @@ namespace OurFoodChain.Trophies {
             return unlocked;
 
         }
-        private async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(TrophyScanner.ScannerQueueItem item, ZoneType type) {
+        private async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneTypeMatch(TrophyScanner.ScannerQueueItem item, string[] zoneTypeNames) {
 
-            if (type == ZoneType.Unknown)
+            if (zoneTypeNames.Count() <= 0)
                 return false;
 
-            string type_string = ZoneUtils.ZoneTypeToString(type);
+            StringBuilder query_builder = new StringBuilder();
+            query_builder.Append("SELECT COUNT(*) FROM Species WHERE owner=$owner");
+
+            foreach (string zone_type_name in zoneTypeNames) {
+
+                ZoneType zone_type = await ZoneUtils.GetZoneTypeAsync(zone_type_name);
+
+                // If any of the zone types are invalid, the trophy is automatically invalidated.
+
+                if (zone_type is null || zone_type.Id == ZoneType.NullZoneTypeId)
+                    return false;
+
+                query_builder.Append(string.Format(" AND id IN (SELECT species_id FROM SpeciesZones WHERE zone_id IN (SELECT id FROM Zones WHERE type_id = {0}))", zone_type.Id));
+
+            }
+
             string username = (await item.Context.Guild.GetUserAsync(item.UserId)).Username;
             bool unlocked = false;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE owner=$owner AND id IN (SELECT species_id FROM SpeciesZones WHERE zone_id IN (SELECT id FROM Zones WHERE type=$type))")) {
+            using (SQLiteCommand cmd = new SQLiteCommand(query_builder.ToString())) {
 
                 cmd.Parameters.AddWithValue("$owner", username);
-                cmd.Parameters.AddWithValue("$type", type_string);
 
                 if (await Database.GetScalar<long>(cmd) > 0)
                     return true;

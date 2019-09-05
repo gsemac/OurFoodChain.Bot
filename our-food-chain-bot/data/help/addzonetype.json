@@ -1,0 +1,13 @@
+﻿{
+	"name": "addzonetype",
+	"aliases": [],
+	"category": "create",
+	"description": "Adds a new zone type to the database. It can then be assigned to new or existing zones.\n\nThe order of the arguments passed in does not matter as long as the name of the type is specified first.",
+	"examples": [
+		"addzonetype <name>",
+		"addzonetype <name> <description>",
+		"addzonetype <name> <icon> <color>",
+		"addzonetype <name> <icon> <color> <description>",
+		"addzonetype aquatic 🌊 #3498db"
+	]
+}

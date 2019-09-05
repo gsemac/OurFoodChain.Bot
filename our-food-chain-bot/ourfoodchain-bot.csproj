@@ -447,6 +447,7 @@
     <None Include="data\help\+prey.json" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\help\addzonetype.json" />
     <Content Include="data\updates\update001.sql" />
     <Content Include="data\updates\update010.sql" />
     <Content Include="data\updates\update002.sql" />

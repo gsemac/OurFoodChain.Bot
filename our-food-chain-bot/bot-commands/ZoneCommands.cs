@@ -67,6 +67,63 @@ namespace OurFoodChain {
 
         }
 
+        [Command("addzonetype"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task AddZoneType(params string[] args) {
+
+            if (args.Count() > 0) {
+
+                string name = args[0];
+                string icon = ZoneType.DefaultIcon;
+                string color = ZoneType.DefaultColorHex;
+                string description = "";
+
+                if (await ZoneUtils.GetZoneTypeAsync(name) != null) {
+
+                    // If a zone type with this name already exists, do not create a new one.
+                    await BotUtils.ReplyAsync_Error(Context, string.Format("The zone type \"{0}\" already exists.", name));
+
+                }
+                else {
+
+                    // Read the rest of the arguments.
+
+                    for (int i = 1; i < args.Count(); ++i) {
+
+                        if (DiscordUtils.StringIsEmoji(args[i]))
+                            icon = args[i];
+                        else if (args[i].StartsWith("#"))
+                            color = args[i];
+                        else
+                            description = args[i];
+
+                    }
+
+                    ZoneType type = new ZoneType {
+                        Name = name,
+                        Icon = icon,
+                        Description = description
+                    };
+
+                    if (!type.SetColor(color))
+                        await BotUtils.ReplyAsync_Error(Context, string.Format("Unable to parse given color code ({0}).", color));
+                    else {
+
+                        // Add the zone type to the database.
+
+                        await ZoneUtils.AddZoneTypeAsync(type);
+
+                        await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new zone type **{0}**.", type.Name));
+
+                    }
+
+                }
+
+            }
+            else
+                await BotUtils.ReplyAsync_Error(Context, "You must specify a name for the zone type.");
+
+        }
+
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string arg0 = "") {
 

@@ -157,6 +157,21 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task AddZoneTypeAsync(ZoneType type) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO ZoneTypes(name, icon, color, description) VALUES($name, $icon, $color, $description)")) {
+
+                cmd.Parameters.AddWithValue("$name", type.Name);
+                cmd.Parameters.AddWithValue("$icon", type.Icon);
+                cmd.Parameters.AddWithValue("$color", ColorTranslator.ToHtml(type.Color));
+                cmd.Parameters.AddWithValue("$description", type.Description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+
         public static async Task<Species[]> GetSpeciesAsync(Zone zone) {
 
             List<Species> species = new List<Species>();

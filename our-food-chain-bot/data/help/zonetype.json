@@ -1,0 +1,11 @@
+﻿{
+  "name": "zonetype",
+  "aliases": [],
+  "category": "info",
+  "description": "Shows information about the given zone type.",
+  "examples": [
+    "zonetype <type>",
+    "zonetype aquatic",
+    "zonetype terrestrial"
+  ]
+}

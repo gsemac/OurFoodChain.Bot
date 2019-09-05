@@ -67,69 +67,12 @@ namespace OurFoodChain {
 
         }
 
-        [Command("addzonetype"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task AddZoneType(params string[] args) {
-
-            if (args.Count() > 0) {
-
-                string name = args[0];
-                string icon = ZoneType.DefaultIcon;
-                string color = ZoneType.DefaultColorHex;
-                string description = "";
-
-                if (await ZoneUtils.GetZoneTypeAsync(name) != null) {
-
-                    // If a zone type with this name already exists, do not create a new one.
-                    await BotUtils.ReplyAsync_Error(Context, string.Format("The zone type \"{0}\" already exists.", name));
-
-                }
-                else {
-
-                    // Read the rest of the arguments.
-
-                    for (int i = 1; i < args.Count(); ++i) {
-
-                        if (DiscordUtils.StringIsEmoji(args[i]))
-                            icon = args[i];
-                        else if (args[i].StartsWith("#"))
-                            color = args[i];
-                        else
-                            description = args[i];
-
-                    }
-
-                    ZoneType type = new ZoneType {
-                        Name = name,
-                        Icon = icon,
-                        Description = description
-                    };
-
-                    if (!type.SetColor(color))
-                        await BotUtils.ReplyAsync_Error(Context, string.Format("Unable to parse given color code ({0}).", color));
-                    else {
-
-                        // Add the zone type to the database.
-
-                        await ZoneUtils.AddZoneTypeAsync(type);
-
-                        await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new zone type **{0}**.", type.Name));
-
-                    }
-
-                }
-
-            }
-            else
-                await BotUtils.ReplyAsync_Error(Context, "You must specify a name for the zone type.");
-
-        }
-
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string arg0 = "") {
 
             ZoneType zone_type = await ZoneUtils.GetZoneTypeAsync(arg0);
 
-            if (string.IsNullOrEmpty(arg0) || (zone_type != null && zone_type.Id != ZoneType.NullZoneTypeId)) {
+            if (string.IsNullOrEmpty(arg0) || ZoneUtils.ZoneTypeIsValid(zone_type)) {
 
                 // Display all zones, or, if the user passed in a valid zone type, all zones of that type.
 
@@ -137,42 +80,22 @@ namespace OurFoodChain {
 
                 if (zones.Count() > 0) {
 
-                    // Create a line describing each zone.
-
-                    List<string> lines = new List<string>();
-
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
-                    string embed_title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", arg0, zones.Count()));
-                    string embed_description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone 1`).\n\n", OurFoodChainBot.Instance.Config.Prefix);
-                    int zones_per_page = 20;
-                    int max_line_length = (EmbedUtils.MAX_EMBED_LENGTH - embed_title.Length - embed_description.Length) / zones_per_page;
-
-                    foreach (Zone zone in zones) {
-
-                        ZoneType type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId);
-
-                        string line = string.Format("{1} **{0}**\t-\t{2}", StringUtils.ToTitleCase(zone.Name), (type is null ? new ZoneType() : type).Icon, zone.GetShortDescription());
-
-                        if (line.Length > max_line_length)
-                            line = line.Substring(0, max_line_length - 3) + "...";
-
-                        lines.Add(line);
-
-                    }
+                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder {
+                        Title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
+                        Description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
+                            OurFoodChainBot.Instance.Config.Prefix,
+                            zones[0].ShortName.Contains(" ") ? string.Format("\"{0}\"", zones[0].ShortName.ToLower()) : zones[0].ShortName.ToLower())
+                    };
 
                     // Build paginated message.
 
-                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.LinesToEmbedPages(lines, 20));
+                    await BotUtils.ZonesToEmbedPagesAsync(embed, zones);
                     embed.AddPageNumbers();
 
-                    if (zone_type is null || zone_type.Id == ZoneType.NullZoneTypeId)
-                        arg0 = "all";
-                    else
+                    if (ZoneUtils.ZoneTypeIsValid(zone_type))
                         embed.SetColor(DiscordUtils.ConvertColor(zone_type.Color));
-
-                    embed.SetTitle(embed_title);
-                    embed.PrependDescription(embed_description);
 
                     await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
@@ -361,6 +284,107 @@ namespace OurFoodChain {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", zone.GetFullName()));
+
+        }
+
+        [Command("zonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task GetZoneType(string arg0) {
+
+            // If the given argument is a zone type, display information for that type.
+            // If the given argument is a zone name, display information for the type corresponding to that zone.
+
+            ZoneType type = await ZoneUtils.GetZoneTypeAsync(arg0);
+
+            if (!ZoneUtils.ZoneTypeIsValid(type)) {
+
+                // If no zone type exists with this name, attempt to get the type of the zone with this name.
+
+                Zone zone = await ZoneUtils.GetZoneAsync(arg0);
+
+                if (zone != null)
+                    type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId);
+
+            }
+
+            if (ZoneUtils.ZoneTypeIsValid(type)) {
+
+                // We got a valid zone type, so show information about the zone type.
+
+                Zone[] zones = await ZoneUtils.GetZonesAsync(type);
+
+                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder {
+                    Title = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count()),
+                    Description = type.Description + "\n\n",
+                    Color = DiscordUtils.ConvertColor(type.Color)
+                };
+
+                await BotUtils.ZonesToEmbedPagesAsync(embed, zones, showIcon: false);
+                embed.AddPageNumbers();
+
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+
+            }
+            else
+                await BotUtils.ReplyAsync_Error(Context, "No such zone type exists.");
+
+        }
+
+        [Command("addzonetype"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task AddZoneType(params string[] args) {
+
+            if (args.Count() <= 0) {
+                await BotUtils.ReplyAsync_Error(Context, "You must specify a name for the zone type.");
+            }
+            else if (args.Count() > 4) {
+                await BotUtils.ReplyAsync_Error(Context, "Too many arguments have been provided.");
+            }
+            else {
+
+                string name = args[0];
+                string icon = ZoneType.DefaultIcon;
+                System.Drawing.Color color = ZoneType.DefaultColor;
+                string description = "";
+
+                if (await ZoneUtils.GetZoneTypeAsync(name) != null) {
+
+                    // If a zone type with this name already exists, do not create a new one.
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone type named \"{0}\" already exists.", name));
+
+                }
+                else {
+
+                    // Read the rest of the arguments.
+
+                    for (int i = 1; i < args.Count(); ++i) {
+
+                        if (DiscordUtils.IsEmoji(args[i]))
+                            icon = args[i];
+                        else if (StringUtils.TryParseColor(args[i], out System.Drawing.Color result))
+                            color = result;
+                        else if (string.IsNullOrEmpty(description))
+                            description = args[i];
+                        else
+                            await BotUtils.ReplyAsync_Warning(Context, string.Format("Invalid argument provided: {0}", args[i]));
+
+                    }
+
+                    ZoneType type = new ZoneType {
+                        Name = name,
+                        Icon = icon,
+                        Description = description,
+                        Color = color
+                    };
+
+                    // Add the zone type to the database.
+
+                    await ZoneUtils.AddZoneTypeAsync(type);
+
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new zone type **{0}**.", type.Name));
+
+                }
+
+            }
+
 
         }
 

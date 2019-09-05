@@ -68,7 +68,9 @@ namespace OurFoodChain {
 
                         CommandInfo commandInfo = OurFoodChainBot.Instance.GetInstalledCommandByName(x.Name);
 
-                        return commandInfo != null && CommandUtils.HasPrivilege(context.User, CommandUtils.GetPrivilegeLevel(commandInfo));
+                        return commandInfo != null &&
+                            CommandUtils.HasPrivilege(context.User, CommandUtils.GetPrivilegeLevel(commandInfo)) &&
+                            (OurFoodChainBot.Instance.Config.AdvancedCommandsEnabled || CommandUtils.GetDifficultyLevel(commandInfo) < DifficultyLevel.Advanced);
 
                     })) {
 

@@ -200,7 +200,7 @@ namespace OurFoodChain {
             if (commandInfo != null) {
 
                 foreach (Attribute attribute in commandInfo.Preconditions) {
-                    
+
                     if (attribute is RequirePrivilegeAttribute privilege_attribute)
                         return privilege_attribute.PrivilegeLevel;
 
@@ -209,6 +209,22 @@ namespace OurFoodChain {
             }
 
             return PrivilegeLevel.ServerMember;
+
+        }
+        public static DifficultyLevel GetDifficultyLevel(CommandInfo commandInfo) {
+
+            if (commandInfo != null) {
+
+                foreach (Attribute attribute in commandInfo.Preconditions) {
+
+                    if (attribute is DifficultyLevelAttribute difficultyLevelAttribute)
+                        return difficultyLevelAttribute.DifficultyLevel;
+
+                }
+
+            }
+
+            return DifficultyLevel.Basic;
 
         }
 

@@ -13,6 +13,8 @@
   "review_channels": [],
 
   "trophies_enabled": true,
-  "gotchis_enabled": true
+  "gotchis_enabled": true,
+
+  "advanced_commands_enabled": true
 
 }

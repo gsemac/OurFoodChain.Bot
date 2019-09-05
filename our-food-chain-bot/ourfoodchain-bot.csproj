@@ -206,6 +206,7 @@
     <Compile Include="bot-commands\SpeciesCommands.cs" />
     <Compile Include="bot-commands\TaxonCommands.cs" />
     <Compile Include="bot-commands\ZoneCommands.cs" />
+    <Compile Include="commands\DifficultyLevelAttribute.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
@@ -407,6 +408,7 @@
     <None Include="data\help\trophy.json" />
     <None Include="data\help\trophylist.json" />
     <None Include="data\help\zone.json" />
+    <None Include="data\help\zonetype.json" />
     <None Include="data\updates\config.json" />
     <None Include="packages.config" />
     <None Include="data\gotchi\moves\infest.lua" />

@@ -43,6 +43,8 @@ namespace OurFoodChain {
         public bool TrophiesEnabled { get; set; } = true;
         [JsonProperty("gotchis_enabled")]
         public bool GotchisEnabled { get; set; } = true;
+        [JsonProperty("advanced_commands_enabled")]
+        public bool AdvancedCommandsEnabled { get; set; } = true;
 
         public bool SetProperty(string name, string value) {
 

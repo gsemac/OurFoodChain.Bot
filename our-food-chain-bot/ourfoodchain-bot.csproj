@@ -192,6 +192,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="bot-commands\AdminCommands.cs" />
     <Compile Include="bot-commands\ConfigCommands.cs" />
     <Compile Include="bot-commands\GalleryCommands.cs" />
     <Compile Include="bot-commands\HelpCommands.cs" />

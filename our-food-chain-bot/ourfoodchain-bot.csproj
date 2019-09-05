@@ -205,6 +205,7 @@
     <Compile Include="bot-commands\SpeciesCommands.cs" />
     <Compile Include="bot-commands\TaxonCommands.cs" />
     <Compile Include="bot-commands\ZoneCommands.cs" />
+    <Compile Include="commands\DifficultyLevelAttribute.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />

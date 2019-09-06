@@ -374,7 +374,7 @@ namespace OurFoodChain.Commands {
         }
         [Command("evolution2"), Alias("evo2")]
         public async Task Evolution2(string species) {
-            await Evolution("", species);
+            await Evolution2("", species);
         }
         [Command("evolution2"), Alias("evo2")]
         public async Task Evolution2(string genus, string species) {

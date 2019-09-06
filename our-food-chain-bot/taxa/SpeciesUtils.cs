@@ -255,17 +255,21 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Species> GetDirectDescendantsAsync(Species species) {
+        public static async Task<Species[]> GetDirectDescendantsAsync(Species species) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id")) {
+            List<Species> result = new List<Species>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id)")) {
 
                 cmd.Parameters.AddWithValue("$ancestor_id", species.id);
 
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                return row is null ? null : await GetSpeciesAsync(row.Field<long>("species_id"));
+                using (DataTable rows = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in rows.Rows)
+                        result.Add(await Species.FromDataRow(row));
 
             }
+
+            return result.ToArray();
 
         }
 

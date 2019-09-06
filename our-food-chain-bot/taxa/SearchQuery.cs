@@ -766,7 +766,7 @@ namespace OurFoodChain {
                             case "evos":
 
                                 await result.FilterByAsync(async (x) => {
-                                    return await SpeciesUtils.GetDirectDescendantsAsync(x) is null;
+                                    return (await SpeciesUtils.GetDirectDescendantsAsync(x)).Count() <= 0;
                                 }, subtract);
 
                                 break;

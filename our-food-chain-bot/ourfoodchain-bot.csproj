@@ -216,6 +216,8 @@
     <Compile Include="commands\PrivilegeLevel.cs" />
     <Compile Include="commands\RequirePrivilegeAttribute.cs" />
     <Compile Include="discord\DiscordUtils.cs" />
+    <Compile Include="graphics\AncestryTreeRenderer.cs" />
+    <Compile Include="taxa\AncestryTree.cs" />
     <Compile Include="taxa\ExtinctionInfo.cs" />
     <Compile Include="galleries\Gallery.cs" />
     <Compile Include="gotchi\GotchiBattleState.cs" />
@@ -266,6 +268,7 @@
     <Compile Include="discord\PaginatedEmbedBuilder.cs" />
     <Compile Include="taxa\SearchQuery.cs" />
     <Compile Include="taxa\SpeciesUtils.cs" />
+    <Compile Include="utils\TreeUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="taxa\TaxonUtils.cs" />
@@ -294,6 +297,7 @@
     <None Include="data\help\-common.json" />
     <None Include="data\help\-pic.json" />
     <None Include="data\help\delete.json" />
+    <None Include="data\help\evolution2.json" />
     <None Include="data\help\gotchi\buy.json" />
     <None Include="data\help\gotchi\forfeit.json" />
     <None Include="data\help\gotchi\list.json" />

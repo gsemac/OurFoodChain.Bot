@@ -90,7 +90,7 @@ namespace OurFoodChain {
 
                             string append = string.Format("[**{0}**]({1}) ⁠— {2} {3}", info.Title, info.SubmissionMessageUrl, question_link, answer_link);
 
-                            if (sb.Length + append.Length <= DiscordUtils.MAX_FIELD_LENGTH)
+                            if (sb.Length + append.Length <= DiscordUtils.MaxFieldLength)
                                 sb.AppendLine(append);
 
                         }
@@ -116,7 +116,7 @@ namespace OurFoodChain {
 
                             string append = string.Format("[**{0}**]({1}) ⁠— {2} {3}", info.Title, info.SubmissionMessageUrl, question_link, answer_link);
 
-                            if (sb.Length + append.Length <= DiscordUtils.MAX_FIELD_LENGTH)
+                            if (sb.Length + append.Length <= DiscordUtils.MaxFieldLength)
                                 sb.AppendLine(append);
 
                         }

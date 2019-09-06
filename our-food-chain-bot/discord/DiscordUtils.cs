@@ -10,7 +10,8 @@ namespace OurFoodChain {
 
     public static class DiscordUtils {
 
-        public static int MAX_FIELD_LENGTH = 1024;
+        public const int MaxFieldLength = 1024;
+        public const int MaxMessageLength = 2000;
 
         public static async Task<IMessage[]> DownloadAllMessagesAsync(IMessageChannel channel, int limit = 0) {
 

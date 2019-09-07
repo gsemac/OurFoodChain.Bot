@@ -409,6 +409,47 @@ namespace OurFoodChain {
 
         }
 
+        [Command("setparentzone"), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task SetParentZone(string zoneName, string parentZoneName) {
+
+            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
+            Zone parent = await ZoneUtils.GetZoneAsync(parentZoneName);
+
+            if (await BotUtils.ReplyValidateZoneAsync(Context, zone) && await BotUtils.ReplyValidateZoneAsync(Context, parent)) {
+
+                if (zone.Id == parent.Id) {
+
+                    await BotUtils.ReplyAsync_Error(Context, "A zone cannot be its own parent.");
+
+                }
+                else if (parent.ParentId == zone.Id) {
+
+                    await BotUtils.ReplyAsync_Error(Context, "A zone cannot have its child as its parent.");
+
+                }
+                else if (zone.ParentId == parent.Id) {
+
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("The parent zone of **{0}** is already **{1}**.",
+                        zone.FullName,
+                        parent.FullName));
+
+                }
+                else {
+
+                    zone.ParentId = parent.Id;
+
+                    await ZoneUtils.UpdateZoneAsync(zone);
+
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the parent zone of **{0}** to **{1}**.",
+                        zone.FullName,
+                        parent.FullName));
+
+                }
+
+            }
+
+        }
+
     }
 
 }

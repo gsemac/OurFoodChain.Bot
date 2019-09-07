@@ -10,7 +10,8 @@ namespace OurFoodChain {
 
     public class Zone {
 
-        public long Id { get; set; }
+        public long Id { get; set; } = -1;
+        public long ParentId { get; set; } = -1;
         public string Name { get; set; }
         public string Description { get; set; }
         public long ZoneTypeId { get; set; } = ZoneType.NullZoneTypeId;

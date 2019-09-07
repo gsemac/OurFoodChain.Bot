@@ -115,9 +115,10 @@ namespace OurFoodChain {
         }
         public static async Task UpdateZoneAsync(Zone zone) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type_id = $type_id, description = $description WHERE id = $id")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type_id = $type_id, description = $description, parent_id = $parent_id WHERE id = $id")) {
 
                 cmd.Parameters.AddWithValue("$id", zone.Id);
+                cmd.Parameters.AddWithValue("$parent_id", zone.ParentId);
                 cmd.Parameters.AddWithValue("$name", zone.Name.ToLower());
                 cmd.Parameters.AddWithValue("$type_id", zone.ZoneTypeId);
                 cmd.Parameters.AddWithValue("$description", zone.Description);
@@ -222,6 +223,7 @@ namespace OurFoodChain {
 
             Zone zone = new Zone {
                 Id = row.Field<long>("id"),
+                ParentId = row.IsNull("parent_id") ? -1 : row.Field<long>("parent_id"),
                 Name = StringUtils.ToTitleCase(row.Field<string>("name")),
                 Description = row.Field<string>("description"),
                 Pics = row.Field<string>("pics"),

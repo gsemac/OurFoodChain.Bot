@@ -1,0 +1,10 @@
+﻿{
+  "name": "setzonetype",
+  "aliases": [],
+  "category": "update",
+  "description": "Sets the zone type of the given zone to the given zone type.",
+  "examples": [
+    "setzonetype <zone> <type>",
+    "setzonetype 1 aquatic"
+  ]
+}

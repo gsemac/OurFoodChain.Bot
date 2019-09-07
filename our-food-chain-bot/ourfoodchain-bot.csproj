@@ -308,6 +308,7 @@
     <None Include="data\help\migration.json" />
     <None Include="data\help\roll.json" />
     <None Include="data\help\setartist.json" />
+    <None Include="data\help\setzonetype.json" />
     <None Include="data\help\size.json" />
     <None Include="data\gotchi\moves\all-out_attack.lua" />
     <None Include="data\gotchi\moves\bite.lua" />

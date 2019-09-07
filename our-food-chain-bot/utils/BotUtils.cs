@@ -876,11 +876,24 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyAsync_ValidateZone(ICommandContext context, Zone zone) {
+        public static async Task<bool> ReplyValidateZoneAsync(ICommandContext context, Zone zone) {
 
-            if (zone is null || zone.Id <= 0) {
+            if (!ZoneUtils.ZoneIsValid(zone)) {
 
                 await context.Channel.SendMessageAsync("No such zone exists.");
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+        public static async Task<bool> ReplyValidateZoneTypeAsync(ICommandContext context, ZoneType zoneType) {
+
+            if (!ZoneUtils.ZoneTypeIsValid(zoneType)) {
+
+                await context.Channel.SendMessageAsync("No such zone type exists.");
 
                 return false;
 

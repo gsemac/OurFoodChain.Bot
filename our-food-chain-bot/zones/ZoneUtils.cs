@@ -113,6 +113,20 @@ namespace OurFoodChain {
             }
 
         }
+        public static async Task UpdateZoneAsync(Zone zone) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type_id = $type_id, description = $description WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", zone.Id);
+                cmd.Parameters.AddWithValue("$name", zone.Name.ToLower());
+                cmd.Parameters.AddWithValue("$type_id", zone.ZoneTypeId);
+                cmd.Parameters.AddWithValue("$description", zone.Description);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
 
         public static async Task<ZoneType> GetZoneTypeAsync(string zoneTypeName) {
 
@@ -240,6 +254,14 @@ namespace OurFoodChain {
             catch (Exception) { }
 
             return result;
+
+        }
+        public static bool ZoneIsValid(Zone zone) {
+
+            if (zone is null || zone.Id <= 0)
+                return false;
+
+            return true;
 
         }
         public static bool ZoneTypeIsValid(ZoneType zoneType) {

@@ -113,7 +113,7 @@ namespace OurFoodChain {
 
                 Zone zone = await ZoneUtils.GetZoneAsync(arg0);
 
-                if (await BotUtils.ReplyAsync_ValidateZone(Context, zone)) {
+                if (await BotUtils.ReplyValidateZoneAsync(Context, zone)) {
 
                     List<Embed> pages = new List<Embed>();
 
@@ -239,7 +239,7 @@ namespace OurFoodChain {
 
             Zone z = await ZoneUtils.GetZoneAsync(zone);
 
-            if (!await BotUtils.ReplyAsync_ValidateZone(Context, z))
+            if (!await BotUtils.ReplyValidateZoneAsync(Context, z))
                 return;
 
             // Make sure the image URL is valid.
@@ -269,7 +269,7 @@ namespace OurFoodChain {
 
             Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
 
-            if (!await BotUtils.ReplyAsync_ValidateZone(Context, zone))
+            if (!await BotUtils.ReplyValidateZoneAsync(Context, zone))
                 return;
 
             // Update the description for the zone.
@@ -385,6 +385,27 @@ namespace OurFoodChain {
 
             }
 
+
+        }
+
+        [Command("setzonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task SetZoneType(string zoneName, string zoneType) {
+
+            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
+            ZoneType type = await ZoneUtils.GetZoneTypeAsync(zoneType);
+
+            if (await BotUtils.ReplyValidateZoneAsync(Context, zone) && await BotUtils.ReplyValidateZoneTypeAsync(Context, type)) {
+
+                zone.ZoneTypeId = type.Id;
+
+                await ZoneUtils.UpdateZoneAsync(zone);
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the type of {0}**{1}** to **{2}**.",
+                    zone.FullName.StartsWith("Zone") ? string.Empty : "zone ",
+                    zone.FullName,
+                    type.Name));
+
+            }
 
         }
 

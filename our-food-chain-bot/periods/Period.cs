@@ -40,7 +40,7 @@ namespace OurFoodChain {
             if (start_ts == "now")
                 return "Now";
 
-            return BotUtils.GetTimeStampAsDateString(_parseTimestamp(start_ts), "MMM dd, yyyy");
+            return DateUtils.TimestampToDateString(_parseTimestamp(start_ts), "MMM dd, yyyy");
 
         }
         public long GetEndTimestamp() {
@@ -53,7 +53,7 @@ namespace OurFoodChain {
             if (end_ts == "now")
                 return "Now";
 
-            return BotUtils.GetTimeStampAsDateString(_parseTimestamp(end_ts), "MMM dd, yyyy");
+            return DateUtils.TimestampToDateString(_parseTimestamp(end_ts), "MMM dd, yyyy");
 
         }
         public string GetHowLongString() {
@@ -61,7 +61,7 @@ namespace OurFoodChain {
             long ts = GetEndTimestamp() - GetStartTimestamp();
             TimeSpan span = TimeSpan.FromSeconds(ts);
 
-            return StringUtils.TimeSpanToString(span);
+            return DateUtils.TimeSpanToString(span);
 
         }
         public string GetHowLongAgoString() {
@@ -76,7 +76,7 @@ namespace OurFoodChain {
 
             TimeSpan span = TimeSpan.FromSeconds(ts);
 
-            return string.Format("{0} ago", StringUtils.TimeSpanToString(span));
+            return string.Format("{0} ago", DateUtils.TimeSpanToString(span));
 
         }
 

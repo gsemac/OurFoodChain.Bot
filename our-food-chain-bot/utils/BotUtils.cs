@@ -656,35 +656,7 @@ namespace OurFoodChain {
             return GenerateSpeciesName(species.genus, species.name);
 
         }
-        public static string GetTimeStampAsDateString(long ts) {
 
-            return DateTimeOffset.FromUnixTimeSeconds(ts).Date.ToUniversalTime().ToShortDateString();
-
-        }
-        public static string GetTimeStampAsDateString(long ts, string format) {
-
-            return DateTimeOffset.FromUnixTimeSeconds(ts).Date.ToUniversalTime().ToString(format);
-
-        }
-        public static string TimestampToLongDateString(long timestamp) {
-
-            DateTime date = DateTimeOffset.FromUnixTimeSeconds(timestamp).Date.ToUniversalTime();
-
-            string day_string = date.Day.ToString();
-
-            if (day_string.Last() == '1' && !day_string.EndsWith("11"))
-                day_string += "st";
-            else if (day_string.Last() == '2' && !day_string.EndsWith("12"))
-                day_string += "nd";
-
-            else if (day_string.Last() == '3' && !day_string.EndsWith("13"))
-                day_string += "rd";
-            else
-                day_string += "th";
-
-            return string.Format("{1:MMMM} {0}, {1:yyyy}", day_string, date);
-
-        }
         public static string Strikeout(string str) {
 
             return string.Format("~~{0}~~", str);

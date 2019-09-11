@@ -251,6 +251,26 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<bool> CommandIsEnabledAsync(ICommandContext context, string commandName) {
+
+            CommandInfo commandInfo = OurFoodChainBot.Instance.GetInstalledCommandByName(commandName);
+
+            if (commandInfo is null)
+                return false;
+
+            if (!HasPrivilege(context.User, GetPrivilegeLevel(commandInfo)))
+                return false;
+
+            if (!OurFoodChainBot.Instance.Config.AdvancedCommandsEnabled && GetDifficultyLevel(commandInfo) >= DifficultyLevel.Advanced)
+                return false;
+
+            if (!(await commandInfo.CheckPreconditionsAsync(context, OurFoodChainBot.Instance.ServiceProvider)).IsSuccess)
+                return false;
+
+            return true;
+
+        }
+
         public static async Task<IUser> GetUserFromUsernameOrMentionAsync(ICommandContext context, string usernameOrMention) {
 
             if (context is null || context.Guild is null)

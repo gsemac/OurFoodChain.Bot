@@ -63,18 +63,10 @@ namespace OurFoodChain {
 
                 List<string> command_str_list = new List<string>();
 
-                foreach (CommandHelpInfo c in commands_lists[cat]
-                    .Where(x => {
+                foreach (CommandHelpInfo c in commands_lists[cat]) {
 
-                        CommandInfo commandInfo = OurFoodChainBot.Instance.GetInstalledCommandByName(x.Name);
-
-                        return commandInfo != null &&
-                            CommandUtils.HasPrivilege(context.User, CommandUtils.GetPrivilegeLevel(commandInfo)) &&
-                            (OurFoodChainBot.Instance.Config.AdvancedCommandsEnabled || CommandUtils.GetDifficultyLevel(commandInfo) < DifficultyLevel.Advanced);
-
-                    })) {
-
-                    command_str_list.Add(string.Format("`{0}`", c.Name));
+                    if (await CommandUtils.CommandIsEnabledAsync(context, c.Name))
+                        command_str_list.Add(string.Format("`{0}`", c.Name));
 
                 }
 

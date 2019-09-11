@@ -26,17 +26,29 @@ namespace OurFoodChain {
                 _description = value;
             }
         }
-        public int Length {
-            get {
-                return _pages.Count > 0 ? _pages[0].Length : 0;
-            }
-        }
         public Color Color {
             get {
                 return _color;
             }
             set {
                 _color = value;
+            }
+        }
+
+        public int Length {
+            get {
+                return _pages.Count > 0 ? _pages[0].Length : 0;
+            }
+        }
+        public int FieldCount {
+            get {
+
+                int count = 0;
+
+                _pages.ForEach(x => count += x.Fields.Count);
+
+                return count;
+
             }
         }
 

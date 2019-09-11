@@ -69,6 +69,14 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task ForEachRowAsync(SQLiteConnection conn, SQLiteCommand command, Func<DataRow, Task> callback) {
+
+            using (DataTable table = await GetRowsAsync(conn, command))
+                foreach (DataRow row in table.Rows)
+                    await callback(row);
+
+        }
+
     }
 
 }

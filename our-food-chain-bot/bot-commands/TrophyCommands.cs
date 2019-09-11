@@ -39,7 +39,7 @@ namespace OurFoodChain.Trophies {
                 description_builder.AppendLine(string.Format("{0} **{1}** - Earned {2} ({3:0.#}%)",
                    trophy.GetIcon(),
                    trophy.GetName(),
-                   BotUtils.GetTimeStampAsDateString(info.timestamp),
+                   DateUtils.TimestampToShortDateString(info.timestamp),
                    await Global.TrophyRegistry.GetCompletionRateAsync(trophy)
                   ));
 

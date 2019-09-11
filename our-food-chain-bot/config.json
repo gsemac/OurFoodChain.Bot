@@ -14,6 +14,7 @@
 
   "trophies_enabled": true,
   "gotchis_enabled": true,
+  "generations_enabled": false,
 
   "advanced_commands_enabled": false
 

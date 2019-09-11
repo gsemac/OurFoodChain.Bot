@@ -111,25 +111,6 @@ namespace OurFoodChain {
 
         }
 
-        public static string TimeSpanToString(TimeSpan span) {
-
-            string format = "{0} {1}";
-
-            if (span < TimeSpan.FromSeconds(60))
-                return string.Format(format, span.Seconds, span.Seconds == 1 ? "second" : "seconds");
-            else if (span < TimeSpan.FromMinutes(60))
-                return string.Format(format, span.Minutes, span.Minutes == 1 ? "minute" : "minutes");
-            else if (span < TimeSpan.FromHours(24))
-                return string.Format(format, span.Hours, span.Hours == 1 ? "hour" : "hours");
-            else if (span < TimeSpan.FromDays(30))
-                return string.Format(format, span.Days, span.Days == 1 ? "day" : "days");
-            else if (span < TimeSpan.FromDays(365))
-                return string.Format(format, span.Days / 30, span.Days / 30 == 1 ? "day" : "days");
-            else
-                return string.Format(format, span.Days / 365, span.Days / 365 == 1 ? "year" : "years");
-
-        }
-
         public static string UnitsToAbbreviation(string value) {
 
             switch (value.ToLower()) {

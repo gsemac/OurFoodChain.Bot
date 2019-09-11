@@ -79,7 +79,7 @@ namespace OurFoodChain.Commands {
                     long timestamp = (long)row.Field<decimal>("timestamp");
 
                     if (!string.IsNullOrEmpty(reason))
-                        description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", BotUtils.TimestampToLongDateString(timestamp), reason));
+                        description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", DateUtils.TimestampToLongDateString(timestamp), reason));
 
                 }
 

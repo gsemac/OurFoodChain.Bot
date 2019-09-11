@@ -438,7 +438,7 @@ namespace OurFoodChain.Commands {
                 if (ts <= 0)
                     ts = species.timestamp;
 
-                result.Append(string.Format("{0} - ", BotUtils.GetTimeStampAsDateString(ts)));
+                result.Append(string.Format("{0} - ", DateUtils.TimestampToShortDateString(ts)));
                 result.Append(i == 0 ? "Started in " : "Spread to ");
                 result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
                 result.Append(StringUtils.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
@@ -780,93 +780,6 @@ namespace OurFoodChain.Commands {
 
         }
 
-        [Command("recent")]
-        public async Task Recent() {
-            await Recent("48h");
-        }
-        [Command("recent")]
-        public async Task Recent(string timespan) {
-
-            TimeAmount time_amount = TimeAmount.Parse(timespan);
-
-            if (time_amount != null) {
-
-                long start_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - time_amount.ToUnixTimeSeconds();
-
-                // Get all species created recently.
-
-                List<Species> new_species = new List<Species>();
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp >= $start_ts;")) {
-
-                    cmd.Parameters.AddWithValue("$start_ts", start_ts);
-
-                    using (DataTable table = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in table.Rows)
-                            new_species.Add(await Species.FromDataRow(row));
-
-                }
-
-                new_species.Sort();
-
-                // Get all extinctions that occurred recently.
-
-                List<Species> extinct_species = new List<Species>();
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE timestamp >= $start_ts;")) {
-
-                    cmd.Parameters.AddWithValue("$start_ts", start_ts);
-
-                    using (DataTable table = await Database.GetRowsAsync(cmd))
-                        foreach (DataRow row in table.Rows)
-                            extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
-
-                }
-
-                extinct_species.Sort();
-
-                // Build embed.
-
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
-                List<EmbedBuilder> pages = new List<EmbedBuilder>();
-                List<string> field_lines = new List<string>();
-
-                if (new_species.Count() > 0) {
-
-                    foreach (Species sp in new_species)
-                        field_lines.Add(sp.GetFullName());
-
-                    EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
-
-                    field_lines.Clear();
-
-                }
-
-                if (extinct_species.Count() > 0) {
-
-                    foreach (Species sp in extinct_species)
-                        field_lines.Add(sp.GetFullName());
-
-                    EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
-
-                    field_lines.Clear();
-
-                }
-
-                embed.AddPages(pages);
-
-                embed.SetTitle(string.Format("Recent events ({0})", time_amount.ToString()));
-                embed.SetFooter(string.Empty); // remove page numbers added automatically
-                embed.AddPageNumbers();
-
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
-
-            }
-            else
-                await BotUtils.ReplyAsync_Error(Context, "Invalid timespan provided.");
-
-        }
-
         [Command("random"), Alias("rand")]
         public async Task Random() {
 
@@ -1025,7 +938,7 @@ namespace OurFoodChain.Commands {
                 embed.WithDescription(string.Format("{1} made their first species on **{2}**.{0}Since then, they have submitted **{3:0.0}** species per day.{0}{0}Their submissions make up **{4:0.0}%** of all species.",
                     Environment.NewLine,
                     user.Username,
-                    BotUtils.TimestampToLongDateString(timestamp_min),
+                    DateUtils.TimestampToLongDateString(timestamp_min),
                     timestamp_diff_days == 0 ? user_species_count : (double)user_species_count / timestamp_diff_days,
                     ((double)user_species_count / species_count) * 100.0));
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);

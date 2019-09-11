@@ -110,7 +110,7 @@ namespace OurFoodChain {
 
         }
         public string GetTimeStampAsDateString() {
-            return BotUtils.GetTimeStampAsDateString(timestamp);
+            return DateUtils.TimestampToShortDateString(timestamp);
         }
         public string GetDescriptionOrDefault() {
 

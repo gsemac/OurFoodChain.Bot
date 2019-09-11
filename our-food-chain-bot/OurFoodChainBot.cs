@@ -108,6 +108,11 @@ namespace OurFoodChain {
                 return _command_service;
             }
         }
+        public IServiceProvider ServiceProvider {
+            get {
+                return _service_provider;
+            }
+        }
         public Config Config { get; set; } = new Config();
 
         public static OurFoodChainBot Instance {

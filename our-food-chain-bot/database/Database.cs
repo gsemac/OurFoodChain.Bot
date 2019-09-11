@@ -113,6 +113,18 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task ForEachRowAsync(SQLiteCommand command, Func<DataRow, Task> callback) {
+
+            using (SQLiteConnection conn = await GetConnectionAsync()) {
+
+                await conn.OpenAsync();
+
+                await DatabaseUtils.ForEachRowAsync(conn, command, callback);
+
+            }
+
+        }
+
         private static readonly string DATABASE_FILE_NAME = "data.db";
         private static readonly string DATABASE_CONNECTION_STRING = string.Format("Data Source={0}", DATABASE_FILE_NAME);
         private static bool _initialized = false;

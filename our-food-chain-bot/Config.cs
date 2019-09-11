@@ -43,18 +43,24 @@ namespace OurFoodChain {
         public bool TrophiesEnabled { get; set; } = true;
         [JsonProperty("gotchis_enabled")]
         public bool GotchisEnabled { get; set; } = true;
+        [JsonProperty("generations_enabled")]
+        public bool GenerationsEnabled { get; set; } = false;
         [JsonProperty("advanced_commands_enabled")]
         public bool AdvancedCommandsEnabled { get; set; } = false;
 
+        public T GetProperty<T>(string name, T defaultValue) {
+
+            PropertyInfo property = _getPropertyByJsonPropertyAttribute(name);
+
+            if (property != null)
+                return (T)Convert.ChangeType(property.GetValue(this), typeof(T));
+            else
+                return defaultValue;
+
+        }
         public bool SetProperty(string name, string value) {
 
-            PropertyInfo property = typeof(Config).GetProperties().FirstOrDefault(x => {
-
-                JsonPropertyAttribute attribute = Attribute.GetCustomAttribute(x, typeof(JsonPropertyAttribute)) as JsonPropertyAttribute;
-
-                return attribute.PropertyName == name.ToLower();
-
-            });
+            PropertyInfo property = _getPropertyByJsonPropertyAttribute(name);
 
             if (property != null)
                 property.SetValue(this, Convert.ChangeType(value, property.PropertyType), null);
@@ -75,6 +81,18 @@ namespace OurFoodChain {
         }
         public static Config FromJson(string json) {
             return JsonConvert.DeserializeObject<Config>(json);
+        }
+
+        private PropertyInfo _getPropertyByJsonPropertyAttribute(string jsonPropertyName) {
+
+            return typeof(Config).GetProperties().FirstOrDefault(x => {
+
+                JsonPropertyAttribute attribute = Attribute.GetCustomAttribute(x, typeof(JsonPropertyAttribute)) as JsonPropertyAttribute;
+
+                return attribute.PropertyName == jsonPropertyName.ToLower();
+
+            });
+
         }
 
     }

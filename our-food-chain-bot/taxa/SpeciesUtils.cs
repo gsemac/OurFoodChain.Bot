@@ -496,6 +496,32 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task SetOwnerAsync(Species species, string ownerName) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner, user_id = NULL WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", species.id);
+                cmd.Parameters.AddWithValue("$owner", ownerName);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+        public static async Task SetOwnerAsync(Species species, string ownerName, ulong ownerId) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner, user_id = $user_id WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", species.id);
+                cmd.Parameters.AddWithValue("$owner", ownerName);
+                cmd.Parameters.AddWithValue("$user_id", ownerId);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+        }
+
         public static async Task<Role[]> GetRolesAsync(long speciesId) {
 
             // Return all roles assigned to the given species.

@@ -357,40 +357,47 @@ namespace OurFoodChain.Commands {
         }
 
         [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetOwner(string species, IUser user) {
-
-            await SetOwner("", species, user);
-
+        public async Task SetOwner(string speciesName, IUser user = null) {
+            await SetOwner(string.Empty, speciesName, user);
         }
         [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetOwner(string genus, string species, IUser user) {
+        public async Task SetOwner(string genusName, string speciesName, IUser user = null) {
 
             if (user is null)
                 user = Context.User;
 
-            string owner = user.Username;
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            if (species != null) {
 
-            if (sp is null)
-                return;
+                await SpeciesUtils.SetOwnerAsync(species, user.Username, user.Id);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner, user_id = $user_id WHERE id=$species_id;")) {
+                // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
-                cmd.Parameters.AddWithValue("$owner", owner);
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
+                if (OurFoodChainBot.Instance.Config.TrophiesEnabled)
+                    await Global.TrophyScanner.AddToQueueAsync(Context, user.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.GetShortName(), user.Username));
 
             }
 
-            // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
+        }
+        [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetOwner(string speciesName, string ownerName) {
+            await SetOwner(string.Empty, speciesName, ownerName);
+        }
+        [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetOwner(string genusName, string speciesName, string ownerName) {
 
-            if (OurFoodChainBot.Instance.Config.TrophiesEnabled)
-                await Global.TrophyScanner.AddToQueueAsync(Context, user.Id);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", sp.GetShortName(), owner));
+            if (species != null) {
+
+                await SpeciesUtils.SetOwnerAsync(species, ownerName);
+
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.GetShortName(), ownerName));
+
+            }
 
         }
 

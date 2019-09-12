@@ -15,35 +15,6 @@ namespace OurFoodChain.Commands {
     public class Commands :
         ModuleBase {
 
-        [Command("info"), Alias("i")]
-        public async Task GetInfo(string name) {
-
-            // Prioritize species first.
-
-            Species[] species = await BotUtils.GetSpeciesFromDb("", name);
-
-            if (species.Count() > 0) {
-
-                if (await BotUtils.ReplyValidateSpeciesAsync(Context, species))
-                    await SpeciesCommandsUtils.ReplySpeciesInfoAsync(Context, species[0]);
-
-            }
-            else {
-
-                // Otherwise, show other taxon.
-
-                Taxon[] taxa = await BotUtils.GetTaxaFromDb(name);
-
-                if (taxa.Count() <= 0)
-                    // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
-                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name, async (BotUtils.ConfirmSuggestionArgs args) => await GetInfo(args.Suggestion));
-                else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
-                    await BotUtils.Command_ShowTaxon(Context, taxa[0].type, name);
-
-            }
-
-        }
-
         [Command("+extinct"), Alias("setextinct")]
         public async Task SetExtinct(string species) {
             await SetExtinct("", species, "");
@@ -679,7 +650,7 @@ namespace OurFoodChain.Commands {
             else if (result.Count() == 1) {
 
                 // If there's only one result, just show that species.
-                await SpeciesCommandsUtils.ReplySpeciesInfoAsync(Context, result.ToArray()[0]);
+                await SpeciesCommands.ShowSpeciesInfoAsync(Context, result.ToArray()[0]);
 
             }
             else {
@@ -792,7 +763,7 @@ namespace OurFoodChain.Commands {
                 if (row is null)
                     await BotUtils.ReplyAsync_Info(Context, "There are currently no extant species.");
                 else
-                    await SpeciesCommandsUtils.ReplySpeciesInfoAsync(Context, await Species.FromDataRow(row));
+                    await SpeciesCommands.ShowSpeciesInfoAsync(Context, await Species.FromDataRow(row));
 
             }
 
@@ -821,7 +792,7 @@ namespace OurFoodChain.Commands {
             if (species.Count() <= 0)
                 await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtils.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
             else
-                await SpeciesCommandsUtils.ReplySpeciesInfoAsync(Context, species[BotUtils.RandomInteger(species.Count())]);
+                await SpeciesCommands.ShowSpeciesInfoAsync(Context, species[BotUtils.RandomInteger(species.Count())]);
 
         }
 

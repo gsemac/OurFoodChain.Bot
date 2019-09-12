@@ -36,6 +36,15 @@ namespace OurFoodChain {
             return null;
 
         }
+        public static async Task<Generation> GetGenerationByTimestampAsync(long timestamp) {
+
+            foreach (Generation generation in await GetGenerationsAsync())
+                if (timestamp >= generation.StartTimestamp && timestamp < generation.EndTimestamp)
+                    return generation;
+
+            return null;
+
+        }
 
         public static async Task<Generation> GetCurrentGenerationAsync() {
 

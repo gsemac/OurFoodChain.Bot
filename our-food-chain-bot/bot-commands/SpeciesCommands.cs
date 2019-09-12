@@ -414,6 +414,16 @@ namespace OurFoodChain.Commands {
             if (common_names.Count() > 0)
                 embed_title += string.Format(" ({0})", string.Join(", ", (object[])common_names));
 
+            // Show generation only if generations are enabled.
+
+            if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
+
+                Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.timestamp);
+
+                embed.AddField("Gen", gen is null ? "?" : gen.Number.ToString(), inline: true);
+
+            }
+
             embed.AddField("Owner", await species.GetOwnerOrDefault(context), inline: true);
 
             // Group zones according to the ones that have the same notes.

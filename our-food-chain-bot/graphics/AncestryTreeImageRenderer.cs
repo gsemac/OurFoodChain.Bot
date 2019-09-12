@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public class AncestryTreeRenderer {
+    public class AncestryTreeImageRenderer {
 
         // Public members
 
-        public static async Task<string> GenerateAndSave(Species species, AncestryTreeGenerationFlags flags) {
+        public static async Task<string> Save(Species species, AncestryTreeGenerationFlags flags) {
 
             // Generate the ancestry tree.
 

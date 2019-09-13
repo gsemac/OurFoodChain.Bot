@@ -38,7 +38,7 @@ namespace OurFoodChain {
                 string line = "";
 
                 line += x.Value.Species.GetTimeStampAsDateString();
-                line += " -";
+                line += " " + (x.Value.Species.isExtinct ? "*" : "-");
 
                 if (x.Parent != null)
                     for (int i = 0; i < x.Depth * 2 - 1; ++i) {

@@ -196,47 +196,25 @@ namespace OurFoodChain.Commands {
         }
 
         [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
-        public async Task Lineage(string species) {
-            await Lineage("", species);
+        public async Task Lineage(string speciesName) {
+            await Lineage(string.Empty, speciesName);
         }
         [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
-        public async Task Lineage(string genus, string species) {
+        public async Task Lineage(string genusName, string speciesName) {
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species != null) {
 
-            List<string> entries = new List<string>();
+                Species[] ancestors = await SpeciesUtils.GetAncestorsAsync(species);
+                StringBuilder sb = new StringBuilder();
 
-            entries.Add(string.Format("{0} - {1}", sp.GetTimeStampAsDateString(), sp.GetShortName()));
+                foreach (Species ancestor in ancestors.Concat(new Species[] { species }))
+                    sb.AppendLine(string.Format("{0} {1} {2}", ancestor.GetTimeStampAsDateString(), ancestor.isExtinct ? "*" : "-", ancestor.GetShortName()));
 
-            long species_id = sp.id;
-
-            while (true) {
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", species_id);
-
-                    DataRow row = await Database.GetRowAsync(cmd);
-
-                    if (row is null)
-                        break;
-
-                    species_id = row.Field<long>("ancestor_id");
-
-                    Species ancestor = await BotUtils.GetSpeciesFromDb(species_id);
-
-                    entries.Add(string.Format("{0} - {1}", ancestor.GetTimeStampAsDateString(), ancestor.GetShortName()));
-
-                }
+                await ReplyAsync(string.Format("```{0}```", sb.ToString()));
 
             }
-
-            entries.Reverse();
-
-            await ReplyAsync(string.Format("```{0}```", string.Join(Environment.NewLine, entries)));
 
         }
         [Command("ancestry2"), Alias("lineage2", "anc2")]

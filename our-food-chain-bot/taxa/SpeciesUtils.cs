@@ -228,6 +228,9 @@ namespace OurFoodChain {
 
             }
 
+            // Reverse the array so that earliest ancestors are listed first.
+            ancestor_ids.Reverse();
+
             return ancestor_ids.ToArray();
 
         }

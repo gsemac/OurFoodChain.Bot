@@ -8,8 +8,9 @@ namespace OurFoodChain {
 
     public enum AncestryTreeGenerationFlags {
         None = 0,
-        Full = 1,
-        DescendantsOnly = 2
+        Full,
+        AncestorsOnly,
+        DescendantsOnly
     }
 
     public class AncestryTree {
@@ -25,18 +26,18 @@ namespace OurFoodChain {
 
             // Start by finding the earliest ancestor of this species.
 
-            List<long> ancestor_ids = new List<long> {
-                species.id
-            };
+            List<long> ancestor_ids = new List<long>();
 
             if (!flags.HasFlag(AncestryTreeGenerationFlags.DescendantsOnly))
                 ancestor_ids.AddRange(await SpeciesUtils.GetAncestorIdsAsync(species.id));
+
+            ancestor_ids.Add(species.id);
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
             TreeNode<NodeData> root = new TreeNode<NodeData> {
                 Value = new NodeData {
-                    Species = await SpeciesUtils.GetSpeciesAsync(ancestor_ids.Last()),
+                    Species = await SpeciesUtils.GetSpeciesAsync(ancestor_ids.First()),
                     IsAncestor = true
                 }
             };

@@ -22,12 +22,14 @@ namespace OurFoodChain.Commands {
 
                 _running_backup = true;
 
-                if (System.IO.File.Exists(Database.GetFilePath()))
+                if (System.IO.File.Exists(Database.FilePath))
                     try {
 
-                        await BotUtils.ReplyAsync_Info(Context, "Uploading database backup. The backup will be posted in this channel when it is complete.");
+                        await BotUtils.ReplyAsync_Info(Context, string.Format(
+                            "Uploading database backup ({0:0.##} MB).\nThe backup will be posted in this channel when it is complete.",
+                            new System.IO.FileInfo(Database.FilePath).Length / 1024000.0));
 
-                        await Context.Channel.SendFileAsync(Database.GetFilePath(), string.Format(string.Format("`Database backup {0}`", DateTime.UtcNow.ToString())));
+                        await Context.Channel.SendFileAsync(Database.FilePath, string.Format(string.Format("`Database backup ({0})`", DateTime.UtcNow.ToString())));
 
                     }
                     catch (Exception) {

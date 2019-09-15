@@ -12,14 +12,16 @@ namespace OurFoodChain {
 
     class Database {
 
+        // Public members
 
+        public static string FilePath { get; } = Global.DatabaseFilePath;
 
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
             if (!_initialized)
                 await _initializeAsync();
 
-            return new SQLiteConnection(DATABASE_CONNECTION_STRING);
+            return new SQLiteConnection(_database_connection_string);
 
         }
         public static async Task<DataRow> GetRowAsync(SQLiteCommand command) {
@@ -125,25 +127,21 @@ namespace OurFoodChain {
 
         }
 
-        private static readonly string DATABASE_FILE_NAME = "data.db";
-        private static readonly string DATABASE_CONNECTION_STRING = string.Format("Data Source={0}", DATABASE_FILE_NAME);
+        private static readonly string _database_connection_string = string.Format("Data Source={0}", FilePath);
         private static bool _initialized = false;
-
-        public static string GetFilePath() {
-            return DATABASE_FILE_NAME;
-        }
 
         private static void _backupDatabase() {
 
-            if (System.IO.File.Exists(DATABASE_FILE_NAME)) {
+            if (System.IO.File.Exists(FilePath)) {
 
                 System.IO.Directory.CreateDirectory("backups");
 
-                System.IO.File.Copy(DATABASE_FILE_NAME, System.IO.Path.Combine("backups", string.Format("{0}-{1}", DateTimeOffset.Now.ToUnixTimeSeconds(), DATABASE_FILE_NAME)));
+                System.IO.File.Copy(FilePath, System.IO.Path.Combine("backups", string.Format("{0}-{1}", DateTimeOffset.Now.ToUnixTimeSeconds(), System.IO.Path.GetFileName(FilePath))));
 
             }
 
         }
+
         private static async Task _initializeAsync() {
 
             if (_initialized)

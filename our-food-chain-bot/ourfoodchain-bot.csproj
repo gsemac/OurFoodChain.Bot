@@ -320,8 +320,10 @@
     <None Include="data\gotchi\moves\thorn_prick.lua" />
     <None Include="data\gotchi\moves\thorn_strike.lua" />
     <None Include="data\gotchi\types\carnivore.lua" />
+    <None Include="data\gotchi\types\decomposer.lua" />
     <None Include="data\gotchi\types\herbivore.lua" />
     <None Include="data\gotchi\types\autotroph.lua" />
+    <None Include="data\gotchi\types\parasite.lua" />
     <None Include="data\help\+common.json" />
     <None Include="data\help\-common.json" />
     <None Include="data\help\-pic.json" />

@@ -229,11 +229,13 @@
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
+    <Compile Include="gotchi\GotchiRequirements.cs" />
     <Compile Include="gotchi\GotchiTradeRequest.cs" />
     <Compile Include="database\DatabaseUtils.cs" />
     <Compile Include="commands\PrivilegeLevel.cs" />
     <Compile Include="commands\RequirePrivilegeAttribute.cs" />
     <Compile Include="discord\DiscordUtils.cs" />
+    <Compile Include="gotchi\GotchiType.cs" />
     <Compile Include="graphics\AncestryTreeImageRenderer.cs" />
     <Compile Include="graphics\AncestryTreeTextRenderer.cs" />
     <Compile Include="periods\Generation.cs" />
@@ -315,6 +317,9 @@
     <None Include="data\gotchi\moves\thorn_assault.lua" />
     <None Include="data\gotchi\moves\thorn_prick.lua" />
     <None Include="data\gotchi\moves\thorn_strike.lua" />
+    <None Include="data\gotchi\types\carnivore.lua" />
+    <None Include="data\gotchi\types\herbivore.lua" />
+    <None Include="data\gotchi\types\autotroph.lua" />
     <None Include="data\help\+common.json" />
     <None Include="data\help\-common.json" />
     <None Include="data\help\-pic.json" />

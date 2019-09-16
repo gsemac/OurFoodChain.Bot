@@ -1,13 +1,8 @@
 ﻿{
   "name": "setowner",
-  "aliases": [
-    "setown",
-    "claim"
-  ],
   "category": "update",
-  "description": "Sets the owner of the given species. Use \"claim\" with no arguments to claim a species as your own.",
+  "description": "Sets the owner of the given species.",
   "examples": [
-    "claim H. quattuorus",
     "setowner H. quattuorus @user"
   ]
 }

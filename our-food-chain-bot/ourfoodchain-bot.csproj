@@ -293,6 +293,8 @@
     <Compile Include="taxa\SearchQuery.cs" />
     <Compile Include="taxa\SpeciesUtils.cs" />
     <Compile Include="utils\TreeUtils.cs" />
+    <Compile Include="utils\UserInfo.cs" />
+    <Compile Include="utils\UserUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="taxa\TaxonUtils.cs" />

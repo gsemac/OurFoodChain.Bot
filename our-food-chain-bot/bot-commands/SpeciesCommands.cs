@@ -356,15 +356,12 @@ namespace OurFoodChain.Commands {
 
         }
 
-        [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetOwner(string speciesName, IUser user = null) {
+        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetOwner(string speciesName, IUser user) {
             await SetOwner(string.Empty, speciesName, user);
         }
-        [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetOwner(string genusName, string speciesName, IUser user = null) {
-
-            if (user is null)
-                user = Context.User;
+        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetOwner(string genusName, string speciesName, IUser user) {
 
             Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
@@ -382,18 +379,30 @@ namespace OurFoodChain.Commands {
             }
 
         }
-        [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOwner(string speciesName, string ownerName) {
             await SetOwner(string.Empty, speciesName, ownerName);
         }
-        [Command("setowner"), Alias("setown", "claim"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOwner(string genusName, string speciesName, string ownerName) {
 
             Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
             if (species != null) {
 
-                await SpeciesUtils.SetOwnerAsync(species, ownerName);
+                // If we've seen this user before, get their user ID from the database.
+
+                UserInfo userInfo = await UserUtils.GetUserInfoAsync(ownerName);
+
+                if (userInfo != null) {
+
+                    ownerName = userInfo.Username;
+
+                    await SpeciesUtils.SetOwnerAsync(species, userInfo.Username, userInfo.UserId);
+
+                }
+                else
+                    await SpeciesUtils.SetOwnerAsync(species, ownerName);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.GetShortName(), ownerName));
 

@@ -102,6 +102,15 @@ namespace OurFoodChain.Gotchi {
 
         }
 
+        [Command("test")]
+        public async Task test(string typeName) {
+
+            GotchiType type = await Global.GotchiTypeRegistry.GetTypeAsync(typeName);
+
+            await ReplyAsync(type.BaseAtk.ToString());
+
+        }
+
         [Command("get")]
         public async Task Get(string species) {
             await Get("", species);

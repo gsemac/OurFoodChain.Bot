@@ -10,8 +10,6 @@
 	type.SetBaseDef(65)
 	type.SetBaseSpd(40)
 
-	type.SetStatMultiplier(1.1)
-
 	type.Requires.RoleMatch("producer|autotroph|plant")
 
 end

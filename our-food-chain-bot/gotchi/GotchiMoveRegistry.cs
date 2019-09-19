@@ -51,7 +51,7 @@ namespace OurFoodChain.Gotchi {
 
             Script script = new Script();
 
-            LuaUtils.InitializeScript(script);
+            LuaUtils.InitializeLuaContext(script);
 
             // Register all moves.
 

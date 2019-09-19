@@ -23,7 +23,7 @@ namespace OurFoodChain {
             _discord_client = new DiscordSocketClient(
                 new DiscordSocketConfig() {
 
-                    LogLevel = LogSeverity.Info,
+                    LogLevel = Discord.LogSeverity.Info,
 
                     // Allows the bot to run on Windows 7.
                     WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance
@@ -35,21 +35,21 @@ namespace OurFoodChain {
             _discord_client.ReactionAdded += _onReactionReceivedAsync;
             _discord_client.ReactionRemoved += _onReactionRemovedAsync;
 
-            _instance = this;
+            Instance = this;
 
         }
 
         public async Task LoadConfigAsync(string filePath) {
 
             if (!System.IO.File.Exists(filePath)) {
-                await LogAsync(LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
+                await LogAsync(Discord.LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
                 Environment.Exit(-1);
             }
 
             Config = Config.FromFile(filePath);
 
             if (string.IsNullOrEmpty(Config.Token)) {
-                await LogAsync(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
+                await LogAsync(Discord.LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
                 Environment.Exit(-1);
             }
 
@@ -66,8 +66,46 @@ namespace OurFoodChain {
             await ReloadConfigAsync();
 
         }
+        public async Task LogAsync(LogMessage logMessage) {
+
+            Discord.LogSeverity dSeverity = Discord.LogSeverity.Info;
+
+            switch (logMessage.Severity) {
+
+                case LogSeverity.Info:
+
+                    dSeverity = Discord.LogSeverity.Info;
+
+                    break;
+
+                case LogSeverity.Warning:
+
+                    dSeverity = Discord.LogSeverity.Warning;
+
+                    break;
+
+                case LogSeverity.Error:
+
+                    dSeverity = Discord.LogSeverity.Error;
+
+                    break;
+
+            }
+
+            await LogAsync(dSeverity, logMessage.Source, logMessage.Message);
+
+        }
         public async Task LogAsync(LogSeverity severity, string source, string message) {
-            await _logAsync(new LogMessage(severity, source, message));
+
+            await LogAsync(new LogMessage {
+                Severity = severity,
+                Source = source,
+                Message = message
+            });
+
+        }
+        public async Task LogAsync(Discord.LogSeverity severity, string source, string message) {
+            await _logAsync(new Discord.LogMessage(severity, source, message));
         }
         public async Task ReloadConfigAsync() {
 
@@ -82,10 +120,10 @@ namespace OurFoodChain {
         }
         public CommandInfo GetInstalledCommandByName(string commandName) {
 
-            if (_command_service is null)
+            if (CommandService is null)
                 return null;
 
-            foreach (CommandInfo info in _command_service.Commands)
+            foreach (CommandInfo info in CommandService.Commands)
                 if (info.Name.ToLower() == commandName.ToLower() || info.Aliases.Any(y => y.ToLower() == commandName.ToLower()))
                     return info;
 
@@ -103,48 +141,30 @@ namespace OurFoodChain {
                 return _discord_client;
             }
         }
-        public CommandService CommandService {
-            get {
-                return _command_service;
-            }
-        }
-        public IServiceProvider ServiceProvider {
-            get {
-                return _service_provider;
-            }
-        }
+        public CommandService CommandService { get; private set; }
+        public IServiceProvider ServiceProvider { get; private set; }
         public Config Config { get; set; } = new Config();
 
-        public static OurFoodChainBot Instance {
-            get {
-                return _instance;
-            }
-        }
-
-        // Private members
-
-        private static OurFoodChainBot _instance = null;
+        public static OurFoodChainBot Instance { get; private set; } = null;
 
         private DiscordSocketClient _discord_client;
-        private CommandService _command_service;
-        private IServiceProvider _service_provider;
 
         private async Task _installCommandsAsync() {
 
-            _command_service = new CommandService();
-            _service_provider = new ServiceCollection().BuildServiceProvider();
+            CommandService = new CommandService();
+            ServiceProvider = new ServiceCollection().BuildServiceProvider();
 
-            await _command_service.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), _service_provider);
+            await CommandService.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), ServiceProvider);
 
             if (!Config.TrophiesEnabled)
-                await _command_service.RemoveModuleAsync<Trophies.Commands>();
+                await CommandService.RemoveModuleAsync<Trophies.Commands>();
 
             if (!Config.GotchisEnabled)
-                await _command_service.RemoveModuleAsync<Gotchi.Commands>();
+                await CommandService.RemoveModuleAsync<Gotchi.Commands>();
 
         }
 
-        private async Task _logAsync(LogMessage message) {
+        private async Task _logAsync(Discord.LogMessage message) {
 
             Console.WriteLine(message.ToString());
 
@@ -208,7 +228,7 @@ namespace OurFoodChain {
             int pos = _getCommandArgumentsPosition(message);
             var context = new CommandContext(_discord_client, message);
 
-            var result = await _command_service.ExecuteAsync(context, pos, _service_provider);
+            var result = await CommandService.ExecuteAsync(context, pos, ServiceProvider);
 
             if (result.IsSuccess)
                 return true;

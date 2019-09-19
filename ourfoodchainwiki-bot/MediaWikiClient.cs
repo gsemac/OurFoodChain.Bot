@@ -9,35 +9,6 @@ using System.Text.RegularExpressions;
 
 namespace OurFoodChainWikiBot {
 
-    public enum LogSeverity {
-        Info,
-        Warning,
-        Error
-    }
-
-    public class LogMessage {
-
-        public LogSeverity Severity { get; set; } = LogSeverity.Info;
-        public string Source { get; set; }
-        public string Message { get; set; }
-
-        public override string ToString() {
-
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append(DateTime.Now.ToString("HH:mm:ss"));
-            sb.Append(" ");
-            sb.Append(string.Format("[{0}]", Source).PadRight(12));
-
-            sb.Append(" ");
-            sb.Append(Message);
-
-            return sb.ToString();
-
-        }
-
-    }
-
     public enum EditAction {
         AppendText,
         PrependText,
@@ -159,7 +130,7 @@ namespace OurFoodChainWikiBot {
 
     public class MediaWikiClient {
 
-        public event Action<LogMessage> Log;
+        public event Action<OurFoodChain.LogMessage> Log;
 
         public string Protocol { get; set; } = "https";
         public string Server { get; set; }
@@ -438,7 +409,7 @@ namespace OurFoodChainWikiBot {
 
         }
 
-        private void _onLog(LogMessage message) {
+        private void _onLog(OurFoodChain.LogMessage message) {
 
             if (Log is null)
                 Console.WriteLine(message.ToString());
@@ -447,13 +418,13 @@ namespace OurFoodChainWikiBot {
 
         }
         private void _logInfo(string message) {
-            _onLog(new LogMessage { Severity = LogSeverity.Info, Message = message, Source = "mwclient" });
+            _onLog(new OurFoodChain.LogMessage { Severity = OurFoodChain.LogSeverity.Info, Message = message, Source = "mwclient" });
         }
         private void _logWarn(string message) {
-            _onLog(new LogMessage { Severity = LogSeverity.Warning, Message = message, Source = "mwclient" });
+            _onLog(new OurFoodChain.LogMessage { Severity = OurFoodChain.LogSeverity.Warning, Message = message, Source = "mwclient" });
         }
         private void _logError(string message) {
-            _onLog(new LogMessage { Severity = LogSeverity.Error, Message = message, Source = "mwclient" });
+            _onLog(new OurFoodChain.LogMessage { Severity = OurFoodChain.LogSeverity.Error, Message = message, Source = "mwclient" });
         }
 
     }

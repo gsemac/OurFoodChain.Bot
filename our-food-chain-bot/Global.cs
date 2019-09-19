@@ -8,6 +8,8 @@ namespace OurFoodChain {
 
     public static class Global {
 
+        // Directories
+
         public static string DataDirectory { get; } = "data/";
         public static string TempDirectory { get; } = DataDirectory + "temp/";
 
@@ -20,8 +22,30 @@ namespace OurFoodChain {
         public static string DatabaseFilePath { get; } = DatabaseDirectory + "data.db";
         public static string DatabaseUpdatesDirectory { get; } = DataDirectory + "updates/";
 
+        // Trophies
+
         public static Trophies.TrophyRegistry TrophyRegistry { get; } = new Trophies.TrophyRegistry();
         public static Trophies.TrophyScanner TrophyScanner { get; } = new Trophies.TrophyScanner(TrophyRegistry);
+
+        // Gotchis
+
+        public static Gotchi.GotchiTypeRegistry GotchiTypeRegistry {
+            get {
+
+                if (_gotchiTypeRegistry is null) {
+
+                    _gotchiTypeRegistry = new Gotchi.GotchiTypeRegistry(GotchiDataDirectory + "types/");
+
+                    _gotchiTypeRegistry.LogAsync += async x => await OurFoodChainBot.Instance.LogAsync(x);
+
+                }
+
+                return _gotchiTypeRegistry;
+
+            }
+        }
+
+        private static Gotchi.GotchiTypeRegistry _gotchiTypeRegistry;
 
     }
 

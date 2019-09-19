@@ -102,13 +102,13 @@ namespace OurFoodChainWikiBot {
 
         private static void _log(string message) {
 
-            _log(new LogMessage {
+            _log(new OurFoodChain.LogMessage {
                 Source = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
                 Message = message
             });
 
         }
-        private static void _log(LogMessage message) {
+        private static void _log(OurFoodChain.LogMessage message) {
 
             if (string.IsNullOrEmpty(LOG_FILE_PATH)) {
 

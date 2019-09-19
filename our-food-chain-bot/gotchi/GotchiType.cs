@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoonSharp.Interpreter;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchi {
 
+    [MoonSharpUserData]
     public class GotchiType {
+
+        // Public members
 
         public string Name {
             get {
@@ -17,13 +21,13 @@ namespace OurFoodChain.Gotchi {
                 _name = value;
             }
         }
-        public GotchiRequirements Requires { get; set; }
+        public GotchiRequirements Requires { get; set; } = new GotchiRequirements();
         public Color Color { get; set; } = Color.White;
 
         public int BaseHp { get; set; } = 40;
-        public double BaseAtk { get; set; } = 40;
-        public double BaseDef { get; set; } = 40;
-        public double BaseSpd { get; set; } = 40;
+        public int BaseAtk { get; set; } = 40;
+        public int BaseDef { get; set; } = 40;
+        public int BaseSpd { get; set; } = 40;
 
         public void SetName(string name) {
             Name = name;
@@ -56,7 +60,9 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        private string _name = "unknown type";
+        // Private members
+
+        private string _name = "unknown";
         private readonly Dictionary<string, double> _matchups = new Dictionary<string, double>();
 
     }

@@ -449,7 +449,7 @@ namespace OurFoodChain.Gotchi {
                 // Create, initialize, and execute the script associated with this move.
 
                 Script script = new Script();
-                LuaUtils.InitializeScript(script);
+                LuaUtils.InitializeLuaContext(script);
 
                 script.DoFile(user.selectedMove.info.scriptPath);
 

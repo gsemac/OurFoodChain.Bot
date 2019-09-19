@@ -236,6 +236,7 @@
     <Compile Include="commands\RequirePrivilegeAttribute.cs" />
     <Compile Include="discord\DiscordUtils.cs" />
     <Compile Include="gotchi\GotchiType.cs" />
+    <Compile Include="gotchi\GotchiTypeRegistry.cs" />
     <Compile Include="graphics\AncestryTreeImageRenderer.cs" />
     <Compile Include="graphics\AncestryTreeTextRenderer.cs" />
     <Compile Include="periods\Generation.cs" />
@@ -292,6 +293,7 @@
     <Compile Include="discord\PaginatedEmbedBuilder.cs" />
     <Compile Include="taxa\SearchQuery.cs" />
     <Compile Include="taxa\SpeciesUtils.cs" />
+    <Compile Include="utils\LogMessage.cs" />
     <Compile Include="utils\TreeUtils.cs" />
     <Compile Include="utils\UserInfo.cs" />
     <Compile Include="utils\UserUtils.cs" />

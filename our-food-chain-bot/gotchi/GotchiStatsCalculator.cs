@@ -96,15 +96,17 @@ namespace OurFoodChain.Gotchi {
 
             GotchiStats result = await GetBaseStatsAsync(gotchi);
 
-            result.Level = GotchiExperienceCalculator.GetLevel(gotchi.ExperienceGroup, gotchi.Experience);
+            result.Experience = gotchi.Experience;
 
             // Calculate final stats based on level and base stats.
             // #todo Implement IVs/EVs
 
-            result.MaxHp = _calculateHp(result.MaxHp, 0, 0, result.Level);
-            result.Atk = _calculateStat(result.Atk, 0, 0, result.Level);
-            result.Def = _calculateStat(result.Def, 0, 0, result.Level);
-            result.Spd = _calculateStat(result.Spd, 0, 0, result.Level);
+            int level = result.Level;
+
+            result.MaxHp = _calculateHp(result.MaxHp, 0, 0, level);
+            result.Atk = _calculateStat(result.Atk, 0, 0, level);
+            result.Def = _calculateStat(result.Def, 0, 0, level);
+            result.Spd = _calculateStat(result.Spd, 0, 0, level);
 
             result.Hp = result.MaxHp;
 

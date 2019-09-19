@@ -103,12 +103,12 @@ namespace OurFoodChain.Gotchi {
         public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi) {
 
             // Get stats.
-            LuaGotchiStats stats = await GotchiStatsUtils.CalculateStats(gotchi);
+            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
 
             return await GetMovesetAsync(gotchi, stats);
 
         }
-        public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi, LuaGotchiStats stats) {
+        public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi, GotchiStats stats) {
 
             GotchiMoveset set = new GotchiMoveset();
             await set.AddAsync("hit"); // all gotchis can use hit regardless of species
@@ -128,7 +128,7 @@ namespace OurFoodChain.Gotchi {
 
                 if (string.IsNullOrEmpty(move.requires.unrestrictedMatch) || !Regex.Match(sp.description, move.requires.unrestrictedMatch).Success) {
 
-                    if (stats.level < move.requires.minLevel || stats.level > move.requires.maxLevel)
+                    if (stats.Level < move.requires.minLevel || stats.Level > move.requires.maxLevel)
                         continue;
 
                     if (!string.IsNullOrEmpty(move.requires.match) && !Regex.Match(sp.description, move.requires.match).Success)

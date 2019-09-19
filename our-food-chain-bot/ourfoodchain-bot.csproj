@@ -228,7 +228,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
-    <Compile Include="gotchi\GotchiBattleInfo.cs" />
+    <Compile Include="gotchi\BattleGotchi.cs" />
     <Compile Include="gotchi\GotchiExperienceCalculator.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
     <Compile Include="gotchi\GotchiRequirementsChecker.cs" />
@@ -257,7 +257,6 @@
     <Compile Include="gotchi\GotchiLua.cs" />
     <Compile Include="gotchi\GotchiMoveRegistry.cs" />
     <Compile Include="gotchi\GotchiMoveset.cs" />
-    <Compile Include="gotchi\GotchiStatsUtils.cs" />
     <Compile Include="gotchi\GotchiBattleStatus.cs" />
     <Compile Include="gotchi\GotchiUserInfo.cs" />
     <Compile Include="gotchi\GotchiUtils.cs" />

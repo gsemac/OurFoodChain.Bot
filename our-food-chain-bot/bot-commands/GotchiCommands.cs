@@ -106,7 +106,7 @@ namespace OurFoodChain.Gotchi {
         public async Task test(string speciesName) {
 
             Species sp = await SpeciesUtils.GetUniqueSpeciesAsync(speciesName);
-            Gotchi gotchi = new Gotchi { SpeciesId = sp.id, Experience = GotchiExperienceCalculator.ExperienceRequiredForLevel(ExperienceGroup.MediumFast, 50) };
+            Gotchi gotchi = new Gotchi { SpeciesId = sp.id, Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.MediumFast, 50) };
             GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
 
             await ReplyAsync(Newtonsoft.Json.JsonConvert.SerializeObject(stats, Newtonsoft.Json.Formatting.Indented));
@@ -276,27 +276,27 @@ namespace OurFoodChain.Gotchi {
             // Calculate stats for this gotchi.
             // If the user is currently in battle, show their battle stats instead.
 
-            LuaGotchiStats stats;
+            GotchiStats stats;
 
             GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
 
             if (!(battle_state is null))
                 stats = battle_state.GetGotchiStats(gotchi);
             else
-                stats = await GotchiStatsUtils.CalculateStats(gotchi);
+                stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
 
             // Create the embed.
 
             EmbedBuilder stats_page = new EmbedBuilder();
 
-            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age));
+            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
             stats_page.WithThumbnailUrl(sp.pics);
-            stats_page.WithFooter(string.Format("{0} experience points until next level", GotchiStatsUtils.ExperienceRequired(stats)));
+            stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
-            stats_page.AddField("❤ Hit points", (int)stats.hp, inline: true);
-            stats_page.AddField("💥 Attack", (int)stats.atk, inline: true);
-            stats_page.AddField("🛡 Defense", (int)stats.def, inline: true);
-            stats_page.AddField("💨 Speed", (int)stats.spd, inline: true);
+            stats_page.AddField("❤ Hit points", stats.Hp, inline: true);
+            stats_page.AddField("💥 Attack", stats.Atk, inline: true);
+            stats_page.AddField("🛡 Defense", stats.Def, inline: true);
+            stats_page.AddField("💨 Speed", stats.Spd, inline: true);
 
             await ReplyAsync("", false, stats_page.Build());
 
@@ -334,11 +334,11 @@ namespace OurFoodChain.Gotchi {
             // Create the embed.
 
             EmbedBuilder set_page = new EmbedBuilder();
-            LuaGotchiStats stats = await GotchiStatsUtils.CalculateStats(gotchi);
+            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
 
-            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.level, sp.GetShortName(), gotchi.Age));
+            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
             set_page.WithThumbnailUrl(sp.pics);
-            set_page.WithFooter(string.Format("{0} experience points until next level", GotchiStatsUtils.ExperienceRequired(stats)));
+            set_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
             int move_index = 1;
 
@@ -905,7 +905,7 @@ namespace OurFoodChain.Gotchi {
                         index,
                         StringUtils.ToTitleCase(i.Name),
                         (await BotUtils.GetSpeciesFromDb(i.SpeciesId)).GetShortName(),
-                        (await GotchiStatsUtils.CalculateStats(i)).level));
+                        GotchiExperienceCalculator.GetLevel(ExperienceGroup.Default, i)));
 
                     ++index;
 

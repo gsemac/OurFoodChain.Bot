@@ -26,7 +26,6 @@ namespace OurFoodChain.Gotchi {
         public long EvolvedTimestamp { get; set; } = 0;
 
         public int Experience { get; set; } = 0;
-        public ExperienceGroup ExperienceGroup { get; set; } = ExperienceGroup.MediumFast;
 
         public int Age {
             get {
@@ -37,9 +36,6 @@ namespace OurFoodChain.Gotchi {
 
             }
         }
-
-        public LuaGotchiStats Stats { get; set; }
-        public GotchiMoveset Moveset { get; set; }
 
         public bool IsSleeping() {
 

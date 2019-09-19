@@ -91,95 +91,9 @@ namespace OurFoodChain.Gotchi {
     }
 
     [MoonSharpUserData]
-    public class LuaGotchiStats {
-
-        public LuaGotchiStats() {
-            _init();
-        }
-
-        public double hp = 1.5;
-        public double maxHp = 1.5;
-        public double atk = 0.8;
-        public double def = 0.1;
-        public double spd = 0.5;
-
-        public double baseHp;
-        public double baseMaxHp;
-        public double baseAtk;
-        public double baseDef;
-        public double baseSpd;
-
-        public long level = 1;
-        public double exp = 0;
-        public double accuracy = 1.0;
-        public double evasion = 0.0;
-
-        /// <summary>
-        /// Multiplies all stats by the given scale factor.
-        /// </summary>
-        /// <param name="multiplier">The scale factor to use.</param>
-        public void MultiplyAll(double multiplier) {
-
-            hp *= multiplier;
-            maxHp *= multiplier;
-            atk *= multiplier;
-            def *= multiplier;
-            spd *= multiplier;
-
-        }
-        /// <summary>
-        /// Resets all stats to their base values, effectively undoing all stat changes.
-        /// </summary>
-        public void Reset() {
-
-            hp = baseHp;
-            maxHp = baseMaxHp;
-            atk = baseAtk;
-            def = baseDef;
-            spd = baseSpd;
-
-        }
-
-        /// <summary>
-        /// Ensures that all fields are set to sane values, adjusting them if necessary.
-        /// </summary>
-        [MoonSharpHidden]
-        public void Normalize() {
-
-            maxHp = Math.Max(0.0, maxHp);
-            hp = Math.Min(Math.Max(0.0, hp), maxHp);
-            atk = Math.Max(0.0, atk);
-            def = Math.Max(0.0, def);
-            spd = Math.Max(0.0, spd);
-
-        }
-        /// <summary>
-        /// Clone the object and returns the cloned instance.
-        /// </summary>
-        /// <returns>Returns the cloned instance.</returns>
-        [MoonSharpHidden]
-        public LuaGotchiStats Clone() {
-
-            return (LuaGotchiStats)MemberwiseClone();
-
-        }
-
-        private void _init() {
-
-            baseHp = hp;
-            baseMaxHp = maxHp;
-            baseAtk = atk;
-            baseDef = def;
-            baseSpd = spd;
-
-        }
-
-    }
-
-    [MoonSharpUserData]
     public class LuaGotchiParameters {
 
-        public LuaGotchiParameters(LuaGotchiStats stats, Role[] roles, Species species) {
+        public LuaGotchiParameters(GotchiStats stats, Role[] roles, Species species) {
 
             this.stats = stats;
             this.roles = roles;
@@ -187,7 +101,7 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public LuaGotchiStats stats;
+        public GotchiStats stats;
         public Role[] roles;
         public Species species;
         public string status = GotchiBattleState.DEFAULT_GOTCHI_BATTLE_STATUS;
@@ -217,7 +131,7 @@ namespace OurFoodChain.Gotchi {
         /// </summary>
         /// <returns>The move's base damage.</returns>
         public double BaseDamage() {
-            return user.stats.atk;
+            return user.stats.Atk;
         }
         /// <summary>
         /// For offensive moves, returns the total damage dealt to the opponent, with all scaling and defensive stats taken into account.
@@ -234,10 +148,10 @@ namespace OurFoodChain.Gotchi {
         public double TotalDamage(double baseDamage) {
 
             //double damage = baseDamage;
-            //return Math.Max(1.0, (damage * bonus_multiplier) - target.def) * matchup_multiplier;
+            //return Math.Max(1.0, (damage * bonus_multiplier) - target.Def) * matchup_multiplier;
 
             double multiplier = bonusMultiplier * matchupMultiplier * (BotUtils.RandomInteger(85, 100 + 1) / 100.0);
-            double damage = baseDamage * (user.stats.atk / Math.Max(1.0, target.stats.def)) / 10.0 * multiplier;
+            double damage = baseDamage * (user.stats.Atk / Math.Max(1.0, target.stats.Def)) / 10.0 * multiplier;
 
             damage = Math.Max(1.0 * bonusMultiplier * matchupMultiplier, damage);
 
@@ -255,15 +169,15 @@ namespace OurFoodChain.Gotchi {
 
             double damage = TotalDamage(baseDamage * multiplier);
 
-            target.stats.hp -= damage;
+            target.stats.Hp -= Math.Min(1, (int)damage);
 
         }
 
         public void DoRecover(double amount) {
-            user.stats.hp += amount;
+            user.stats.Hp += (int)amount;
         }
         public void DoRecoverPercent(double percent) {
-            user.stats.hp += user.stats.maxHp * percent;
+            user.stats.Hp += (int)(user.stats.MaxHp * percent);
         }
 
         public bool TargetHasRole(string roleName) {

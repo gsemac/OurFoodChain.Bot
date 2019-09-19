@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchi {
 
-    public class GotchiBattleInfo {
+    public class BattleGotchi {
 
-        public Gotchi Gotchi { get; set; } = null;
+        public Gotchi Gotchi { get; set; } = new Gotchi();
 
         public GotchiStats Stats { get; set; } = new GotchiStats();
         public GotchiType[] Types { get; set; } = new GotchiType[] { };
-        public GotchiMove[] Moves { get; set; } = new GotchiMove[] { };
+        public GotchiMoveset Moves { get; set; } = new GotchiMoveset();
 
     }
 

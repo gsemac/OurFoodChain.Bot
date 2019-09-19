@@ -271,18 +271,18 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public static async Task<Gotchi> GenerateGotchiAsync(GotchiGenerationParameters parameters) {
+        public static async Task<BattleGotchi> GenerateGotchiAsync(GotchiGenerationParameters parameters) {
 
-            Gotchi result = new Gotchi();
+            BattleGotchi result = new BattleGotchi();
 
             if (!(parameters.Base is null)) {
 
                 // If a base gotchi was provided, copy over some of its characteristics.
 
-                result.BornTimestamp = parameters.Base.BornTimestamp;
-                result.DiedTimestamp = parameters.Base.DiedTimestamp;
-                result.EvolvedTimestamp = parameters.Base.EvolvedTimestamp;
-                result.FedTimestamp = parameters.Base.FedTimestamp;
+                result.Gotchi.BornTimestamp = parameters.Base.BornTimestamp;
+                result.Gotchi.DiedTimestamp = parameters.Base.DiedTimestamp;
+                result.Gotchi.EvolvedTimestamp = parameters.Base.EvolvedTimestamp;
+                result.Gotchi.FedTimestamp = parameters.Base.FedTimestamp;
 
             }
 
@@ -301,35 +301,32 @@ namespace OurFoodChain.Gotchi {
             }
 
             if (!(species is null))
-                result.SpeciesId = species.id;
+                result.Gotchi.SpeciesId = species.id;
 
             // Evolve it the given number of times.
 
             for (int i = 0; i < parameters.MaxEvolutions; ++i)
-                if (!await EvolveAndUpdateGotchiAsync(result))
+                if (!await EvolveAndUpdateGotchiAsync(result.Gotchi))
                     break;
 
             // Generate stats (if applicable).
 
             if (parameters.GenerateStats) {
 
-                result.Stats = new LuaGotchiStats {
-                    level = Math.Max(1, BotUtils.RandomInteger(parameters.MinLevel, parameters.MaxLevel + 1)),
-                    exp = (parameters.Base is null) ? 0 : (parameters.Base.Stats is null ? 0 : parameters.Base.Stats.exp)
-                };
+                result.Gotchi.Experience = GotchiExperienceCalculator.ExperienceToLevel(result.Stats.ExperienceGroup, BotUtils.RandomInteger(parameters.MinLevel, parameters.MaxLevel + 1));
 
-                await GotchiStatsUtils.CalculateStats(result, result.Stats);
+                result.Stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(result.Gotchi);
 
             }
 
             // Generate moveset (if applicable).
 
             if (parameters.GenerateMoveset)
-                result.Moveset = await GotchiMoveset.GetMovesetAsync(result, result.Stats);
+                result.Moves = await GotchiMoveset.GetMovesetAsync(result.Gotchi, result.Stats);
 
             // Generate a name for the gotchi.
 
-            result.Name = (species is null ? "Wild Gotchi" : species.GetShortName()) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.level);
+            result.Gotchi.Name = (species is null ? "Wild Gotchi" : species.GetShortName()) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.Level);
 
             return result;
 
@@ -726,7 +723,7 @@ namespace OurFoodChain.Gotchi {
 
                 // Level is calculated based off of total EXP now, but if level data exists, use it.
 
-                result.Experience += GotchiExperienceCalculator.ExperienceRequiredForLevel(result.ExperienceGroup, (int)Math.Max(1, row.Field<long>("level")));
+                result.Experience += GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.Default, (int)Math.Max(1, row.Field<long>("level")));
 
             }
 

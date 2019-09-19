@@ -25,7 +25,7 @@ namespace OurFoodChain.Gotchi {
 
         public class PlayerState {
             public Gotchi gotchi;
-            public LuaGotchiStats stats;
+            public GotchiStats stats;
             public GotchiMoveset moves;
             public GotchiMove selectedMove = null;
             public string status = DEFAULT_GOTCHI_BATTLE_STATUS;
@@ -85,7 +85,7 @@ namespace OurFoodChain.Gotchi {
             return userId == player1.gotchi.OwnerId ? player1.gotchi : player2.gotchi;
 
         }
-        public LuaGotchiStats GetGotchiStats(Gotchi gotchi) {
+        public GotchiStats GetGotchiStats(Gotchi gotchi) {
 
             if (gotchi.Id == player1.gotchi.Id)
                 return player1.stats;
@@ -189,11 +189,11 @@ namespace OurFoodChain.Gotchi {
                 first = player2;
                 second = player1;
             }
-            else if (player1.stats.spd > player2.stats.spd) {
+            else if (player1.stats.Spd > player2.stats.Spd) {
                 first = player1;
                 second = player2;
             }
-            else if (player2.stats.spd > player1.stats.spd) {
+            else if (player2.stats.Spd > player1.stats.Spd) {
                 first = player2;
                 second = player1;
             }
@@ -262,7 +262,7 @@ namespace OurFoodChain.Gotchi {
 
         public bool IsBattleOver() {
 
-            return player1.stats.hp <= 0.0 || player2.stats.hp <= 0.0;
+            return player1.stats.Hp <= 0.0 || player2.stats.Hp <= 0.0;
 
         }
         public bool IsBattlingCpu() {
@@ -301,7 +301,7 @@ namespace OurFoodChain.Gotchi {
             state.player1 = new PlayerState {
                 gotchi = gotchi1,
                 moves = await GotchiMoveset.GetMovesetAsync(gotchi1),
-                stats = await GotchiStatsUtils.CalculateStats(gotchi1)
+                stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi1)
             };
 
             // Initialize Player 2 (which may be a human player, or a CPU).
@@ -313,7 +313,7 @@ namespace OurFoodChain.Gotchi {
                 state.player2 = new PlayerState {
                     gotchi = gotchi2,
                     moves = await GotchiMoveset.GetMovesetAsync(gotchi2),
-                    stats = await GotchiStatsUtils.CalculateStats(gotchi2)
+                    stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi2)
                 };
 
             }
@@ -386,7 +386,7 @@ namespace OurFoodChain.Gotchi {
                 gotchi = state.player1.gotchi,
                 x = 50,
                 y = 150,
-                state = state.player1.stats.hp > 0 ? (state.player2.stats.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                state = state.player1.stats.Hp > 0 ? (state.player2.stats.Hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
                 auto = false
             };
 
@@ -394,7 +394,7 @@ namespace OurFoodChain.Gotchi {
                 gotchi = state.player2.gotchi,
                 x = 250,
                 y = 150,
-                state = state.player2.stats.hp > 0 ? (state.player1.stats.hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                state = state.player2.stats.Hp > 0 ? (state.player1.stats.Hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
                 auto = false
             };
 
@@ -404,8 +404,8 @@ namespace OurFoodChain.Gotchi {
 
                     // Draw health bars.
 
-                    _drawHealthBar(gfx, p1.x, 180, state.player1.stats.hp / state.player1.stats.maxHp);
-                    _drawHealthBar(gfx, p2.x, 180, state.player2.stats.hp / state.player2.stats.maxHp);
+                    _drawHealthBar(gfx, p1.x, 180, (double)state.player1.stats.Hp / state.player1.stats.MaxHp);
+                    _drawHealthBar(gfx, p2.x, 180, (double)state.player2.stats.Hp / state.player2.stats.MaxHp);
 
                 }
             });
@@ -472,7 +472,7 @@ namespace OurFoodChain.Gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = target.status != "blinding" && (!user.selectedMove.info.canMiss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hitRate * Math.Max(0.1, user.stats.accuracy - target.stats.evasion)));
+                    bool is_hit = target.status != "blinding" && (!user.selectedMove.info.canMiss || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.selectedMove.info.hitRate * Math.Max(0.1, user.stats.Acc - target.stats.Eva)));
                     bool is_critical =
                         BotUtils.RandomInteger(0, (int)(10 / user.selectedMove.info.criticalRate)) == 0 ||
                         (await SpeciesUtils.GetPreyAsync(user.gotchi.SpeciesId)).Any(x => x.id == target.gotchi.Id);
@@ -492,8 +492,8 @@ namespace OurFoodChain.Gotchi {
 
                         // Clone each user's stats before triggering the callback, so we can compare them before and after.
 
-                        LuaGotchiStats user_before = user.stats.Clone();
-                        LuaGotchiStats target_before = target.stats.Clone();
+                        GotchiStats user_before = user.stats.Clone();
+                        GotchiStats target_before = target.stats.Clone();
 
                         // Trigger the callback.
 
@@ -524,7 +524,7 @@ namespace OurFoodChain.Gotchi {
                         // If the target is "withdrawn", allow them to survive the hit with at least 1 HP.
                         if (target.status == "withdrawn") {
 
-                            target.stats.hp = Math.Max(1.0, target.stats.hp);
+                            target.stats.Hp = Math.Max(1, target.stats.Hp);
                             target.status = "";
 
                         }
@@ -540,53 +540,53 @@ namespace OurFoodChain.Gotchi {
 
                         if (string.IsNullOrEmpty(text)) {
 
-                            if (target.stats.hp < target_before.hp) {
+                            if (target.stats.Hp < target_before.Hp) {
                                 text = "dealing {target:damage} damage";
                                 user.selectedMove.info.Type = GotchiMoveType.Offensive;
                             }
 
-                            else if (target.stats.atk < target_before.atk) {
+                            else if (target.stats.Atk < target_before.Atk) {
                                 text = "lowering its opponent's ATK by {target:atk%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.def < target_before.def) {
+                            else if (target.stats.Def < target_before.Def) {
                                 text = "lowering its opponent's DEF by {target:def%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.spd < target_before.spd) {
+                            else if (target.stats.Spd < target_before.Spd) {
                                 text = "lowering its opponent's SPD by {target:spd%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.accuracy < target_before.accuracy) {
+                            else if (target.stats.Acc < target_before.Acc) {
                                 text = "lowering its opponent's accuracy by {target:acc%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (target.stats.evasion < target_before.evasion) {
+                            else if (target.stats.Eva < target_before.Eva) {
                                 text = "lowering its opponent's evasion by {target:eva%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
 
-                            else if (user.stats.hp > user_before.hp) {
+                            else if (user.stats.Hp > user_before.Hp) {
                                 text = "recovering {user:recovered} HP";
                                 user.selectedMove.info.Type = GotchiMoveType.Recovery;
                             }
-                            else if (user.stats.atk > user_before.atk) {
+                            else if (user.stats.Atk > user_before.Atk) {
                                 text = "boosting its ATK by {user:atk%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.def > user_before.def) {
+                            else if (user.stats.Def > user_before.Def) {
                                 text = "boosting its DEF by {user:def%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.spd > user_before.spd) {
+                            else if (user.stats.Spd > user_before.Spd) {
                                 text = "boosting its SPD by {user:spd%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.accuracy > user_before.accuracy) {
+                            else if (user.stats.Acc > user_before.Acc) {
                                 text = "boosting its accuracy by {user:acc%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
-                            else if (user.stats.evasion > user_before.evasion) {
+                            else if (user.stats.Eva > user_before.Eva) {
                                 text = "boosting its evasion by {user:eva%}";
                                 user.selectedMove.info.Type = GotchiMoveType.Buff;
                             }
@@ -607,32 +607,32 @@ namespace OurFoodChain.Gotchi {
 
                                 case "damage":
                                 case "target:damage":
-                                    return string.Format("{0:0.#}", target_before.hp - target.stats.hp);
+                                    return string.Format("{0:0.#}", target_before.Hp - target.stats.Hp);
 
                                 case "target:atk%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.atk - target.stats.atk) / target_before.atk) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Atk - target.stats.Atk) / target_before.Atk) * 100.0);
                                 case "target:def%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.def - target.stats.def) / target_before.def) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Def - target.stats.Def) / target_before.Def) * 100.0);
                                 case "target:spd%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.spd - target.stats.spd) / target_before.spd) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Spd - target.stats.Spd) / target_before.Spd) * 100.0);
                                 case "target:acc%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.accuracy - target.stats.accuracy) / target_before.accuracy) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Acc - target.stats.Acc) / target_before.Acc) * 100.0);
                                 case "target:eva%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.evasion - target.stats.evasion) / target_before.evasion) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Eva - target.stats.Eva) / target_before.Eva) * 100.0);
 
                                 case "user:atk%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.atk - user.stats.atk) / user_before.atk) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Atk - user.stats.Atk) / user_before.Atk) * 100.0);
                                 case "user:def%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.def - user.stats.def) / user_before.def) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Def - user.stats.Def) / user_before.Def) * 100.0);
                                 case "user:spd%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.spd - user.stats.spd) / user_before.spd) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Spd - user.stats.Spd) / user_before.Spd) * 100.0);
                                 case "user:acc%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.accuracy - user.stats.accuracy) / user_before.accuracy) * 100.0);
+                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Acc - user.stats.Acc) / user_before.Acc) * 100.0);
                                 case "user:eva%":
-                                    return string.Format("{0:0.#}%", (user_before.evasion == 0.0 ? user.stats.evasion : (Math.Abs(user_before.evasion - user.stats.evasion) / user_before.evasion)) * 100.0);
+                                    return string.Format("{0:0.#}%", (user_before.Eva == 0.0 ? user.stats.Eva : (Math.Abs(user_before.Eva - user.stats.Eva) / user_before.Eva)) * 100.0);
 
                                 case "user:recovered":
-                                    return string.Format("{0:0.#}", user.stats.hp - user_before.hp);
+                                    return string.Format("{0:0.#}", user.stats.Hp - user_before.Hp);
 
                                 default:
                                     return "???";
@@ -650,16 +650,10 @@ namespace OurFoodChain.Gotchi {
                         if (user.selectedMove.info.canMatchup && weakness_multiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (user.selectedMove.info.canCritical && is_critical && target.stats.hp < target_before.hp)
+                        if (user.selectedMove.info.canCritical && is_critical && target.stats.Hp < target_before.Hp)
                             battle_text.Append(" Critical hit!");
 
                         battle_text.AppendLine();
-
-                        // Normalize state changes (i.e. make sure no stats ended up being negative).
-                        // Do this after the message has been shown so things like damage higher than the target's HP can still be shown correctly.
-
-                        user.stats.Normalize();
-                        target.stats.Normalize();
 
                     }
                     else {
@@ -700,7 +694,7 @@ namespace OurFoodChain.Gotchi {
 
                 // If the user is poisoned, apply poison damage (1/16th of max HP).
 
-                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.maxHp / 16.0));
+                user.stats.Hp = Math.Max(0, user.stats.Hp - (user.stats.MaxHp / 16));
 
                 sb.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.gotchi.Name)));
 
@@ -709,7 +703,7 @@ namespace OurFoodChain.Gotchi {
 
                 // If the user is rooted, heal some HP (1/10th of max HP).
 
-                user.stats.hp = Math.Min(user.stats.maxHp, user.stats.hp + (user.stats.maxHp / 10.0));
+                user.stats.Hp = Math.Min(user.stats.MaxHp, user.stats.Hp + (user.stats.MaxHp / 10));
 
                 sb.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.gotchi.Name)));
 
@@ -718,7 +712,7 @@ namespace OurFoodChain.Gotchi {
 
                 // If the user is wrapped in vines, apply poison damage (1/16th of max HP).
 
-                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.maxHp / 16.0));
+                user.stats.Hp = Math.Max(0, user.stats.Hp - (user.stats.MaxHp / 16));
 
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.gotchi.Name)));
 
@@ -730,7 +724,7 @@ namespace OurFoodChain.Gotchi {
                 // If the user is surrounded by thorns, apply thorn damage (1/10th of max HP).
                 // Only damages the user if they are attacking the opponent.
 
-                user.stats.hp = Math.Max(0.0, user.stats.hp - (user.stats.maxHp / 10.0));
+                user.stats.Hp = Math.Max(0, user.stats.Hp - (user.stats.MaxHp / 10));
 
                 sb.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.gotchi.Name)));
 
@@ -797,7 +791,7 @@ namespace OurFoodChain.Gotchi {
 
             double exp = 0.0;
 
-            exp = (opponent.Id == player1.gotchi.Id ? player1.stats.level : player2.stats.level) * 10.0;
+            exp = (opponent.Id == player1.gotchi.Id ? player1.stats.Level : player2.stats.Level) * 10.0;
 
             if (!won)
                 exp *= .5;
@@ -830,15 +824,15 @@ namespace OurFoodChain.Gotchi {
                 species_list.AddRange((await ZoneUtils.GetSpeciesAsync(zone.Zone)).Where(x => !x.isExtinct));
 
             player2 = new PlayerState();
-            Gotchi opponent = null;
+            BattleGotchi opponent = null;
 
             if (species_list.Count() > 0) {
 
                 opponent = await GotchiUtils.GenerateGotchiAsync(new GotchiGenerationParameters {
                     Base = player1.gotchi,
                     Species = species_list[BotUtils.RandomInteger(species_list.Count())],
-                    MinLevel = (int)player1.stats.level - 3,
-                    MaxLevel = (int)player1.stats.level + 3,
+                    MinLevel = player1.stats.Level - 3,
+                    MaxLevel = player1.stats.Level + 3,
                     GenerateMoveset = true,
                     GenerateStats = true
                 });
@@ -847,14 +841,14 @@ namespace OurFoodChain.Gotchi {
 
             // Set the opponent.
 
-            if (!(opponent is null)) {
+            if (opponent != null) {
 
-                opponent.OwnerId = WILD_GOTCHI_USER_ID;
-                opponent.Id = WILD_GOTCHI_ID;
+                opponent.Gotchi.OwnerId = WILD_GOTCHI_USER_ID;
+                opponent.Gotchi.Id = WILD_GOTCHI_ID;
 
-                player2.gotchi = opponent;
+                player2.gotchi = opponent.Gotchi;
                 player2.stats = opponent.Stats;
-                player2.moves = opponent.Moveset;
+                player2.moves = opponent.Moves;
 
             }
 
@@ -868,19 +862,19 @@ namespace OurFoodChain.Gotchi {
         }
         private async Task _endBattle(ICommandContext context) {
 
-            PlayerState winner = player1.stats.hp <= 0.0 ? player2 : player1;
-            PlayerState loser = player1.stats.hp <= 0.0 ? player1 : player2;
+            PlayerState winner = player1.stats.Hp <= 0.0 ? player2 : player1;
+            PlayerState loser = player1.stats.Hp <= 0.0 ? player1 : player2;
 
             // Calculate the amount of EXP awarded to the winner.
             // The loser will get 50% of the winner's EXP.
 
             double exp = _getExpEarned(winner.gotchi, loser.gotchi, won: true);
 
-            double exp1 = player2.stats.hp <= 0.0 ? exp : exp * .5;
-            double exp2 = player1.stats.hp <= 0.0 ? exp : exp * .5;
+            double exp1 = player2.stats.Hp <= 0.0 ? exp : exp * .5;
+            double exp2 = player1.stats.Hp <= 0.0 ? exp : exp * .5;
 
-            long levels1 = GotchiStatsUtils.LeveUp(player1.stats, exp1);
-            long levels2 = GotchiStatsUtils.LeveUp(player2.stats, exp2);
+            long levels1 = player1.stats.AddExperience((int)exp1);
+            long levels2 = player2.stats.AddExperience((int)exp2);
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(battleText);
@@ -891,7 +885,7 @@ namespace OurFoodChain.Gotchi {
 
                 double winner_exp = winner.gotchi.Id == player1.gotchi.Id ? exp1 : exp2;
                 long winner_levels = winner.gotchi.Id == player1.gotchi.Id ? levels1 : levels2;
-                long winner_g = (long)(loser.stats.level * (BotUtils.RandomInteger(100, 150) / 100.0));
+                long winner_g = (long)(loser.stats.Level * (BotUtils.RandomInteger(100, 150) / 100.0));
 
                 sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP** and **{2}G**.",
                     StringUtils.ToTitleCase(winner.gotchi.Name),
@@ -899,9 +893,9 @@ namespace OurFoodChain.Gotchi {
                     winner_g));
 
                 if (winner_levels > 0)
-                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.gotchi.Name), winner.stats.level));
+                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.gotchi.Name), winner.stats.Level));
 
-                if (((winner.stats.level - winner_levels) / 10) < (winner.stats.level / 10))
+                if (((winner.stats.Level - winner_levels) / 10) < (winner.stats.Level / 10))
                     if (await GotchiUtils.EvolveAndUpdateGotchiAsync(winner.gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(winner.gotchi.SpeciesId);
@@ -930,9 +924,9 @@ namespace OurFoodChain.Gotchi {
                 sb.AppendLine(string.Format("💀 **{0}** lost the battle... Earned **{1} EXP**.", StringUtils.ToTitleCase(loser.gotchi.Name), loser_exp));
 
                 if (loser_levels > 0)
-                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(loser.gotchi.Name), loser.stats.level));
+                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(loser.gotchi.Name), loser.stats.Level));
 
-                if (((loser.stats.level - loser_levels) / 10) < (loser.stats.level / 10))
+                if (((loser.stats.Level - loser_levels) / 10) < (loser.stats.Level / 10))
                     if (await GotchiUtils.EvolveAndUpdateGotchiAsync(loser.gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(loser.gotchi.SpeciesId);
@@ -948,8 +942,8 @@ namespace OurFoodChain.Gotchi {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
 
                 cmd.Parameters.AddWithValue("$id", player1.gotchi.Id);
-                cmd.Parameters.AddWithValue("$level", player1.stats.level);
-                cmd.Parameters.AddWithValue("$exp", player1.stats.exp);
+                cmd.Parameters.AddWithValue("$level", player1.stats.Level);
+                cmd.Parameters.AddWithValue("$exp", player1.stats.Experience);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -960,8 +954,8 @@ namespace OurFoodChain.Gotchi {
                 using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
 
                     cmd.Parameters.AddWithValue("$id", player2.gotchi.Id);
-                    cmd.Parameters.AddWithValue("$level", player2.stats.level);
-                    cmd.Parameters.AddWithValue("$exp", player2.stats.exp);
+                    cmd.Parameters.AddWithValue("$level", player2.stats.Level);
+                    cmd.Parameters.AddWithValue("$exp", player2.stats.Experience);
 
                     await Database.ExecuteNonQuery(cmd);
 

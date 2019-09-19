@@ -9,26 +9,41 @@ namespace OurFoodChain.Gotchi {
 
     public class Gotchi {
 
-        public const long NULL_GOTCHI_ID = -1;
-        public const long HOURS_OF_SLEEP_PER_DAY = 8;
-        public const long HOURS_PER_DAY = 24;
-        public const long MAXIMUM_STARVATION_DAYS = 3; // 3 days of no feeding
+        // Public members
 
-        public long id = NULL_GOTCHI_ID;
-        public long species_id = -1;
-        public string name;
-        public ulong owner_id = 0;
-        public long fed_ts = 0;
-        public long born_ts = 0;
-        public long died_ts = 0;
-        public long evolved_ts = 0;
+        public const long NullGotchiId = -1;
+        public const long HoursOfSleepPerDay = 8;
+        public const long HoursPerDay = 24;
+        public const long MaxMissedFeedings = 3; // 3 days of no feeding
+
+        public long Id { get; set; } = NullGotchiId;
+        public long SpeciesId { get; set; } = Species.NullSpeciesId;
+        public string Name { get; set; }
+        public ulong OwnerId { get; set; } = UserInfo.NullUserId;
+        public long FedTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
+        public long BornTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
+        public long DiedTimestamp { get; set; } = 0;
+        public long EvolvedTimestamp { get; set; } = 0;
+
+        public int Experience { get; set; } = 0;
+        public ExperienceGroup ExperienceGroup { get; set; } = ExperienceGroup.MediumFast;
+
+        public int Age {
+            get {
+
+                long ts = DateUtils.GetCurrentTimestamp();
+
+                return (int)(((DiedTimestamp > 0 ? DiedTimestamp : ts) - BornTimestamp) / 60 / 60 / 24);
+
+            }
+        }
 
         public LuaGotchiStats Stats { get; set; }
         public GotchiMoveset Moveset { get; set; }
 
         public bool IsSleeping() {
 
-            return (HoursSinceBirth() % HOURS_PER_DAY) >= (HOURS_PER_DAY - HOURS_OF_SLEEP_PER_DAY);
+            return (HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - HoursOfSleepPerDay);
 
         }
         public long HoursOfSleepLeft() {
@@ -36,7 +51,7 @@ namespace OurFoodChain.Gotchi {
             if (!IsSleeping())
                 return 0;
 
-            return HOURS_PER_DAY - (HoursSinceBirth() % HOURS_PER_DAY);
+            return HoursPerDay - (HoursSinceBirth() % HoursPerDay);
 
         }
         public long HoursSinceLastSlept() {
@@ -44,7 +59,7 @@ namespace OurFoodChain.Gotchi {
             if (IsSleeping())
                 return 0;
 
-            return HoursSinceBirth() % HOURS_PER_DAY;
+            return HoursSinceBirth() % HoursPerDay;
 
         }
         public long HoursUntilSleep() {
@@ -52,7 +67,7 @@ namespace OurFoodChain.Gotchi {
             if (IsSleeping())
                 return 0;
 
-            return (HOURS_PER_DAY - HOURS_OF_SLEEP_PER_DAY) - (HoursSinceBirth() % HOURS_PER_DAY);
+            return (HoursPerDay - HoursOfSleepPerDay) - (HoursSinceBirth() % HoursPerDay);
 
         }
         public bool IsEating() {
@@ -67,14 +82,14 @@ namespace OurFoodChain.Gotchi {
         }
         public bool IsDead() {
 
-            return HoursSinceFed() > (HOURS_PER_DAY * MAXIMUM_STARVATION_DAYS);
+            return HoursSinceFed() > (HoursPerDay * MaxMissedFeedings);
 
         }
         public long HoursSinceBirth() {
 
             long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            long ts_diff = ts - born_ts;
+            long ts_diff = ts - BornTimestamp;
             long hours_diff = ts_diff / 60 / 60;
 
             return hours_diff;
@@ -84,7 +99,7 @@ namespace OurFoodChain.Gotchi {
 
             long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            long ts_diff = ts - fed_ts;
+            long ts_diff = ts - FedTimestamp;
             long hours_diff = ts_diff / 60 / 60;
 
             return hours_diff;
@@ -94,7 +109,7 @@ namespace OurFoodChain.Gotchi {
 
             long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            long ts_diff = ts - evolved_ts;
+            long ts_diff = ts - EvolvedTimestamp;
             long hours_diff = ts_diff / 60 / 60;
 
             return hours_diff;
@@ -103,13 +118,6 @@ namespace OurFoodChain.Gotchi {
         public bool IsReadyToEvolve() {
 
             return !IsDead() && HoursSinceEvolved() >= 7 * 24;
-
-        }
-        public long Age() {
-
-            long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-            return ((died_ts > 0 ? died_ts : ts) - born_ts) / 60 / 60 / 24;
 
         }
         public GotchiState State() {
@@ -130,23 +138,6 @@ namespace OurFoodChain.Gotchi {
                 return GotchiState.Tired;
 
             return GotchiState.Happy;
-
-        }
-
-        public static Gotchi FromDataRow(DataRow row) {
-
-            Gotchi result = new Gotchi() {
-                id = row.Field<long>("id"),
-                species_id = row.Field<long>("species_id"),
-                name = row.Field<string>("name"),
-                owner_id = (ulong)row.Field<long>("owner_id"),
-                fed_ts = row.Field<long>("fed_ts"),
-                born_ts = row.Field<long>("born_ts"),
-                died_ts = row.Field<long>("died_ts"),
-                evolved_ts = row.Field<long>("evolved_ts")
-            };
-
-            return result;
 
         }
 

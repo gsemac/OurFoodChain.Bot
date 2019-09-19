@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchi {
 
-    public class GotchiRequirementChecker {
+    public class GotchiRequirementsChecker {
 
-        public GotchiRequires Requires { get; set; } = new GotchiRequires();
+        public GotchiRequirements Requires { get; set; } = new GotchiRequirements();
 
         public async Task<bool> CheckAsync(Gotchi gotchi) {
 
@@ -19,7 +19,7 @@ namespace OurFoodChain.Gotchi {
             if (!string.IsNullOrEmpty(Requires.RolePattern) && !await _checkRolesAsync(gotchi))
                 return false;
 
-            Species species = await SpeciesUtils.GetSpeciesAsync(gotchi.species_id);
+            Species species = await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId);
 
             if (!string.IsNullOrEmpty(Requires.DescriptionPattern) && !_checkDescription(species))
                 return false;
@@ -32,7 +32,7 @@ namespace OurFoodChain.Gotchi {
 
             try {
 
-                Role[] roles = await SpeciesUtils.GetRolesAsync(gotchi.species_id);
+                Role[] roles = await SpeciesUtils.GetRolesAsync(gotchi.SpeciesId);
 
                 foreach (Role role in roles)
                     if (Regex.IsMatch(role.Name, Requires.RolePattern, RegexOptions.IgnoreCase))

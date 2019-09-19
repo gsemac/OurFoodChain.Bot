@@ -13,6 +13,8 @@ namespace OurFoodChain {
     public class Species :
       IComparable<Species> {
 
+        public const long NullSpeciesId = -1;
+
         public long id;
         public long genusId;
         public string name;

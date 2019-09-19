@@ -8,7 +8,7 @@ namespace OurFoodChain.Gotchi {
 
     public class GotchiExperienceCalculator {
 
-        public static int ExperienceToLevel(ExperienceGroup experienceGroup, int toLevel) {
+        public static int ExperienceRequiredForLevel(ExperienceGroup experienceGroup, int toLevel) {
 
             double exp_required = 0.0;
 
@@ -61,9 +61,26 @@ namespace OurFoodChain.Gotchi {
             return (int)exp_required;
 
         }
-        public static int ExperienceToLevel(ExperienceGroup experienceGroup, int currentLevel, int currentExp, int targetLevel) {
+        public static int ExperienceRequiredForLevel(ExperienceGroup experienceGroup, int currentLevel, int currentExp, int targetLevel) {
 
-            return Math.Max(0, ExperienceToLevel(experienceGroup, targetLevel) - ExperienceToLevel(experienceGroup, currentLevel) - currentExp);
+            return Math.Max(0, ExperienceRequiredForLevel(experienceGroup, targetLevel) - ExperienceRequiredForLevel(experienceGroup, currentLevel) - currentExp);
+
+        }
+
+        public static int GetLevel(ExperienceGroup experienceGroup, int experience) {
+
+            int level = 1;
+
+            for (int i = 2; i < int.MaxValue; ++i) {
+
+                if (experience >= ExperienceRequiredForLevel(experienceGroup, i))
+                    ++level;
+                else
+                    return level;
+
+            }
+
+            return level;
 
         }
 

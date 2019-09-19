@@ -248,10 +248,13 @@ namespace OurFoodChain {
 
         }
         public static async Task<Species[]> GetAncestorsAsync(Species species) {
+            return await GetAncestorsAsync(species.id);
+        }
+        public static async Task<Species[]> GetAncestorsAsync(long speciesId) {
 
             List<Species> ancestor_species = new List<Species>();
 
-            foreach (long species_id in await GetAncestorIdsAsync(species.id))
+            foreach (long species_id in await GetAncestorIdsAsync(speciesId))
                 ancestor_species.Add(await GetSpeciesAsync(species_id));
 
             return ancestor_species.ToArray();

@@ -78,7 +78,7 @@ namespace OurFoodChain.Gotchi {
             List<GotchiType> types = new List<GotchiType>();
 
             foreach (GotchiType type in await GetTypesAsync())
-                if (await new GotchiRequirementChecker { Requires = type.Requires }.CheckAsync(gotchi))
+                if (await new GotchiRequirementsChecker { Requires = type.Requires }.CheckAsync(gotchi))
                     types.Add(type);
 
             return types.ToArray();

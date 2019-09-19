@@ -44,7 +44,7 @@ namespace OurFoodChain.Gotchi {
         /// <summary>
         /// The ID of the user's primary gotchi.
         /// </summary>
-        public long PrimaryGotchiId { get; set; } = Gotchi.NULL_GOTCHI_ID;
+        public long PrimaryGotchiId { get; set; } = Gotchi.NullGotchiId;
 
     }
 

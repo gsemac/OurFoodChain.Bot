@@ -8,8 +8,10 @@ namespace OurFoodChain {
 
     public class UserInfo {
 
+        public const ulong NullUserId = 0;
+
         public string Username { get; set; }
-        public ulong UserId { get; set; } = 0;
+        public ulong UserId { get; set; } = NullUserId;
 
     }
 

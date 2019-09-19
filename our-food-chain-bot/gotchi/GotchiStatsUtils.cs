@@ -51,7 +51,7 @@ namespace OurFoodChain.Gotchi {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT level, exp FROM Gotchi WHERE id=$id;")) {
 
-                cmd.Parameters.AddWithValue("$id", gotchi.id);
+                cmd.Parameters.AddWithValue("$id", gotchi.Id);
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
@@ -69,7 +69,7 @@ namespace OurFoodChain.Gotchi {
         }
         public static async Task<LuaGotchiStats> CalculateStats(Gotchi gotchi, LuaGotchiStats stats) {
 
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
+            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
 
             if (sp is null)
                 return stats;
@@ -159,7 +159,7 @@ namespace OurFoodChain.Gotchi {
 
             // For additional variation, assign bonus multipliers randomly according to the species name.
 
-            Random random = new Random(StringUtils.SumStringChars(sp.name + gotchi.born_ts.ToString()));
+            Random random = new Random(StringUtils.SumStringChars(sp.name + gotchi.BornTimestamp.ToString()));
 
             stats.hp += random.Next(0, 5) / 10.0;
             stats.atk += random.Next(0, 5) / 10.0;
@@ -168,7 +168,7 @@ namespace OurFoodChain.Gotchi {
 
             // The gotchi's final stats depend on its level/age.
 
-            double age = gotchi.Age();
+            double age = gotchi.Age;
             double multiplier = stats.level + (age / 10.0);
 
             stats.hp *= multiplier;

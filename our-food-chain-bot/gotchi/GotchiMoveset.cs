@@ -115,7 +115,7 @@ namespace OurFoodChain.Gotchi {
 
             // Get the gotchi's species.
 
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.species_id);
+            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
 
             if (sp is null)
                 return set;

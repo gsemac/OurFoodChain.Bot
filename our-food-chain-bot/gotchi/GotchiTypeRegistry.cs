@@ -73,6 +73,24 @@ namespace OurFoodChain.Gotchi {
             return null;
 
         }
+        public async Task<GotchiType[]> GetTypesAsync(Gotchi gotchi) {
+
+            List<GotchiType> types = new List<GotchiType>();
+
+            foreach (GotchiType type in await GetTypesAsync())
+                if (await new GotchiRequirementChecker { Requires = type.Requires }.CheckAsync(gotchi))
+                    types.Add(type);
+
+            return types.ToArray();
+
+        }
+        public async Task<GotchiType[]> GetTypesAsync() {
+
+            await _initializeAsync();
+
+            return await Task.FromResult(_registry.Values.ToArray());
+
+        }
 
         // Private members
 

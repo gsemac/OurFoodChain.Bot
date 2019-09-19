@@ -21,7 +21,7 @@ namespace OurFoodChain.Gotchi {
                 _name = value;
             }
         }
-        public GotchiRequirements Requires { get; set; } = new GotchiRequirements();
+        public GotchiRequires Requires { get; set; } = new GotchiRequires();
         public Color Color { get; set; } = Color.White;
 
         public int BaseHp { get; set; } = 40;

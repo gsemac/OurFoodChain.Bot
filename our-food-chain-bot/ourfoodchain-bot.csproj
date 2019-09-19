@@ -228,8 +228,13 @@
     <Compile Include="Config.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
+    <Compile Include="gotchi\GotchiBattleInfo.cs" />
+    <Compile Include="gotchi\GotchiExperienceCalculator.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
-    <Compile Include="gotchi\GotchiRequirements.cs" />
+    <Compile Include="gotchi\GotchiRequirementChecker.cs" />
+    <Compile Include="gotchi\GotchiRequires.cs" />
+    <Compile Include="gotchi\GotchiStats.cs" />
+    <Compile Include="gotchi\GotchiStatCalculator.cs" />
     <Compile Include="gotchi\GotchiTradeRequest.cs" />
     <Compile Include="database\DatabaseUtils.cs" />
     <Compile Include="commands\PrivilegeLevel.cs" />

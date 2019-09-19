@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Gotchi {
 
     [MoonSharpUserData]
-    public class GotchiRequirements {
+    public class GotchiRequires {
 
         public string RolePattern { get; set; }
         public string DescriptionPattern { get; set; }

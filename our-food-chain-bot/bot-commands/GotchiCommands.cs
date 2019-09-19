@@ -105,9 +105,11 @@ namespace OurFoodChain.Gotchi {
         [Command("test")]
         public async Task test(string typeName) {
 
-            GotchiType type = await Global.GotchiTypeRegistry.GetTypeAsync(typeName);
+            Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
+            GotchiType[] types = await Global.GotchiTypeRegistry.GetTypesAsync(gotchi);
+            GotchiStats stats = await GotchiStatCalculator.GetStatsAsync(gotchi, types);
 
-            await ReplyAsync(type.BaseAtk.ToString());
+            await ReplyAsync(Newtonsoft.Json.JsonConvert.SerializeObject(stats, Newtonsoft.Json.Formatting.Indented));
 
         }
 

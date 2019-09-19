@@ -232,6 +232,7 @@
     <Compile Include="gotchi\GotchiExperienceCalculator.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
     <Compile Include="gotchi\GotchiMove.cs" />
+    <Compile Include="gotchi\GotchiMoveCallbackArgs.cs" />
     <Compile Include="gotchi\GotchiRequirementsChecker.cs" />
     <Compile Include="gotchi\GotchiRequirements.cs" />
     <Compile Include="gotchi\GotchiStats.cs" />

@@ -429,13 +429,6 @@ namespace OurFoodChain.Gotchi {
 
         private async Task _useMoveOnAsync(ICommandContext context, PlayerState user, PlayerState target) {
 
-            // Check role match-up to see if the move is super-effective.
-            // #todo Role match-ups should be defined in an external file.
-
-            Role[] target_roles = await SpeciesUtils.GetRolesAsync(target.Gotchi.Gotchi.SpeciesId);
-            double weakness_multiplier = !user.SelectedMove.IgnoreMatchup ? GotchiType.CheckMatchup(user.SelectedMove.Types, target.Gotchi.Types) : 1.0;
-            Species target_species = await BotUtils.GetSpeciesFromDb(target.Gotchi.Gotchi.SpeciesId);
-
             // Execute the selected move.
 
             StringBuilder battle_text = new StringBuilder();
@@ -452,9 +445,10 @@ namespace OurFoodChain.Gotchi {
 
                 // Initialize the callback args.
 
-                LuaGotchiMoveCallbackArgs args = new LuaGotchiMoveCallbackArgs {
-                    user = new LuaGotchiParameters(user.Gotchi.Stats, null, null) { status = user.Gotchi.Status },
-                    target = new LuaGotchiParameters(target.Gotchi.Stats, target_roles, target_species) { status = target.Gotchi.Status }
+                GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
+                    User = user.Gotchi,
+                    Target = target.Gotchi,
+                    Move = user.SelectedMove
                 };
 
                 // Initialize the move state (required for only certain moves).
@@ -465,26 +459,17 @@ namespace OurFoodChain.Gotchi {
                 // It's possible for a move to be used more than once in a turn (e.g., multi-hit moves).
                 // Each time will trigger the callback to be called and display a new message.
 
-                for (int i = 0; i < Math.Max(1, args.times); ++i) {
+                for (int i = 0; i < Math.Max(1, args.Times); ++i) {
 
                     // Check if this was a critical hit, or if the move missed.
 
                     bool is_hit = target.Gotchi.Status != "blinding" && (user.SelectedMove.IgnoreAccuracy || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.SelectedMove.Accuracy * Math.Max(0.1, user.Gotchi.Stats.Acc - target.Gotchi.Stats.Eva)));
-                    bool is_critical =
-                        BotUtils.RandomInteger(0, (int)(10 / user.SelectedMove.CriticalRate)) == 0 ||
-                        (await SpeciesUtils.GetPreyAsync(user.Gotchi.Gotchi.SpeciesId)).Any(x => x.id == target.Gotchi.Gotchi.Id);
-
-                    if (user.SelectedMove.IgnoreCritical)
-                        is_critical = false;
+                    args.IsCritical =
+                        !user.SelectedMove.IgnoreCritical &&
+                        (BotUtils.RandomInteger(0, (int)(10 / user.SelectedMove.CriticalRate)) == 0 ||
+                        (await SpeciesUtils.GetPreyAsync(user.Gotchi.Gotchi.SpeciesId)).Any(x => x.id == target.Gotchi.Gotchi.Id));
 
                     if (is_hit) {
-
-                        // Set additional parameters in the callback.
-
-                        args.matchupMultiplier = weakness_multiplier;
-
-                        if (is_critical)
-                            args.bonusMultiplier *= 1.5;
 
                         // Clone each user's stats before triggering the callback, so we can compare them before and after.
 
@@ -507,16 +492,9 @@ namespace OurFoodChain.Gotchi {
                             else
                                 args.DoDamage(user.SelectedMove.Power);
 
-                            // Copy the statuses over for both participants (to reflect changes made in the callback).
-
-                            user.Gotchi.Status = args.user.status;
-                            target.Gotchi.Status = args.target.status;
-
-                            //}
-
                         }
                         catch (Exception) {
-                            args.text = "but something went wrong";
+                            args.Text = "but something went wrong";
                         }
 
                         // If the target is "withdrawn", allow them to survive the hit with at least 1 HP.
@@ -534,7 +512,7 @@ namespace OurFoodChain.Gotchi {
                         // Show the battle text.
                         // If the move doesn't specify a text, choose one automatically (where possible).
 
-                        string text = args.text;
+                        string text = args.Text;
 
                         if (string.IsNullOrEmpty(text)) {
 
@@ -591,8 +569,6 @@ namespace OurFoodChain.Gotchi {
 
                             else {
                                 text = "but nothing happened?";
-                                is_critical = false;
-                                weakness_multiplier = 1.0;
                             }
 
                         }
@@ -645,10 +621,10 @@ namespace OurFoodChain.Gotchi {
                             StringUtils.ToTitleCase(user.SelectedMove.Name),
                             text));
 
-                        if (!user.SelectedMove.IgnoreMatchup && weakness_multiplier > 1.0)
+                        if (args.MatchupMultiplier > 1.0)
                             battle_text.Append(" It's super effective!");
 
-                        if (!user.SelectedMove.IgnoreCritical && is_critical && target.Gotchi.Stats.Hp < target_before.Hp)
+                        if (args.IsCritical && target.Gotchi.Stats.Hp < target_before.Hp)
                             battle_text.Append(" Critical hit!");
 
                         battle_text.AppendLine();
@@ -666,8 +642,8 @@ namespace OurFoodChain.Gotchi {
 
                 }
 
-                if (args.times > 1)
-                    battle_text.Append(string.Format(" Hit {0} times!", args.times));
+                if (args.Times > 1)
+                    battle_text.Append(string.Format(" Hit {0} times!", args.Times));
 
             }
             else {

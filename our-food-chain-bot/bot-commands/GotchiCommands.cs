@@ -322,13 +322,13 @@ namespace OurFoodChain.Gotchi {
             // Get moveset for this gotchi.
             // If the user is currently in battle, get their moveset from the battle state instead.
 
-            GotchiMoveset set;
+            GotchiMoveSet set;
             GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
 
             if (!(battle_state is null))
                 set = battle_state.GetGotchiMoveset(gotchi);
             else
-                set = await GotchiMoveset.GetMovesetAsync(gotchi);
+                set = await GotchiMoveSet.GetMovesetAsync(gotchi);
 
 
             // Create the embed.
@@ -342,8 +342,8 @@ namespace OurFoodChain.Gotchi {
 
             int move_index = 1;
 
-            foreach (GotchiMove move in set.moves)
-                set_page.AddField(string.Format("Move {0}: **{1}** ({2}/{3} PP)", move_index++, StringUtils.ToTitleCase(move.info.name), move.pp, move.info.pp), move.info.description);
+            foreach (GotchiMove move in set.Moves)
+                set_page.AddField(string.Format("Move {0}: **{1}** ({2}/{3} PP)", move_index++, StringUtils.ToTitleCase(move.Name), move.PP, move.PP), move.Description);
 
             await ReplyAsync("", false, set_page.Build());
 
@@ -480,7 +480,7 @@ namespace OurFoodChain.Gotchi {
                 await Database.ExecuteNonQuery(cmd);
 
             }
-
+          
             await Battle(null);
 
         }
@@ -1046,7 +1046,7 @@ namespace OurFoodChain.Gotchi {
 
             if (!(state is null) && state.accepted) {
 
-                ulong other_user_id = state.player1.gotchi.OwnerId == context.User.Id ? state.player2.gotchi.OwnerId : state.player1.gotchi.OwnerId;
+                ulong other_user_id = state.player1.Gotchi.Gotchi.OwnerId == context.User.Id ? state.player2.Gotchi.Gotchi.OwnerId : state.player1.Gotchi.Gotchi.OwnerId;
                 IUser other_user = await context.Guild.GetUserAsync(other_user_id);
 
                 // We won't lock them into the battle if the other user has left the server.
@@ -1071,7 +1071,7 @@ namespace OurFoodChain.Gotchi {
 
             if (!(state is null) && state.accepted) {
 
-                ulong other_user_id = state.player1.gotchi.OwnerId == context.User.Id ? state.player2.gotchi.OwnerId : state.player1.gotchi.OwnerId;
+                ulong other_user_id = state.player1.Gotchi.Gotchi.OwnerId == context.User.Id ? state.player2.Gotchi.Gotchi.OwnerId : state.player1.Gotchi.Gotchi.OwnerId;
                 IUser other_user = await context.Guild.GetUserAsync(other_user_id);
 
                 // We won't lock them into the battle if the other user has left the server.

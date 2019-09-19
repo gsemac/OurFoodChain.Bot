@@ -36,8 +36,6 @@ namespace OurFoodChain.Gotchi {
 
                 _registry[type.Name.ToLower()] = type;
 
-                await _logAsync(LogSeverity.Info, string.Format("Registered type {0}", System.IO.Path.GetFileName(typeFilePath)));
-
             }
             catch (Exception) {
 

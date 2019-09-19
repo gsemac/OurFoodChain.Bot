@@ -60,6 +60,26 @@ namespace OurFoodChain.Gotchi {
 
         }
 
+        public static double CheckMatchup(GotchiType offensiveType, GotchiType defensiveType) {
+
+            if (offensiveType._matchups.TryGetValue(defensiveType.Name.ToLower(), out double value))
+                return value;
+
+            return 1.0;
+
+        }
+        public static double CheckMatchup(GotchiType[] offensiveTypes, GotchiType[] defensiveTypes) {
+
+            double multiplier = 1.0;
+
+            foreach (GotchiType offensiveType in offensiveTypes)
+                foreach (GotchiType defensiveType in defensiveTypes)
+                    multiplier *= CheckMatchup(offensiveType, defensiveType);
+
+            return multiplier;
+
+        }
+
         // Private members
 
         private string _name = "unknown";

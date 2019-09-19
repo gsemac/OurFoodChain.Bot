@@ -11,33 +11,30 @@ namespace OurFoodChain.Gotchi {
 
     public class GotchiMoveRegistry {
 
-        public static async Task<LuaGotchiMove> GetMoveByNameAsync(string name) {
+        public static async Task<GotchiMove> GetMoveByNameAsync(string name) {
 
-            if (_move_registry.Count <= 0)
+            if (Registry.Count <= 0)
                 await _registerAllMovesAsync();
 
-            return _move_registry[name.ToLower()];
+            if (Registry.TryGetValue(name.ToLower(), out GotchiMove result))
+                return result.Clone();
+
+            throw new Exception(string.Format("No move with the name \"{0}\" exists in the registry.", name));
 
         }
 
-        private static Dictionary<string, LuaGotchiMove> _move_registry = new Dictionary<string, LuaGotchiMove>();
+        public static Dictionary<string, GotchiMove> Registry { get; } = new Dictionary<string, GotchiMove>();
 
-        public static Dictionary<string, LuaGotchiMove> Registry {
-            get {
-                return _move_registry;
-            }
-        }
+        private static void _addMoveToRegistry(GotchiMove move) {
 
-        private static void _addMoveToRegistry(LuaGotchiMove move) {
-
-            _move_registry.Add(move.name.ToLower(), move);
+            Registry.Add(move.Name.ToLower(), move);
 
         }
         private static async Task _registerAllMovesAsync() {
 
             await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Gotchi", "Registering moves");
 
-            _move_registry.Clear();
+            Registry.Clear();
 
             await _registerLuaMovesAsync();
 
@@ -59,14 +56,14 @@ namespace OurFoodChain.Gotchi {
 
                 try {
 
-                    LuaGotchiMove move = new LuaGotchiMove {
-                        scriptPath = file
+                    GotchiMove move = new GotchiMove {
+                        LuaScriptFilePath = file
                     };
 
                     script.DoFile(file);
+
                     script.Call(script.Globals["register"], move);
 
-                    // Register the move.
                     _addMoveToRegistry(move);
 
                 }

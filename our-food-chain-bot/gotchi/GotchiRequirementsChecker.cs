@@ -13,29 +13,48 @@ namespace OurFoodChain.Gotchi {
 
         public async Task<bool> CheckAsync(Gotchi gotchi) {
 
-            if (Requires is null)
+            List<GotchiRequirements> requirements = new List<GotchiRequirements> {
+                Requires
+            };
+
+            if (Requires != null)
+                requirements.AddRange(Requires.OrValue);
+
+            foreach (GotchiRequirements requirement in requirements)
+                if (!await CheckAsync(gotchi, requirement))
+                    return false;
+
+            return true;
+
+        }
+        public async Task<bool> CheckAsync(Gotchi gotchi, GotchiRequirements requirements) {
+
+            if (requirements is null)
                 return true;
 
-            if (!string.IsNullOrEmpty(Requires.RolePattern) && !await _checkRolesAsync(gotchi))
+            if (!_checkLevelsAsync(gotchi, requirements))
+                return false;
+
+            if (!string.IsNullOrEmpty(requirements.RolePattern) && !await _checkRolesAsync(gotchi, requirements))
                 return false;
 
             Species species = await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId);
 
-            if (!string.IsNullOrEmpty(Requires.DescriptionPattern) && !_checkDescription(species))
+            if (!string.IsNullOrEmpty(requirements.DescriptionPattern) && !_checkDescription(species, requirements))
                 return false;
 
             return true;
 
         }
 
-        private async Task<bool> _checkRolesAsync(Gotchi gotchi) {
+        private async Task<bool> _checkRolesAsync(Gotchi gotchi, GotchiRequirements requirements) {
 
             try {
 
                 Role[] roles = await SpeciesUtils.GetRolesAsync(gotchi.SpeciesId);
 
                 foreach (Role role in roles)
-                    if (Regex.IsMatch(role.Name, Requires.RolePattern, RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(role.Name, requirements.RolePattern, RegexOptions.IgnoreCase))
                         return true;
 
             }
@@ -44,17 +63,24 @@ namespace OurFoodChain.Gotchi {
             return false;
 
         }
-        private bool _checkDescription(Species species) {
+        private bool _checkDescription(Species species, GotchiRequirements requirements) {
 
             try {
 
-                if (Regex.IsMatch(species.description, Requires.DescriptionPattern, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(species.description, requirements.DescriptionPattern, RegexOptions.IgnoreCase))
                     return true;
 
             }
             catch (Exception) { }
 
             return false;
+
+        }
+        private bool _checkLevelsAsync(Gotchi gotchi, GotchiRequirements requirements) {
+
+            int level = GotchiExperienceCalculator.GetLevel(ExperienceGroup.Default, gotchi.Experience);
+
+            return level >= requirements.MinimumLevelValue && level <= requirements.MaximumLevelValue;
 
         }
 

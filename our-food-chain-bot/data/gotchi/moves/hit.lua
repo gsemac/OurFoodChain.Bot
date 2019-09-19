@@ -1,11 +1,9 @@
 ﻿function register(move)
 
-	move.name = "Hit";
-	move.description = "A simple attack where the user collides with the opponent.";
-	move.pp = 40;
+	move.SetName("hit")
+	move.SetDescription("A simple attack where the user collides with the opponent.")
 
-end
+	move.SetPower(40)
+	move.SetPP(40)
 
-function callback(args) 
-	args.DoDamage();
 end

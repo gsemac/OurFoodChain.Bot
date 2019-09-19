@@ -28,26 +28,23 @@ namespace OurFoodChain.Gotchi {
         Photosynthetic // restores health every turn if not shaded
     }
 
-    public class GotchiMove {
-        public LuaGotchiMove info;
-        public int pp = 0;
-    }
+    public class GotchiMoveSet {
 
-    public class GotchiMoveset {
+        public const int MoveLimit = 4;
 
-        public const int MOVE_LIMIT = 4;
-
-        public List<GotchiMove> moves = new List<GotchiMove>();
+        public List<GotchiMove> Moves { get; private set; } = new List<GotchiMove>();
         public GotchiAbility ability = 0;
 
-        public bool HasPPLeft() {
+        public bool HasPPLeft {
+            get {
 
-            foreach (GotchiMove move in moves)
-                if (move.pp > 0)
-                    return true;
+                foreach (GotchiMove move in Moves)
+                    if (move.PP > 0)
+                        return true;
 
-            return false;
+                return false;
 
+            }
         }
 
         public async Task AddAsync(string name) {
@@ -55,27 +52,19 @@ namespace OurFoodChain.Gotchi {
             Add(await GotchiMoveRegistry.GetMoveByNameAsync(name));
 
         }
-        public void Add(LuaGotchiMove move) {
+        public void Add(GotchiMove move) {
 
-            // If the set already contains this move, ignore it.
-
-            foreach (GotchiMove m in moves)
-                if (move.name.ToLower() == m.info.name.ToLower())
-                    return;
-
-            moves.Add(new GotchiMove {
-                info = move,
-                pp = move.pp
-            });
+            if (!Moves.Any(x => x.Name.ToLower() == move.Name.ToLower()))
+                Moves.Add(move);
 
         }
         public GotchiMove GetMove(string identifier) {
 
-            if (int.TryParse(identifier, out int result) && result > 0 && result <= moves.Count())
-                return moves[result - 1];
+            if (int.TryParse(identifier, out int result) && result > 0 && result <= Moves.Count())
+                return Moves[result - 1];
 
-            foreach (GotchiMove move in moves)
-                if (move.info.name.ToLower() == identifier.ToLower())
+            foreach (GotchiMove move in Moves)
+                if (move.Name.ToLower() == identifier.ToLower())
                     return move;
 
             return null;
@@ -87,20 +76,18 @@ namespace OurFoodChain.Gotchi {
 
             List<GotchiMove> options = new List<GotchiMove>();
 
-            foreach (GotchiMove move in moves)
-                if (move.pp > 0)
+            foreach (GotchiMove move in Moves)
+                if (move.PP > 0)
                     options.Add(move);
 
             if (options.Count() > 0)
                 return options[BotUtils.RandomInteger(options.Count())];
             else
-                return new GotchiMove {
-                    info = await GotchiMoveRegistry.GetMoveByNameAsync("desperation")
-                };
+                return await GotchiMoveRegistry.GetMoveByNameAsync("desperation");
 
         }
 
-        public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi) {
+        public static async Task<GotchiMoveSet> GetMovesetAsync(Gotchi gotchi) {
 
             // Get stats.
             GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
@@ -108,54 +95,31 @@ namespace OurFoodChain.Gotchi {
             return await GetMovesetAsync(gotchi, stats);
 
         }
-        public static async Task<GotchiMoveset> GetMovesetAsync(Gotchi gotchi, GotchiStats stats) {
+        public static async Task<GotchiMoveSet> GetMovesetAsync(Gotchi gotchi, GotchiStats stats) {
 
-            GotchiMoveset set = new GotchiMoveset();
+            GotchiMoveSet set = new GotchiMoveSet();
+
             await set.AddAsync("hit"); // all gotchis can use hit regardless of species
-
-            // Get the gotchi's species.
-
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
-
-            if (sp is null)
-                return set;
-
-            Role[] roles = await SpeciesUtils.GetRolesAsync(sp);
 
             // Add all moves that the gotchi meets the requirements for.
 
-            foreach (LuaGotchiMove move in GotchiMoveRegistry.Registry.Values) {
+            foreach (GotchiMove move in GotchiMoveRegistry.Registry.Values)
+                if (await new GotchiRequirementsChecker { Requires = move.Requires }.CheckAsync(gotchi))
+                    set.Add(move.Clone());
 
-                if (string.IsNullOrEmpty(move.requires.unrestrictedMatch) || !Regex.Match(sp.description, move.requires.unrestrictedMatch).Success) {
-
-                    if (stats.Level < move.requires.minLevel || stats.Level > move.requires.maxLevel)
-                        continue;
-
-                    if (!string.IsNullOrEmpty(move.requires.match) && !Regex.Match(sp.description, move.requires.match).Success)
-                        continue;
-
-                    if (!string.IsNullOrEmpty(move.requires.role) && !roles.Any(item => item.name.ToLower() == move.requires.role.ToLower()))
-                        continue;
-
-                }
-
-                set.Add(move);
-
-            }
-
-            if (set.moves.Count() > 4) {
+            if (set.Moves.Count() > 4) {
 
                 // If move count is over the limit, randomize by the species ID, and keep the last four moves.
                 // This means members of the same species will have consistent movesets, and won't be biased by later moves.
 
-                Random rng = new Random((int)sp.id);
+                Random rng = new Random((int)gotchi.SpeciesId);
 
-                set.moves = set.moves.OrderBy(x => rng.Next()).ToList();
-                set.moves = set.moves.GetRange(set.moves.Count() - 4, 4);
+                set.Moves = set.Moves.OrderBy(x => rng.Next()).ToList();
+                set.Moves = set.Moves.GetRange(set.Moves.Count() - 4, 4);
 
             }
 
-            set.moves.Sort((lhs, rhs) => lhs.info.name.CompareTo(rhs.info.name));
+            set.Moves.Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));
 
             return set;
 

@@ -104,7 +104,7 @@ namespace OurFoodChain.Gotchi {
         public GotchiStats stats;
         public Role[] roles;
         public Species species;
-        public string status = GotchiBattleState.DEFAULT_GOTCHI_BATTLE_STATUS;
+        public string status = "";
 
     }
 
@@ -169,7 +169,7 @@ namespace OurFoodChain.Gotchi {
 
             double damage = TotalDamage(baseDamage * multiplier);
 
-            target.stats.Hp -= Math.Min(1, (int)damage);
+            target.stats.Hp -= Math.Max(1, (int)damage);
 
         }
 

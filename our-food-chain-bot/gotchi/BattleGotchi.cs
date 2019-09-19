@@ -12,7 +12,9 @@ namespace OurFoodChain.Gotchi {
 
         public GotchiStats Stats { get; set; } = new GotchiStats();
         public GotchiType[] Types { get; set; } = new GotchiType[] { };
-        public GotchiMoveset Moves { get; set; } = new GotchiMoveset();
+        public GotchiMoveSet Moves { get; set; } = new GotchiMoveSet();
+
+        public string Status { get; set; } = string.Empty;
 
     }
 

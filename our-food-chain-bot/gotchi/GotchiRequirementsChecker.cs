@@ -32,10 +32,13 @@ namespace OurFoodChain.Gotchi {
             if (requirements is null)
                 return true;
 
-            if (!_checkLevelsAsync(gotchi, requirements))
+            if (!_checkLevels(gotchi, requirements))
                 return false;
 
             if (!string.IsNullOrEmpty(requirements.RolePattern) && !await _checkRolesAsync(gotchi, requirements))
+                return false;
+
+            if (!string.IsNullOrEmpty(requirements.TypePattern) && !await _checkTypesAsync(gotchi, requirements))
                 return false;
 
             Species species = await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId);
@@ -76,11 +79,27 @@ namespace OurFoodChain.Gotchi {
             return false;
 
         }
-        private bool _checkLevelsAsync(Gotchi gotchi, GotchiRequirements requirements) {
+        private bool _checkLevels(Gotchi gotchi, GotchiRequirements requirements) {
 
             int level = GotchiExperienceCalculator.GetLevel(ExperienceGroup.Default, gotchi.Experience);
 
             return level >= requirements.MinimumLevelValue && level <= requirements.MaximumLevelValue;
+
+        }
+        private async Task<bool> _checkTypesAsync(Gotchi gotchi, GotchiRequirements requirements) {
+
+            try {
+
+                GotchiType[] types = await Global.GotchiTypeRegistry.GetTypesAsync(gotchi);
+
+                foreach (GotchiType type in types)
+                    if (Regex.IsMatch(type.Name, requirements.TypePattern, RegexOptions.IgnoreCase))
+                        return true;
+
+            }
+            catch (Exception) { }
+
+            return false;
 
         }
 

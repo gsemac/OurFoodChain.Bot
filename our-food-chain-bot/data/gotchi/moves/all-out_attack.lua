@@ -1,18 +1,14 @@
 ﻿function register(move)
+	
+	move.SetName("all-out attack")
+	move.SetDescription("Rushes the opponent. Has abysmal accuracy, but deals very high damage.")
+	move.SetType("carnivore")
 
-	move.name = "All-Out Attack";
-	move.description = "Rushes the opponent. Has abysmal accuracy, but deals very high damage.";
-	move.role = "predator";
+	move.SetPower(80)
+	move.SetPP(10)
+	move.SetAccuracy(0.1)
 
-	move.pp = 10;
-	move.hitRate = 0.1;
-	move.multiplier = 2.5;
+	move.Requires.TypeMatch("carnivore")
+	move.Requires.MinimumLevel(20)
 
-	move.requires.role = "predator";
-	move.requires.minLevel = 20;
-
-end
-
-function callback(args) 
-	args.DoDamage();
 end

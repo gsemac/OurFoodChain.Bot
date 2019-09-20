@@ -35,6 +35,10 @@ namespace OurFoodChain.Gotchi {
         public void SetColor(int red, int green, int blue) {
             Color = Color.FromArgb(red, green, blue);
         }
+
+        public double GetMatchup(GotchiType defensiveType) {
+            return GetMatchup(this, defensiveType);
+        }
         public void SetMatchup(string typeName, double offensiveMultiplier) {
             _matchups[typeName] = offensiveMultiplier;
         }
@@ -60,21 +64,25 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public static double CheckMatchup(GotchiType offensiveType, GotchiType defensiveType) {
+        public bool Matches(string typeName) {
+            return typeName.ToLower() == Name.ToLower();
+        }
 
-            if (offensiveType._matchups.TryGetValue(defensiveType.Name.ToLower(), out double value))
+        public static double GetMatchup(GotchiType offendingType, GotchiType defendingType) {
+
+            if (offendingType._matchups.TryGetValue(defendingType.Name.ToLower(), out double value))
                 return value;
 
             return 1.0;
 
         }
-        public static double CheckMatchup(GotchiType[] offensiveTypes, GotchiType[] defensiveTypes) {
+        public static double GetMatchup(GotchiType[] offendingTypes, GotchiType[] defendingTypes) {
 
             double multiplier = 1.0;
 
-            foreach (GotchiType offensiveType in offensiveTypes)
-                foreach (GotchiType defensiveType in defensiveTypes)
-                    multiplier *= CheckMatchup(offensiveType, defensiveType);
+            foreach (GotchiType offensiveType in offendingTypes)
+                foreach (GotchiType defensiveType in defendingTypes)
+                    multiplier *= GetMatchup(offensiveType, defensiveType);
 
             return multiplier;
 

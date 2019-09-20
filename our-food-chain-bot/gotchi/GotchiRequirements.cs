@@ -12,6 +12,8 @@ namespace OurFoodChain.Gotchi {
 
         public string RolePattern { get; set; }
         public string DescriptionPattern { get; set; }
+        public string TypePattern { get; set; }
+
         public int MinimumLevelValue { get; set; } = 0;
         public int MaximumLevelValue { get; set; } = int.MaxValue;
         public GotchiRequirements[] OrValue {
@@ -20,22 +22,56 @@ namespace OurFoodChain.Gotchi {
             }
         }
 
-        public void RoleMatch(string pattern) {
+        public GotchiRequirements RoleMatch(string pattern) {
+
             RolePattern = pattern;
+
+            return this;
+
         }
-        public void DescriptionMatch(string pattern) {
+        public GotchiRequirements DescriptionMatch(string pattern) {
+
             DescriptionPattern = pattern;
+
+            return this;
+
+        }
+        public GotchiRequirements TypeMatch(string pattern) {
+
+            TypePattern = pattern;
+
+            return this;
+
         }
 
-        public void MinimumLevel(int value) {
+        public GotchiRequirements MinimumLevel(int value) {
+
             MinimumLevelValue = value;
+
+            return this;
+
         }
-        public void MaximumLevel(int value) {
+        public GotchiRequirements MaximumLevel(int value) {
+
             MaximumLevelValue = value;
+
+            return this;
+
         }
 
-        public void Or(GotchiRequirements orRequirements) {
-            _or.Add(orRequirements);
+        public GotchiRequirements Or {
+            get {
+
+                _or.Add(new GotchiRequirements());
+
+                return _or.Last();
+
+            }
+        }
+        public GotchiRequirements And {
+            get {
+                return this;
+            }
         }
 
         private List<GotchiRequirements> _or = new List<GotchiRequirements>();

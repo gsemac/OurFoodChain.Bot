@@ -46,9 +46,7 @@ namespace OurFoodChain.Gotchi {
             // Create and initialize the script object we'll use for registering all of the moves.
             // The same script object will be used for all moves.
 
-            Script script = new Script();
-
-            LuaUtils.InitializeLuaContext(script);
+            Script script = LuaUtils.CreateAndInitializeScript();
 
             // Register all moves.
 

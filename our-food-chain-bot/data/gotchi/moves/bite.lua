@@ -1,16 +1,12 @@
 ﻿function register(move)
 
-	move.name = "Bite";
-	move.description = "Attacks the opponent with mouthparts. Effective against Consumers, but ineffective against Producers.";
-	move.role = "predator";
+	move.SetName("Bite")
+	move.SetDescription("Attacks the opponent with mouthparts. Effective against Consumers, but ineffective against Producers.")
+	move.SetType("carnivore")
 
-	move.pp = 40;
+	move.SetPower(60)
+	move.SetPP(40)
 
-	move.requires.role = "predator";
-	move.requires.unrestrictedMatch = "teeth|jaws|bite";
+	move.Requires.TypeMatch("carnivore").Or.DescriptionMatch("teeth|jaws|bite")
 
-end
-
-function callback(args) 
-	args.DoDamage();
 end

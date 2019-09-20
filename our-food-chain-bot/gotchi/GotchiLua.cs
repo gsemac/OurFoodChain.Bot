@@ -90,6 +90,14 @@ namespace OurFoodChain.Gotchi {
 
     }
 
+    public class LuaFunctions {
+
+        public static GotchiRequirements NewRequirements() {
+            return new GotchiRequirements();
+        }
+
+    }
+
     public class LuaUtils {
 
         public static void InitializeLuaContext(Script script) {
@@ -112,6 +120,7 @@ namespace OurFoodChain.Gotchi {
             script.Globals["max"] = (Func<int, int, int>)((int a, int b) => Math.Max(a, b));
             script.Globals["min"] = (Func<int, int, int>)((int a, int b) => Math.Min(a, b));
             script.Globals["swap"] = (Action<object, object>)((object a, object b) => Utils.Swap(ref a, ref b));
+            script.Globals["NewRequirements"] = (Func<GotchiRequirements>)(() => LuaFunctions.NewRequirements());
 
         }
         public static Script CreateAndInitializeScript() {

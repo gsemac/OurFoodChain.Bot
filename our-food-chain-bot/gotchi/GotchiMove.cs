@@ -22,7 +22,7 @@ namespace OurFoodChain.Gotchi {
         }
         public string Description { get; set; } = "";
 
-        public GotchiType[] Types { get; set; } = new GotchiType[] { };
+        public string[] Types { get; set; } = new string[] { };
         public GotchiRequirements Requires { get; } = new GotchiRequirements();
 
         public int Power { get; set; } = 0;
@@ -46,9 +46,9 @@ namespace OurFoodChain.Gotchi {
             Description = value;
         }
 
-        public void SetType(GotchiType type) {
+        public void SetType(string type) {
 
-            Types = new List<GotchiType>(Types) {
+            Types = new List<string>(Types) {
                 type
             }.ToArray();
 

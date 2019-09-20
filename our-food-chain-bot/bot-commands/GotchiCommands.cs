@@ -108,7 +108,7 @@ namespace OurFoodChain.Gotchi {
             GotchiType t1 = await Global.GotchiTypeRegistry.GetTypeAsync(type1);
             GotchiType t2 = await Global.GotchiTypeRegistry.GetTypeAsync(type2);
 
-            await ReplyAsync(GotchiType.CheckMatchup(t1, t2).ToString());
+            await ReplyAsync(GotchiType.GetMatchup(t1, t2).ToString());
 
             //Species sp = await SpeciesUtils.GetUniqueSpeciesAsync(speciesName);
             //Gotchi gotchi = new Gotchi { SpeciesId = sp.id, Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.MediumFast, 50) };

@@ -11,6 +11,7 @@ namespace OurFoodChain.Gotchi {
     public class GotchiMoveCallbackArgs {
 
         public GotchiMove Move { get; set; } = null;
+        public GotchiType[] MoveTypes { get; set; } = new GotchiType[] { };
         public BattleGotchi User { get; set; } = null;
         public BattleGotchi Target { get; set; } = null;
         public int Times { get; set; } = 1;
@@ -27,7 +28,7 @@ namespace OurFoodChain.Gotchi {
                 double multiplier = 1.0;
 
                 if (Move != null && !Move.IgnoreMatchup && Target != null)
-                    multiplier = GotchiType.CheckMatchup(Move.Types, Target.Types);
+                    multiplier = GotchiType.GetMatchup(MoveTypes, Target.Types);
 
                 return multiplier;
 
@@ -39,7 +40,7 @@ namespace OurFoodChain.Gotchi {
                 double multiplier = 1.0;
 
                 if (Move != null && User != null)
-                    if (Move.Types.Any(x => User.Types.Any(y => y.Name.ToLower() == x.Name.ToLower())))
+                    if (Move.Types.Any(x => User.Types.Any(y => y.Matches(x))))
                         return 1.5;
 
                 return multiplier;
@@ -82,10 +83,10 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public void DoDamage() {
-            DoDamage(Power);
+        public void DealDamage() {
+            DealDamage(Power);
         }
-        public void DoDamage(int power) {
+        public void DealDamage(int power) {
 
             double damage = CalculateDamage(power);
 
@@ -93,10 +94,10 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public void DoRecover(double amount) {
+        public void RecoverAmount(double amount) {
             User.Stats.Hp += (int)amount;
         }
-        public void DoRecoverPercent(double percent) {
+        public void RecoverPercent(double percent) {
             User.Stats.Hp += (int)(User.Stats.MaxHp * percent);
         }
 

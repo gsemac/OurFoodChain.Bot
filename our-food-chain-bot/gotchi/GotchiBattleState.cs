@@ -448,7 +448,8 @@ namespace OurFoodChain.Gotchi {
                 GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
                     User = user.Gotchi,
                     Target = target.Gotchi,
-                    Move = user.SelectedMove
+                    Move = user.SelectedMove,
+                    MoveTypes = await Global.GotchiTypeRegistry.GetTypesAsync(user.SelectedMove.Types)
                 };
 
                 // Initialize the move state (required for only certain moves).
@@ -490,7 +491,7 @@ namespace OurFoodChain.Gotchi {
                             if (script.Globals["callback"] != null)
                                 await script.CallAsync(script.Globals["callback"], args);
                             else
-                                args.DoDamage(user.SelectedMove.Power);
+                                args.DealDamage(user.SelectedMove.Power);
 
                         }
                         catch (Exception) {

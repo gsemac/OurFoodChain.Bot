@@ -1,4 +1,4 @@
-﻿function register(move)
+﻿function onRegister(move)
 	
 	move.SetName("all-out attack")
 	move.SetDescription("Rushes the opponent. Has abysmal accuracy, but deals very high damage.")

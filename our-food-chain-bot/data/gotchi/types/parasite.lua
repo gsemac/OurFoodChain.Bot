@@ -1,4 +1,4 @@
-﻿function register(type)
+﻿function onRegister(type)
 
 	-- Good attack and defense, but low speed and HP.
 

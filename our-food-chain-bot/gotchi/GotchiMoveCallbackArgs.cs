@@ -17,6 +17,23 @@ namespace OurFoodChain.Gotchi {
         public int Times { get; set; } = 1;
         public string Text { get; set; } = "";
 
+        public BattleGotchi Self {
+            get {
+                return User;
+            }
+            set {
+                User = value;
+            }
+        }
+        public BattleGotchi Opponent {
+            get {
+                return Target;
+            }
+            set {
+                Target = value;
+            }
+        }
+
         public int Power {
             get {
                 return Math.Max(0, Move is null ? 0 : Move.Power);

@@ -60,7 +60,7 @@ namespace OurFoodChain.Gotchi {
 
                     script.DoFile(file);
 
-                    script.Call(script.Globals["register"], move);
+                    script.Call(script.Globals["onRegister"], move);
 
                     _addMoveToRegistry(move);
 

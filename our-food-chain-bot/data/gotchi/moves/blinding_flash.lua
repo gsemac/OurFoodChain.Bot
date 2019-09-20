@@ -1,4 +1,4 @@
-﻿function register(move)
+﻿function onRegister(move)
 
 	move.SetName("blinding flash")
 	move.SetDescription("Flashes bright lights, causing the opponent's next move to miss.")
@@ -10,7 +10,7 @@
 
 end
 
-function callback(args) 	
+function onMove(args)
 	
 	args.User.Status = "blinding"
 	args.Text = "emitting a blinding bright light"

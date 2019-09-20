@@ -1,4 +1,4 @@
-﻿function register(move)
+﻿function onRegister(move)
 
 	move.SetName("Bite")
 	move.SetDescription("Attacks the opponent with mouthparts. Effective against Consumers, but ineffective against Producers.")

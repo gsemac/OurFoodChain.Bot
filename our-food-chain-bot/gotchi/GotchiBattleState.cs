@@ -488,8 +488,8 @@ namespace OurFoodChain.Gotchi {
                             //}
                             //else {
 
-                            if (script.Globals["callback"] != null)
-                                await script.CallAsync(script.Globals["callback"], args);
+                            if (script.Globals["onMove"] != null)
+                                await script.CallAsync(script.Globals["onMove"], args);
                             else
                                 args.DealDamage(user.SelectedMove.Power);
 

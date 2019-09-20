@@ -1,4 +1,4 @@
-﻿function register(type)
+﻿function onRegister(type)
 
 	-- Autotrophs are slow and hardy.
 

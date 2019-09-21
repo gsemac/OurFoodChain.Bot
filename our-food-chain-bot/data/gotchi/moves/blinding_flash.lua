@@ -13,6 +13,6 @@ end
 function onMove(args)
 	
 	args.User.Status = "blinding"
-	args.Text = "emitting a blinding bright light"
+	args.SetText("emitting a blinding bright light")
 
 end

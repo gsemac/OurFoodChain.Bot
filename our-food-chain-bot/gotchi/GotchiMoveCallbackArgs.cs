@@ -34,6 +34,10 @@ namespace OurFoodChain.Gotchi {
             }
         }
 
+        public void SetText(string value) {
+            Text = value;
+        }
+
         public int Power {
             get {
                 return Math.Max(0, Move is null ? 0 : Move.Power);

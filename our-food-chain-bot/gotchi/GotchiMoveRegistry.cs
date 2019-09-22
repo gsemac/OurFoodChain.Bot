@@ -43,11 +43,6 @@ namespace OurFoodChain.Gotchi {
         }
         private static async Task _registerLuaMovesAsync() {
 
-            // Create and initialize the script object we'll use for registering all of the moves.
-            // The same script object will be used for all moves.
-
-            Script script = LuaUtils.CreateAndInitializeScript();
-
             // Register all moves.
 
             foreach (string file in System.IO.Directory.GetFiles(Global.GotchiMovesDirectory, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
@@ -58,11 +53,8 @@ namespace OurFoodChain.Gotchi {
                         LuaScriptFilePath = file
                     };
 
-                    script.DoFile(file);
-
-                    script.Call(script.Globals["onRegister"], move);
-
-                    _addMoveToRegistry(move);
+                    if (await new GotchiMoveLuaScript(move.LuaScriptFilePath).OnRegisterAsync(move))
+                        _addMoveToRegistry(move);
 
                 }
                 catch (Exception) {

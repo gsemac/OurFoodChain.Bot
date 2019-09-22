@@ -108,6 +108,14 @@ namespace OurFoodChain.Gotchi {
 
         }
 
+        public void BuffPercent(double percent) {
+
+            Atk = (int)(Atk * percent);
+            Def = (int)(Def * percent);
+            Spd = (int)(Spd * percent);
+
+        }
+
         public GotchiStats Clone() {
             return (GotchiStats)MemberwiseClone();
         }

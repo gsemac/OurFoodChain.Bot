@@ -29,23 +29,26 @@ namespace OurFoodChain {
 
         // Gotchis
 
-        public static Gotchi.GotchiTypeRegistry GotchiTypeRegistry {
+        public static Gotchi.GotchiContext GotchiContext {
             get {
 
-                if (_gotchiTypeRegistry is null) {
+                if (_gotchiContext is null) {
 
-                    _gotchiTypeRegistry = new Gotchi.GotchiTypeRegistry(GotchiDataDirectory + "types/");
+                    _gotchiContext = new Gotchi.GotchiContext();
 
-                    _gotchiTypeRegistry.LogAsync += async x => await OurFoodChainBot.Instance.LogAsync(x);
+                    _gotchiContext.TypeRegistry.TypeDirectoryPath = GotchiDataDirectory + "types/";
+                    _gotchiContext.StatusRegistry.StatusDirectoryPath = GotchiDataDirectory + "statuses/";
+
+                    _gotchiContext.LogAsync += async x => await OurFoodChainBot.Instance.LogAsync(x);
 
                 }
 
-                return _gotchiTypeRegistry;
+                return _gotchiContext;
 
             }
         }
 
-        private static Gotchi.GotchiTypeRegistry _gotchiTypeRegistry;
+        private static Gotchi.GotchiContext _gotchiContext;
 
     }
 

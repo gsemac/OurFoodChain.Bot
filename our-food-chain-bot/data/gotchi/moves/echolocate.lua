@@ -1,13 +1,16 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "echolocate";
-	move.description = "Scans the environment using echolocation. Greatly boosts the user's accuracy.";
+	move.SetName("echolocate")
+	move.SetDescription("Scans the environment using echolocation. Greatly boosts the user's accuracy.")
 
-	move.pp = 1;
-	move.requires.match = "\b(echolcation|echolocate)\b";
+	move.SetPP(1)
 
+	move.Requires.DescriptionMatch("\b(echolcation|echolocate)\b")
+	
 end
 
-function callback(args) 
-	args.user.stats.accuracy = args.user.stats.accuracy * 10;
+function OnMove(args) 
+
+	args.User.Stats.Acc = args.User.Stats.Acc * 10
+
 end

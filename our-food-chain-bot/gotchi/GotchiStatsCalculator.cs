@@ -13,11 +13,11 @@ namespace OurFoodChain.Gotchi {
 
         // Public members
 
-        public GotchiTypeRegistry TypeRegistry { get; private set; }
+        public GotchiContext Context { get; private set; }
 
-        public GotchiStatsCalculator(GotchiTypeRegistry typeRegistry) {
+        public GotchiStatsCalculator(GotchiContext gotchiContext) {
 
-            TypeRegistry = typeRegistry;
+            Context = gotchiContext;
 
         }
 
@@ -27,7 +27,7 @@ namespace OurFoodChain.Gotchi {
 
             int denominator = 0;
 
-            GotchiType[] gotchiTypes = await TypeRegistry.GetTypesAsync(gotchi);
+            GotchiType[] gotchiTypes = await Context.TypeRegistry.GetTypesAsync(gotchi);
 
             if (gotchiTypes.Count() > 0) {
 
@@ -79,12 +79,14 @@ namespace OurFoodChain.Gotchi {
             result.Def /= denominator;
             result.Spd /= denominator;
 
-            // Add 0.1 points for every day the gotchi has been alive.
+            // Add 0.5 points for every week the gotchi has been alive.
 
-            result.MaxHp += gotchi.Age / 10;
-            result.Atk += gotchi.Age / 10;
-            result.Def += gotchi.Age / 10;
-            result.Spd += gotchi.Age / 10;
+            int age_bonus = (int)(0.5 * (gotchi.Age / 7));
+
+            result.MaxHp += age_bonus;
+            result.Atk += age_bonus;
+            result.Def += age_bonus;
+            result.Spd += age_bonus;
 
             // Add or remove stats based on the species' description.
             await _calculateDescriptionBasedBaseStats(gotchi, result);

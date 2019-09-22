@@ -1,19 +1,19 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "break down";
-	move.description = "Resets all of the opponent's stat buffs.";
+	move.SetName("break down")
+	move.SetDescription("Resets all of the opponent's stat buffs.")
 
-	move.pp = 1;
-	move.type = type.Offensive;
+	move.SetPP(1)
 
-	move.requires.role = "decomposer";
-	move.requires.minLevel = 20;
+	move.Requires.TypeMatch("decomposer")
+	move.Requires.MinimumLevel(20)
 
 end
 
-function callback(args) 	
+function OnMove(args)
 	
-	args.target.stats.Reset();
-	args.text = "resetting its opponent's stats";
+	args.Target.ResetStats()
+
+	args.SetText("resetting its opponent's stats")
 
 end

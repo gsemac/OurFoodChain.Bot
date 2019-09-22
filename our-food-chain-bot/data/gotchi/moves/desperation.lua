@@ -1,23 +1,24 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "desperation";
-	move.description = "Used as a last resort when no other moves have PP.";
+	move.SetName("desperation")
+	move.SetName("Used as a last resort when no other moves have PP.")
 
-	move.pp = 0;
+	move.SetPower(40)
+	move.SetPP(0)
 
 	-- This move should be inaccessible normally.
-	move.requires.minLevel = -1;
-	move.requires.maxLevel = -1;
+	move.Requires.AlwaysFail()
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	damage = args.TotalDamage();
-	args.user.stats.hp = args.user.stats.hp - damage;
+	damage = args.CalculateDamage()
 
-	args.DoDamage();
+	args.User.Stats.Hp = args.User.Stats.Hp - damage
 
-	args.text = "lashing out in desperation";
+	args.DealDamage()
+
+	args.SetText("lashing out in desperation")
 	
 end

@@ -1,15 +1,11 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "flagella whip";
-	move.description = "Whips the opponent with flagella, dealing consistent base damage.";
+	move.SetName("flagella whip")
+	move.SetDescription("Whips the opponent with flagella, dealing consistent base damage.")
 
-	move.pp = 20;
-	move.type = type.Offensive;
+	move.SetPower(10)
+	move.SetPP(20)
 
-	move.requires.match = "flagella|flagellum";
+	move.Requires.DescriptionMatch("flagella|flagellum")
 
-end
-
-function callback(args) 
-	args.DoDamage(3);
 end

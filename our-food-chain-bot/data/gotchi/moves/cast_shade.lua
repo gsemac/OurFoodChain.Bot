@@ -1,22 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "cast shade";
-	move.description = "Casts shade over the opponent, preventing them from using Grow or Photosynthesis.";
-	move.role = "producer";
+	move.SetName("cast shade")
+	move.SetDescription("Casts shade over the opponent, preventing them from using Grow or Photosynthesis.")
+	move.SetType("producer")
 
-	move.pp = 25;
-	move.type = type.Offensive;
-	move.canCritical = false;
+	move.SetPP(25)
+	move.SetIgnoreCritical(true)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 10;
-	move.requires.match = "tree|tall|heavy";
+	move.Requires.TypeMatch("producer")
+	move.Requires.MinimumLevel(10)
+	move.Requires.DescriptionMatch("tree|tall|heavy")
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	args.text = "casting shade on the opponent";
-	args.target.status = "shaded";
+	args.SetText("casting shade on the opponent")
+	args.Target.SetStatus("shaded")
 
 end

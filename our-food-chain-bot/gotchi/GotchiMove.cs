@@ -20,7 +20,7 @@ namespace OurFoodChain.Gotchi {
                 _name = value;
             }
         }
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = "???";
 
         public string[] Types { get; set; } = new string[] { };
         public GotchiRequirements Requires { get; } = new GotchiRequirements();
@@ -87,7 +87,7 @@ namespace OurFoodChain.Gotchi {
 
         // Private members
 
-        private string _name = "unknown";
+        private string _name = "???";
 
     }
 

@@ -1,22 +1,23 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "branch drop";
-	move.description = "Drops a heavy branch on the target, dealing damage to the opponent. However, the user also takes damage.";
+	move.SetName("branch drop")
+	move.SetDescription("Drops a heavy branch on the target, dealing damage to the opponent. However, the user also takes damage.")
+	move.SetType("producer")
 
-	move.pp = 10;
-	move.multiplier = 3;
-	move.critical_rate = 1.5;
+	move.SetPower(75)
+	move.SetPP(10)
+	move.SetCriticalRate(1.5)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 5;
-	move.requires.match = "tree|branch";
+	move.Requires.TypeMatch("producer")
+	move.Requires.MinimumLevel(5)
+	move.Requires.DescriptionMatch("tree|branch")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.user.stats.hp = args.user.stats.hp - 10;
+	args.User.Stats.Hp = args.User.Stats.Hp - 10
 
-	args.DoDamage();
+	args.DealDamage()
 
 end

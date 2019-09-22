@@ -1,20 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Break Defense";
-	move.description = "Breaks down the opponent's defense, allowing them to go all-out. Reducing the opponent's Defense to 0, but ups their Attack.";
+	move.SetName("break defense")
+	move.SetDescription("Breaks down the opponent's defense, allowing them to go all-out. Reducing the opponent's Defense to 0, but ups their Attack.")
+	move.SetType("decomposer")
 
-	move.role = "decomposer";
-	move.pp = 5;
-
-	move.requires.role = "decomposer";
-	move.requires.minLevel = 30;
+	move.SetPP(5)
+	
+	move.Requires.TypeMatch("decomposer")
+	move.Requires.MinimumLevel(30)
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.target.stats.atk = args.target.stats.atk + args.target.stats.def;
-	args.target.stats.def = 0;
-	args.text = "breaking the opponent's defense";
+	args.Target.Stats.Atk = args.Target.Stats.Atk + args.Target.Stats.Def
+	args.Target.Stats.Def = 0
+
+	args.SetText("breaking the opponent's defense")
 
 end

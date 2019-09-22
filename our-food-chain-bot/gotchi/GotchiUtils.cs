@@ -315,7 +315,7 @@ namespace OurFoodChain.Gotchi {
 
                 result.Gotchi.Experience = GotchiExperienceCalculator.ExperienceToLevel(result.Stats.ExperienceGroup, BotUtils.RandomInteger(parameters.MinLevel, parameters.MaxLevel + 1));
 
-                result.Stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(result.Gotchi);
+                result.Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(result.Gotchi);
 
             }
 

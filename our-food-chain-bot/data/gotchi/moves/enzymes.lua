@@ -1,15 +1,12 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "enzymes";
-	move.description = "Attacks by coating the opponent with enzymes encouraging decomposition. This move is highly effective against Producers.";
-	move.role = "decomposer";
+	move.SetName("enzymes")
+	move.SetDescription("Attacks by coating the opponent with enzymes encouraging decomposition. This move is highly effective against Producers.")
+	move.SetType("decomposer")
 
-	move.pp = 40;
+	move.SetPower(25)
+	move.SetPP(40)
 
-	move.requires.role = "decomposer";
+	move.Requires.TypeMatch("decomposer")
 
-end
-
-function callback(args) 
-	args.DoDamage();
 end

@@ -1,19 +1,20 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "degrade";
-	move.description = "Degrades the opponent, reducing their stats by a small amount.";
-	move.role = "decomposer";
+	move.SetName("degrade")
+	move.SetDescription("Degrades the opponent, reducing their stats by a small amount.")
+	move.SetType("decomposer")
 
-	move.pp = 10;
+	move.SetPP(10)
 
-	move.requires.role = "decomposer";
-	move.requires.minLevel = 10;
+	move.Requires.TypeMatch("decomposer")
+	move.Requires.MinimumLevel(10)
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	args.target.stats.MultiplyAll(0.8);
-	args.text = "lowering their opponent's stats by 20%";
+	args.Target.Stats.BuffPercent(0.8)
+
+	args.SetText("lowering their opponent's stats by 20%")
 
 end

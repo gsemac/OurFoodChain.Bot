@@ -1,23 +1,23 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "grow";
-	move.description = "Grows larger and raises stats by a small amount.";
-	move.role = "producer";
+	move.SetName("grow")
+	move.SetDescription("Grows larger and raises stats by a small amount.")
+	move.SetType("producer")
 
-	move.pp = 10;
-	move.canMiss = false;
+	move.SetPP(10)
+	move.SetIgnoreAccuracy(true)
 
-	move.requires.role = "producer";
+	move.Requires.TypeMatch("producer")
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	if(args.user.status == "shaded") then
-		args.text = "but couldn't get any sun";
+	if(args.User.StatusName == "shaded") then
+		args.SetText("but couldn't get any sun")
 	else
-		args.user.stats.MultiplyAll(1.05);
-		args.text = "boosting their stats by 5%";
+		args.User.Stats.BuffPercent(1.05)
+		args.SetText("boosting their stats by 5%")
 	end
 
 end

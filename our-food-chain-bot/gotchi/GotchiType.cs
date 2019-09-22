@@ -90,7 +90,7 @@ namespace OurFoodChain.Gotchi {
 
         // Private members
 
-        private string _name = "unknown";
+        private string _name = "???";
         private readonly Dictionary<string, double> _matchups = new Dictionary<string, double>();
 
     }

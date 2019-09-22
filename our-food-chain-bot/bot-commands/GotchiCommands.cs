@@ -105,8 +105,8 @@ namespace OurFoodChain.Gotchi {
         [Command("test")]
         public async Task test(string type1, string type2) {
 
-            GotchiType t1 = await Global.GotchiTypeRegistry.GetTypeAsync(type1);
-            GotchiType t2 = await Global.GotchiTypeRegistry.GetTypeAsync(type2);
+            GotchiType t1 = await Global.GotchiContext.TypeRegistry.GetTypeAsync(type1);
+            GotchiType t2 = await Global.GotchiContext.TypeRegistry.GetTypeAsync(type2);
 
             await ReplyAsync(GotchiType.GetMatchup(t1, t2).ToString());
 
@@ -288,7 +288,7 @@ namespace OurFoodChain.Gotchi {
             if (!(battle_state is null))
                 stats = battle_state.GetGotchiStats(gotchi);
             else
-                stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
+                stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
 
             // Create the embed.
 
@@ -339,7 +339,7 @@ namespace OurFoodChain.Gotchi {
             // Create the embed.
 
             EmbedBuilder set_page = new EmbedBuilder();
-            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
+            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
 
             set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
             set_page.WithThumbnailUrl(sp.pics);

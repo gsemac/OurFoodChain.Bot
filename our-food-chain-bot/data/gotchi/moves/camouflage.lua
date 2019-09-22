@@ -1,14 +1,16 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "camouflage";
-	move.description = "Uses camouflage to hide from the opponent, boosting evasion by a small amount.";
-	move.pp = 5;
-	move.requires.match = "camouflage";
+	move.SetName("camouflage")
+	move.SetDescription("Uses camouflage to hide from the opponent, boosting evasion by a small amount.")
+
+	move.SetPP(5)
+	
+	move.Requires.DescriptionMatch("camouflage")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.user.stats.evasion = args.user.stats.evasion + 0.1;
+	args.User.Stats.Eva = args.User.Stats.Eva + 0.1
 
 end

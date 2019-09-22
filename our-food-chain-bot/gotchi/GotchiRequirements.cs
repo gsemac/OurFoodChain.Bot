@@ -22,6 +22,8 @@ namespace OurFoodChain.Gotchi {
             }
         }
 
+        public bool AlwaysFailValue { get; set; } = false;
+
         public GotchiRequirements RoleMatch(string pattern) {
 
             RolePattern = pattern;
@@ -57,6 +59,10 @@ namespace OurFoodChain.Gotchi {
 
             return this;
 
+        }
+
+        public void AlwaysFail() {
+            AlwaysFailValue = true;
         }
 
         public GotchiRequirements Or {

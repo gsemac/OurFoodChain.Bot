@@ -1,17 +1,18 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "clean-up";
-	move.description = "Nibbles on detritus, restoring a small amount of HP.";
-	move.role = "detritivore";
+	move.SetName("clean-up")
+	move.SetDescription("Nibbles on detritus, restoring a small amount of HP.")
+	move.SetType("detritivore")
 
-	move.pp = 20;
-	move.type = type.Recovery;
+	move.SetPP(20)
 
-	move.requires.role = "detritivore";
-	move.requires.maxLevel = 10;
+	move.Requires.TypeMatch("detritivore")
+	move.Requires.SetMaximumLevel(10)
 
 end
 
-function callback(args) 	
-	args.DoRecoverPercent(0.1);
+function OnMove(args) 	
+	
+	args.RecoverPercent(0.1)
+
 end

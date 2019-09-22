@@ -14,11 +14,13 @@ namespace OurFoodChain.Gotchi {
 
         public event Func<LogMessage, Task> LogAsync;
 
+        public string TypeDirectoryPath { get; set; }
+
         public GotchiTypeRegistry() {
         }
         public GotchiTypeRegistry(string typeDirectoryPath) {
 
-            _type_directory_path = typeDirectoryPath;
+            TypeDirectoryPath = typeDirectoryPath;
 
         }
 
@@ -108,13 +110,12 @@ namespace OurFoodChain.Gotchi {
 
         // Private members
 
-        private string _type_directory_path;
         private ConcurrentDictionary<string, GotchiType> _registry = new ConcurrentDictionary<string, GotchiType>();
 
         private async Task _initializeAsync() {
 
-            if (_registry.Count <= 0 && System.IO.Directory.Exists(_type_directory_path))
-                await RegisterAllAsync(_type_directory_path);
+            if (_registry.Count <= 0 && System.IO.Directory.Exists(TypeDirectoryPath))
+                await RegisterAllAsync(TypeDirectoryPath);
 
         }
         private async Task _logAsync(LogSeverity severity, string message) {

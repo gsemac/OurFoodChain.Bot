@@ -32,6 +32,9 @@ namespace OurFoodChain.Gotchi {
             if (requirements is null)
                 return true;
 
+            if (requirements.AlwaysFailValue)
+                return false;
+
             if (!_checkLevels(gotchi, requirements))
                 return false;
 
@@ -90,7 +93,7 @@ namespace OurFoodChain.Gotchi {
 
             try {
 
-                GotchiType[] types = await Global.GotchiTypeRegistry.GetTypesAsync(gotchi);
+                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi);
 
                 foreach (GotchiType type in types)
                     if (Regex.IsMatch(type.Name, requirements.TypePattern, RegexOptions.IgnoreCase))

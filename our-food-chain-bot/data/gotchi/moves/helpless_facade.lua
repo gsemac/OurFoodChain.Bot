@@ -1,16 +1,17 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "helpless facade";
-	move.description = "The user appears helpless and harmless, causing the opponent to let their guard down, lowering their DEF.";
+	move.SetName("helpless facade")
+	move.SetDescription("The user appears helpless and harmless, causing the opponent to let their guard down, lowering their DEF.")
 
-	move.pp = 5;
-	move.canMiss = false;
-	move.requires.match = "blind";
+	move.SetPP(5)
+	move.SetIgnoreAccuracy(true)
+
+	move.Requires.DescriptionMatch("blind")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.target.stats.def = args.target.stats.def * 0.8;
+	args.Target.Stats.Def = args.Target.Stats.Def * 0.8
 
 end

@@ -90,7 +90,7 @@ namespace OurFoodChain.Gotchi {
         public static async Task<GotchiMoveSet> GetMovesetAsync(Gotchi gotchi) {
 
             // Get stats.
-            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
+            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
 
             return await GetMovesetAsync(gotchi, stats);
 

@@ -16,8 +16,14 @@ namespace OurFoodChain.Gotchi {
 
     public class GotchiBattleState {
 
-        public const ulong WILD_GOTCHI_USER_ID = 0;
-        public const long WILD_GOTCHI_ID = -1;
+        public const ulong WildGotchiUserId = 0;
+        public const long WildGotchiId = -1;
+
+        public bool BattleIsOver {
+            get {
+                return player1.Gotchi.Stats.Hp <= 0.0 || player2.Gotchi.Stats.Hp <= 0.0;
+            }
+        }
 
         private static ConcurrentDictionary<ulong, GotchiBattleState> _battle_states = new ConcurrentDictionary<ulong, GotchiBattleState>();
 
@@ -45,7 +51,7 @@ namespace OurFoodChain.Gotchi {
         }
         public async Task<string> GetPlayer1UsernameAsync(ICommandContext context) {
 
-            if (player1.Gotchi.Gotchi.OwnerId == WILD_GOTCHI_USER_ID)
+            if (player1.Gotchi.Gotchi.OwnerId == WildGotchiUserId)
                 return player1.Gotchi.Gotchi.Name;
 
             return (await GetPlayer1UserAsync(context)).Username;
@@ -53,7 +59,7 @@ namespace OurFoodChain.Gotchi {
         }
         public async Task<string> GetPlayer2UsernameAsync(ICommandContext context) {
 
-            if (player2.Gotchi.Gotchi.OwnerId == WILD_GOTCHI_USER_ID)
+            if (player2.Gotchi.Gotchi.OwnerId == WildGotchiUserId)
                 return player2.Gotchi.Gotchi.Name;
 
             return (await GetPlayer2UserAsync(context)).Username;
@@ -171,74 +177,28 @@ namespace OurFoodChain.Gotchi {
             if (turnCount == 0)
                 turnCount = 1;
 
-            // The faster gotchi goes first if their selected moves have the priority, otherwise the higher priority move goes first.
-            // If both gotchis have the same speed, the first attacker is randomly selected.
+            Tuple<PlayerState, PlayerState> turnOrder = _getTurnOrder();
 
-            PlayerState first, second;
+            // Execute both players' moves.
 
-            if (player1.SelectedMove.Priority > player2.SelectedMove.Priority) {
-                first = player1;
-                second = player2;
-            }
-            else if (player2.SelectedMove.Priority > player1.SelectedMove.Priority) {
-                first = player2;
-                second = player1;
-            }
-            else if (player1.Gotchi.Stats.Spd > player2.Gotchi.Stats.Spd) {
-                first = player1;
-                second = player2;
-            }
-            else if (player2.Gotchi.Stats.Spd > player1.Gotchi.Stats.Spd) {
-                first = player2;
-                second = player1;
-            }
-            else {
+            if (!BattleIsOver)
+                await _useMoveOnAsync(context, turnOrder.Item1, turnOrder.Item2);
 
-                if (BotUtils.RandomInteger(0, 2) == 0) {
-                    first = player1;
-                    second = player2;
-                }
-                else {
-                    first = player2;
-                    second = player1;
-                }
+            if (!BattleIsOver)
+                await _useMoveOnAsync(context, turnOrder.Item2, turnOrder.Item1);
 
-            }
+            // Apply status problems.
 
-            // Execute the first player's move.
-            await _useMoveOnAsync(context, first, second);
+            if (!BattleIsOver)
+                await _applyStatusProblemsAsync(turnOrder.Item1, turnOrder.Item2);
 
-            if (IsBattleOver())
+            if (!BattleIsOver)
+                await _applyStatusProblemsAsync(turnOrder.Item2, turnOrder.Item1);
+
+            // Check if the battle has ended, and handle the situation accordingly.
+
+            if (BattleIsOver)
                 await _endBattle(context);
-            else {
-
-                // Execute the second player's move.
-                await _useMoveOnAsync(context, second, first);
-
-                if (IsBattleOver())
-                    await _endBattle(context);
-
-            }
-
-            // Apply status problems for both users.
-
-            if (!IsBattleOver()) {
-
-                _applyStatusProblems(context, first);
-
-                if (IsBattleOver())
-                    await _endBattle(context);
-
-                else {
-
-                    _applyStatusProblems(context, second);
-
-                    if (IsBattleOver())
-                        await _endBattle(context);
-
-                }
-
-            }
 
             // Show the battle state.
             await ShowBattleStateAsync(context, this);
@@ -255,22 +215,17 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public bool IsBattleOver() {
-
-            return player1.Gotchi.Stats.Hp <= 0.0 || player2.Gotchi.Stats.Hp <= 0.0;
-
-        }
         public bool IsBattlingCpu() {
 
             if (!(player2 is null))
-                return player2.Gotchi.Gotchi.OwnerId == WILD_GOTCHI_USER_ID;
+                return player2.Gotchi.Gotchi.OwnerId == WildGotchiUserId;
 
             return false;
 
         }
         public bool IsCpuGotchi(Gotchi gotchi) {
 
-            return gotchi.OwnerId == WILD_GOTCHI_USER_ID;
+            return gotchi.OwnerId == WildGotchiUserId;
 
         }
         public static bool IsUserCurrentlyBattling(ulong userId) {
@@ -295,7 +250,7 @@ namespace OurFoodChain.Gotchi {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi1,
                         Moves = await GotchiMoveSet.GetMovesetAsync(gotchi1),
-                        Stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi1)
+                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi1)
                     }
                 }
 
@@ -309,7 +264,7 @@ namespace OurFoodChain.Gotchi {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi2,
                         Moves = await GotchiMoveSet.GetMovesetAsync(gotchi2),
-                        Stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi2)
+                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi2)
                     }
                 };
 
@@ -334,11 +289,14 @@ namespace OurFoodChain.Gotchi {
 
             }
 
+            state.player1.Gotchi.Context = Global.GotchiContext;
+            state.player2.Gotchi.Context = Global.GotchiContext;
+
             // Register the battle state in the battle state collection.
 
             _battle_states[gotchi1.OwnerId] = state;
 
-            if (state.player2.Gotchi.Gotchi.OwnerId != WILD_GOTCHI_USER_ID)
+            if (state.player2.Gotchi.Gotchi.OwnerId != WildGotchiUserId)
                 _battle_states[state.player2.Gotchi.Gotchi.OwnerId] = state;
 
             // Set the initial message displayed when the battle starts.
@@ -415,7 +373,7 @@ namespace OurFoodChain.Gotchi {
                 state.turnCount));
             embed.WithImageUrl(gif_url);
             embed.WithDescription(state.battleText);
-            if (state.IsBattleOver())
+            if (state.BattleIsOver)
                 embed.WithFooter("The battle has ended!");
             else if (state.turnCount == 0) {
                 embed.WithFooter("The battle has begun. Pick your move!");
@@ -438,24 +396,12 @@ namespace OurFoodChain.Gotchi {
 
                 // Create, initialize, and execute the script associated with this move.
 
-                Script script = new Script();
-                LuaUtils.InitializeLuaContext(script);
+                GotchiMoveLuaScript moveScript = new GotchiMoveLuaScript(user.SelectedMove.LuaScriptFilePath);
 
-                script.DoFile(user.SelectedMove.LuaScriptFilePath);
+                GotchiMoveCallbackArgs args = await _createCallbackArgsAsync(user, target);
 
-                // Initialize the callback args.
-
-                GotchiMoveCallbackArgs args = new GotchiMoveCallbackArgs {
-                    User = user.Gotchi,
-                    Target = target.Gotchi,
-                    Move = user.SelectedMove,
-                    MoveTypes = await Global.GotchiTypeRegistry.GetTypesAsync(user.SelectedMove.Types)
-                };
-
-                // Initialize the move state (required for only certain moves).
-
-                if (!(script.Globals["init"] is null))
-                    await script.CallAsync(script.Globals["init"], args);
+                // Call the move's "OnInit" callback (only applicable for some moves).
+                await moveScript.OnInitAsync(args);
 
                 // It's possible for a move to be used more than once in a turn (e.g., multi-hit moves).
                 // Each time will trigger the callback to be called and display a new message.
@@ -464,7 +410,7 @@ namespace OurFoodChain.Gotchi {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = target.Gotchi.Status != "blinding" && (user.SelectedMove.IgnoreAccuracy || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.SelectedMove.Accuracy * Math.Max(0.1, user.Gotchi.Stats.Acc - target.Gotchi.Stats.Eva)));
+                    bool is_hit = user.SelectedMove.IgnoreAccuracy || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.SelectedMove.Accuracy * Math.Max(0.1, user.Gotchi.Stats.Acc - target.Gotchi.Stats.Eva));
                     args.IsCritical =
                         !user.SelectedMove.IgnoreCritical &&
                         (BotUtils.RandomInteger(0, (int)(10 / user.SelectedMove.CriticalRate)) == 0 ||
@@ -488,27 +434,30 @@ namespace OurFoodChain.Gotchi {
                             //}
                             //else {
 
-                            if (script.Globals["onMove"] != null)
-                                await script.CallAsync(script.Globals["onMove"], args);
-                            else
+                            if (!await moveScript.OnMoveAsync(args))
                                 args.DealDamage(user.SelectedMove.Power);
 
                         }
-                        catch (Exception) {
+                        catch (Exception ex) {
+
                             args.Text = "but something went wrong";
+
                         }
 
-                        // If the target is "withdrawn", allow them to survive the hit with at least 1 HP.
-                        if (target.Gotchi.Status == "withdrawn") {
+                        // Apply the target's status if a new status was acquired.
 
+                        if (target.Gotchi.StatusChanged && target.Gotchi.HasStatus) {
+
+                            await new GotchiStatusLuaScript(target.Gotchi.Status.LuaScriptFilePath).OnAcquireAsync(args);
+
+                            target.Gotchi.StatusChanged = false;
+
+                        }
+
+                        // Prevent the target from fainting if they're able to endure the hit.
+
+                        if (target.Gotchi.HasStatus && target.Gotchi.Status.Endure)
                             target.Gotchi.Stats.Hp = Math.Max(1, target.Gotchi.Stats.Hp);
-                            target.Gotchi.Status = "";
-
-                        }
-
-                        // If the target is "blinding", remove the status.
-                        if (target.Gotchi.Status == "blinding")
-                            target.Gotchi.Status = "";
 
                         // Show the battle text.
                         // If the move doesn't specify a text, choose one automatically (where possible).
@@ -660,56 +609,35 @@ namespace OurFoodChain.Gotchi {
             battleText = battle_text.ToString();
 
         }
-        private void _applyStatusProblems(ICommandContext context, PlayerState user) {
+        private async Task _applyStatusProblemsAsync(PlayerState affectedUser, PlayerState otherUser) {
 
             StringBuilder sb = new StringBuilder();
+
             sb.AppendFormat(battleText);
 
-            if (user.Gotchi.Status == "poisoned") {
+            if (affectedUser.Gotchi.HasStatus) {
 
-                // If the user is poisoned, apply poison damage (1/16th of max HP).
+                GotchiStatus status = affectedUser.Gotchi.Status;
+                GotchiStatusLuaScript script = new GotchiStatusLuaScript(status.LuaScriptFilePath);
+                GotchiMoveCallbackArgs args = await _createCallbackArgsAsync(otherUser, affectedUser);
 
-                user.Gotchi.Stats.Hp = Math.Max(0, user.Gotchi.Stats.Hp - (user.Gotchi.Stats.MaxHp / 16));
+                // Call the "OnTurnEnd" callback.
+                await script.OnTurnEndAsync(args);
 
-                sb.Append(string.Format("\n⚡ **{0}** is damaged by poison!", StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name)));
+                // Apply other properties.
 
-            }
-            else if (user.Gotchi.Status == "rooted") {
+                affectedUser.Gotchi.Stats.Hp -= status.SlipDamage;
+                affectedUser.Gotchi.Stats.Hp -= (int)(status.SlipDamagePercent * affectedUser.Gotchi.Stats.MaxHp);
 
-                // If the user is rooted, heal some HP (1/10th of max HP).
+                // Show status text.
 
-                user.Gotchi.Stats.Hp = Math.Min(user.Gotchi.Stats.MaxHp, user.Gotchi.Stats.Hp + (user.Gotchi.Stats.MaxHp / 10));
+                if (!string.IsNullOrEmpty(args.Text))
+                    sb.Append(string.Format("\n⚡ **{0}** {1}!", affectedUser.Gotchi.Gotchi.Name, args.Text));
 
-                sb.Append(string.Format("\n❤ **{0}** absorbed nutrients from its roots!", StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name)));
+                // Decrement the duration of the status, clearing it if the duration has been completed.
 
-            }
-            else if (user.Gotchi.Status == "vine-wrapped") {
-
-                // If the user is wrapped in vines, apply poison damage (1/16th of max HP).
-
-                user.Gotchi.Stats.Hp = Math.Max(0, user.Gotchi.Stats.Hp - (user.Gotchi.Stats.MaxHp / 16));
-
-                sb.Append(string.Format("\n⚡ **{0}** is hurt by vines!", StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name)));
-
-            }
-            else if (user.Gotchi.Status == "thorn-surrounded") {
-
-                // #todo Damage should only be incurred when the user uses a damaging move.
-
-                // If the user is surrounded by thorns, apply thorn damage (1/10th of max HP).
-                // Only damages the user if they are attacking the opponent.
-
-                user.Gotchi.Stats.Hp = Math.Max(0, user.Gotchi.Stats.Hp - (user.Gotchi.Stats.MaxHp / 10));
-
-                sb.Append(string.Format("\n⚡ **{0}** is hurt by thorns!", StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name)));
-
-            }
-            else if (user.Gotchi.Status == "withdrawn") {
-
-                // This status only lasts a single turn.
-
-                user.Gotchi.Status = "";
-                sb.Append(string.Format("\n⚡ **{0}** came back out of its shell.", StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name)));
+                if (!status.Permanent && --status.Duration <= 0)
+                    affectedUser.Gotchi.ClearStatus();
 
             }
 
@@ -817,8 +745,8 @@ namespace OurFoodChain.Gotchi {
 
             if (player2.Gotchi != null) {
 
-                player2.Gotchi.Gotchi.OwnerId = WILD_GOTCHI_USER_ID;
-                player2.Gotchi.Gotchi.Id = WILD_GOTCHI_ID;
+                player2.Gotchi.Gotchi.OwnerId = WildGotchiUserId;
+                player2.Gotchi.Gotchi.Id = WildGotchiId;
 
             }
 
@@ -938,6 +866,60 @@ namespace OurFoodChain.Gotchi {
             DeregisterBattle(context.User.Id);
 
             battleText = sb.ToString();
+
+        }
+
+        private Tuple<PlayerState, PlayerState> _getTurnOrder() {
+
+            /* Determine which player gets to move first at the start of the turn.
+             * 
+             * Move priority is considered first, followed by speed, and then random selection.
+             * 
+             * */
+
+            PlayerState first, second;
+
+            if (player1.SelectedMove.Priority > player2.SelectedMove.Priority) {
+                first = player1;
+                second = player2;
+            }
+            else if (player2.SelectedMove.Priority > player1.SelectedMove.Priority) {
+                first = player2;
+                second = player1;
+            }
+            else if (player1.Gotchi.Stats.Spd > player2.Gotchi.Stats.Spd) {
+                first = player1;
+                second = player2;
+            }
+            else if (player2.Gotchi.Stats.Spd > player1.Gotchi.Stats.Spd) {
+                first = player2;
+                second = player1;
+            }
+            else {
+
+                if (BotUtils.RandomInteger(0, 2) == 0) {
+                    first = player1;
+                    second = player2;
+                }
+                else {
+                    first = player2;
+                    second = player1;
+                }
+
+            }
+
+            return new Tuple<PlayerState, PlayerState>(first, second);
+
+        }
+
+        private static async Task<GotchiMoveCallbackArgs> _createCallbackArgsAsync(PlayerState userState, PlayerState targetState) {
+
+            return new GotchiMoveCallbackArgs {
+                User = userState.Gotchi,
+                Target = targetState.Gotchi,
+                Move = userState.SelectedMove,
+                MoveTypes = await Global.GotchiContext.TypeRegistry.GetTypesAsync(userState.SelectedMove.Types)
+            };
 
         }
 

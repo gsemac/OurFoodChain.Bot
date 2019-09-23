@@ -251,7 +251,8 @@ namespace OurFoodChain.Gotchi {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi1,
                         Moves = await GotchiMoveSet.GetMovesetAsync(gotchi1),
-                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi1)
+                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi1),
+                        Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi1)
                     }
                 }
 
@@ -265,7 +266,8 @@ namespace OurFoodChain.Gotchi {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi2,
                         Moves = await GotchiMoveSet.GetMovesetAsync(gotchi2),
-                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi2)
+                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi2),
+                        Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi2)
                     }
                 };
 
@@ -570,11 +572,13 @@ namespace OurFoodChain.Gotchi {
                             StringUtils.ToTitleCase(user.SelectedMove.Name),
                             text));
 
-                        if (args.MatchupMultiplier > 1.0)
-                            battle_text.Append(" It's super effective!");
-
                         if (args.IsCritical && target.Gotchi.Stats.Hp < target_before.Hp)
                             battle_text.Append(" Critical hit!");
+
+                        if (args.MatchupMultiplier > 1.0)
+                            battle_text.Append(" It's super effective!");
+                        else if (args.MatchupMultiplier < 1.0)
+                            battle_text.Append(" It's not very effective...");
 
                         battle_text.AppendLine();
 

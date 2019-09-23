@@ -12,8 +12,8 @@ end
 
 function OnMove(args) 
 	
-	multiplier = min(2.0, args.Target.Stats.Spd / args.User.Stats.Spd);
-	base_damage = args.Power * multiplier;
+	multiplier = Min(2.0, args.Target.Stats.Spd / args.User.Stats.Spd)
+	base_damage = args.Power * multiplier
 
 	args.DealDamage(base_damage)
 

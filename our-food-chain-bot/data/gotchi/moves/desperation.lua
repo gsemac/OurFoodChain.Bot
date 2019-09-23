@@ -1,7 +1,7 @@
 ﻿function OnRegister(move)
 
 	move.SetName("desperation")
-	move.SetName("Used as a last resort when no other moves have PP.")
+	move.SetDescription("Used as a last resort when no other moves have PP.")
 
 	move.SetPower(40)
 	move.SetPP(0)

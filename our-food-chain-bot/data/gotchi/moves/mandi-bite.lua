@@ -14,8 +14,8 @@ function OnMove(args)
 
 	args.DealDamage()
 
-	if(chance(5)) then
-		args.Target.Stats.Def = args.Target.Stats.Def * 0.9;
+	if(Chance(5)) then
+		args.Target.Stats.DebuffPercent("def", 10)
 	end
 
 end

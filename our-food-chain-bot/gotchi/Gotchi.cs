@@ -16,7 +16,14 @@ namespace OurFoodChain.Gotchi {
 
         public long Id { get; set; } = NullGotchiId;
         public long SpeciesId { get; set; } = Species.NullSpeciesId;
-        public string Name { get; set; }
+        public string Name {
+            get {
+                return StringUtils.ToTitleCase(_name);
+            }
+            set {
+                _name = value;
+            }
+        }
         public ulong OwnerId { get; set; } = UserInfo.NullUserId;
         public long FedTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
         public long BornTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
@@ -134,6 +141,10 @@ namespace OurFoodChain.Gotchi {
             return GotchiState.Happy;
 
         }
+
+        // Private members
+
+        private string _name;
 
     }
 

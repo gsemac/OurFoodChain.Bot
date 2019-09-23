@@ -12,7 +12,7 @@ end
 
 function OnMove(args) 
 	
-	if(chance(2)) then
+	if(Chance(2)) then
 		args.SetText("but the opponent woke up")
 	else 
 

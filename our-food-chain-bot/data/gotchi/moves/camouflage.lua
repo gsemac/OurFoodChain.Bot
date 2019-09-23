@@ -11,6 +11,6 @@ end
 
 function OnMove(args) 
 
-	args.User.Stats.Eva = args.User.Stats.Eva + 0.1
+	args.User.Stats.BuffPercent("eva", 10)
 
 end

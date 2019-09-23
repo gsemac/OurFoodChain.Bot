@@ -12,9 +12,9 @@ end
 
 function OnMove(args) 
 
-	if(chance(10)) then
+	if(Chance(10)) then
 		args.Target.SetStatus("poisoned")
-	end;
+	end
 
 	args.DealDamage()
 

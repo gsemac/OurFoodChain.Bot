@@ -10,9 +10,7 @@
 end
 
 function OnMove(args) 	
-	
-	amount = 0.05
 
-	args.Target.Stats.Acc = args.Target.Stats.Acc * (1.0 - amount)
+	args.Target.Stats.DebuffPercent("acc", 5)
 
 end

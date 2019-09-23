@@ -13,9 +13,9 @@ end
 
 function OnMove(args) 
 	
-	amount = rand(0, 6)
+	amount = rand(0, 60)
 
-	args.RecoverPercent(amount / 10)
+	args.RecoverPercent(amount)
 
 	if(amount == 0) then 
 		args.SetText("but couldn't find anything")

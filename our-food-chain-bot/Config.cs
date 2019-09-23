@@ -87,9 +87,7 @@ namespace OurFoodChain {
 
             return typeof(Config).GetProperties().FirstOrDefault(x => {
 
-                JsonPropertyAttribute attribute = Attribute.GetCustomAttribute(x, typeof(JsonPropertyAttribute)) as JsonPropertyAttribute;
-
-                return attribute.PropertyName == jsonPropertyName.ToLower();
+                return Attribute.GetCustomAttribute(x, typeof(JsonPropertyAttribute)) is JsonPropertyAttribute attribute && string.Equals(attribute.PropertyName, jsonPropertyName, StringComparison.OrdinalIgnoreCase);
 
             });
 

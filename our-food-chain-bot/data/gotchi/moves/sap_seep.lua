@@ -12,6 +12,6 @@ end
 
 function OnMove(args) 		
 
-	args.Target.Stats.Spd = args.Target.Stats.Spd * 0.7
+	args.Target.Stats.DebuffPercent("spd", 30)
 
 end

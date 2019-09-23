@@ -16,7 +16,7 @@ end
 
 function OnMove(args) 
 
-	args.User.Stats.Hp = args.User.Stats.Hp - 10
+	args.TakeDamage(10)
 
 	args.DealDamage()
 

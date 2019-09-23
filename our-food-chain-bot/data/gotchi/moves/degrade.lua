@@ -13,7 +13,7 @@ end
 
 function OnMove(args) 	
 	
-	args.Target.Stats.BuffPercent(0.8)
+	args.Target.Stats.DebuffPercent(20)
 
 	args.SetText("lowering their opponent's stats by 20%")
 

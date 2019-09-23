@@ -16,7 +16,7 @@ function OnMove(args)
 	if(args.User.StatusName == "shaded") then
 		args.SetText("but couldn't get any sun")
 	else
-		args.RecoverPercent(0.15)
+		args.RecoverPercent(15)
 	end
 
 end

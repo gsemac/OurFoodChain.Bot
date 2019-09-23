@@ -13,6 +13,6 @@ end
 
 function OnMove(args) 	
 	
-	args.User.Stats.Atk = args.User.Stats.Atk * 1.2
+	args.User.Stats.BuffPercent("atk", 20)
 
 end

@@ -98,11 +98,19 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public void RecoverAmount(double amount) {
-            User.Stats.Hp += (int)amount;
+        public void TakeDamage(int power) {
+            User.Stats.Hp -= power;
         }
-        public void RecoverPercent(double percent) {
-            User.Stats.Hp += (int)(User.Stats.MaxHp * percent);
+
+        public void RecoverAmount(int amount) {
+            User.Stats.Hp += amount;
+        }
+        public void RecoverPercent(int percent) {
+
+            double factor = percent / 100.0;
+
+            User.Stats.Hp += (int)Math.Ceiling(User.Stats.MaxHp * factor);
+
         }
 
         //public bool TargetHasRole(string roleName) {

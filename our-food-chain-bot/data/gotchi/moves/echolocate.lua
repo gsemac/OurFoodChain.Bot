@@ -11,6 +11,6 @@ end
 
 function OnMove(args) 
 
-	args.User.Stats.Acc = args.User.Stats.Acc * 10
+	args.User.Stats.Acc = 1.0
 
 end

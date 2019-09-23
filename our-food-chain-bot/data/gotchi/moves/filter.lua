@@ -13,6 +13,6 @@ end
 
 function OnMove(args) 	
 	
-	args.RecoverPercent(0.2)
+	args.RecoverPercent(20)
 
 end

@@ -371,8 +371,8 @@ namespace OurFoodChain.Gotchi {
             EmbedBuilder embed = new EmbedBuilder();
 
             embed.WithTitle(string.Format("**{0}** vs. **{1}** (Turn {2})",
-                StringUtils.ToTitleCase(state.player1.Gotchi.Gotchi.Name),
-                StringUtils.ToTitleCase(state.player2.Gotchi.Gotchi.Name),
+                state.player1.Gotchi.Gotchi.Name,
+                state.player2.Gotchi.Gotchi.Name,
                 state.turnCount));
             embed.WithImageUrl(gif_url);
             embed.WithDescription(state.battleText);
@@ -568,8 +568,8 @@ namespace OurFoodChain.Gotchi {
 
                         battle_text.Append(string.Format("{0} **{1}** used **{2}**, {3}!",
                             "💥", //user.SelectedMove.info.Icon(),
-                            StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name),
-                            StringUtils.ToTitleCase(user.SelectedMove.Name),
+                            user.Gotchi.Gotchi.Name,
+                            user.SelectedMove.Name,
                             text));
 
                         if (args.IsCritical && target.Gotchi.Stats.Hp < target_before.Hp)
@@ -588,8 +588,8 @@ namespace OurFoodChain.Gotchi {
                         // If the move missed, so display a failure message.
                         battle_text.AppendLine(string.Format("{0} **{1}** used **{2}**, but it missed!",
                              "💥", //user.SelectedMove.info.Icon(),
-                            StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name),
-                            StringUtils.ToTitleCase(user.SelectedMove.Name)));
+                            user.Gotchi.Gotchi.Name,
+                            user.SelectedMove.Name));
 
                     }
 
@@ -604,8 +604,8 @@ namespace OurFoodChain.Gotchi {
                 // If there is no Lua script associated with the given move, display a failure message.
                 battle_text.Append(string.Format("{0} **{1}** used **{2}**, but it forgot how!",
                      "💥", //user.SelectedMove.info.Icon(),
-                    StringUtils.ToTitleCase(user.Gotchi.Gotchi.Name),
-                    StringUtils.ToTitleCase(user.SelectedMove.Name)));
+                    user.Gotchi.Gotchi.Name,
+                    user.SelectedMove.Name));
 
             }
 
@@ -803,19 +803,19 @@ namespace OurFoodChain.Gotchi {
                 long winner_g = (long)Math.Round(loser.Gotchi.Stats.Level * (BotUtils.RandomInteger(150, 200) / 100.0));
 
                 sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP** and **{2}G**.",
-                    StringUtils.ToTitleCase(winner.Gotchi.Gotchi.Name),
+                    winner.Gotchi.Gotchi.Name,
                     winner_exp,
                     winner_g));
 
                 if (winner_levels > 0)
-                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(winner.Gotchi.Gotchi.Name), winner.Gotchi.Stats.Level));
+                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", winner.Gotchi.Gotchi.Name, winner.Gotchi.Stats.Level));
 
                 if (((winner.Gotchi.Stats.Level - winner_levels) / 10) < (winner.Gotchi.Stats.Level / 10))
                     if (await GotchiUtils.EvolveAndUpdateGotchiAsync(winner.Gotchi.Gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(winner.Gotchi.Gotchi.SpeciesId);
 
-                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(winner.Gotchi.Gotchi.Name), sp.GetShortName()));
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", winner.Gotchi.Gotchi.Name, sp.GetShortName()));
 
                     }
 
@@ -836,17 +836,17 @@ namespace OurFoodChain.Gotchi {
                 double loser_exp = loser.Gotchi.Gotchi.Id == player1.Gotchi.Gotchi.Id ? exp1 : exp2;
                 long loser_levels = loser.Gotchi.Gotchi.Id == player1.Gotchi.Gotchi.Id ? levels1 : levels2;
 
-                sb.AppendLine(string.Format("💀 **{0}** lost the battle... Earned **{1} EXP**.", StringUtils.ToTitleCase(loser.Gotchi.Gotchi.Name), loser_exp));
+                sb.AppendLine(string.Format("💀 **{0}** lost the battle... Earned **{1} EXP**.", loser.Gotchi.Gotchi.Name, loser_exp));
 
                 if (loser_levels > 0)
-                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", StringUtils.ToTitleCase(loser.Gotchi.Gotchi.Name), loser.Gotchi.Stats.Level));
+                    sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", loser.Gotchi.Gotchi.Name, loser.Gotchi.Stats.Level));
 
                 if (((loser.Gotchi.Stats.Level - loser_levels) / 10) < (loser.Gotchi.Stats.Level / 10))
                     if (await GotchiUtils.EvolveAndUpdateGotchiAsync(loser.Gotchi.Gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(loser.Gotchi.Gotchi.SpeciesId);
 
-                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", StringUtils.ToTitleCase(loser.Gotchi.Gotchi.Name), sp.GetShortName()));
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", loser.Gotchi.Gotchi.Name, sp.GetShortName()));
 
                     }
 

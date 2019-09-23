@@ -105,21 +105,17 @@ namespace OurFoodChain.Gotchi {
             if (!_registered_assembly) {
 
                 UserData.RegisterAssembly();
-                UserData.RegisterType<GotchiBattleStatus>();
-                //UserData.RegisterType<GotchiMoveType>();
 
                 _registered_assembly = true;
 
             }
 
-            script.Globals["status"] = UserData.CreateStatic<GotchiBattleStatus>();
-            //script.Globals["type"] = UserData.CreateStatic<GotchiMoveType>();
-            script.Globals["console"] = (Action<string>)((string x) => Console.WriteLine(x));
-            script.Globals["rand"] = (Func<int, int, int>)((int min, int max) => BotUtils.RandomInteger(min, max));
-            script.Globals["chance"] = (Func<int, bool>)((int chance) => BotUtils.RandomInteger(0, chance) == 0);
-            script.Globals["max"] = (Func<int, int, int>)((int a, int b) => Math.Max(a, b));
-            script.Globals["min"] = (Func<int, int, int>)((int a, int b) => Math.Min(a, b));
-            script.Globals["swap"] = (Action<object, object>)((object a, object b) => Utils.Swap(ref a, ref b));
+            script.Globals["Console"] = (Action<string>)((string x) => Console.WriteLine(x));
+            script.Globals["Rand"] = (Func<int, int, int>)((int min, int max) => BotUtils.RandomInteger(min, max));
+            script.Globals["Chance"] = (Func<int, bool>)((int chance) => BotUtils.RandomInteger(0, chance) == 0);
+            script.Globals["Min"] = (Func<int, int, int>)((int a, int b) => Math.Min(a, b));
+            script.Globals["Max"] = (Func<int, int, int>)((int a, int b) => Math.Max(a, b));
+            script.Globals["Swap"] = (Action<object, object>)((object a, object b) => Utils.Swap(ref a, ref b));
             script.Globals["NewRequirements"] = (Func<GotchiRequirements>)(() => LuaFunctions.NewRequirements());
 
         }

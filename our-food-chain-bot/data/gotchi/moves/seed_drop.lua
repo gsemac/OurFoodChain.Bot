@@ -13,5 +13,5 @@
 end
 
 function OnInit(args) 
-	args.SetTimes(rand(1, 6))
+	args.SetTimes(Rand(1, 6))
 end

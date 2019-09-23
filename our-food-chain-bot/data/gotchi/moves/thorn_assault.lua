@@ -11,6 +11,6 @@ end
 
 function OnMove(args) 	
 	
-	args.DealDamage(rand(50, 100))
+	args.DealDamage(Rand(50, 100))
 
 end

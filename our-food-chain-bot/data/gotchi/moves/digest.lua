@@ -14,8 +14,8 @@ end
 
 function OnMove(args) 
 
-	if(rand(0, 10) == 0) then
-		args.Target.Stats.BuffPercent(0.9)
+	if(Chance(10)) then
+		args.Target.Stats.DebuffPercent(10)
 	end
 
 	args.DealDamage()

@@ -18,7 +18,7 @@ function OnMove(args)
 	
 	else
 		
-		args.User.Stats.BuffPercent(1.10)
+		args.User.Stats.BuffPercent(10)
 		
 		args.SetText("boosting their stats by 10%")
 

@@ -251,6 +251,7 @@
     <Compile Include="gotchi\GotchiTypeRegistry.cs" />
     <Compile Include="graphics\AncestryTreeImageRenderer.cs" />
     <Compile Include="graphics\AncestryTreeTextRenderer.cs" />
+    <Compile Include="graphics\GraphicsUtils.cs" />
     <Compile Include="periods\Generation.cs" />
     <Compile Include="periods\GenerationUtils.cs" />
     <Compile Include="taxa\AncestryTree.cs" />
@@ -300,7 +301,6 @@
     <Compile Include="discord\EmbedUtils.cs" />
     <Compile Include="utils\LevenshteinDistance.cs" />
     <Compile Include="commands\CommandUtils.cs" />
-    <Compile Include="utils\GraphicsUtils.cs" />
     <Compile Include="discord\PaginatedEmbedBuilder.cs" />
     <Compile Include="taxa\SearchQuery.cs" />
     <Compile Include="taxa\SpeciesUtils.cs" />

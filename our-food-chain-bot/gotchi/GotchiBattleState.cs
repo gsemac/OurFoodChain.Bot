@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -702,17 +703,31 @@ namespace OurFoodChain.Gotchi {
         }
         private static void _drawHealthBar(Graphics gfx, float x, float y, double amount) {
 
-            float hp_bar_width = 50;
+            int hpBarWidth = 50;
+            int hpBarHeight = 9;
+            int hpBarRadius = 4;
+
+            Rectangle bounds = new Rectangle((int)x - hpBarWidth / 2, (int)y, hpBarWidth, hpBarHeight);
+            System.Drawing.Color color = System.Drawing.Color.Green;
+
+            if (amount >= 0.5)
+                color = GraphicsUtils.Blend(System.Drawing.Color.Orange, System.Drawing.Color.Green, (1.0 - amount) / 0.5);
+            else
+                color = GraphicsUtils.Blend(System.Drawing.Color.Red, System.Drawing.Color.Orange, (0.5 - amount) / 0.5);
 
             using (Brush brush = new SolidBrush(System.Drawing.Color.White))
-                gfx.FillRectangle(brush, new RectangleF(x - hp_bar_width / 2, y, hp_bar_width, 10));
+                GraphicsUtils.FillRoundedRectangle(gfx, brush, bounds, hpBarRadius);
 
-            using (Brush brush = new SolidBrush(amount < 0.5 ? (amount < 0.2 ? System.Drawing.Color.Red : System.Drawing.Color.Orange) : System.Drawing.Color.Green))
-                gfx.FillRectangle(brush, new RectangleF(x - hp_bar_width / 2, y, hp_bar_width * (float)amount, 10));
+            gfx.SetClip(GraphicsUtils.RoundedRect(bounds, hpBarRadius), CombineMode.Replace);
+
+            using (Brush brush = new SolidBrush(color))
+                gfx.FillRectangle(brush, new Rectangle((int)x - hpBarWidth / 2, (int)y, (int)(hpBarWidth * amount), hpBarHeight));
+
+            gfx.ResetClip();
 
             using (Brush brush = new SolidBrush(System.Drawing.Color.Black))
             using (Pen pen = new Pen(brush))
-                gfx.DrawRectangle(pen, new Rectangle((int)(x - hp_bar_width / 2), (int)y, (int)hp_bar_width, 10));
+                GraphicsUtils.DrawRoundedRectangle(gfx, pen, new Rectangle((int)(x - hpBarWidth / 2), (int)y, hpBarWidth, hpBarHeight), hpBarRadius);
 
         }
         private async Task _generateOpponentAsync() {

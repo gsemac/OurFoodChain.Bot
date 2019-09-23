@@ -761,12 +761,37 @@ namespace OurFoodChain {
 
                                 break;
 
+                            case "descendant":
                             case "descendants":
                             case "evo":
                             case "evos":
+                            case "evolution":
+                            case "evolutions":
 
                                 await result.FilterByAsync(async (x) => {
                                     return (await SpeciesUtils.GetDirectDescendantsAsync(x)).Count() <= 0;
+                                }, subtract);
+
+                                break;
+
+                            case "role":
+                            case "roles":
+
+                                await result.FilterByAsync(async (x) => {
+                                    return (await SpeciesUtils.GetRolesAsync(x)).Count() <= 0;
+                                }, subtract);
+
+                                break;
+
+                            case "pic":
+                            case "pics":
+                            case "picture":
+                            case "pictures":
+                            case "image":
+                            case "images":
+
+                                await result.FilterByAsync(async (x) => {
+                                    return (await SpeciesUtils.GetPicturesAsync(x)).Count() <= 0;
                                 }, subtract);
 
                                 break;

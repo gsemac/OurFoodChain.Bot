@@ -17,7 +17,8 @@ namespace OurFoodChain {
             FullName,
             ShortName,
             CommonName,
-            SpeciesOnly
+            SpeciesOnly,
+            Gallery
         }
 
         public enum OrderBy {
@@ -531,6 +532,7 @@ namespace OurFoodChain {
 
                 case "n":
                 case "name":
+                case "format":
 
                     // Changes how names are displayed.
 
@@ -554,6 +556,10 @@ namespace OurFoodChain {
                         case "sp":
                         case "species":
                             result.DisplayFormat = DisplayFormat.SpeciesOnly;
+                            break;
+
+                        case "gallery":
+                            result.DisplayFormat = DisplayFormat.Gallery;
                             break;
 
                     }
@@ -602,6 +608,15 @@ namespace OurFoodChain {
                             break;
 
                     }
+
+                    break;
+
+                case "s":
+                case "species":
+
+                    await result.FilterByAsync((x) => {
+                        return Task.FromResult(x.name.ToLower() != value.ToLower());
+                    }, subtract);
 
                     break;
 

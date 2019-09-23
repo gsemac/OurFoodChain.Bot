@@ -535,26 +535,34 @@ namespace OurFoodChain {
         }
         public static async Task<TaxonSet> GetFullTaxaFromDb(Species sp) {
 
-            TaxonSet set = new TaxonSet();
+            TaxonSet set = new TaxonSet {
 
-            set.Genus = await GetTaxonFromDb(sp.genusId, TaxonRank.Genus);
+                Species = new Taxon(TaxonRank.Species) {
+                    id = sp.id,
+                    name = sp.name,
+                    description = sp.description
+                },
 
-            if (!(set.Genus is null))
+                Genus = await GetTaxonFromDb(sp.genusId, TaxonRank.Genus)
+
+            };
+
+            if (set.Genus != null)
                 set.Family = await GetTaxonFromDb(set.Genus.parent_id, TaxonRank.Family);
 
-            if (!(set.Family is null))
+            if (set.Family != null)
                 set.Order = await GetTaxonFromDb(set.Family.parent_id, TaxonRank.Order);
 
-            if (!(set.Order is null))
+            if (set.Order != null)
                 set.Class = await GetTaxonFromDb(set.Order.parent_id, TaxonRank.Class);
 
-            if (!(set.Class is null))
+            if (set.Class != null)
                 set.Phylum = await GetTaxonFromDb(set.Class.parent_id, TaxonRank.Phylum);
 
-            if (!(set.Phylum is null))
+            if (set.Phylum != null)
                 set.Kingdom = await GetTaxonFromDb(set.Phylum.parent_id, TaxonRank.Kingdom);
 
-            if (!(set.Kingdom is null))
+            if (set.Kingdom != null)
                 set.Domain = await GetTaxonFromDb(set.Kingdom.parent_id, TaxonRank.Domain);
 
             return set;

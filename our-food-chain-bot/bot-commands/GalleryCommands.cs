@@ -253,7 +253,7 @@ namespace OurFoodChain {
                     foreach (Species sp in await BotUtils.GetSpeciesInTaxonFromDb(taxon))
                         pictures.AddRange(await SpeciesUtils.GetPicturesAsync(sp));
 
-                    await _showGallery(taxon.GetName(), pictures.ToArray());
+                    await ShowGalleryAsync(Context, taxon.GetName(), pictures.ToArray());
 
                 }
 
@@ -282,16 +282,17 @@ namespace OurFoodChain {
 
             Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
 
-            await _showGallery(species.GetShortName(), pictures);
+            await ShowGalleryAsync(Context, species.GetShortName(), pictures);
 
         }
-        private async Task _showGallery(string galleryName, Picture[] pictures) {
+
+        public static async Task ShowGalleryAsync(ICommandContext context, string galleryName, Picture[] pictures) {
 
             // If there were no images for this query, show a message and quit.
 
             if (pictures.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not have any pictures.", galleryName));
+                await BotUtils.ReplyAsync_Info(context, string.Format("**{0}** does not have any pictures.", galleryName));
 
             }
             else {
@@ -319,7 +320,7 @@ namespace OurFoodChain {
 
                 }
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, message);
+                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, message);
 
             }
 

@@ -562,33 +562,50 @@ namespace OurFoodChain.Commands {
                 await BotUtils.ReplyAsync_Info(Context, "No species matching this query could be found.");
 
             }
-            else if (result.Count() == 1) {
-
-                // If there's only one result, just show that species.
-                await SpeciesCommands.ShowSpeciesInfoAsync(Context, result.ToArray()[0]);
-
-            }
             else {
 
-                PaginatedEmbedBuilder embed;
+                if (result.DisplayFormat == SearchQuery.DisplayFormat.Gallery) {
 
-                if (result.HasGroup(SearchQuery.DEFAULT_GROUP)) {
+                    List<Picture> pictures = new List<Picture>();
 
-                    // If there's only one group, just list the species without creating separate fields.
-                    embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+                    foreach (Species species in result.ToArray())
+                        pictures.AddRange(await SpeciesUtils.GetPicturesAsync(species));
+
+                    await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 
                 }
                 else {
 
-                    embed = new PaginatedEmbedBuilder();
-                    embed.AddPages(EmbedUtils.SearchQueryResultToEmbedPages(result));
+                    if (result.Count() == 1) {
+
+                        // If there's only one result, just show that species.
+                        await SpeciesCommands.ShowSpeciesInfoAsync(Context, result.ToArray()[0]);
+
+                    }
+                    else {
+
+                        PaginatedEmbedBuilder embed;
+
+                        if (result.HasGroup(SearchQuery.DEFAULT_GROUP)) {
+
+                            // If there's only one group, just list the species without creating separate fields.
+                            embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+
+                        }
+                        else {
+
+                            embed = new PaginatedEmbedBuilder();
+                            embed.AddPages(EmbedUtils.SearchQueryResultToEmbedPages(result));
+
+                        }
+
+                        embed.SetFooter("");
+                        embed.AddPageNumbers();
+
+                        await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                    }
 
                 }
-
-                embed.SetFooter("");
-                embed.AddPageNumbers();
-
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
 
             }
 
@@ -832,7 +849,7 @@ namespace OurFoodChain.Commands {
 
                 embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
 
-                if(OurFoodChainBot.Instance.Config.TrophiesEnabled) {
+                if (OurFoodChainBot.Instance.Config.TrophiesEnabled) {
 
                     embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
                         (await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id)).Count(),

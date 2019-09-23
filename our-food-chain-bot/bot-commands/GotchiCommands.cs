@@ -424,7 +424,7 @@ namespace OurFoodChain.Gotchi {
 
                 if (training_left <= 0) {
 
-                    long minutes_left = Global.GotchiContext.Config.TrainingLimit - minutes_elapsed;
+                    long minutes_left = Global.GotchiContext.Config.TrainingCooldown - minutes_elapsed;
 
                     await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
                         StringUtils.ToTitleCase(gotchi.Name),

@@ -1,25 +1,24 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "scavenge";
-	move.description = "Scavenges for something to eat, restoring a random amount of HP.";
-	move.role = "scavenger";
+	move.SetName("scavenge")
+	move.SetDescription("Scavenges for something to eat, restoring a random amount of HP.")
+	move.SetType("scavenger")
 
-	move.pp = 15;
-	move.type = type.Recovery;
+	move.SetPP(15)
 
-	move.requires.role = "scavenger";
-	move.requires.minLevel = 10;
+	move.Requires.TypeMatch("scavenger")
+	move.Requires.MinimumLevel(10)
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	amount = rand(0, 6);
+	amount = rand(0, 6)
 
-	args.DoRecoverPercent(amount / 10);
+	args.RecoverPercent(amount / 10)
 
 	if(amount == 0) then 
-		args.text = "but couldn't find anything";
+		args.SetText("but couldn't find anything")
 	end
 
 end

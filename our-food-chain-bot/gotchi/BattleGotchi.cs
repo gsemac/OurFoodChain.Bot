@@ -30,6 +30,12 @@ namespace OurFoodChain.Gotchi {
             }
         }
 
+        public bool TestRequirements(GotchiRequirements requirements) {
+
+            return new GotchiRequirementsChecker { Requires = requirements }.CheckAsync(Gotchi).Result;
+
+        }
+
         public void ResetStats() {
 
             if (Context is null)

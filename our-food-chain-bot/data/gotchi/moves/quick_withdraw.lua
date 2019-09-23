@@ -1,21 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Quick Withdraw";
-	move.description = "The user quickly withdraws into its shell, allowing it to survive the next hit.";
+	move.SetName("Quick Withdraw")
+	move.SetDescription("The user quickly withdraws into its shell, allowing it to survive the next hit.")
 
-	move.pp = 5;
-	move.type = type.Buff;
-	move.priority = 2;
-	move.canMiss = false;
+	move.SetPP(5)
+	move.SetPriority(2)
+	move.SetIgnoreAccuracy(true)
 
-	move.requires.match = "shell|carapace";
-	move.requires.minLevel = 20;
+	move.Requires.DescriptionMatch("shell|carapace")
+	move.Requires.MinimumLevel(20)
 
 end
 
-function callback(args) 		
+function OnMove(args) 		
 	
-	args.text = "quickly withdrawing into its shell";
-	args.user.status = "withdrawn";
+	args.SetText("quickly withdrawing into its shell")
+
+	args.User.SetStatus("withdrawn")
 
 end

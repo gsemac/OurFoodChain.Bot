@@ -1,20 +1,19 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Tail Slap";
-	move.description = "Deals more damage the faster the user is compared to the opponent.";
+	move.SetName("Tail Slap")
+	move.SetDescription("Deals more damage the faster the user is compared to the opponent.")
 	
-	move.pp = 5;
-	move.type = type.Offensive;
+	move.SetPP(5)
 
-	move.requires.match = "tail";
+	move.Requires.DescriptionMatch("tail")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	multiplier = min(2.0, args.user.stats.spd / args.target.stats.spd);
-	base_damage = args.BaseDamage() * multiplier;
+	multiplier = min(2.0, args.User.Stats.Spd / args.Target.Stats.Spd)
+	base_damage = args.CalculateDamage() * multiplier
 
-	args.DoDamage(base_damage);
+	args.DealDamage(base_damage)
 
 end

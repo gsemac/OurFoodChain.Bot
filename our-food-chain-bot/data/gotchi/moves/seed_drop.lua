@@ -1,24 +1,17 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "seed drop";
-	move.description = "Drops 1-5 seeds onto the opponent, dealing minor damage repeatedly.";
-	move.role = "producer";
+	move.SetName("seed drop")
+	move.SetDescription("Drops 1-5 seeds onto the opponent, dealing minor damage repeatedly.")
+	move.SetType("producer")
 
-	move.pp = 25;
-	move.type = type.Offensive;
-	move.multiplier = 1 / 5;
-	move.hit_rate = 0.9;
+	move.SetPower(15)
+	move.SetPP(25)
+	move.SetAccuracy(0.9)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 20;
-	move.requires.match = "seed";
+	move.Requires.TypeMatch("producer").MinimumLevel(20).DescriptionMatch("seed")
 
 end
 
-function init(args) 
-	args.times = rand(1, 6);
-end
-
-function callback(args) 	
-	args.DoDamage();
+function OnInit(args) 
+	args.SetTimes(rand(1, 6))
 end

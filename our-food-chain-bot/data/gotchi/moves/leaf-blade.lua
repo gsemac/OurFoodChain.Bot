@@ -1,24 +1,17 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "leaf-blade";
-	move.description = "Slashes the opponent with sharp leaves. High critical rate, but ineffective against Producers.";
-	move.role = "base-consumer";
+	move.SetName("leaf-blade")
+	move.SetDescription("Slashes the opponent with sharp leaves. High critical rate, but ineffective against Producers.")
+	move.SetType("base-consumer")
 
-	move.criticalRate = 1.2;
-	move.pp = 15;
+	move.SetPower(70)
+	move.SetCriticalRate(1.2)
+	move.SetPP(15)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 20;
-	move.requires.match = "leaf|leaves";
+	move.SetMatchup("producer", 0.5)
 
-end
-
-function callback(args) 	
-
-	if(args.TargetHasRole("producer")) then
-		args.DoDamage(args.BaseDamage(), 0.5);
-	else
-		args.DoDamage();
-	end
+	move.Requires.TypeMatch("producer")
+	move.Requires.MinimumLevel(20)
+	move.Requires.DescriptionMatch("leaf|leaves")
 
 end

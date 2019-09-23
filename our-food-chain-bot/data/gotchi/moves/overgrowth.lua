@@ -1,17 +1,18 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "overgrowth";
-	move.description = "Accelerates growth, boosting attack by a moderate amount.";
-	move.role = "producer";
+	move.SetName("overgrowth")
+	move.SetDescription("Accelerates growth, boosting attack by a moderate amount.")
+	move.SetType("producer")
 
-	move.pp = 25;
-	move.type = type.Buff;
+	move.SetPP(25)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 30;
+	move.Requires.TypeMatch("producer")
+	move.Requires.MinimumLevel(30)
 
 end
 
-function callback(args) 	
-	args.user.stats.atk = args.user.stats.atk * 1.2;
+function OnMove(args) 	
+	
+	args.User.Stats.Atk = args.User.Stats.Atk * 1.2
+
 end

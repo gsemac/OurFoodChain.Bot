@@ -53,6 +53,11 @@ namespace OurFoodChain.Gotchi {
             }.ToArray();
 
         }
+        public void SetMatchup(string type, double offensiveMultiplier) {
+
+            _matchups[type.ToLower()] = offensiveMultiplier;
+
+        }
 
         public void SetPower(int value) {
             Power = value;
@@ -88,6 +93,7 @@ namespace OurFoodChain.Gotchi {
         // Private members
 
         private string _name = "???";
+        private Dictionary<string, double> _matchups = new Dictionary<string, double>();
 
     }
 

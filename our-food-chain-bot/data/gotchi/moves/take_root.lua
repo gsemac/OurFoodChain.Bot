@@ -1,21 +1,19 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Take Root";
-	move.description = "Takes root and draws nutrients from the substrate, restoring HP each turn.";
-	move.role = "producer";
+	move.SetName("Take Root")
+	move.SetDescription("Takes root and draws nutrients from the substrate, restoring HP each turn.")
+	move.SetType("producer")
 
-	move.pp = 10;
-	move.type = type.Recovery;
+	move.SetPP(10)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 30;
-	move.requires.match = "root";
+	move.Requires.TypeMatch("producer").MinimumLevel(30).DescriptionMatch("root")
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	args.text = "digging its roots into the ground";
-	args.user.status = "rooted";
+	args.SetText("digging its roots into the ground")
+
+	args.User.SetStatus("rooted")
 
 end

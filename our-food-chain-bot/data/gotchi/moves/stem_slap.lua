@@ -1,16 +1,17 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "stem slap";
-	move.description = "Slaps the opponent with a stem. Does more damage the faster the user is.";
+	move.SetName("stem slap")
+	move.SetDescription("Slaps the opponent with a stem. Does more damage the faster the user is.")
+	move.SetType("producer")
 
-	move.pp = 20;
-	move.type = type.Offensive;
+	move.SetPP(20)
 
-	move.requires.role = "producer";
-	move.requires.match = "\\b(?:stems?)\\b";
+	move.Requires.TypeMatch("producer").DescriptionMatch("\\b(?:stems?)\\b")
 
 end
 
-function callback(args) 	
-	args.DoDamage(args.user.stats.spd);
+function OnMove(args) 	
+	
+	args.DealDamage(args.User.Stats.Spd)
+
 end

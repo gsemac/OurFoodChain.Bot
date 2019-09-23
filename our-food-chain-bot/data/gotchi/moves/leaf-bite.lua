@@ -1,15 +1,12 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "leaf-bite";
-	move.description = "Attacks the opponent with mouthparts. Effective against Producers.";
-	move.role = "base-consumer";
+	move.SetName("leaf-bite")
+	move.SetDescription("Attacks the opponent with mouthparts. Effective against Producers.")
+	move.SetType("base-consumer")
 
-	move.pp = 40;
+	move.SetPower(60)
+	move.SetPP(40)
 
-	move.requires.role = "base-consumer";
+	move.Requires.TypeMatch("base-consumer")
 
-end
-
-function callback(args) 	
-	args.DoDamage();
 end

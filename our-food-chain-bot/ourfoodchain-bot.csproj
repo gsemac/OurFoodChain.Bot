@@ -333,6 +333,7 @@
     <None Include="data\gotchi\moves\thorn_prick.lua" />
     <None Include="data\gotchi\moves\thorn_strike.lua" />
     <None Include="data\gotchi\statuses\blinded.lua" />
+    <None Include="data\gotchi\statuses\heal_block.lua" />
     <None Include="data\gotchi\statuses\poisoned.lua" />
     <None Include="data\gotchi\statuses\rooted.lua" />
     <None Include="data\gotchi\statuses\shaded.lua" />

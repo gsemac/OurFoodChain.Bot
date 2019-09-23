@@ -57,8 +57,11 @@ namespace OurFoodChain.Gotchi {
                         _addMoveToRegistry(move);
 
                 }
-                catch (Exception) {
-                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "Gotchi", "Failed to register move: " + System.IO.Path.GetFileName(file));
+                catch (Exception ex) {
+
+                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "Gotchi", 
+                        string.Format("Failed to register move {0}: {1}", System.IO.Path.GetFileName(file), ex.ToString()));
+
                 }
 
             }

@@ -1,23 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "topple";
-	move.description = "Collapses onto the opponent, dealing heavy damage. However, the user is reduced to 1 HP.";
+	move.SetName("topple")
+	move.SetDescription("Collapses onto the opponent, dealing heavy damage. However, the user is reduced to 1 HP.")
 
-	move.pp = 1;
-	move.multiplier = 5;
-	move.critical_rate = 2;
-	move.hit_rate = 0.5;
+	move.SetPower(130)
+	move.SetPP(1)
+	move.SetCriticalRate(2.0)
+	move.SetAccuracy(0.5)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 10;
-	move.requires.match = "tree|tall|heavy";
+	move.Requires.TypeMatch("producer").MinimumLevel(10).DescriptionMatch("tree|tall|heavy")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.user.stats.hp = min(1, args.user.stats.hp);
+	args.User.Stats.Hp = 1
 
-	args.DoDamage();
+	args.DealDamage()
 
 end

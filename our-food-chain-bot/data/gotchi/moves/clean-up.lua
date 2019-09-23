@@ -6,8 +6,7 @@
 
 	move.SetPP(20)
 
-	move.Requires.TypeMatch("detritivore")
-	move.Requires.SetMaximumLevel(10)
+	move.Requires.TypeMatch("detritivore").MaximumLevel(10)
 
 end
 

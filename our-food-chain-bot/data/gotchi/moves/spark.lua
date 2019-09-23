@@ -1,18 +1,12 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "spark";
-	move.description = "Shocks the opponent with electricity. This move does little damage, but always strikes first.";
+	move.SetName("spark")
+	move.SetDescription("Shocks the opponent with electricity. This move does little damage, but always strikes first.")
 
-	move.pp = 10;
-	move.type = type.Offensive;
-	move.multiplier = 0.3;
-	move.priority = 2;
+	move.SetPower(25)
+	move.SetPP(10)
+	move.SetPriority(2)
 
-	move.requires.minLevel = 10;
-	move.requires.match = "electric|static";
+	move.Requires.MinimumLevel(10).DescriptionMatch("electric|static")
 
-end
-
-function callback(args) 
-	args.DoDamage();
 end

@@ -1,15 +1,12 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "infest";
-	move.description = "Attack by parasitizing the opponent. This move is highly effective against Consumers.";
-	move.role = "parasite";
+	move.SetName("infest")
+	move.SetDescription("Attack by parasitizing the opponent. This move is highly effective against Consumers.")
+	move.SetType("parasite")
 
-	move.pp = 40;
+	move.SetPower(45)
+	move.SetPP(40)
 
-	move.requires.role = "parasite";
+	move.Requires.TypeMatch("parasite")
 
-end
-
-function callback(args) 	
-	args.DoDamage();
 end

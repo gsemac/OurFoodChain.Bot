@@ -1,20 +1,20 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Wrap";
-	move.description = "Tightly wraps tentacles around the opponent. Deals more damage the faster the opponent is compared to the user.";
+	move.SetName("Wrap")
+	move.SetDescription("Tightly wraps tentacles around the opponent. Deals more damage the faster the opponent is compared to the user.")
 	
-	move.pp = 5;
-	move.type = type.Offensive;
-
-	move.requires.match = "tentacle";
+	move.SetPower(55)
+	move.SetPP(5)
+	
+	move.Requires.DescriptionMatch("tentacle")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	multiplier = min(2.0, args.target.stats.spd / args.user.stats.spd);
-	base_damage = args.BaseDamage() * multiplier;
+	multiplier = min(2.0, args.Target.Stats.Spd / args.User.Stats.Spd);
+	base_damage = args.Power * multiplier;
 
-	args.DoDamage(base_damage);
+	args.DealDamage(base_damage)
 
 end

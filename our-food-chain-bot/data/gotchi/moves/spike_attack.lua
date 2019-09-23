@@ -1,21 +1,26 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Spike Attack";
-	move.description = "Attacks the opponent with a spike. Effective against flying opponents.";
+	move.SetName("Spike Attack")
+	move.SetDescription("Attacks the opponent with a spike. Effective against flying opponents.")
 
-	move.pp = 25;
-	move.type = type.Offensive;
+	move.SetPower(40)
+	move.SetPP(25)
 
-	move.requires.match = "spike";
+	move.Requires.DescriptionMatch("spike")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	if(args.TargetHasDescription("fly|flies")) then
-		args.DoDamage(BaseDamage(), 1.2);
-	else
-		args.DoDamage();
+	damage = args.CalculateDamage()
+	
+	requirements = NewRequirements()
+	requirements.DescriptionMatch("fly|flies")
+
+	if(args.Target.TestRequirements(requirements)) then
+		damage = damage * 1.2
 	end
+
+	args.DealDamage(damage)
 
 end

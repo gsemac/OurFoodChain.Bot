@@ -1,22 +1,22 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Leech";
-	move.description = "Leeches some hit points from the opponent, healing the user.";
+	move.SetName("Leech")
+	move.SetDescription("Leeches some hit points from the opponent, healing the user.")
+	move.SetType("parasite")
 
-	move.pp = 25;
-	move.type = type.Offensive;
+	move.SetPP(25)
+	move.SetPower(20)
 
-	move.requires.role = "parasite";
-	move.requires.minLevel = 10;
-	move.requires.unrestrictedMatch = "leech|suck|sap";
+	move.Requires.TypeMatch("parasite").MinimumLevel(10).Or.DescriptionMatch("leech|suck|sap")
 
 end
 
-function callback(args) 		
+function OnMove(args) 		
 
-	args.DoDamage();
+	args.DealDamage()
 
-	args.user.stats.hp = args.user.stats.hp + (args.TotalDamage() / 2);
-	args.text = "sapping {damage} hit points";
+	args.User.Stats.Hp = args.User.Stats.Hp + (args.CalculateDamage() / 2)
+
+	args.SetText("sapping {damage} hit points")
 
 end

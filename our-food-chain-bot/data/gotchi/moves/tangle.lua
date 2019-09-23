@@ -1,20 +1,19 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "tangle";
-	move.description = "Tangles the opponent in vines, lowering their speed.";
-	move.role = "producer";
+	move.SetName("tangle")
+	move.SetDescription("Tangles the opponent in vines, lowering their speed.")
+	move.SetType("producer")
 
-	move.pp = 10;
-	move.type = type.Buff;
+	move.SetPP(10)
 
-	move.requires.role = "producer";
-	move.requires.match = "vine";
+	move.Requires.TypeMatch("producer").DescriptionMatch("vine")
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	args.target.stats.spd = args.target.stats.spd * 0.8;
-	args.text = "lowering the opponent's speed by 20%";
+	args.Target.Stats.Spd = args.Target.Stats.Spd * 0.8
+
+	args.SetText("lowering the opponent's speed by 20%")
 
 end

@@ -1,29 +1,28 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Night Strike";
-	move.description = "Attacks in the night while the opponent is sleeping, completely ignoring defense. Has a 50% chance to fail if the target wakes up.";
+	move.SetName("Night Strike")
+	move.SetDescription("Attacks in the night while the opponent is sleeping, completely ignoring defense. Has a 50% chance to fail if the target wakes up.")
 
-	move.pp = 1;
-	move.type = type.Offensive;
+	move.SetPP(1)
 
-	move.requires.minLevel = 25;
-	move.requires.match = "\\b(?:nocturnal)\\b";
+	move.Requires.MinimumLevel(25)
+	move.Requires.DescriptionMatch("\\b(?:nocturnal)\\b")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	if(rand(0, 2) == 0) then
-		args.text = "but the opponent woke up";
+	if(chance(2)) then
+		args.SetText("but the opponent woke up")
 	else 
 
-		old_defense = args.target.stats.def;
+		old_defense = args.Target.Stats.Def
 		
-		args.target.stats.def = 0;
+		args.Target.Stats.Def = 0
 		
-		args.DoDamage();
+		args.DealDamage()
 		
-		args.target.stats.def = old_defense;
+		args.Target.Stats.Def = old_defense;
 
 	end
 

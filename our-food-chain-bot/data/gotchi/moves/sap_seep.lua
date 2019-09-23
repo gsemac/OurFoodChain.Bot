@@ -1,16 +1,17 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Sap Seep";
-	move.description = "Seeps sticky sap onto the opponent, decreasing their speed by 30%.";
+	move.SetName("Sap Seep")
+	move.SetDescription("Seeps sticky sap onto the opponent, decreasing their speed by 30%.")
 
-	move.pp = 5;
-	move.type = type.Buff;
+	move.SetPP(5)
 
-	move.requires.role = "producer";
-	move.requires.match = "\\b(?:sap|sticky)\\b";
+	move.Requires.TypeMatch("producer")
+	move.Requires.DescriptionMatch("\\b(?:sap|sticky)\\b")
 
 end
 
-function callback(args) 		
-	args.target.stats.spd = args.target.stats.spd * 0.7;
+function OnMove(args) 		
+
+	args.Target.Stats.Spd = args.Target.Stats.Spd * 0.7
+
 end

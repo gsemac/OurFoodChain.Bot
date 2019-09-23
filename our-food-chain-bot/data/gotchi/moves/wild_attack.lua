@@ -1,18 +1,14 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Wild Attack";
-	move.description = "Viciously and blindly attacks the opponent. Has low accuracy, but high critical hit rate.";
-	move.role = "predator";
+	move.SetName("Wild Attack")
+	move.SetDescription("Viciously and blindly attacks the opponent. Has low accuracy, but high critical hit rate.")
+	move.SetType("predator")
 
-	move.pp = 20;
-	move.hitRate = 0.5;
-	move.criticalRate = 2.0;
+	move.SetPower(65)
+	move.SetPP(20)
+	move.SetAccuracy(0.5)
+	move.SetCriticalRate(2.0)
+	
+	move.Requires.TypeMatch("predator").MinimumLevel(10)
 
-	move.requires.role = "predator";
-	move.requires.minLevel = 10;
-
-end
-
-function callback(args) 
-	args.DoDamage();
 end

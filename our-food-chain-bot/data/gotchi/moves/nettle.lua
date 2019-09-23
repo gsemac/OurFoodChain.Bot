@@ -1,23 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "nettle";
-	move.description = "Attacks the opponent with irritating stingers, decreasing their speed. Does low damage, but never misses.";
+	move.SetName("nettle")
+	move.SetDescription("Attacks the opponent with irritating stingers, decreasing their speed. Does low damage, but never misses.")
 
-	move.pp = 40;
-	move.hitRate = 1.0;
-	move.canMiss = false;
-	move.multiplier = 0.8;
-	move.type = type.Offensive;
+	move.SetPP(40)
+	move.SetIgnoreAccuracy(true)
+	move.SetPower(30)
 
-	move.requires.match = "\\b(sting)";
-	move.requires.minLevel = 10;
+	move.Requires.DescriptionMatch("\\b(sting)")
+	move.Requires.MinimumLevel(10)
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.target.stats.spd = args.target.stats.spd * 0.8;
+	args.Target.Stats.Spd = args.Target.Stats.Spd * 0.8
 
-	args.DoDamage();
+	args.DealDamage()
 
 end

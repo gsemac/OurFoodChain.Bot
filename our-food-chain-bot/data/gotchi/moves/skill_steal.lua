@@ -1,28 +1,26 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "skill steal";
-	move.description = "Swaps a random stat with the opponent.";
+	move.SetName("skill steal")
+	move.SetDescription("Swaps a random stat with the opponent.")
 
-	move.pp = 15;
-	move.type = type.Offensive;
-
-	move.requires.role = "parasite";
-	move.requires.minLevel = 20;
+	move.SetPP(15)
+	
+	move.Requires.TypeMatch("parasite").MinimumLevel(20)
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	r = rand(0, 3);
+	r = rand(0, 3)
 
 	if(r == 0) then
-		swap(args.user.stats.atk, args.target.stats.atk);
+		swap(args.User.Stats.Atk, args.Target.Stats.Atk)
 	elseif(r == 1) then
-		swap(args.user.stats.def, args.target.stats.def);
+		swap(args.User.Stats.Def, args.Target.Stats.Def)
 	elseif(r == 2) then
-		swap(args.user.stats.spd, args.target.stats.spd);
+		swap(args.User.Stats.Spd, args.Target.Stats.Spd)
 	end
 
-	args.text = "swapping a stat with the opponent";
+	args.SetText("swapping a stat with the opponent")
 
 end

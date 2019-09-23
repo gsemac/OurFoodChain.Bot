@@ -1,21 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "molt";
-	move.description = "Molts exoskeleton, undoing all stat changes and restoring HP.";
+	move.SetName("molt")
+	move.SetDescription("Molts exoskeleton, undoing all stat changes and restoring HP.")
 
-	move.pp = 5;
-	move.type = type.Recovery;
+	move.SetPP(5)
 
-	move.requires.match = "molt";
+	move.Requires.DescriptionMatch("molt")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.text = "resetting all stat changes and restoring HP";
+	args.User.ResetStats()
+	args.User.ClearStatus()
 
-	args.user.stats.Reset();
-	args.user.status = "";
-	args.DoRecoverPercent(0.2);
+	args.RecoverPercent(0.2)
+
+	args.SetText("resetting all stat changes and restoring HP")
 
 end

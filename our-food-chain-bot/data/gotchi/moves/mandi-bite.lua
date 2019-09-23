@@ -1,21 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Mandi-Bite";
-	move.description = "Bites the opponent with crushing mandibles. Has a chance to damage the opponent's carapace, descreasing their DEF.";
-	move.role = "predator";
+	move.SetName("Mandi-Bite")
+	move.SetDescription("Bites the opponent with crushing mandibles. Has a chance to damage the opponent's carapace, descreasing their DEF.")
+	move.SetType("predator")
 
-	move.pp = 15;
+	move.SetPP(15)
 
-	move.requires.match = "mandible";
+	move.Requires.DescriptionMatch("mandible")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
-	args.DoDamage();
+	args.DealDamage()
 
 	if(chance(5)) then
-		args.target.stats.def = args.target.stats.def * 0.9;
+		args.Target.Stats.Def = args.Target.Stats.Def * 0.9;
 	end
 
 end

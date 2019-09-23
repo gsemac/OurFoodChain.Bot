@@ -1,17 +1,16 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "thorn assault";
-	move.description = "Assaults the opponent with thorns, dealing a large amount of random base damage.";
+	move.SetName("thorn assault")
+	move.SetDescription("Assaults the opponent with thorns, dealing a large amount of random base damage.")
 
-	move.pp = 5;
-	move.type = type.Offensive;
+	move.SetPP(5)
 
-	move.requires.minLevel = 30;
-	move.requires.role = "producer";
-	move.requires.match = "\\b(?:thorn[sy]?|spike[sy]?|spiky|needles?)\\b";
+	move.Requires.MinimumLevel(30).TypeMatch("producer").DescriptionMatch("\\b(?:thorn[sy]?|spike[sy]?|spiky|needles?)\\b")
 
 end
 
-function callback(args) 	
-	args.DoDamage(rand(50, 100));
+function OnMove(args) 	
+	
+	args.DealDamage(rand(50, 100))
+
 end

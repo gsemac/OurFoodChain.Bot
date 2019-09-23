@@ -1,18 +1,12 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Sting";
-	move.description = "Attacks the opponent with stinger(s). Does low damage, but never misses.";
+	move.SetName("Sting")
+	move.SetDescription("Attacks the opponent with stinger(s). Does low damage, but never misses.")
 
-	move.pp = 40;
-	move.hitRate = 1.0;
-	move.canMiss = false;
-	move.multiplier = 0.8;
+	move.SetPower(30)
+	move.SetPP(40)
+	move.SetIgnoreAccuracy(true)
 
-	move.requires.match = "\\b(sting)";
-	move.requires.maxLevel = 10;
+	move.Requires.DescriptionMatch("\\b(sting)").MaximumLevel(10)
 
-end
-
-function callback(args) 
-	args.DoDamage();
 end

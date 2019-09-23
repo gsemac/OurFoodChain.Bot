@@ -1,17 +1,16 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "thorn strike";
-	move.description = "Strikes the opponent with thorns, dealing a moderate amount of random base damage.";
+	move.SetName("thorn strike")
+	move.SetDescription("Strikes the opponent with thorns, dealing a moderate amount of random base damage.")
 
-	move.pp = 10;
-	move.type = type.Offensive;
+	move.SetPP(10)
 
-	move.requires.minLevel = 15;
-	move.requires.role = "producer";
-	move.requires.match = "\\b(?:thorn[sy]?|spike[sy]?|spiky|needles?)\\b";
+	move.Requires.MinimumLevel(15).TypeMatch("producer").DescriptionMatch("\\b(?:thorn[sy]?|spike[sy]?|spiky|needles?)\\b")
 
 end
 
-function callback(args) 	
-	args.DoDamage(rand(10, 50));
+function OnMove(args) 	
+	
+	args.DealDamage(rand(40, 80))
+
 end

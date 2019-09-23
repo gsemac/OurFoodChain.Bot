@@ -1,23 +1,22 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Photo-Boost";
-	move.description = "Regenerates with the help of sunlight, restoring a moderate amount of HP.";
-	move.role = "producer";
+	move.SetName("Photo-Boost")
+	move.SetDescription("Regenerates with the help of sunlight, restoring a moderate amount of HP.")
+	move.SetType("producer")
 
-	move.pp = 5;
-	move.type = type.Recovery;
+	move.SetPP(5)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 30;
+	move.Requires.TypeMatch("producer")
+	move.Requires.MinimumLevel(30)
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	if(args.user.status == "shaded") then
-		args.text = "but couldn't get any sun";
+	if(args.User.StatusName == "shaded") then
+		args.SetText("but couldn't get any sun")
 	else
-		args.DoRecoverPercent(0.15);
+		args.RecoverPercent(0.15)
 	end
 
 end

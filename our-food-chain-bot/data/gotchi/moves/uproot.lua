@@ -1,28 +1,30 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Uproot";
-	move.description = "Uproots the opponent, eliminating their ability to use recovery moves. Only works on Producers.";
-	move.role = "base-consumer";
+	move.SetName("Uproot")
+	move.SetDescription("Uproots the opponent, eliminating their ability to use recovery moves. Only works on Producers.")
+	move.SetType("base-consumer")
 
-	move.pp = 5;
-	move.type = type.Offensive;
-	move.multiplier = 0.5;
+	move.SetPower(40)
+	move.SetPP(5)
 
-	move.requires.role = "base-consumer";
-	move.requires.minLevel = 10;
+	move.Requires.TypeMatch("base-consumer").MinimumLevel(10)
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	if(args.TargetHasRole("producer")) then
+	requirements = NewRequirements()
+	requirements.TypeMatch("producer")
+
+	if(args.Target.TestRequirements(requirements)) then
 	
-		args.target.status = "heal block";
-		args.DoDamage();
+		args.target.SetStatus("heal block")
+
+		args.DealDamage()
 
 	else
 
-		args.text = "but it failed";
+		args.SetText("but it failed")
 
 	end
 

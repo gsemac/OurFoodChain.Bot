@@ -1,15 +1,16 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Withdraw";
-	move.description = "Boosts defense by a small amount.";
+	move.SetName("Withdraw")
+	move.SetDescription("Boosts defense by a small amount.")
 
-	move.pp = 10;
-	move.type = type.Buff;
-
-	move.requires.match = "shell|carapace";
+	move.SetPP(10)
+	
+	move.Requires.DescriptionMatch("shell|carapace")
 
 end
 
-function callback(args) 		
-	args.user.stats.def = args.user.stats.def * 1.2;
+function OnMove(args) 		
+
+	args.User.Stats.Def = args.User.Stats.Def * 1.2
+
 end

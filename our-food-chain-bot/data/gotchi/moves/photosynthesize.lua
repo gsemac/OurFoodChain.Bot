@@ -1,23 +1,22 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Photosynthesize";
-	move.description = "Regenerates with the help of sunlight, restoring HP.";
-	move.role = "producer";
+	move.SetName("Photosynthesize")
+	move.SetDescription("Regenerates with the help of sunlight, restoring HP.")
+	move.SetType("producer")
 
-	move.pp = 5;
-	move.type = type.Recovery;
-	move.canMiss = false;
+	move.SetPP(5)
+	move.SetIgnoreAccuracy(true)
 
-	move.requires.role = "producer";
+	move.Requires.TypeMatch("producer")
 
 end
 
-function callback(args) 	
+function OnMove(args) 	
 	
-	if(args.user.status == "shaded") then
-		args.text = "but couldn't get any sun";
+	if(args.User.StatusName == "shaded") then
+		args.SetText("but couldn't get any sun")
 	else
-		args.DoRecoverPercent(0.1);
+		args.RecoverPercent(0.1)
 	end
 
 end

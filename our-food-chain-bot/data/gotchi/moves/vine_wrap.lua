@@ -1,20 +1,18 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "vine wrap";
-	move.description = "Tightly wraps vines around the opponent, causing them to take damage every turn.";
+	move.SetName("vine wrap")
+	move.SetDescription("Tightly wraps vines around the opponent, causing them to take damage every turn.")
 
-	move.pp = 10;
-	move.type = type.Offensive;
+	move.SetPP(10)
 
-	move.requires.role = "producer";
-	move.requires.minLevel = 20;
-	move.requires.match = "vine";
+	move.Requires.TypeMatch("producer").MinimumLevel(20).DescriptionMatch("vine")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	args.target.status = "vine-wrapped";
-	args.text = "wrapping the opponent in vines";
+	args.Target.SetStatus("vine-wrapped")
+
+	args.SetText("wrapping the opponent in vines")
 
 end

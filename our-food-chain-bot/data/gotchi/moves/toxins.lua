@@ -1,18 +1,18 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Toxins";
-	move.description = "Poisons the opponent, causing them to take damage every turn.";
+	move.SetName("Toxins")
+	move.SetDescription("Poisons the opponent, causing them to take damage every turn.")
 
-	move.pp = 10;
-	move.type = type.Offensive;
+	move.SetPP(10)
 
-	move.requires.match = "toxin|poison";
+	move.Requires.DescriptionMatch("toxin|poison")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 	
-	args.target.status = "poisoned";
-	args.text = "poisoning the opponent";
+	args.Target.SetStatus("poisoned")
+
+	args.SetText("poisoning the opponent")
 
 end

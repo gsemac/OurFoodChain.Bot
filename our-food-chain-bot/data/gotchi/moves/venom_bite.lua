@@ -1,22 +1,21 @@
-﻿function register(move)
+﻿function OnRegister(move)
 
-	move.name = "Venom Bite";
-	move.description = "Bites the opponent, injecting venom into the wound. Has a small chance of poisoning the target.";
+	move.SetName("Venom Bite")
+	move.SetDescription("Bites the opponent, injecting venom into the wound. Has a small chance of poisoning the target.")
+	move.SetType("predator")
 
-	move.role = "predator";
-	move.pp = 15;
+	move.SetPP(15)
 
-	move.requires.role = "predator";
-	move.requires.match = "poison|venom";
+	move.Requires.TypeMatch("predator").DescriptionMatch("poison|venom")
 
 end
 
-function callback(args) 
+function OnMove(args) 
 
 	if(chance(10)) then
-		args.target.status = "poisoned";
+		args.Target.SetStatus("poisoned")
 	end;
 
-	args.DoDamage();
+	args.DealDamage()
 
 end

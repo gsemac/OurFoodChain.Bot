@@ -32,14 +32,21 @@ namespace OurFoodChain {
         public static Gotchi.GotchiContext GotchiContext {
             get {
 
-                if (_gotchiContext is null) {
+                lock (_gotchiContextLock) {
 
-                    _gotchiContext = new Gotchi.GotchiContext();
+                    if (_gotchiContext is null) {
 
-                    _gotchiContext.TypeRegistry.TypeDirectoryPath = GotchiDataDirectory + "types/";
-                    _gotchiContext.StatusRegistry.StatusDirectoryPath = GotchiDataDirectory + "statuses/";
+                        _gotchiContext = new Gotchi.GotchiContext();
 
-                    _gotchiContext.LogAsync += async x => await OurFoodChainBot.Instance.LogAsync(x);
+                        _gotchiContext.TypeRegistry.TypeDirectoryPath = GotchiDataDirectory + "types/";
+                        _gotchiContext.StatusRegistry.StatusDirectoryPath = GotchiDataDirectory + "statuses/";
+
+                        if (System.IO.File.Exists("gotchi-config.json"))
+                            _gotchiContext.Config = Gotchi.GotchiConfig.FromFile("gotchi-config.json");
+
+                        _gotchiContext.LogAsync += async x => await OurFoodChainBot.Instance.LogAsync(x);
+
+                    }
 
                 }
 
@@ -49,6 +56,7 @@ namespace OurFoodChain {
         }
 
         private static Gotchi.GotchiContext _gotchiContext;
+        private static object _gotchiContextLock = new object();
 
     }
 

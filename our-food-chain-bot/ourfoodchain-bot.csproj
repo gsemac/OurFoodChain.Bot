@@ -226,9 +226,11 @@
     <Compile Include="commands\DifficultyLevelAttribute.cs" />
     <Compile Include="commands\RequiredConfigSettingEnabledAttribute.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="ConfigBase.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="gotchi\BattleGotchi.cs" />
+    <Compile Include="gotchi\GotchiConfig.cs" />
     <Compile Include="gotchi\GotchiContext.cs" />
     <Compile Include="gotchi\GotchiExperienceCalculator.cs" />
     <Compile Include="gotchi\GotchiGeneratorParameters.cs" />
@@ -322,6 +324,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="gotchi-config.json" />
     <None Include="data\gotchi\moves\branch_drop.lua" />
     <None Include="data\gotchi\moves\crush.lua" />
     <None Include="data\gotchi\moves\molt.lua" />
@@ -573,7 +576,7 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(ProjectDir)data\*.*" "$(TargetDir)data" /y /i /e
 copy "$(SolutionDir)README.md" "$(TargetDir)README.md" 
-replace "$(ProjectDir)config.json" "$(TargetDir)config.json" /a
+echo n | copy /-y "$(ProjectDir)*config.json" "$(TargetDir)*config.json"
 
 mkdir "$(TargetDir)lib\"
 move /y "$(TargetDir)*.dll" "$(TargetDir)lib\"

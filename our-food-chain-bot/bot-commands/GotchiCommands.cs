@@ -387,63 +387,67 @@ namespace OurFoodChain.Gotchi {
             if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
                 return;
 
-            // Users can train their gotchi by battling random gotchis 3 times every 15 minutes.
+            if (Global.GotchiContext.Config.TrainingLimit > 0 && Global.GotchiContext.Config.TrainingCooldown > 0) {
 
-            long training_left = 0;
-            long training_ts = 0;
+                // Users can train their gotchi by battling random gotchis 3 times every 15 minutes.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT training_left, training_ts FROM Gotchi WHERE id=$id;")) {
+                long training_left = 0;
+                long training_ts = 0;
 
-                cmd.Parameters.AddWithValue("$id", gotchi.Id);
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT training_left, training_ts FROM Gotchi WHERE id=$id;")) {
 
-                DataRow row = await Database.GetRowAsync(cmd);
+                    cmd.Parameters.AddWithValue("$id", gotchi.Id);
 
-                if (!(row is null)) {
+                    DataRow row = await Database.GetRowAsync(cmd);
 
-                    training_left = row.IsNull("training_left") ? 0 : row.Field<long>("training_left");
-                    training_ts = row.IsNull("training_ts") ? 0 : row.Field<long>("training_ts");
+                    if (!(row is null)) {
+
+                        training_left = row.IsNull("training_left") ? 0 : row.Field<long>("training_left");
+                        training_ts = row.IsNull("training_ts") ? 0 : row.Field<long>("training_ts");
+
+                    }
 
                 }
 
-            }
+                // If it's been more than 15 minutes since the training timestamp was updated, reset the training count.
 
-            // If it's been more than 15 minutes since the training timestamp was updated, reset the training count.
+                long minutes_elapsed = (DateUtils.GetCurrentTimestamp() - training_ts) / 60;
 
-            long minutes_elapsed = (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - training_ts) / 60;
+                if (minutes_elapsed >= Global.GotchiContext.Config.TrainingCooldown) {
 
-            if (minutes_elapsed >= 15) {
+                    training_left = Global.GotchiContext.Config.TrainingLimit;
+                    training_ts = DateUtils.GetCurrentTimestamp();
 
-                training_left = 3;
-                training_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                }
 
-            }
+                // If the user has no more training attempts left, exit. 
 
-            // If the user has no more training attempts left, exit. 
+                if (training_left <= 0) {
 
-            if (training_left <= 0) {
+                    long minutes_left = Global.GotchiContext.Config.TrainingLimit - minutes_elapsed;
 
-                long minutes_left = (15 - minutes_elapsed);
+                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
+                        StringUtils.ToTitleCase(gotchi.Name),
+                        minutes_left <= 1 ? "a" : minutes_left.ToString(),
+                        minutes_left > 1 ? "s" : ""));
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
-                    StringUtils.ToTitleCase(gotchi.Name),
-                    minutes_left <= 1 ? "a" : minutes_left.ToString(),
-                    minutes_left > 1 ? "s" : ""));
+                    return;
 
-                return;
+                }
 
-            }
+                // Update the user's training data.
 
-            // Update the user's training data.
+                --training_left;
 
-            --training_left;
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET training_left=$training_left, training_ts=$training_ts WHERE id=$id;")) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET training_left=$training_left, training_ts=$training_ts WHERE id=$id;")) {
+                    cmd.Parameters.AddWithValue("$id", gotchi.Id);
+                    cmd.Parameters.AddWithValue("$training_left", training_left);
+                    cmd.Parameters.AddWithValue("$training_ts", training_ts);
 
-                cmd.Parameters.AddWithValue("$id", gotchi.Id);
-                cmd.Parameters.AddWithValue("$training_left", training_left);
-                cmd.Parameters.AddWithValue("$training_ts", training_ts);
+                    await Database.ExecuteNonQuery(cmd);
 
-                await Database.ExecuteNonQuery(cmd);
+                }
 
             }
 

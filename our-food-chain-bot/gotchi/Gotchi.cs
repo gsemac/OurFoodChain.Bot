@@ -12,9 +12,7 @@ namespace OurFoodChain.Gotchi {
         // Public members
 
         public const long NullGotchiId = -1;
-        public const long HoursOfSleepPerDay = 8;
-        public const long HoursPerDay = 24;
-        public const long MaxMissedFeedings = 3; // 3 days of no feeding
+        public static readonly long HoursPerDay = 24;
 
         public long Id { get; set; } = NullGotchiId;
         public long SpeciesId { get; set; } = Species.NullSpeciesId;
@@ -39,7 +37,7 @@ namespace OurFoodChain.Gotchi {
 
         public bool IsSleeping() {
 
-            return (HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - HoursOfSleepPerDay);
+            return (HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - Global.GotchiContext.Config.SleepHours);
 
         }
         public long HoursOfSleepLeft() {
@@ -63,7 +61,7 @@ namespace OurFoodChain.Gotchi {
             if (IsSleeping())
                 return 0;
 
-            return (HoursPerDay - HoursOfSleepPerDay) - (HoursSinceBirth() % HoursPerDay);
+            return (HoursPerDay - Global.GotchiContext.Config.SleepHours) - (HoursSinceBirth() % HoursPerDay);
 
         }
         public bool IsEating() {
@@ -78,7 +76,7 @@ namespace OurFoodChain.Gotchi {
         }
         public bool IsDead() {
 
-            return HoursSinceFed() > (HoursPerDay * MaxMissedFeedings);
+            return HoursSinceFed() > (HoursPerDay * Global.GotchiContext.Config.MaxMissedFeedings);
 
         }
         public long HoursSinceBirth() {

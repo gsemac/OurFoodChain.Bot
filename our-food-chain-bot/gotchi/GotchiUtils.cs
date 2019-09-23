@@ -402,7 +402,7 @@ namespace OurFoodChain.Gotchi {
 
             string gotchi_pic = Global.GotchiImagesDirectory + "default.png";
 
-            if (!string.IsNullOrEmpty(sp.pics) && Regex.Match(sp.pics, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success) {
+            if (!string.IsNullOrEmpty(sp.pics) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.pics, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
 
                 string downloads_dir = Global.TempDirectory + "downloads";
                 string ext = Regex.Match(sp.pics, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
@@ -662,7 +662,7 @@ namespace OurFoodChain.Gotchi {
 
             long current_ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            current_ts -= Gotchi.MaxMissedFeedings * Gotchi.HoursPerDay * 60 * 60;
+            current_ts -= Global.GotchiContext.Config.MaxMissedFeedings * Gotchi.HoursPerDay * 60 * 60;
 
             return current_ts;
 

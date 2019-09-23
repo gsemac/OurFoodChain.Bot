@@ -103,6 +103,19 @@ namespace OurFoodChain.Gotchi {
         }
 
         [Command("get")]
+        public async Task Get() {
+
+            // This overload can only be used for cases where there is only a single common ancestor, which will be automatically selected.
+
+            Species[] base_species = await SpeciesUtils.GetBaseSpeciesAsync();
+
+            if (base_species.Length == 1)
+                await _getGotchiAsync(Context, base_species[0]);
+            else
+                await BotUtils.ReplyAsync_Error(Context, "You must specify the species you want to start with.");
+
+        }
+        [Command("get")]
         public async Task Get(string species) {
             await Get("", species);
         }
@@ -116,44 +129,7 @@ namespace OurFoodChain.Gotchi {
             if (sp is null)
                 return;
 
-            // The species must be a base species (e.g., doesn't evolve from anything).
-
-            if (!await BotUtils.IsBaseSpeciesAsync(sp)) {
-
-                await BotUtils.ReplyAsync_Error(Context, "You must start with a base species (i.e., a species that doesn't evolve from anything).");
-
-                return;
-
-            }
-
-            // If the user has already reached their gotchi limit, don't allow them to get any more.
-
-            GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
-            ulong gotchi_count = await GotchiUtils.GetUserGotchiCountAsync(Context.User);
-
-            if (gotchi_count >= user_data.GotchiLimit) {
-
-                // If the user's primary Gotchi is dead, remove it to be replaced. Otherwise, the new Gotchi cannot be added.
-
-                Gotchi primary_gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
-
-                if (primary_gotchi.IsDead())
-                    await GotchiUtils.DeleteGotchiAsync(primary_gotchi.Id);
-
-                else {
-
-                    await BotUtils.ReplyAsync_Error(Context, "You don't have room for any more Gotchis!\n\nYou will need to release one of your Gotchis, or expand your Gotchi tank. See the `gotchi release` and `gotchi shop` commands for more details.");
-
-                    return;
-
-                }
-
-            }
-
-            // Create a gotchi for this user.
-            await GotchiUtils.CreateGotchiAsync(Context.User, sp);
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("All right **{0}**, take care of your new **{1}**!", Context.User.Username, sp.GetShortName()));
+            await _getGotchiAsync(Context, sp);
 
         }
 
@@ -1077,6 +1053,50 @@ namespace OurFoodChain.Gotchi {
             }
 
             return true;
+
+        }
+
+        private static async Task _getGotchiAsync(ICommandContext context, Species species) {
+
+            // The species must be a base species (e.g., doesn't evolve from anything).
+
+            if (!await SpeciesUtils.IsBaseSpeciesAsync(species)) {
+
+                await BotUtils.ReplyAsync_Error(context, "You must start with a base species (i.e. a species with no ancestor).");
+
+                return;
+
+            }
+
+            // If the user has already reached their gotchi limit, don't allow them to get any more.
+
+            GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(context.User);
+            ulong gotchi_count = await GotchiUtils.GetUserGotchiCountAsync(context.User);
+
+            if (gotchi_count >= user_data.GotchiLimit) {
+
+                // If the user's primary Gotchi is dead, remove it to be replaced. Otherwise, the new Gotchi cannot be added.
+
+                Gotchi primary_gotchi = await GotchiUtils.GetUserGotchiAsync(context.User);
+
+                if (primary_gotchi.IsDead())
+                    await GotchiUtils.DeleteGotchiAsync(primary_gotchi.Id);
+
+                else {
+
+                    await BotUtils.ReplyAsync_Error(context, "You don't have room for any more Gotchis!\n\nYou will need to release one of your Gotchis, or expand your Gotchi tank. See the `gotchi release` and `gotchi shop` commands for more details.");
+
+                    return;
+
+                }
+
+            }
+
+            // Create a gotchi for this user.
+            await GotchiUtils.CreateGotchiAsync(context.User, species);
+
+            await BotUtils.ReplyAsync_Success(context, string.Format("All right **{0}**, take care of your new **{1}**!", context.User.Username, species.ShortName));
+
 
         }
 

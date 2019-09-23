@@ -166,6 +166,9 @@ namespace OurFoodChain {
             return species.ToArray();
 
         }
+        public static async Task<bool> IsBaseSpeciesAsync(Species species) {
+            return await GetAncestorAsync(species) is null;
+        }
 
         public static async Task<Species[]> GetPredatorsAsync(Species species) {
 

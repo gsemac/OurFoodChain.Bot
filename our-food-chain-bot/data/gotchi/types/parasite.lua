@@ -3,6 +3,7 @@
 	-- Good attack and defense, but low speed and HP.
 
 	type.SetName("parasite")
+	type.SetAliasPattern("parasite")
 	type.SetColor(192, 192, 192)
 
 	type.SetBaseHp(40)
@@ -13,6 +14,6 @@
 	type.SetMatchup("carnivore", 1.5)
 	type.SetMatchup("herbivore", 1.5)
 
-	type.Requires.RoleMatch("parasite")
+	type.Requires.RoleMatch(type.AliasPattern)
 
 end

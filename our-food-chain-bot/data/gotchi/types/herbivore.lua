@@ -3,6 +3,7 @@
 	-- Herbivores are well-rounded.
 
 	type.SetName("herbivore")
+	type.SetAliasPattern("base-consumer|herbivore")
 	type.SetColor(0, 0, 255)
 
 	type.SetBaseHp(44)
@@ -12,6 +13,6 @@
 
 	type.SetMatchup("autotroph", 1.5)
 
-	type.Requires.RoleMatch("base-consumer|herbivore")
+	type.Requires.RoleMatch(type.AliasPattern)
 
 end

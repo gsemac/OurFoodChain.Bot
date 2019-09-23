@@ -532,24 +532,24 @@ namespace OurFoodChain.Gotchi {
                                     return string.Format("{0:0.#}", target_before.Hp - target.Gotchi.Stats.Hp);
 
                                 case "target:atk%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Atk - target.Gotchi.Stats.Atk) / target_before.Atk) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(target_before.Atk - target.Gotchi.Stats.Atk) / (double)target_before.Atk * 100.0);
                                 case "target:def%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Def - target.Gotchi.Stats.Def) / target_before.Def) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(target_before.Def - target.Gotchi.Stats.Def) / (double)target_before.Def * 100.0);
                                 case "target:spd%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Spd - target.Gotchi.Stats.Spd) / target_before.Spd) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(target_before.Spd - target.Gotchi.Stats.Spd) / (double)target_before.Spd * 100.0);
                                 case "target:acc%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Acc - target.Gotchi.Stats.Acc) / target_before.Acc) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(target_before.Acc - target.Gotchi.Stats.Acc) / target_before.Acc * 100.0);
                                 case "target:eva%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(target_before.Eva - target.Gotchi.Stats.Eva) / target_before.Eva) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(target_before.Eva - target.Gotchi.Stats.Eva) / target_before.Eva * 100.0);
 
                                 case "user:atk%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Atk - user.Gotchi.Stats.Atk) / user_before.Atk) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(user_before.Atk - user.Gotchi.Stats.Atk) / (double)user_before.Atk * 100.0);
                                 case "user:def%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Def - user.Gotchi.Stats.Def) / user_before.Def) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(user_before.Def - user.Gotchi.Stats.Def) / (double)user_before.Def * 100.0);
                                 case "user:spd%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Spd - user.Gotchi.Stats.Spd) / user_before.Spd) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(user_before.Spd - user.Gotchi.Stats.Spd) / (double)user_before.Spd * 100.0);
                                 case "user:acc%":
-                                    return string.Format("{0:0.#}%", (Math.Abs(user_before.Acc - user.Gotchi.Stats.Acc) / user_before.Acc) * 100.0);
+                                    return string.Format("{0:0.#}%", Math.Abs(user_before.Acc - user.Gotchi.Stats.Acc) / user_before.Acc * 100.0);
                                 case "user:eva%":
                                     return string.Format("{0:0.#}%", (user_before.Eva == 0.0 ? user.Gotchi.Stats.Eva : (Math.Abs(user_before.Eva - user.Gotchi.Stats.Eva) / user_before.Eva)) * 100.0);
 

@@ -36,7 +36,7 @@ namespace OurFoodChain.Gotchi {
 
                 script.Call(script.Globals["onRegister"], type);
 
-                _registry[type.Name.ToLower()] = type;
+                _registry.Add(type);
 
             }
             catch (Exception) {
@@ -67,8 +67,9 @@ namespace OurFoodChain.Gotchi {
 
             await _initializeAsync();
 
-            if (_registry.TryGetValue(typeName, out GotchiType gotchiType))
-                return gotchiType;
+            foreach (GotchiType type in _registry)
+                if (type.Matches(typeName))
+                    return type;
 
             return null;
 
@@ -104,13 +105,13 @@ namespace OurFoodChain.Gotchi {
 
             await _initializeAsync();
 
-            return await Task.FromResult(_registry.Values.ToArray());
+            return await Task.FromResult(_registry.ToArray());
 
         }
 
         // Private members
 
-        private ConcurrentDictionary<string, GotchiType> _registry = new ConcurrentDictionary<string, GotchiType>();
+        private ConcurrentBag<GotchiType> _registry = new ConcurrentBag<GotchiType>();
 
         private async Task _initializeAsync() {
 

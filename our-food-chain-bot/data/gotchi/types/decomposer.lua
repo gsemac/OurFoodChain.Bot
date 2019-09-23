@@ -3,6 +3,7 @@
 	-- Good HP with low attack and speed.
 
 	type.SetName("decomposer")
+	type.SetAliasPattern("scavenger|detritivore|decomposer|fungus")
 	type.SetColor(139, 69, 19)
 
 	type.SetBaseHp(50)
@@ -13,6 +14,6 @@
 	type.SetMatchup("carnivore", 1.2)
 	type.SetMatchup("autotroph", 1.5)
 
-	type.Requires.RoleMatch("scavenger|detritivore|decomposer|fungus")
+	type.Requires.RoleMatch(type.AliasPattern)
 
 end

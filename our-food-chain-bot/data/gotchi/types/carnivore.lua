@@ -2,7 +2,8 @@
 
 	-- Carnivores are fast and offensive.
 
-	type.SetName("carnivore")
+	type.SetName("predator")
+	type.SetAliasPattern("predator|carnivore")
 	type.SetColor(255, 0, 0)
 	
 	type.SetBaseHp(39)
@@ -13,6 +14,6 @@
 	type.SetMatchup("carnivore", 1.5)
 	type.SetMatchup("autotroph", 0.5)
 
-	type.Requires.RoleMatch("predator|carnivore")
+	type.Requires.RoleMatch(type.AliasPattern)
 
 end

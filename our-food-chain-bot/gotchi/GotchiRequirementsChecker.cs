@@ -93,10 +93,15 @@ namespace OurFoodChain.Gotchi {
 
             try {
 
+                // Get the types assigned to this gotchi.
                 GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi);
 
+                // Compare each type using the type pattern provided.
+                // #todo Types can also have aliases (AliasPattern). For now, we'll just try to match against the type pattern as well.
+
                 foreach (GotchiType type in types)
-                    if (Regex.IsMatch(type.Name, requirements.TypePattern, RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(type.Name, requirements.TypePattern, RegexOptions.IgnoreCase) ||
+                        Regex.IsMatch(type.AliasPattern, requirements.TypePattern, RegexOptions.IgnoreCase))
                         return true;
 
             }

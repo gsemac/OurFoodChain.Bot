@@ -327,14 +327,9 @@ namespace OurFoodChain.Gotchi {
             // Get moveset for this gotchi.
             // If the user is currently in battle, get their moveset from the battle state instead.
 
-            GotchiMoveSet set;
             GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
-
-            if (!(battle_state is null))
-                set = battle_state.GetGotchiMoveset(gotchi);
-            else
-                set = await GotchiMoveSet.GetMovesetAsync(gotchi);
-
+            GotchiMoveSet set = await GotchiMoveSet.GetMovesetAsync(gotchi);
+            GotchiMoveSet battle_set = battle_state?.GetGotchiMoveset(gotchi);
 
             // Create the embed.
 
@@ -348,7 +343,13 @@ namespace OurFoodChain.Gotchi {
             int move_index = 1;
 
             foreach (GotchiMove move in set.Moves)
-                set_page.AddField(string.Format("Move {0}: **{1}** ({2}/{3} PP)", move_index++, StringUtils.ToTitleCase(move.Name), move.PP, move.PP), move.Description);
+                set_page.AddField(string.Format(
+                    "Move {0}: **{1}** ({2}/{3} PP)",
+                    move_index++,
+                    move.Name,
+                    battle_set is null ? move.PP : battle_set.GetMove(move.Name).PP,
+                    move.PP
+                    ), move.Description);
 
             await ReplyAsync("", false, set_page.Build());
 
@@ -485,7 +486,7 @@ namespace OurFoodChain.Gotchi {
                 await Database.ExecuteNonQuery(cmd);
 
             }
-          
+
             await Battle(null);
 
         }

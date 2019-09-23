@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchi {
@@ -23,6 +24,7 @@ namespace OurFoodChain.Gotchi {
         }
         public GotchiRequirements Requires { get; set; } = new GotchiRequirements();
         public Color Color { get; set; } = Color.White;
+        public string AliasPattern { get; set; }
 
         public int BaseHp { get; set; } = 40;
         public int BaseAtk { get; set; } = 40;
@@ -41,6 +43,10 @@ namespace OurFoodChain.Gotchi {
         }
         public void SetMatchup(string typeName, double offensiveMultiplier) {
             _matchups[typeName] = offensiveMultiplier;
+        }
+
+        public void SetAliasPattern(string aliasPattern) {
+            AliasPattern = aliasPattern;
         }
 
         public void SetBaseHp(int value) {
@@ -65,13 +71,27 @@ namespace OurFoodChain.Gotchi {
         }
 
         public bool Matches(string typeName) {
-            return typeName.ToLower() == Name.ToLower();
+
+            if (typeName.ToLower() == Name.ToLower())
+                return true;
+
+            try {
+
+                if (!string.IsNullOrEmpty(AliasPattern) && Regex.IsMatch(Name, AliasPattern, RegexOptions.IgnoreCase))
+                    return true;
+
+            }
+            catch (Exception) { }
+
+            return false;
+
         }
 
         public static double GetMatchup(GotchiType offendingType, GotchiType defendingType) {
 
-            if (offendingType._matchups.TryGetValue(defendingType.Name.ToLower(), out double value))
-                return value;
+            foreach (string key in offendingType._matchups.Keys)
+                if (defendingType.Matches(key))
+                    return offendingType._matchups[key];
 
             return 1.0;
 

@@ -65,11 +65,15 @@ namespace OurFoodChain.Gotchi {
 
         public async Task<GotchiType> GetTypeAsync(string typeName) {
 
-            await _initializeAsync();
+            if (!string.IsNullOrEmpty(typeName)) {
 
-            foreach (GotchiType type in _registry)
-                if (type.Matches(typeName))
-                    return type;
+                await _initializeAsync();
+
+                foreach (GotchiType type in _registry)
+                    if (type.Matches(typeName))
+                        return type;
+
+            }
 
             return null;
 

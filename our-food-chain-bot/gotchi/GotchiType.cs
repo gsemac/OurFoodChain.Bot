@@ -72,23 +72,26 @@ namespace OurFoodChain.Gotchi {
 
         public bool Matches(string typeName) {
 
-            if (typeName.ToLower() == Name.ToLower())
-                return true;
+            if (!string.IsNullOrEmpty(typeName)) {
 
-            try {
-
-                if (!string.IsNullOrEmpty(AliasPattern) && Regex.IsMatch(Name, AliasPattern, RegexOptions.IgnoreCase))
+                if (typeName.ToLower() == Name.ToLower())
                     return true;
 
+                try {
+
+                    if (!string.IsNullOrEmpty(AliasPattern) && Regex.IsMatch(typeName, AliasPattern, RegexOptions.IgnoreCase))
+                        return true;
+
+                }
+                catch (Exception) { }
+
             }
-            catch (Exception) { }
 
             return false;
 
         }
 
         public static double GetMatchup(GotchiType offendingType, GotchiType defendingType) {
-
             foreach (string key in offendingType._matchups.Keys)
                 if (defendingType.Matches(key))
                     return offendingType._matchups[key];
@@ -99,7 +102,6 @@ namespace OurFoodChain.Gotchi {
         public static double GetMatchup(GotchiType[] offendingTypes, GotchiType[] defendingTypes) {
 
             double multiplier = 1.0;
-
             foreach (GotchiType offensiveType in offendingTypes)
                 foreach (GotchiType defensiveType in defendingTypes)
                     multiplier *= GetMatchup(offensiveType, defensiveType);

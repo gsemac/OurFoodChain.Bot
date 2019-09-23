@@ -102,22 +102,6 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        [Command("test")]
-        public async Task test(string type1, string type2) {
-
-            GotchiType t1 = await Global.GotchiContext.TypeRegistry.GetTypeAsync(type1);
-            GotchiType t2 = await Global.GotchiContext.TypeRegistry.GetTypeAsync(type2);
-
-            await ReplyAsync(GotchiType.GetMatchup(t1, t2).ToString());
-
-            //Species sp = await SpeciesUtils.GetUniqueSpeciesAsync(speciesName);
-            //Gotchi gotchi = new Gotchi { SpeciesId = sp.id, Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.MediumFast, 50) };
-            //GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiTypeRegistry).GetStatsAsync(gotchi);
-
-            //await ReplyAsync(Newtonsoft.Json.JsonConvert.SerializeObject(stats, Newtonsoft.Json.Formatting.Indented));
-
-        }
-
         [Command("get")]
         public async Task Get(string species) {
             await Get("", species);

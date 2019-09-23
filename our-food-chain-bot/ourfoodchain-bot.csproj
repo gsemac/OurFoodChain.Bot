@@ -340,10 +340,10 @@
     <None Include="data\gotchi\statuses\thorn_surrounded.lua" />
     <None Include="data\gotchi\statuses\vine_wrapped.lua" />
     <None Include="data\gotchi\statuses\withdrawn.lua" />
-    <None Include="data\gotchi\types\carnivore.lua" />
+    <None Include="data\gotchi\types\predator.lua" />
     <None Include="data\gotchi\types\decomposer.lua" />
-    <None Include="data\gotchi\types\herbivore.lua" />
-    <None Include="data\gotchi\types\autotroph.lua" />
+    <None Include="data\gotchi\types\base-consumer.lua" />
+    <None Include="data\gotchi\types\producer.lua" />
     <None Include="data\gotchi\types\parasite.lua" />
     <None Include="data\help\+common.json" />
     <None Include="data\help\-common.json" />

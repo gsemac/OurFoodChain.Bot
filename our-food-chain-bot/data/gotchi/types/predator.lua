@@ -11,8 +11,8 @@
 	type.SetBaseDef(43)
 	type.SetBaseSpd(65)
 
-	type.SetMatchup("carnivore", 1.5)
-	type.SetMatchup("autotroph", 0.5)
+	type.SetMatchup("predator", 1.5)
+	type.SetMatchup("producer", 0.5)
 
 	type.Requires.RoleMatch(type.AliasPattern)
 

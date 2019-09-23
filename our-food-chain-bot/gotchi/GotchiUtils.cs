@@ -324,6 +324,9 @@ namespace OurFoodChain.Gotchi {
             if (parameters.GenerateMoveset)
                 result.Moves = await GotchiMoveSet.GetMovesetAsync(result.Gotchi, result.Stats);
 
+            // Generate types.
+            result.Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(result.Gotchi);
+
             // Generate a name for the gotchi.
 
             result.Gotchi.Name = (species is null ? "Wild Gotchi" : species.GetShortName()) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.Level);

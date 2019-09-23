@@ -800,7 +800,7 @@ namespace OurFoodChain.Gotchi {
 
                 double winner_exp = winner.Gotchi.Gotchi.Id == player1.Gotchi.Gotchi.Id ? exp1 : exp2;
                 long winner_levels = winner.Gotchi.Gotchi.Id == player1.Gotchi.Gotchi.Id ? levels1 : levels2;
-                long winner_g = (long)(loser.Gotchi.Stats.Level * (BotUtils.RandomInteger(100, 150) / 100.0));
+                long winner_g = (long)Math.Round(loser.Gotchi.Stats.Level * (BotUtils.RandomInteger(150, 200) / 100.0));
 
                 sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP** and **{2}G**.",
                     StringUtils.ToTitleCase(winner.Gotchi.Gotchi.Name),

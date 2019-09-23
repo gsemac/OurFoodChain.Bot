@@ -423,22 +423,15 @@ namespace OurFoodChain.Gotchi {
                         GotchiStats user_before = user.Gotchi.Stats.Clone();
                         GotchiStats target_before = target.Gotchi.Stats.Clone();
 
-                        // Trigger the callback.
+                        // Invoke the callback.
 
                         try {
-
-                            //if (user.SelectedMove.info.type == GotchiMoveType.Recovery && user.Gotchi.Status == "heal block") {
-                            //
-                            //    args.text = "but it failed";
-                            //
-                            //}
-                            //else {
 
                             if (!await moveScript.OnMoveAsync(args))
                                 args.DealDamage(user.SelectedMove.Power);
 
                         }
-                        catch (Exception ex) {
+                        catch (Exception) {
 
                             args.Text = "but something went wrong";
 
@@ -458,6 +451,11 @@ namespace OurFoodChain.Gotchi {
 
                         if (target.Gotchi.HasStatus && target.Gotchi.Status.Endure)
                             target.Gotchi.Stats.Hp = Math.Max(1, target.Gotchi.Stats.Hp);
+
+                        // If the user is heal-blocked, prevent recovery by resetting the HP back to what it was before recovery.
+
+                        if (user.Gotchi.HasStatus && !user.Gotchi.Status.AllowRecovery && user.Gotchi.Stats.Hp > user_before.Hp)
+                            user.Gotchi.Stats.Hp = user_before.Hp;
 
                         // Show the battle text.
                         // If the move doesn't specify a text, choose one automatically (where possible).

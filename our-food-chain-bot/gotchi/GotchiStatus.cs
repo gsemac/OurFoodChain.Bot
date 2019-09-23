@@ -44,6 +44,7 @@ namespace OurFoodChain.Gotchi {
         }
 
         public bool Endure { get; set; } = false;
+        public bool AllowRecovery { get; set; } = true;
 
         public int SlipDamage { get; set; } = 0;
         public double SlipDamagePercent { get; set; } = 0.0;
@@ -62,6 +63,9 @@ namespace OurFoodChain.Gotchi {
         }
         public void SetEndure(bool value) {
             Endure = value;
+        }
+        public void SetAllowRecovery(bool value) {
+            AllowRecovery = value;
         }
         public void SetSlipDamage(int value) {
             SlipDamage = value;

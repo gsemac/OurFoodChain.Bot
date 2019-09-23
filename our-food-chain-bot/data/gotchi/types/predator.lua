@@ -1,4 +1,4 @@
-﻿function onRegister(type)
+﻿function OnRegister(type)
 
 	-- Carnivores are fast and offensive.
 

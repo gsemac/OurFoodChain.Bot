@@ -34,7 +34,7 @@ namespace OurFoodChain.Gotchi {
 
                 GotchiType type = new GotchiType();
 
-                script.Call(script.Globals["onRegister"], type);
+                script.Call(script.Globals["OnRegister"], type);
 
                 _registry.Add(type);
 

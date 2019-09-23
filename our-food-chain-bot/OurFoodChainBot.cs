@@ -58,6 +58,20 @@ namespace OurFoodChain {
 
         }
 
+        public async Task StartAsync() {
+
+            await LogAsync(LogSeverity.Info, "OurFoodChain", "Starting bot");
+
+            await LogAsync(LogSeverity.Info, "Database", "Initializing database");
+
+            await Database.InitializeAsync();
+
+            if (Config.GotchisEnabled)
+                await _initializeGotchiContextAsync();
+
+            await ConnectAsync();
+
+        }
         public async Task ConnectAsync() {
 
             await _discord_client.LoginAsync(TokenType.Bot, Config.Token);
@@ -267,6 +281,41 @@ namespace OurFoodChain {
                 await BotUtils.ReplyAsync_Error(context, result.ErrorReason);
 
             return false;
+
+        }
+
+        private async Task _initializeGotchiContextAsync() {
+
+            Gotchi.GotchiContext gotchiContext = new Gotchi.GotchiContext();
+
+            gotchiContext.LogAsync += async x => await LogAsync(x);
+
+            // Load gotchi config.
+
+            if (System.IO.File.Exists("gotchi-config.json"))
+                gotchiContext.Config = Gotchi.GotchiConfig.FromFile("gotchi-config.json");
+
+            // Initialize registries.
+
+            await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi types");
+
+            await gotchiContext.TypeRegistry.RegisterAllAsync(Global.GotchiDataDirectory + "types/");
+
+            await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi types");
+
+            await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi statuses");
+
+            await gotchiContext.StatusRegistry.RegisterAllAsync(Global.GotchiDataDirectory + "statuses/");
+
+            await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi statuses");
+
+            await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi moves");
+
+            await gotchiContext.MoveRegistry.RegisterAllAsync(Global.GotchiDataDirectory + "moves/");
+
+            await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi moves");
+
+            Global.GotchiContext = gotchiContext;
 
         }
 

@@ -17,7 +17,7 @@ namespace OurFoodChain {
 
             await bot.LoadConfigAsync("config.json");
 
-            await bot.ConnectAsync();
+            await bot.StartAsync();
 
             // Block this task until the program is closed.
             await Task.Delay(-1);

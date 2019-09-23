@@ -288,7 +288,7 @@ namespace OurFoodChain.Gotchi {
             // If the user is currently in battle, get their moveset from the battle state instead.
 
             GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
-            GotchiMoveSet set = await GotchiMoveSet.GetMovesetAsync(gotchi);
+            GotchiMoveSet set = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi);
             GotchiMoveSet battle_set = battle_state?.GetGotchiMoveset(gotchi);
 
             // Create the embed.

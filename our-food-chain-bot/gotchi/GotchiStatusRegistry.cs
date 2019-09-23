@@ -45,8 +45,6 @@ namespace OurFoodChain.Gotchi {
         }
         public async Task RegisterAllAsync(string statusDirectoryPath) {
 
-            await _logAsync(LogSeverity.Info, "Registering gotchi statuses");
-
             if (System.IO.Directory.Exists(statusDirectoryPath)) {
 
                 string[] files = System.IO.Directory.GetFiles(statusDirectoryPath, "*.lua");
@@ -55,8 +53,6 @@ namespace OurFoodChain.Gotchi {
                     await RegisterAsync(file);
 
             }
-
-            await _logAsync(LogSeverity.Info, "Finished registering gotchi statuses");
 
         }
 

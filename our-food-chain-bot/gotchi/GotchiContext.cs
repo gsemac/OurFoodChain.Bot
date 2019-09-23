@@ -22,6 +22,7 @@ namespace OurFoodChain.Gotchi {
         public GotchiConfig Config { get; set; } = new GotchiConfig();
         public GotchiTypeRegistry TypeRegistry { get; } = new GotchiTypeRegistry();
         public GotchiStatusRegistry StatusRegistry { get; } = new GotchiStatusRegistry();
+        public GotchiMoveRegistry MoveRegistry { get; } = new GotchiMoveRegistry();
 
         // Private members
 

@@ -9,12 +9,6 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchi {
 
-    public enum MoveTarget {
-        Self,
-        Other
-    }
-
-
     public enum GotchiMoveType {
         Unspecified,
         Offensive,
@@ -32,10 +26,9 @@ namespace OurFoodChain.Gotchi {
 
         public const int MoveLimit = 4;
 
-        public List<GotchiMove> Moves { get; private set; } = new List<GotchiMove>();
-        public GotchiAbility ability = 0;
+        public List<GotchiMove> Moves { get; } = new List<GotchiMove>();
 
-        public bool HasPPLeft {
+        public bool HasPP {
             get {
 
                 foreach (GotchiMove move in Moves)
@@ -46,18 +39,28 @@ namespace OurFoodChain.Gotchi {
 
             }
         }
-
-        public async Task AddAsync(string name) {
-
-            Add(await GotchiMoveRegistry.GetMoveByNameAsync(name));
-
+        public int Count {
+            get {
+                return Moves.Count;
+            }
         }
+
         public void Add(GotchiMove move) {
 
-            if (!Moves.Any(x => x.Name.ToLower() == move.Name.ToLower()))
+            if (!Moves.Any(x => string.Equals(x.Name, move.Name, StringComparison.OrdinalIgnoreCase)))
                 Moves.Add(move);
 
+            if (Moves.Count > MoveLimit)
+                throw new Exception(string.Format("Number of moves added has exceeded the move limit ({0}).", MoveLimit));
+
         }
+        public void AddRange(IEnumerable<GotchiMove> moves) {
+
+            foreach (GotchiMove move in moves)
+                Add(move);
+
+        }
+
         public GotchiMove GetMove(string identifier) {
 
             if (int.TryParse(identifier, out int result) && result > 0 && result <= Moves.Count())
@@ -70,7 +73,7 @@ namespace OurFoodChain.Gotchi {
             return null;
 
         }
-        public async Task<GotchiMove> GetRandomMoveAsync() {
+        public GotchiMove GetRandomMove() {
 
             // Select randomly from all moves that currently have PP.
 
@@ -83,45 +86,7 @@ namespace OurFoodChain.Gotchi {
             if (options.Count() > 0)
                 return options[BotUtils.RandomInteger(options.Count())];
             else
-                return await GotchiMoveRegistry.GetMoveByNameAsync("desperation");
-
-        }
-
-        public static async Task<GotchiMoveSet> GetMovesetAsync(Gotchi gotchi) {
-
-            // Get stats.
-            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
-
-            return await GetMovesetAsync(gotchi, stats);
-
-        }
-        public static async Task<GotchiMoveSet> GetMovesetAsync(Gotchi gotchi, GotchiStats stats) {
-
-            GotchiMoveSet set = new GotchiMoveSet();
-
-            await set.AddAsync("hit"); // all gotchis can use hit regardless of species
-
-            // Add all moves that the gotchi meets the requirements for.
-
-            foreach (GotchiMove move in GotchiMoveRegistry.Registry.Values)
-                if (await new GotchiRequirementsChecker { Requires = move.Requires }.CheckAsync(gotchi))
-                    set.Add(move.Clone());
-
-            if (set.Moves.Count() > 4) {
-
-                // If move count is over the limit, randomize by the species ID, and keep the last four moves.
-                // This means members of the same species will have consistent movesets, and won't be biased by later moves.
-
-                Random rng = new Random((int)gotchi.SpeciesId);
-
-                set.Moves = set.Moves.OrderBy(x => rng.Next()).ToList();
-                set.Moves = set.Moves.GetRange(set.Moves.Count() - 4, 4);
-
-            }
-
-            set.Moves.Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));
-
-            return set;
+                return null;
 
         }
 

@@ -48,8 +48,6 @@ namespace OurFoodChain.Gotchi {
         }
         public async Task RegisterAllAsync(string typeDirectoryPath) {
 
-            await _logAsync(LogSeverity.Info, "Registering gotchi types");
-
             if (System.IO.Directory.Exists(typeDirectoryPath)) {
 
                 string[] files = System.IO.Directory.GetFiles(typeDirectoryPath, "*.lua");
@@ -58,8 +56,6 @@ namespace OurFoodChain.Gotchi {
                     await RegisterAsync(file);
 
             }
-
-            await _logAsync(LogSeverity.Info, "Finished registering gotchi types");
 
         }
 

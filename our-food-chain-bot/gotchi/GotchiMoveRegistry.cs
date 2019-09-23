@@ -11,60 +11,114 @@ namespace OurFoodChain.Gotchi {
 
     public class GotchiMoveRegistry {
 
-        public static async Task<GotchiMove> GetMoveByNameAsync(string name) {
+        // Public members
 
-            if (Registry.Count <= 0)
-                await _registerAllMovesAsync();
+        public event Func<LogMessage, Task> LogAsync;
 
-            if (Registry.TryGetValue(name.ToLower(), out GotchiMove result))
-                return result.Clone();
+        public async Task RegisterAsync(string filePath) {
 
-            throw new Exception(string.Format("No move with the name \"{0}\" exists in the registry.", name));
+            try {
+
+                GotchiMove move = new GotchiMove {
+                    LuaScriptFilePath = filePath
+                };
+
+                if (await new GotchiMoveLuaScript(move.LuaScriptFilePath).OnRegisterAsync(move))
+                    _addMoveToRegistry(move);
+
+            }
+            catch (Exception) {
+
+                await _logAsync(LogSeverity.Error, string.Format("Failed to register move {0}", System.IO.Path.GetFileName(filePath)));
+
+            }
+
+        }
+        public async Task RegisterAllAsync(string directoryPath) {
+
+            if (System.IO.Directory.Exists(directoryPath)) {
+
+                string[] files = System.IO.Directory.GetFiles(directoryPath, "*.lua");
+
+                foreach (string file in files)
+                    await RegisterAsync(file);
+
+            }
 
         }
 
-        public static Dictionary<string, GotchiMove> Registry { get; } = new Dictionary<string, GotchiMove>();
+        public async Task<GotchiMove> GetMoveAsync(string name) {
 
-        private static void _addMoveToRegistry(GotchiMove move) {
+            GotchiMove move = await _getMoveAsync(name);
+
+            if (move != null)
+                return move;
+            else
+                throw new Exception(string.Format("No move with the name \"{0}\" exists in the registry.", name));
+
+        }
+
+        public async Task<GotchiMove[]> GetLearnSetAsync(Gotchi gotchi) {
+
+            List<GotchiMove> moves = new List<GotchiMove>();
+
+            // all gotchis can use hit regardless of species
+
+            GotchiMove universalMove = await _getMoveAsync("hit");
+
+            if (universalMove != null)
+                moves.Add(universalMove);
+
+            foreach (GotchiMove move in Registry.Values)
+                if (await new GotchiRequirementsChecker { Requires = move.Requires }.CheckAsync(gotchi))
+                    moves.Add(move.Clone());
+
+            return moves.ToArray();
+
+        }
+        public async Task<GotchiMoveSet> GetMoveSetAsync(Gotchi gotchi) {
+
+            GotchiMove[] learnSet = await GetLearnSetAsync(gotchi);
+
+            GotchiMoveSet set = new GotchiMoveSet();
+
+            Random rng = new Random((int)gotchi.SpeciesId);
+
+            set.AddRange(learnSet
+                .Skip(set.Moves.Count() - GotchiMoveSet.MoveLimit)
+                .OrderBy(x => rng.Next()));
+
+            set.Moves.Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));
+
+            return set;
+
+        }
+
+        // Private members
+
+        private Dictionary<string, GotchiMove> Registry { get; } = new Dictionary<string, GotchiMove>();
+
+        private void _addMoveToRegistry(GotchiMove move) {
 
             Registry.Add(move.Name.ToLower(), move);
 
         }
-        private static async Task _registerAllMovesAsync() {
 
-            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Gotchi", "Registering moves");
+        private async Task<GotchiMove> _getMoveAsync(string name) {
 
-            Registry.Clear();
+            if (Registry.TryGetValue(name.ToLower(), out GotchiMove result))
+                return await Task.FromResult(result.Clone());
 
-            await _registerLuaMovesAsync();
-
-            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Gotchi", "Registered moves");
+            return null;
 
         }
-        private static async Task _registerLuaMovesAsync() {
+        private async Task _logAsync(LogSeverity severity, string message) {
 
-            // Register all moves.
-
-            foreach (string file in System.IO.Directory.GetFiles(Global.GotchiMovesDirectory, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
-
-                try {
-
-                    GotchiMove move = new GotchiMove {
-                        LuaScriptFilePath = file
-                    };
-
-                    if (await new GotchiMoveLuaScript(move.LuaScriptFilePath).OnRegisterAsync(move))
-                        _addMoveToRegistry(move);
-
-                }
-                catch (Exception ex) {
-
-                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "Gotchi", 
-                        string.Format("Failed to register move {0}: {1}", System.IO.Path.GetFileName(file), ex.ToString()));
-
-                }
-
-            }
+            await LogAsync?.Invoke(new LogMessage {
+                Source = "Gotchi",
+                Severity = severity,
+                Message = message
+            });
 
         }
 

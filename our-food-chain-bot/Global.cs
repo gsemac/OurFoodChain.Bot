@@ -29,34 +29,7 @@ namespace OurFoodChain {
 
         // Gotchis
 
-        public static Gotchi.GotchiContext GotchiContext {
-            get {
-
-                lock (_gotchiContextLock) {
-
-                    if (_gotchiContext is null) {
-
-                        _gotchiContext = new Gotchi.GotchiContext();
-
-                        _gotchiContext.TypeRegistry.TypeDirectoryPath = GotchiDataDirectory + "types/";
-                        _gotchiContext.StatusRegistry.StatusDirectoryPath = GotchiDataDirectory + "statuses/";
-
-                        if (System.IO.File.Exists("gotchi-config.json"))
-                            _gotchiContext.Config = Gotchi.GotchiConfig.FromFile("gotchi-config.json");
-
-                        _gotchiContext.LogAsync += async x => await OurFoodChainBot.Instance.LogAsync(x);
-
-                    }
-
-                }
-
-                return _gotchiContext;
-
-            }
-        }
-
-        private static Gotchi.GotchiContext _gotchiContext;
-        private static object _gotchiContextLock = new object();
+        public static Gotchi.GotchiContext GotchiContext { get; set; } = null;
 
     }
 

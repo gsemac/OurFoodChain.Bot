@@ -16,6 +16,15 @@ namespace OurFoodChain {
 
         public static string FilePath { get; } = Global.DatabaseFilePath;
 
+        public static async Task InitializeAsync() {
+
+            if (_initialized)
+                throw new Exception("Database is already initialized.");
+            else
+                await _initializeAsync();
+
+        }
+
         public static async Task<SQLiteConnection> GetConnectionAsync() {
 
             if (!_initialized)

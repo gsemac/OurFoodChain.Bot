@@ -322,7 +322,7 @@ namespace OurFoodChain.Gotchi {
             // Generate moveset (if applicable).
 
             if (parameters.GenerateMoveset)
-                result.Moves = await GotchiMoveSet.GetMovesetAsync(result.Gotchi, result.Stats);
+                result.Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(result.Gotchi);
 
             // Generate types.
             result.Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(result.Gotchi);

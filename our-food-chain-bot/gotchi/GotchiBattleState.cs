@@ -131,7 +131,7 @@ namespace OurFoodChain.Gotchi {
                     await BotUtils.ReplyAsync_Error(context, "The move you have selected is invalid. Please select a valid move.");
 
                 }
-                else if (move.PP <= 0 && player.Gotchi.Moves.HasPPLeft) {
+                else if (move.PP <= 0 && player.Gotchi.Moves.HasPP) {
 
                     // The selected move cannot be used because it is out of PP.
                     await BotUtils.ReplyAsync_Error(context, "The selected move has no PP left. Please select a different move.");
@@ -144,7 +144,7 @@ namespace OurFoodChain.Gotchi {
 
                     // If the selected move does not have any PP, silently select the "struggle" move (used when no moves have any PP).
                     if (player.SelectedMove.PP <= 0)
-                        player.SelectedMove = await GotchiMoveRegistry.GetMoveByNameAsync("desperation");
+                        player.SelectedMove = await Global.GotchiContext.MoveRegistry.GetMoveAsync("desperation");
 
                     if (!IsBattlingCpu() && other_player.SelectedMove is null) {
 
@@ -250,7 +250,7 @@ namespace OurFoodChain.Gotchi {
                 player1 = new PlayerState {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi1,
-                        Moves = await GotchiMoveSet.GetMovesetAsync(gotchi1),
+                        Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi1),
                         Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi1),
                         Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi1)
                     }
@@ -265,7 +265,7 @@ namespace OurFoodChain.Gotchi {
                 state.player2 = new PlayerState {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi2,
-                        Moves = await GotchiMoveSet.GetMovesetAsync(gotchi2),
+                        Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi2),
                         Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi2),
                         Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi2)
                     }
@@ -770,7 +770,10 @@ namespace OurFoodChain.Gotchi {
         }
         private async Task _pickCpuMoveAsync(PlayerState player) {
 
-            GotchiMove move = await player.Gotchi.Moves.GetRandomMoveAsync();
+            GotchiMove move = player.Gotchi.Moves.GetRandomMove();
+
+            if (move is null)
+                move = await Global.GotchiContext.MoveRegistry.GetMoveAsync("desperation");
 
             player.SelectedMove = move;
 

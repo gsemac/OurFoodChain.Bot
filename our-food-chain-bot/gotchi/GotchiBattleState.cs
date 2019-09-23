@@ -848,12 +848,12 @@ namespace OurFoodChain.Gotchi {
 
             }
 
-            // Update level/exp in the database.
+            // Update exp in the database.
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
 
                 cmd.Parameters.AddWithValue("$id", player1.Gotchi.Gotchi.Id);
-                cmd.Parameters.AddWithValue("$level", player1.Gotchi.Stats.Level);
+                cmd.Parameters.AddWithValue("$level", DBNull.Value);
                 cmd.Parameters.AddWithValue("$exp", player1.Gotchi.Stats.Experience);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -865,7 +865,7 @@ namespace OurFoodChain.Gotchi {
                 using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET level=$level, exp=$exp WHERE id=$id;")) {
 
                     cmd.Parameters.AddWithValue("$id", player2.Gotchi.Gotchi.Id);
-                    cmd.Parameters.AddWithValue("$level", player2.Gotchi.Stats.Level);
+                    cmd.Parameters.AddWithValue("$level", DBNull.Value);
                     cmd.Parameters.AddWithValue("$exp", player2.Gotchi.Stats.Experience);
 
                     await Database.ExecuteNonQuery(cmd);

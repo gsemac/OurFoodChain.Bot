@@ -1136,7 +1136,16 @@ namespace OurFoodChain {
 
                 List<string> items = new List<string>();
 
-                if (taxon.type == TaxonRank.Genus) {
+                if (taxon.type == TaxonRank.Species) {
+
+                    Species species = await SpeciesUtils.GetSpeciesAsync(taxon.id);
+
+                    await Commands.SpeciesCommands.ShowSpeciesInfoAsync(context, species);
+
+                    return;
+
+                }
+                else if (taxon.type == TaxonRank.Genus) {
 
                     // For genera, get all species underneath it.
                     // This will let us check if the species is extinct, and cross it out if that's the case.

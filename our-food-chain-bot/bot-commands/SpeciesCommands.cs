@@ -412,130 +412,134 @@ namespace OurFoodChain.Commands {
 
         public static async Task ShowSpeciesInfoAsync(ICommandContext context, Species species) {
 
-            EmbedBuilder embed = new EmbedBuilder();
-            StringBuilder description_builder = new StringBuilder();
+            if(await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 
-            string embed_title = species.GetFullName();
-            Color embed_color = Color.Blue;
+                EmbedBuilder embed = new EmbedBuilder();
+                StringBuilder description_builder = new StringBuilder();
 
-            CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species);
+                string embed_title = species.GetFullName();
+                Color embed_color = Color.Blue;
 
-            if (common_names.Count() > 0)
-                embed_title += string.Format(" ({0})", string.Join(", ", (object[])common_names));
+                CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species);
 
-            // Show generation only if generations are enabled.
+                if (common_names.Count() > 0)
+                    embed_title += string.Format(" ({0})", string.Join(", ", (object[])common_names));
 
-            if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
+                // Show generation only if generations are enabled.
 
-                Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.timestamp);
+                if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
 
-                embed.AddField("Gen", gen is null ? "?" : gen.Number.ToString(), inline: true);
+                    Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.timestamp);
 
-            }
+                    embed.AddField("Gen", gen is null ? "?" : gen.Number.ToString(), inline: true);
 
-            embed.AddField("Owner", await species.GetOwnerOrDefault(context), inline: true);
+                }
 
-            // Group zones according to the ones that have the same notes.
+                embed.AddField("Owner", await species.GetOwnerOrDefault(context), inline: true);
 
-            List<string> zones_value_builder = new List<string>();
+                // Group zones according to the ones that have the same notes.
 
-            SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(species);
+                List<string> zones_value_builder = new List<string>();
 
-            zone_list.GroupBy(x => string.IsNullOrEmpty(x.Notes) ? "" : x.Notes)
-                .OrderBy(x => x.Key)
-                .ToList()
-                .ForEach(x => {
+                SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(species);
+
+                zone_list.GroupBy(x => string.IsNullOrEmpty(x.Notes) ? "" : x.Notes)
+                    .OrderBy(x => x.Key)
+                    .ToList()
+                    .ForEach(x => {
 
                     // Create an array of zone names, and sort them according to name.
                     List<string> zones_array = x.Select(y => y.Zone.GetShortName()).ToList();
-                    zones_array.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
+                        zones_array.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
-                    if (string.IsNullOrEmpty(x.Key))
-                        zones_value_builder.Add(StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "));
-                    else
-                        zones_value_builder.Add(string.Format("{0} ({1})", StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "), x.Key.ToLower()));
+                        if (string.IsNullOrEmpty(x.Key))
+                            zones_value_builder.Add(StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "));
+                        else
+                            zones_value_builder.Add(string.Format("{0} ({1})", StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "), x.Key.ToLower()));
 
-                });
+                    });
 
-            if (zone_list.Count() > 0) {
+                if (zone_list.Count() > 0) {
 
-                embed_color = DiscordUtils.ConvertColor((await ZoneUtils.GetZoneTypeAsync(zone_list
-                    .GroupBy(x => x.Zone.ZoneTypeId)
-                    .OrderBy(x => x.Count())
-                    .Last()
-                    .Key)).Color);
-
-            }
-
-            string zones_value = string.Join("; ", zones_value_builder);
-
-            embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
-
-            // Check if the species is extinct.
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", species.id);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null)) {
-
-                    embed_title = "[EXTINCT] " + embed_title;
-                    embed_color = Color.Red;
-
-                    string reason = row.Field<string>("reason");
-                    long timestamp = (long)row.Field<decimal>("timestamp");
-
-                    if (!string.IsNullOrEmpty(reason))
-                        description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", DateUtils.TimestampToLongDateString(timestamp), reason));
+                    embed_color = DiscordUtils.ConvertColor((await ZoneUtils.GetZoneTypeAsync(zone_list
+                        .GroupBy(x => x.Zone.ZoneTypeId)
+                        .OrderBy(x => x.Count())
+                        .Last()
+                        .Key)).Color);
 
                 }
 
-            }
+                string zones_value = string.Join("; ", zones_value_builder);
 
-            description_builder.Append(species.GetDescriptionOrDefault());
+                embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
 
-            embed.WithTitle(embed_title);
-            embed.WithThumbnailUrl(species.pics);
-            embed.WithColor(embed_color);
+                // Check if the species is extinct.
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
 
-            // If the description puts us over the character limit, we'll paginate.
+                    cmd.Parameters.AddWithValue("$species_id", species.id);
 
-            if (embed.Length + description_builder.Length > CommandUtils.MAX_EMBED_LENGTH) {
+                    DataRow row = await Database.GetRowAsync(cmd);
 
-                List<EmbedBuilder> pages = new List<EmbedBuilder>();
+                    if (!(row is null)) {
 
-                int chunk_size = (description_builder.Length - ((embed.Length + description_builder.Length) - CommandUtils.MAX_EMBED_LENGTH)) - 3;
-                int written_size = 0;
-                string desc = description_builder.ToString();
+                        embed_title = "[EXTINCT] " + embed_title;
+                        embed_color = Color.Red;
 
-                while (written_size < desc.Length) {
+                        string reason = row.Field<string>("reason");
+                        long timestamp = (long)row.Field<decimal>("timestamp");
 
-                    EmbedBuilder page = new EmbedBuilder();
+                        if (!string.IsNullOrEmpty(reason))
+                            description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", DateUtils.TimestampToLongDateString(timestamp), reason));
 
-                    page.WithTitle(embed.Title);
-                    page.WithThumbnailUrl(embed.ThumbnailUrl);
-                    page.WithFields(embed.Fields);
-                    page.WithDescription(desc.Substring(written_size, Math.Min(chunk_size, desc.Length - written_size)) + (written_size + chunk_size < desc.Length ? "..." : ""));
-
-                    written_size += chunk_size;
-
-                    pages.Add(page);
+                    }
 
                 }
 
-                PaginatedEmbedBuilder builder = new PaginatedEmbedBuilder(pages);
-                builder.AddPageNumbers();
-                builder.SetColor(embed_color);
+                description_builder.Append(species.GetDescriptionOrDefault());
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, builder.Build());
+                embed.WithTitle(embed_title);
+                embed.WithThumbnailUrl(species.pics);
+                embed.WithColor(embed_color);
 
-            }
-            else {
+                // If the description puts us over the character limit, we'll paginate.
 
-                embed.WithDescription(description_builder.ToString());
+                if (embed.Length + description_builder.Length > CommandUtils.MAX_EMBED_LENGTH) {
 
-                await context.Channel.SendMessageAsync("", false, embed.Build());
+                    List<EmbedBuilder> pages = new List<EmbedBuilder>();
+
+                    int chunk_size = (description_builder.Length - ((embed.Length + description_builder.Length) - CommandUtils.MAX_EMBED_LENGTH)) - 3;
+                    int written_size = 0;
+                    string desc = description_builder.ToString();
+
+                    while (written_size < desc.Length) {
+
+                        EmbedBuilder page = new EmbedBuilder();
+
+                        page.WithTitle(embed.Title);
+                        page.WithThumbnailUrl(embed.ThumbnailUrl);
+                        page.WithFields(embed.Fields);
+                        page.WithDescription(desc.Substring(written_size, Math.Min(chunk_size, desc.Length - written_size)) + (written_size + chunk_size < desc.Length ? "..." : ""));
+
+                        written_size += chunk_size;
+
+                        pages.Add(page);
+
+                    }
+
+                    PaginatedEmbedBuilder builder = new PaginatedEmbedBuilder(pages);
+                    builder.AddPageNumbers();
+                    builder.SetColor(embed_color);
+
+                    await CommandUtils.ReplyAsync_SendPaginatedMessage(context, builder.Build());
+
+                }
+                else {
+
+                    embed.WithDescription(description_builder.ToString());
+
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+
+                }
 
             }
 

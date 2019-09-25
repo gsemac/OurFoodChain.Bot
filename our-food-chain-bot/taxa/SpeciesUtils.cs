@@ -681,35 +681,7 @@ namespace OurFoodChain {
 
         private static GenusSpeciesPair _parseGenusAndSpeciesFromUserInput(string inputGenus, string inputSpecies) {
 
-            string genus = inputGenus;
-            string species = inputSpecies;
-
-            if (string.IsNullOrEmpty(genus) && species.Contains('.')) {
-
-                // If the genus is empty but the species contains a period, assume everything to the left of the period is the genus.
-                // This allows us to process inputs like "C.aspersum" where the user forgot to put a space between the genus and species names.
-
-                int split_index = species.IndexOf('.');
-
-                genus = species.Substring(0, split_index);
-                species = species.Substring(split_index, species.Length - split_index);
-
-            }
-
-            // Strip all periods from the genus/species names.
-            // This allows us to process inputs like "c aspersum" and "c. aspersum" in the same way.
-            // At the same time, convert to lowercase to match how the values are stored in the database, and trim any excess whitespace.
-
-            if (!string.IsNullOrEmpty(genus))
-                genus = genus.Trim().Trim('.').ToLower();
-
-            if (!string.IsNullOrEmpty(species))
-                species = species.Trim().Trim('.').ToLower();
-
-            return new GenusSpeciesPair {
-                GenusName = genus,
-                SpeciesName = species
-            };
+            return GenusSpeciesPair.Parse(inputGenus, inputSpecies);
 
         }
         private static async Task<Species> _getSpeciesByGenusAndSpeciesNameAsync(string genus, string species) {

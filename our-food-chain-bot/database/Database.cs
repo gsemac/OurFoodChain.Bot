@@ -168,7 +168,10 @@ namespace OurFoodChain {
                 // Load database updater config.
 
                 string config_fname = System.IO.Path.Combine(Global.DatabaseUpdatesDirectory, "config.json");
-                DatabaseUpdaterConfig config = JsonConvert.DeserializeObject<DatabaseUpdaterConfig>(System.IO.File.ReadAllText(config_fname));
+                DatabaseUpdaterConfig config = new DatabaseUpdaterConfig();
+
+                if (System.IO.File.Exists(config_fname))
+                    JsonConvert.DeserializeObject<DatabaseUpdaterConfig>(System.IO.File.ReadAllText(config_fname));
 
                 config.UpdatesDirectory = Global.DatabaseUpdatesDirectory;
 

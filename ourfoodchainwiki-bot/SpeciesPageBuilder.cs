@@ -10,7 +10,7 @@ namespace OurFoodChainWikiBot {
     public class SpeciesPageBuilderSpeciesData {
 
         public SpeciesPageBuilderSpeciesData(OurFoodChain.Species species) {
-            Species = Species;
+            Species = species;
         }
 
         public OurFoodChain.Species Species { get; set; }
@@ -76,10 +76,10 @@ namespace OurFoodChainWikiBot {
 
         private string _build(PageTemplate template) {
 
-            if (SpeciesData is null)
+            if (SpeciesData is null || SpeciesData.Species is null)
                 throw new Exception("Species is null");
 
-            template.ReplaceToken("picture", string.Format("File:{0}", PictureFileName));
+            template.ReplaceToken("picture", string.IsNullOrEmpty(PictureFileName) ? "" : string.Format("File:{0}", PictureFileName));
             template.ReplaceToken("owner", SpeciesData.Species.owner);
             template.ReplaceToken("status", SpeciesData.Species.isExtinct ? "Extinct" : "Extant");
             template.ReplaceToken("common_names", string.Join(", ", SpeciesData.CommonNames.Select(x => x.Value)));
@@ -101,7 +101,7 @@ namespace OurFoodChainWikiBot {
 
             string title = string.Empty;
 
-            if (speciesData is null)
+            if (speciesData is null || speciesData.Species is null)
                 throw new Exception("Species is null");
 
             if (!string.IsNullOrWhiteSpace(speciesData.Species.CommonName))
@@ -124,6 +124,9 @@ namespace OurFoodChainWikiBot {
         }
 
         private string _formatSpeciesDescription() {
+
+            if (SpeciesData is null || SpeciesData.Species is null)
+                throw new Exception("Species is null");
 
             string description = SpeciesData.Species.GetDescriptionOrDefault();
 
@@ -168,7 +171,7 @@ namespace OurFoodChainWikiBot {
 
                 Regex regex = new Regex(string.Join("|", to_match), RegexOptions.IgnoreCase);
 
-                return PageUtils.FormatAllMatches(content, regex, TextFormatting.Italic);
+                content = PageUtils.FormatAllMatches(content, regex, TextFormatting.Italic);
 
             }
 

@@ -62,7 +62,7 @@ namespace OurFoodChainWikiBot {
                     OurFoodChain.Species ancestorSpecies = await OurFoodChain.SpeciesUtils.GetAncestorAsync(species);
 
                     SpeciesPageBuilderSpeciesData ancestorSpeciesData = ancestorSpecies != null ? new SpeciesPageBuilderSpeciesData(ancestorSpecies) {
-                        CommonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(species)
+                        CommonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(ancestorSpecies)
                     } : null;
 
                     // Create the page builder.
@@ -83,16 +83,17 @@ namespace OurFoodChainWikiBot {
                     bool create_redirect = page_title != species.GetFullName();
 
                     // Attempt to upload the species' picture.
+
                     pageBuilder.PictureFileName = await _uploadSpeciesPictureAsync(client, history, species);
 
                     // Generate page content.
 
                     string page_content = pageBuilder.Build();
-
+                    
                     // Upload page content.
 
                     await _editSpeciesPageAsync(client, history, species, page_title, page_content);
-
+              
                     // Attempt to create the redirect page for the species (if applicable).
 
                     if (create_redirect) {

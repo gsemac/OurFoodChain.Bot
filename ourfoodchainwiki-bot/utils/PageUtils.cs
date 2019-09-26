@@ -85,9 +85,7 @@ namespace OurFoodChainWikiBot {
         }
         public static string FormatAllMatches(string content, Regex regex, TextFormatting textFormatting) {
 
-            content = regex.Replace(content, m => {
-                return string.Format(FormatString(m.Value, textFormatting), m.Value);
-            });
+            content = regex.Replace(content, m => FormatString(m.Value, textFormatting));
 
             return content;
 

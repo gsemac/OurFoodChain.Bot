@@ -10,6 +10,10 @@ namespace OurFoodChainWikiBot {
 
     class Program {
 
+        // Public members
+
+        public string SpeciesTemplateFilePath { get; } = "data/templates/species_template.txt";
+
         static void Main(string[] args)
              => new Program().MainAsync(args).GetAwaiter().GetResult();
 
@@ -49,23 +53,41 @@ namespace OurFoodChainWikiBot {
 
                     _log(string.Format("synchronizing species {0}", species.GetShortName()));
 
+                    // Create species page builder data (required for generating page titles).
+
+                    SpeciesPageBuilderSpeciesData speciesData = new SpeciesPageBuilderSpeciesData(species) {
+                        CommonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(species)
+                    };
+
+                    OurFoodChain.Species ancestorSpecies = await OurFoodChain.SpeciesUtils.GetAncestorAsync(species);
+
+                    SpeciesPageBuilderSpeciesData ancestorSpeciesData = ancestorSpecies != null ? new SpeciesPageBuilderSpeciesData(ancestorSpecies) {
+                        CommonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(species)
+                    } : null;
+
+                    // Create the page builder.
+
+                    SpeciesPageBuilder pageBuilder = new SpeciesPageBuilder(speciesData, PageTemplate.FromFile(SpeciesTemplateFilePath)) {
+                        SpeciesList = speciesList,
+                        AncestorSpeciesData = ancestorSpeciesData,
+                        ExtinctionInfo = await OurFoodChain.SpeciesUtils.GetExtinctionInfoAsync(species),
+                        LinkDictionary = link_dictionary,
+                        Roles = await OurFoodChain.SpeciesUtils.GetRolesAsync(species),
+                        Zones = await OurFoodChain.SpeciesUtils.GetZonesAsync(species)
+                    };
+
                     // Pages are created based on the first/primary common name (where available).
                     // The full species name is added as a redirect.
 
-                    string page_title = await SpeciesPageGenerator.GenerateTitleAsync(species);
+                    string page_title = pageBuilder.Title;
                     bool create_redirect = page_title != species.GetFullName();
 
                     // Attempt to upload the species' picture.
-                    string picture_filename = await _uploadSpeciesPictureAsync(client, history, species);
+                    pageBuilder.PictureFileName = await _uploadSpeciesPictureAsync(client, history, species);
 
                     // Generate page content.
 
-                    string page_content = new SpeciesPageGenerator().Generate(new SpeciesPageData {
-                        Species = species,
-                        AllSpecies = speciesList,
-                        PictureFileName = picture_filename,
-                        LinkDictionary = link_dictionary
-                    });
+                    string page_content = pageBuilder.Build();
 
                     // Upload page content.
 
@@ -77,7 +99,7 @@ namespace OurFoodChainWikiBot {
 
                         string redirect_page_title = species.GetFullName();
 
-                        if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", page_title) + "\n" + BOT_FLAG_STRING))
+                        if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", page_title) + "\n" + BotFlag))
                             await history.AddRedirectRecordAsync(redirect_page_title, page_title);
 
                     }
@@ -96,9 +118,10 @@ namespace OurFoodChainWikiBot {
 
         }
 
-        private const string BOT_FLAG_STRING = "{{BotGenerated}}";
+        // Private members
 
-        private static string LOG_FILE_PATH = "";
+        private const string BotFlag = "{{BotGenerated}}";
+        private static string LogFilePath = "";
 
         private static void _log(string message) {
 
@@ -110,17 +133,17 @@ namespace OurFoodChainWikiBot {
         }
         private static void _log(OurFoodChain.LogMessage message) {
 
-            if (string.IsNullOrEmpty(LOG_FILE_PATH)) {
+            if (string.IsNullOrEmpty(LogFilePath)) {
 
                 System.IO.Directory.CreateDirectory("log");
 
-                LOG_FILE_PATH = string.Format("log/wiki_log_{0}.txt", DateTimeOffset.Now.ToUnixTimeSeconds());
+                LogFilePath = string.Format("log/wiki_log_{0}.txt", DateTimeOffset.Now.ToUnixTimeSeconds());
 
             }
 
             Console.WriteLine(message.ToString());
 
-            System.IO.File.AppendAllText(LOG_FILE_PATH, message.ToString() + Environment.NewLine);
+            System.IO.File.AppendAllText(LogFilePath, message.ToString() + Environment.NewLine);
 
         }
 
@@ -207,7 +230,7 @@ namespace OurFoodChainWikiBot {
 
                 MediaWikiApiParseRequestResult page_content = client.Parse(parameters.PageTitle, new ParseParameters());
 
-                if (page_content.ErrorCode == ErrorCode.MissingTitle || page_content.Text.Contains(BOT_FLAG_STRING)) {
+                if (page_content.ErrorCode == ErrorCode.MissingTitle || page_content.Text.Contains(BotFlag)) {
 
                     // Attempt to upload the file.
 
@@ -241,7 +264,7 @@ namespace OurFoodChainWikiBot {
                                 await history.AddUploadRecordAsync(parameters.FilePath, parameters.UploadFileName);
 
                                 // Add the bot flag to the page content.
-                                client.Edit(parameters.PageTitle, new EditParameters { Text = BOT_FLAG_STRING });
+                                client.Edit(parameters.PageTitle, new EditParameters { Text = BotFlag });
 
                             }
                             else
@@ -302,7 +325,7 @@ namespace OurFoodChainWikiBot {
 
                         MediaWikiApiParseRequestResult parse_result = client.Parse(i.Title, new ParseParameters());
 
-                        if (parse_result.Text.Contains(BOT_FLAG_STRING)) {
+                        if (parse_result.Text.Contains(BotFlag)) {
 
                             // Only delete pages that haven't been manually edited. 
 
@@ -326,7 +349,7 @@ namespace OurFoodChainWikiBot {
 
                         MediaWikiApiParseRequestResult parse_result = client.Parse(j.Title, new ParseParameters());
 
-                        if (parse_result.IsRedirect && parse_result.Text.Contains(BOT_FLAG_STRING)) {
+                        if (parse_result.IsRedirect && parse_result.Text.Contains(BotFlag)) {
 
                             // Only delete pages that haven't been manually edited. 
 
@@ -358,7 +381,7 @@ namespace OurFoodChainWikiBot {
 
                 MediaWikiApiParseRequestResult parse_result = client.Parse(pageTitle, new ParseParameters());
 
-                if (parse_result.ErrorCode == ErrorCode.MissingTitle || parse_result.Text.Contains(BOT_FLAG_STRING)) {
+                if (parse_result.ErrorCode == ErrorCode.MissingTitle || parse_result.Text.Contains(BotFlag)) {
 
                     if (parse_result.ErrorCode == ErrorCode.MissingTitle)
                         _log(string.Format("creating page \"{0}\"", pageTitle));

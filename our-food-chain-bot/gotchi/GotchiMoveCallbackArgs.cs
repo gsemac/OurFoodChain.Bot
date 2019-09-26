@@ -64,7 +64,7 @@ namespace OurFoodChain.Gotchi {
         }
         public int CalculateDamage(int power) {
 
-            double damage = (((2.0 * User.Stats.Level / 5.0) + 2.0) * Power * User.Stats.Atk / Target.Stats.Def / 50.0) + 2.0;
+            double damage = (((2.0 * User.Stats.Level / 5.0) + 2.0) * power * User.Stats.Atk / Target.Stats.Def / 50.0) + 2.0;
 
             // Critical hits add 1.5x damage
 

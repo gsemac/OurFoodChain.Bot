@@ -3,6 +3,7 @@
 	move.SetName("Tail Slap")
 	move.SetDescription("Deals more damage the faster the user is compared to the opponent.")
 	
+	move.SetPower(40)
 	move.SetPP(5)
 
 	move.Requires.DescriptionMatch("tail")

@@ -85,7 +85,7 @@ namespace OurFoodChain.Gotchi {
             Random rng = new Random((int)gotchi.SpeciesId);
 
             set.AddRange(learnSet
-                .Skip(set.Moves.Count() - GotchiMoveSet.MoveLimit)
+                .Skip(Math.Max(0, learnSet.Count() - GotchiMoveSet.MoveLimit))
                 .OrderBy(x => rng.Next()));
 
             set.Moves.Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));

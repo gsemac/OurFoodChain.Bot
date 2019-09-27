@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="EditHistory.cs" />
+    <Compile Include="LinkifyList.cs" />
     <Compile Include="PageTemplate.cs" />
     <Compile Include="SpeciesPageBuilder.cs" />
     <Compile Include="utils\PageUtils.cs" />

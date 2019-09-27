@@ -16,7 +16,8 @@ namespace OurFoodChainWikiBot {
 
         // Public members
 
-        public const string UnlinkedWikiTextPatternFormat = @"(?<!\[\[|\|)\b{0}\b(?!\||\]\])";
+        public const string UnlinkedWikiTextPatternFormat = @"(?<!\[\[|\|')\b{0}\b(?!\||\]\]')"; // no links
+        public const string UnformattedWikiTextPatternFormat = @"(?<!\[\[|\||'')\b{0}\b(?!\||\]\]|'')"; // no links/italics/emboldening
 
         public static string ReplaceMarkdownWithWikiMarkup(string content) {
 
@@ -47,30 +48,37 @@ namespace OurFoodChainWikiBot {
 
         }
 
-        public static string FormatPageLinks(string content, Dictionary<string, string> linkDictionary) {
-            return FormatPageLinksIf(content, linkDictionary, x => true);
+        public static string FormatPageLinks(string content, LinkifyList linkifyList) {
+            return FormatPageLinksIf(content, linkifyList, x => true);
         }
-        public static string FormatPageLinksIf(string content, Dictionary<string, string> linkDictionary, Func<string, bool> condition) {
+        public static string FormatPageLinksIf(string content, LinkifyList linkifyList, Func<LinkifyListData, bool> condition) {
 
             // Keys to be replaced are sorted by length so longer strings are replaced before their substrings.
             // For example, "one two" should have higher priority over "one" and "two" individually.
 
-            foreach (string key in linkDictionary.Keys.OrderByDescending(x => x.Length)) {
+            // Additionally, filter the list so that we only have unique values to avoid performing replacements more than once.
+            // This can cause some incorrect mappings, but it's the best we can do.
+            // Note that "GroupBy" preserves the order of the elements.
 
-                if (!condition(key))
+            foreach (LinkifyListData data in linkifyList.GroupBy(x => x.Value).Select(x => x.First()).OrderByDescending(x => x.Value.Length)) {
+
+                if (!condition(data))
                     continue;
 
-                content = Regex.Replace(content, string.Format(UnlinkedWikiTextPatternFormat, Regex.Escape(key)), m => {
+                string pageTitle = data.Target;
+                Regex regex = data.Type == LinkifyListDataType.Find ? new Regex(string.Format(UnlinkedWikiTextPatternFormat, Regex.Escape(data.Value)), RegexOptions.IgnoreCase)
+                    : new Regex(data.Value);
 
-                    string page_title = linkDictionary[key];
-                    string match_value = m.Value;
+                content = regex.Replace(content, m => {
 
-                    if (page_title == match_value)
-                        return string.Format("[[{0}]]", match_value);
+                    string matchValue = m.Value;
+
+                    if (pageTitle == matchValue)
+                        return string.Format("[[{0}]]", matchValue);
                     else
-                        return string.Format("[[{0}|{1}]]", page_title, match_value);
+                        return string.Format("[[{0}|{1}]]", pageTitle, matchValue);
 
-                }, RegexOptions.IgnoreCase);
+                });
 
             }
 

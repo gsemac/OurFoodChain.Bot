@@ -91,6 +91,10 @@ namespace OurFoodChain {
 
         // https://stackoverflow.com/questions/11454004/calculate-a-md5-hash-from-a-string
         public static string CreateMD5(string input) {
+
+            if (string.IsNullOrEmpty(input))
+                input = "";
+
             // Use input string to calculate MD5 hash
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create()) {
                 byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
@@ -103,6 +107,7 @@ namespace OurFoodChain {
                 }
                 return sb.ToString();
             }
+
         }
         public static int SumStringChars(string value) {
 

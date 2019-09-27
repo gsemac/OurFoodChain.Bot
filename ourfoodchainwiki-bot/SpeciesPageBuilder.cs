@@ -44,7 +44,7 @@ namespace OurFoodChainWikiBot {
         public OurFoodChain.Role[] Roles { get; set; } = new OurFoodChain.Role[] { };
 
         public OurFoodChain.Species[] SpeciesList { get; set; } = new OurFoodChain.Species[] { };
-        public Dictionary<string, string> LinkDictionary { get; set; } = new Dictionary<string, string>();
+        public LinkifyList LinkifyList { get; set; } = new LinkifyList();
 
         public SpeciesPageBuilder(SpeciesPageBuilderSpeciesData speciesData, PageTemplate pageTemplate) {
 
@@ -141,7 +141,9 @@ namespace OurFoodChainWikiBot {
 
         private string _replaceLinks(string Content) {
 
-            return PageUtils.FormatPageLinksIf(Content, LinkDictionary, x => !_stringMatchesSpeciesName(x, SpeciesData.Species));
+            // Only replace links that don't refer to the current species (either by name or by target).
+
+            return PageUtils.FormatPageLinksIf(Content, LinkifyList, x => !_stringMatchesSpeciesName(x.Value, SpeciesData.Species) && !_stringMatchesSpeciesName(x.Target, SpeciesData.Species));
 
         }
         private string _emboldenFirstMentionOfSpecies(string content) {
@@ -165,13 +167,17 @@ namespace OurFoodChainWikiBot {
             foreach (OurFoodChain.Species species in SpeciesList) {
 
                 List<string> to_match = new List<string> {
-                    string.Format(PageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(species.FullName)),
-                    string.Format(PageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(species.ShortName))
+                    string.Format(PageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.FullName)),
+                    string.Format(PageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.ShortName)),
                 };
 
                 Regex regex = new Regex(string.Join("|", to_match), RegexOptions.IgnoreCase);
 
                 content = PageUtils.FormatAllMatches(content, regex, TextFormatting.Italic);
+
+                // Also italicize binomial names that might be using outdated genera (e.g. Species moved to a new genus since the description was written).
+                // This might create some false-positives, so it could be a good idea to limit matches only to known genera (at the expense of a significantly longer regex).
+                content = PageUtils.FormatAllMatches(content, new Regex(string.Format(PageUtils.UnformattedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower()))), TextFormatting.Italic);
 
             }
 
@@ -200,9 +206,9 @@ namespace OurFoodChainWikiBot {
 
             name = name.ToLower();
 
-            return name == species.name.ToLower() ||
-                name == species.GetShortName().ToLower() ||
-                name == species.GetFullName().ToLower() ||
+            return name == species.Name.ToLower() ||
+                name == species.ShortName.ToLower() ||
+                name == species.FullName.ToLower() ||
                 (!string.IsNullOrEmpty(species.CommonName) && name == species.CommonName.ToLower());
 
         }

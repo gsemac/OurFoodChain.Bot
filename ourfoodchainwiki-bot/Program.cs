@@ -40,7 +40,7 @@ namespace OurFoodChainWikiBot {
 
                 _log("generating link dictionary");
 
-                Dictionary<string, string> link_dictionary = await _generateLinkDictionary();
+                LinkifyList LinkifyList = await _generateLinkifyListAsync();
 
                 _log("synchronizing species");
                 _log("getting species from database");
@@ -49,7 +49,7 @@ namespace OurFoodChainWikiBot {
 
                 _log(string.Format("got {0} results", speciesList.Count()));
 
-                foreach (OurFoodChain.Species species in speciesList) {
+                foreach (OurFoodChain.Species species in speciesList.Where(x => x.name.ToLower() == "tingualus")) {
 
                     _log(string.Format("synchronizing species {0}", species.GetShortName()));
 
@@ -71,7 +71,7 @@ namespace OurFoodChainWikiBot {
                         SpeciesList = speciesList,
                         AncestorSpeciesData = ancestorSpeciesData,
                         ExtinctionInfo = await OurFoodChain.SpeciesUtils.GetExtinctionInfoAsync(species),
-                        LinkDictionary = link_dictionary,
+                        LinkifyList = LinkifyList,
                         Roles = await OurFoodChain.SpeciesUtils.GetRolesAsync(species),
                         Zones = await OurFoodChain.SpeciesUtils.GetZonesAsync(species)
                     };
@@ -89,13 +89,13 @@ namespace OurFoodChainWikiBot {
                     // Generate page content.
 
                     string page_content = pageBuilder.Build();
-                    
+
                     // Upload page content.
 
                     await _editSpeciesPageAsync(client, history, species, page_title, page_content);
-              
-                    // Attempt to create the redirect page for the species (if applicable).
 
+                    // Attempt to create the redirect page for the species (if applicable).
+              
                     if (create_redirect) {
 
                         string redirect_page_title = species.GetFullName();
@@ -161,11 +161,11 @@ namespace OurFoodChainWikiBot {
             return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(image_url).ToLower());
 
         }
-        private static async Task<Dictionary<string, string>> _generateLinkDictionary() {
+        private static async Task<LinkifyList> _generateLinkifyListAsync() {
 
             // Returns a dictionary of substrings that should be turned into page links in page content.
 
-            Dictionary<string, string> dict = new Dictionary<string, string>();
+            LinkifyList list = new LinkifyList();
 
             // Add species names to the dictionary.
 
@@ -173,12 +173,23 @@ namespace OurFoodChainWikiBot {
 
             foreach (OurFoodChain.Species species in species_list) {
 
-                dict[species.GetShortName().ToLower()] = species.GetFullName();
-                dict[species.GetFullName().ToLower()] = species.GetFullName();
-                dict[species.name.ToLower()] = species.GetFullName();
+                list.Add(species.ShortName.ToLower(), species.FullName);
+                list.Add(species.FullName.ToLower(), species.FullName);
+                list.Add(species.Name.ToLower(), species.FullName);
 
                 if (!string.IsNullOrEmpty(species.CommonName))
-                    dict[species.CommonName.ToLower()] = species.GetFullName();
+                    list.Add(species.CommonName.ToLower(), species.FullName);
+
+            }
+
+            foreach (OurFoodChain.Species species in species_list) {
+
+                // Also linkify binomial names that might be using outdated genera (e.g. Species moved to a new genus since the description was written).
+                // Only do this for species that have a unique name-- otherwise, there's no way to know for sure which species to link to!
+                // This might create some false-positives, so it could be a good idea to limit matches only to known genera (at the expense of a significantly longer regex).
+
+                if (list.Count(x => x.Value == species.Name.ToLower()) == 1)
+                    list.Add(string.Format(PageUtils.UnlinkedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower())), species.FullName, LinkifyListDataType.Regex);
 
             }
 
@@ -188,11 +199,11 @@ namespace OurFoodChainWikiBot {
 
             foreach (OurFoodChain.Zone zone in zones_list) {
 
-                dict.Add(zone.GetFullName().ToLower(), zone.GetFullName());
+                list.Add(zone.FullName.ToLower(), zone.FullName);
 
             }
 
-            return dict;
+            return list;
 
         }
 
@@ -309,7 +320,7 @@ namespace OurFoodChainWikiBot {
 
                 EditRecord record = await history.GetEditRecordAsync(pageTitle, pageContent);
 
-                if (!(record is null)) {
+                if (record != null) {
 
                     await history.AddEditRecordAsync(species.id, record);
 
@@ -333,6 +344,11 @@ namespace OurFoodChainWikiBot {
                             client.Delete(i.Title, new DeleteParameters {
                                 Reason = "species page moved to " + pageTitle
                             });
+
+                            // Add an edit record for this page so that we can restore the content later without it thinking we've already made this edit.
+                            // This is important, because this step can delete redirects when a page with redirects is updated. By creating a new edit record, the redirect will be recreated.
+
+                            await history.AddEditRecordAsync(i.Title, string.Empty);
 
                         }
 

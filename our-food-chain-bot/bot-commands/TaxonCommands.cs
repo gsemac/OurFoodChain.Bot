@@ -13,6 +13,8 @@ namespace OurFoodChain.Commands {
     public class TaxonCommands :
         ModuleBase {
 
+        // Public members
+
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
 
@@ -364,7 +366,7 @@ namespace OurFoodChain.Commands {
 
                 if (!string.IsNullOrEmpty(speciesOrGenus))
                     // The user passed in a species and a description, so attempt to update the description for that species.
-                    await SetSpeciesDescription("", speciesOrGenus, descriptionOrSpecies);
+                    await SetSpeciesDescription(string.Empty, speciesOrGenus, descriptionOrSpecies);
                 else
                     // The user passed in a blank genus and a non-existent species, so reply with some suggestions.
                     await BotUtils.ReplyAsync_SpeciesSuggestions(Context, speciesOrGenus, descriptionOrSpecies);
@@ -378,35 +380,21 @@ namespace OurFoodChain.Commands {
                 if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
-                MultistageCommand p = new MultistageCommand(Context) {
-                    OriginalArguments = new string[] { speciesOrGenus, descriptionOrSpecies },
-                    Callback = async (MultistageCommandCallbackArgs args) => {
-
-                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
-
-                        if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
-                            await _setSpeciesDescription(species[0], args.MessageContent);
-
-                    }
-                };
-
-                await MultistageCommand.SendAsync(p,
-                    string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
+                await _setSpeciesDescriptionAsync(species_list[0]);
 
             }
 
         }
         [Command("setspeciesdesc"), Alias("setspeciesdescription", "setsdesc")]
-        public async Task SetSpeciesDescription(string genus, string species, string description) {
+        public async Task SetSpeciesDescription(string genusName, string speciesName, string description) {
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
-            if (sp is null)
-                return;
-
-            await _setSpeciesDescription(sp, description);
+            if (species != null)
+                await _setSpeciesDescriptionAsync(species, description);
 
         }
+
         [Command("setspeciescommonname"), Alias("setspeciescommon", "setscommon")]
         private async Task SetSpeciesCommonName(string species, string commonName) {
             await SetSpeciesCommonName("", species, commonName);
@@ -481,6 +469,7 @@ namespace OurFoodChain.Commands {
             }
 
         }
+
         [Command("-commonname"), Alias("-common")]
         private async Task MinusCommonName(string species, string commonName) {
             await MinusCommonName("", species, commonName);
@@ -516,18 +505,6 @@ namespace OurFoodChain.Commands {
                     StringUtils.ToTitleCase(commonName)));
 
             }
-
-        }
-
-        private async Task _setSpeciesDescription(Species species, string description) {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
-                return;
-
-            await BotUtils.UpdateSpeciesDescription(species, description);
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
 
         }
 
@@ -584,7 +561,7 @@ namespace OurFoodChain.Commands {
                     if (taxon.type == TaxonRank.Species)
 
                         // If the taxon is a species, use the species update procedure.
-                        await _setSpeciesDescription(await BotUtils.GetSpeciesFromDb(taxon.id), descriptionOrSpecies);
+                        await _setSpeciesDescriptionAsync(await BotUtils.GetSpeciesFromDb(taxon.id), descriptionOrSpecies);
 
                     else
 
@@ -603,13 +580,13 @@ namespace OurFoodChain.Commands {
                     return;
 
                 MultistageCommand p = new MultistageCommand(Context) {
-                    OriginalArguments = new string[] { taxonNameOrGenus, descriptionOrSpecies },
+                    Arguments = new string[] { taxonNameOrGenus, descriptionOrSpecies },
                     Callback = async (MultistageCommandCallbackArgs args) => {
 
-                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.OriginalArguments[0], args.Command.OriginalArguments[1]);
+                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.Arguments[0], args.Command.Arguments[1]);
 
                         if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
-                            await _setSpeciesDescription(species[0], args.MessageContent);
+                            await _setSpeciesDescriptionAsync(species[0], args.MessageContent);
 
                     }
                 };
@@ -721,14 +698,48 @@ namespace OurFoodChain.Commands {
 
         }
 
+        // Private members
+
+        private async Task _setSpeciesDescriptionAsync(Species species) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
+                return;
+
+            MultistageCommand p = new MultistageCommand(Context) {
+                Callback = async (MultistageCommandCallbackArgs args) => {
+
+                    if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
+                        await _setSpeciesDescriptionAsync(species, args.MessageContent);
+
+                }
+            };
+
+            await MultistageCommand.SendAsync(p,
+                string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.ShortName));
+
+        }
+        private async Task _setSpeciesDescriptionAsync(Species species, string description) {
+
+            // Ensure that the user has necessary privileges to use this command.
+            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
+                return;
+
+            await BotUtils.UpdateSpeciesDescription(species, description);
+
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
+
+        }
+
         private async Task _setTaxonDescriptionAsync(Taxon taxon) {
 
             if (taxon.type == TaxonRank.Species)
-                await SetSpeciesDescription(taxon.name);
+                await _setSpeciesDescriptionAsync(await SpeciesUtils.GetSpeciesAsync(taxon.id));
+
             else if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) { // moderator use only
 
                 MultistageCommand p = new MultistageCommand(Context) {
-                    OriginalArguments = new string[] { taxon.name },
+                    Arguments = new string[] { taxon.name },
                     Callback = async (MultistageCommandCallbackArgs args) => {
 
                         await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon, args.MessageContent);
@@ -742,7 +753,7 @@ namespace OurFoodChain.Commands {
             }
 
         }
-        public async Task _appendDescriptionAsync(Species species) {
+        private async Task _appendDescriptionAsync(Species species) {
 
             MultistageCommand p = new MultistageCommand(Context) {
                 Callback = async (MultistageCommandCallbackArgs args) => {
@@ -757,7 +768,7 @@ namespace OurFoodChain.Commands {
                 string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.GetShortName()));
 
         }
-        public async Task _appendDescriptionAsync(Species species, string description) {
+        private async Task _appendDescriptionAsync(Species species, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))

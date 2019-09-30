@@ -28,7 +28,7 @@ namespace OurFoodChain {
         public MultistageCommand(ICommandContext context) {
 
             Context = context;
-            OriginalArguments = new string[] { };
+            Arguments = new string[] { };
             Timestamp = DateTime.Now;
             ChannelId = context.Channel.Id;
             AllowCancel = true;
@@ -36,7 +36,7 @@ namespace OurFoodChain {
         }
 
         public ICommandContext Context { get; }
-        public string[] OriginalArguments { get; set; }
+        public string[] Arguments { get; set; }
         public DateTime Timestamp { get; set; }
         public ulong ChannelId { get; }
         public bool AllowCancel { get; set; }

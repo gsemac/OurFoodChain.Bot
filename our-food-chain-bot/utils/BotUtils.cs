@@ -1335,7 +1335,7 @@ namespace OurFoodChain {
                 return;
 
             MultistageCommand p = new MultistageCommand(context) {
-                OriginalArguments = new string[] { name },
+                Arguments = new string[] { name },
                 Callback = async (MultistageCommandCallbackArgs args) => {
 
                     await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon, args.MessageContent);

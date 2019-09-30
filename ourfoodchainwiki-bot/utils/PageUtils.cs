@@ -16,7 +16,7 @@ namespace OurFoodChainWikiBot {
 
         // Public members
 
-        public const string UnlinkedWikiTextPatternFormat = @"(?<!\[\[|\|')\b{0}\b(?!\||\]\]')"; // no links
+        public const string UnlinkedWikiTextPatternFormat = @"(?<!\[\[|\|)\b{0}\b(?!\||\]\])"; // no links
         public const string UnformattedWikiTextPatternFormat = @"(?<!\[\[|\||'')\b{0}\b(?!\||\]\]|'')"; // no links/italics/emboldening
 
         public static string ReplaceMarkdownWithWikiMarkup(string content) {

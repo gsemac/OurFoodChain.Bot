@@ -49,7 +49,7 @@ namespace OurFoodChainWikiBot {
 
                 _log(string.Format("got {0} results", speciesList.Count()));
 
-                foreach (OurFoodChain.Species species in speciesList.Where(x => x.name.ToLower() == "tingualus")) {
+                foreach (OurFoodChain.Species species in speciesList) {
 
                     _log(string.Format("synchronizing species {0}", species.GetShortName()));
 

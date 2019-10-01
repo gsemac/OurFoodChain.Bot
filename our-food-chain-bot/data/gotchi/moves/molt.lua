@@ -14,7 +14,7 @@ function OnMove(args)
 	args.User.ResetStats()
 	args.User.ClearStatus()
 
-	args.RecoverPercent(0.2)
+	args.RecoverPercent(20)
 
 	args.SetText("resetting all stat changes and restoring HP")
 

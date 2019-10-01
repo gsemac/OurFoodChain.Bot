@@ -425,128 +425,6 @@ namespace OurFoodChain.Commands {
 
         }
 
-        [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy() {
-            await AddedBy(Context.User);
-        }
-        [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy(IUser user) {
-
-            if (user is null)
-                user = Context.User;
-
-            // Get all species belonging to this user.
-
-            List<Species> species_list = new List<Species>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner = $owner OR user_id = $user_id;")) {
-
-                cmd.Parameters.AddWithValue("$owner", user.Username);
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
-
-                    foreach (DataRow row in rows.Rows)
-                        species_list.Add(await Species.FromDataRow(row));
-
-                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
-
-                }
-
-            }
-
-            // Display the species belonging to this user.
-
-            await _displaySpeciesAddedBy(user.Username, user.GetAvatarUrl(size: 32), species_list);
-
-        }
-        [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy(string owner) {
-
-            // If we get this overload, then the requested user does not currently exist in the guild.
-
-            // Get all species belonging to this user.
-
-            // First, see if we can find a user ID belong to this user in the database. 
-            // This allows us to find all species they have made even if their username had changed at some point.
-
-            List<Species> species_list = new List<Species>();
-            long user_id = 0;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, user_id FROM Species WHERE owner = $owner COLLATE NOCASE AND user_id IS NOT NULL LIMIT 1;")) {
-
-                cmd.Parameters.AddWithValue("$owner", owner);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null)) {
-
-                    owner = row.Field<string>("owner");
-                    user_id = row.Field<long>("user_id");
-
-                }
-
-            }
-
-            // Generate a list of species belonging to this username or user ID.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner = $owner COLLATE NOCASE OR user_id = $user_id;")) {
-
-                cmd.Parameters.AddWithValue("$owner", owner);
-                cmd.Parameters.AddWithValue("$user_id", user_id);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
-
-                    foreach (DataRow row in rows.Rows) {
-
-                        Species sp = await Species.FromDataRow(row);
-                        owner = sp.owner;
-
-                        species_list.Add(sp);
-
-                    }
-
-                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
-
-                }
-
-            }
-
-            // If no species were found, then no such user exists.
-
-            if (species_list.Count() <= 0) {
-
-                await BotUtils.ReplyAsync_Error(Context, "No such user exists.");
-
-                return;
-
-            }
-
-            // Display the species belonging to this user.
-
-            await _displaySpeciesAddedBy(owner, string.Empty, species_list);
-
-        }
-        private async Task _displaySpeciesAddedBy(string username, string thumbnailUrl, List<Species> speciesList) {
-
-            if (speciesList.Count() <= 0) {
-
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not submitted any species yet.", username));
-
-            }
-            else {
-
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList,
-                    fieldName: string.Format("Species owned by {0} ({1})", username, speciesList.Count())));
-
-                embed.SetThumbnailUrl(thumbnailUrl);
-
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
-
-            }
-
-        }
-
         [Command("search")]
         public async Task Search([Remainder]string queryString) {
 
@@ -735,83 +613,27 @@ namespace OurFoodChain.Commands {
         [Command("profile")]
         public async Task Profile(IUser user) {
 
-            long species_count = 0;
+            // Get basic information about the user.
 
-            // Get the total number of species.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species;"))
-                species_count = await Database.GetScalar<long>(cmd);
-
-            // Get this user's species count, first timestamp, and last timestamp.
-
-            long user_species_count = 0;
-            long timestamp_min = 0;
-            long timestamp_max = 0;
-            long timestamp_diff_days = 0;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) AS count, MIN(timestamp) AS timestamp_min, MAX(timestamp) AS timestamp_max FROM Species WHERE owner=$owner OR user_id=$user_id;")) {
-
-                cmd.Parameters.AddWithValue("$owner", user.Username);
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
-
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null) && !row.IsNull("timestamp_min")) {
-
-                    user_species_count = row.Field<long>("count");
-                    timestamp_min = row.Field<long>("timestamp_min");
-                    timestamp_max = row.Field<long>("timestamp_max");
-
-                    timestamp_diff_days = (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - timestamp_min) / 60 / 60 / 24;
-
-                }
-
-            }
-
-            // Get the user rankings according to the number of submitted species.
-
-            int user_rank = 1;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT owner, COUNT(id) AS count FROM Species GROUP BY user_id ORDER BY count DESC;"))
-            using (DataTable table = await Database.GetRowsAsync(cmd)) {
-
-                foreach (DataRow row in table.Rows) {
-
-                    long count = row.Field<long>("count");
-
-                    if (count > user_species_count)
-                        user_rank += 1;
-                    else
-                        break;
-
-                }
-
-            }
+            UserInfo userInfo = await UserUtils.GetUserInfoAsync(user.Username, user.Id, UserInfoQueryFlags.MatchBoth);
+            long daysSinceFirstSubmission = (DateUtils.GetCurrentTimestamp() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
+            UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchBoth);
 
             // Get the user's most active genus.
 
-            string favorite_genus = "N/A";
-            long genus_count = 0;
+            Species[] userSpecies = await UserUtils.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchBoth);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT genus_id, COUNT(genus_id) AS count FROM Species WHERE owner=$owner OR user_id=$user_id GROUP BY genus_id ORDER BY count DESC LIMIT 1;")) {
+            IGrouping<string, string> favoriteGenusGrouping = userSpecies
+                .Select(x => x.GenusName)
+                .GroupBy(x => x)
+                .OrderByDescending(x => x.Count())
+                .FirstOrDefault();
 
-                cmd.Parameters.AddWithValue("$owner", user.Username);
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
+            string favoriteGenus = favoriteGenusGrouping is null ? "N/A" : favoriteGenusGrouping.First();
+            int favoriteGenusCount = favoriteGenusGrouping is null ? 0 : favoriteGenusGrouping.Count();
 
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (!(row is null)) {
-
-                    long genus_id = row.Field<long>("genus_id");
-                    genus_count = row.Field<long>("count");
-
-                    Taxon genus = await BotUtils.GetGenusFromDb(genus_id);
-
-                    favorite_genus = genus.name;
-
-                }
-
-            }
+            int userSpeciesCount = userSpecies.Count();
+            int speciesCount = await SpeciesUtils.GetSpeciesCount();
 
             // Get the user's rarest trophy.
 
@@ -836,18 +658,18 @@ namespace OurFoodChain.Commands {
             embed.WithTitle(string.Format("{0}'s profile", user.Username));
             embed.WithThumbnailUrl(user.GetAvatarUrl(size: 64));
 
-            if (user_species_count > 0) {
+            if (userSpecies.Count() > 0) {
 
                 embed.WithDescription(string.Format("{1} made their first species on **{2}**.{0}Since then, they have submitted **{3:0.0}** species per day.{0}{0}Their submissions make up **{4:0.0}%** of all species.",
                     Environment.NewLine,
                     user.Username,
-                    DateUtils.TimestampToLongDateString(timestamp_min),
-                    timestamp_diff_days == 0 ? user_species_count : (double)user_species_count / timestamp_diff_days,
-                    ((double)user_species_count / species_count) * 100.0));
+                    DateUtils.TimestampToLongDateString(userInfo.FirstSubmissionTimestamp),
+                    daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
+                    ((double)userSpeciesCount / speciesCount) * 100.0));
 
-                embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", user_species_count, user_rank), inline: true);
+                embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", userSpeciesCount, userRank.Rank), inline: true);
 
-                embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtils.ToTitleCase(favorite_genus), genus_count), inline: true);
+                embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtils.ToTitleCase(favoriteGenus), favoriteGenusCount), inline: true);
 
                 if (OurFoodChainBot.Instance.Config.TrophiesEnabled) {
 
@@ -869,59 +691,20 @@ namespace OurFoodChain.Commands {
         [Command("leaderboard")]
         public async Task Leaderboard() {
 
+            UserRank[] userRanks = await UserUtils.GetRanksAsync();
+
             List<string> lines = new List<string>();
-            long place = 1;
-            long last_count = -1;
 
-            // Get the users and their species counts, ordered by species count.
+            foreach (UserRank userRank in userRanks) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT owner, user_id, COUNT(id) AS count FROM Species WHERE user_id IS NOT NULL GROUP BY user_id UNION 
-                SELECT owner, user_id, COUNT(id) AS count FROM Species WHERE user_id IS NULL GROUP BY owner ORDER BY count DESC")) {
+                IUser user = Context.Guild is null ? null : await Context.Guild.GetUserAsync(userRank.User.Id);
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows) {
-
-                        // Get information about the user.
-
-                        ulong user_id = row.IsNull("user_id") ? 0 : (ulong)row.Field<long>("user_id");
-                        IUser user = Context.Guild is null ? null : await Context.Guild.GetUserAsync(user_id);
-                        long count = row.Field<long>("count");
-                        string icon = "";
-
-                        if (last_count != -1 && count < last_count)
-                            ++place;
-
-                        last_count = count;
-
-                        switch (place) {
-
-                            case 1:
-                                icon = "👑";
-                                break;
-
-                            case 2:
-                                icon = "🥈";
-                                break;
-
-                            case 3:
-                                icon = "🥉";
-                                break;
-
-                            default:
-                                icon = "➖";
-                                break;
-
-                        }
-
-
-                        lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
-                            string.Format("{0}.", place.ToString("000")),
-                            icon,
-                            count.ToString("000"),
-                            string.Format(place <= 3 ? "**{0}**" : "{0}", user is null ? row.Field<string>("owner") : user.Username)
-                           ));
-
-                    }
+                lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
+                        string.Format("{0}.", userRank.Rank.ToString("000")),
+                        userRank.Icon,
+                        userRank.User.SubmissionCount.ToString("000"),
+                        string.Format(userRank.Rank <= 3 ? "**{0}**" : "{0}", user is null ? userRank.User.Username : user.Username)
+                       ));
 
             }
 

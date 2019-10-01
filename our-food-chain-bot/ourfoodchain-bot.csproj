@@ -283,6 +283,7 @@
     <Compile Include="trophies\UnlockedTrophyInfo.cs" />
     <Compile Include="trophies\TrophyRegistry.cs" />
     <Compile Include="trophies\TrophyScanner.cs" />
+    <Compile Include="users\UserRank.cs" />
     <Compile Include="utils\ArrayUtils.cs" />
     <Compile Include="bot-commands\Commands.cs" />
     <Compile Include="database\Database.cs" />
@@ -308,8 +309,8 @@
     <Compile Include="taxa\SpeciesUtils.cs" />
     <Compile Include="utils\LogMessage.cs" />
     <Compile Include="utils\TreeUtils.cs" />
-    <Compile Include="utils\UserInfo.cs" />
-    <Compile Include="utils\UserUtils.cs" />
+    <Compile Include="users\UserInfo.cs" />
+    <Compile Include="users\UserUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="utils\StringUtils.cs" />
     <Compile Include="taxa\TaxonUtils.cs" />

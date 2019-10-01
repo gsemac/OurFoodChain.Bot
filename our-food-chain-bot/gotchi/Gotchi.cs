@@ -24,7 +24,7 @@ namespace OurFoodChain.Gotchi {
                 _name = value;
             }
         }
-        public ulong OwnerId { get; set; } = UserInfo.NullUserId;
+        public ulong OwnerId { get; set; } = UserInfo.NullId;
         public long FedTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
         public long BornTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
         public long DiedTimestamp { get; set; } = 0;

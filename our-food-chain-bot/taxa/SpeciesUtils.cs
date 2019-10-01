@@ -154,6 +154,12 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<int> GetSpeciesCount() {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species"))
+                return (int)await Database.GetScalar<long>(cmd);
+        }
+
         public static async Task<Species[]> GetBaseSpeciesAsync() {
 
             List<Species> species = new List<Species>();

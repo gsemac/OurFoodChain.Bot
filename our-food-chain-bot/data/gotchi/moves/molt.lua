@@ -4,6 +4,7 @@
 	move.SetDescription("Molts exoskeleton, undoing all stat changes and restoring HP.")
 
 	move.SetPP(5)
+	move.SetIgnoreAccuracy(true)
 
 	move.Requires.DescriptionMatch("molt")
 

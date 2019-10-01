@@ -41,7 +41,19 @@ namespace OurFoodChain.Gotchi {
             if (Context is null)
                 throw new Exception("Context is null");
 
+            // Reset all stats except for HP.
+
+            int hp = Stats?.Hp ?? 1;
+            int maxHp = Stats?.MaxHp ?? 1;
+
             Stats = new GotchiStatsCalculator(Context).GetStatsAsync(Gotchi).Result;
+
+            if (Stats != null) {
+
+                Stats.Hp = hp;
+                Stats.MaxHp = maxHp;
+
+            }
 
         }
 

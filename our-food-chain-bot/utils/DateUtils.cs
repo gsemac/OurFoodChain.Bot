@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
+    public enum TimestampToDateStringFormat {
+        Default,
+        Short,
+        Long
+    }
+
     public class DateUtils {
 
         public static long GetCurrentTimestamp() {
@@ -45,6 +51,22 @@ namespace OurFoodChain {
         public static string TimestampToShortDateString(long timestamp) {
 
             return TimestampToDateTime(timestamp).ToShortDateString();
+
+        }
+        public static string TimestampToDateString(long timestamp, TimestampToDateStringFormat format) {
+
+            switch (format) {
+
+                case TimestampToDateStringFormat.Short:
+                    return TimestampToShortDateString(timestamp);
+
+                case TimestampToDateStringFormat.Long:
+                    return TimestampToLongDateString(timestamp);
+
+                default:
+                    goto case TimestampToDateStringFormat.Long;
+
+            }
 
         }
         public static string TimestampToDateString(long timestamp, string format) {

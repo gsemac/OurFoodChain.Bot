@@ -512,10 +512,10 @@ namespace OurFoodChain.Commands {
             await _displaySpeciesAddedBy(owner, string.Empty, species_list);
 
         }
-       
+
         public static async Task ShowSpeciesInfoAsync(ICommandContext context, Species species) {
 
-            if(await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
+            if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 
                 EmbedBuilder embed = new EmbedBuilder();
                 StringBuilder description_builder = new StringBuilder();
@@ -534,7 +534,7 @@ namespace OurFoodChain.Commands {
 
                     Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.timestamp);
 
-                    embed.AddField("Gen", gen is null ? "?" : gen.Number.ToString(), inline: true);
+                    embed.AddField("Gen", gen is null ? "???" : gen.Number.ToString(), inline: true);
 
                 }
 
@@ -551,8 +551,8 @@ namespace OurFoodChain.Commands {
                     .ToList()
                     .ForEach(x => {
 
-                    // Create an array of zone names, and sort them according to name.
-                    List<string> zones_array = x.Select(y => y.Zone.GetShortName()).ToList();
+                        // Create an array of zone names, and sort them according to name.
+                        List<string> zones_array = x.Select(y => y.Zone.GetShortName()).ToList();
                         zones_array.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
 
                         if (string.IsNullOrEmpty(x.Key))
@@ -592,7 +592,7 @@ namespace OurFoodChain.Commands {
                         long timestamp = (long)row.Field<decimal>("timestamp");
 
                         if (!string.IsNullOrEmpty(reason))
-                            description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", DateUtils.TimestampToLongDateString(timestamp), reason));
+                            description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(timestamp), reason));
 
                     }
 

@@ -206,13 +206,16 @@ namespace OurFoodChain.Commands {
 
             if (species != null) {
 
-                Species[] ancestors = await SpeciesUtils.GetAncestorsAsync(species);
-                StringBuilder sb = new StringBuilder();
+                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(species, AncestryTreeGenerationFlags.AncestorsOnly);
 
-                foreach (Species ancestor in ancestors.Concat(new Species[] { species }))
-                    sb.AppendLine(string.Format("{0} {1} {2}", ancestor.GetTimeStampAsDateString(), ancestor.isExtinct ? "*" : "-", ancestor.GetShortName()));
+                AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
+                    Tree = tree,
+                    DrawLines = false,
+                    MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
+                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, TimestampToDateStringFormat.Short).Result
+                };
 
-                await ReplyAsync(string.Format("```{0}```", sb.ToString()));
+                await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
 
             }
 
@@ -250,7 +253,8 @@ namespace OurFoodChain.Commands {
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
-                    MaxLength = DiscordUtils.MaxMessageLength - 6 // account for code block markup
+                    MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
+                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, TimestampToDateStringFormat.Short).Result
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -288,53 +292,63 @@ namespace OurFoodChain.Commands {
             if (species is null)
                 return;
 
-            // Group zones changes that happened closely together (12 hours).
-
             SpeciesZone[] zones = (await SpeciesUtils.GetZonesAsync(species)).OrderBy(x => x.Timestamp).ToArray();
-            List<List<SpeciesZone>> zone_groups = new List<List<SpeciesZone>>();
 
-            long last_timestamp = zones.Count() > 0 ? zones.First().Timestamp : 0;
+            if (zones.Count() <= 0) {
 
-            foreach (SpeciesZone zone in zones) {
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is not present in any zones.", species.ShortName));
 
-                if (zone_groups.Count() <= 0)
-                    zone_groups.Add(new List<SpeciesZone>());
+            }
+            else {
 
-                if (zone_groups.Last().Count() <= 0 || Math.Abs(zone_groups.Last().Last().Timestamp - zone.Timestamp) < 60 * 60 * 12)
-                    zone_groups.Last().Add(zone);
-                else {
+                // Group zones changes that happened closely together (12 hours).
 
-                    last_timestamp = zone.Timestamp;
-                    zone_groups.Add(new List<SpeciesZone> { zone });
+                List<List<SpeciesZone>> zone_groups = new List<List<SpeciesZone>>();
+
+                long last_timestamp = zones.Count() > 0 ? zones.First().Timestamp : 0;
+
+                foreach (SpeciesZone zone in zones) {
+
+                    if (zone_groups.Count() <= 0)
+                        zone_groups.Add(new List<SpeciesZone>());
+
+                    if (zone_groups.Last().Count() <= 0 || Math.Abs(zone_groups.Last().Last().Timestamp - zone.Timestamp) < 60 * 60 * 12)
+                        zone_groups.Last().Add(zone);
+                    else {
+
+                        last_timestamp = zone.Timestamp;
+                        zone_groups.Add(new List<SpeciesZone> { zone });
+
+                    }
 
                 }
 
 
+                StringBuilder result = new StringBuilder();
+
+                for (int i = 0; i < zone_groups.Count(); ++i) {
+
+                    if (zone_groups[i].Count() <= 0)
+                        continue;
+
+                    long ts = i == 0 ? species.timestamp : zone_groups[i].First().Timestamp;
+
+                    if (ts <= 0)
+                        ts = species.timestamp;
+
+                    result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts, TimestampToDateStringFormat.Short)));
+                    result.Append(i == 0 ? "Started in " : "Spread to ");
+                    result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
+                    result.Append(StringUtils.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
+
+                    result.AppendLine();
+
+                }
+
+
+                await ReplyAsync(string.Format("```{0}```", result.ToString()));
+
             }
-
-            StringBuilder result = new StringBuilder();
-
-            for (int i = 0; i < zone_groups.Count(); ++i) {
-
-                if (zone_groups[i].Count() <= 0)
-                    continue;
-
-                long ts = i == 0 ? species.timestamp : zone_groups[i].First().Timestamp;
-
-                if (ts <= 0)
-                    ts = species.timestamp;
-
-                result.Append(string.Format("{0} - ", DateUtils.TimestampToShortDateString(ts)));
-                result.Append(i == 0 ? "Started in " : "Spread to ");
-                result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
-                result.Append(StringUtils.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
-
-                result.AppendLine();
-
-            }
-
-
-            await ReplyAsync(string.Format("```{0}```", result.ToString()));
 
         }
 
@@ -660,12 +674,27 @@ namespace OurFoodChain.Commands {
 
             if (userSpecies.Count() > 0) {
 
-                embed.WithDescription(string.Format("{1} made their first species on **{2}**.{0}Since then, they have submitted **{3:0.0}** species per day.{0}{0}Their submissions make up **{4:0.0}%** of all species.",
-                    Environment.NewLine,
-                    user.Username,
-                    DateUtils.TimestampToLongDateString(userInfo.FirstSubmissionTimestamp),
-                    daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
-                    ((double)userSpeciesCount / speciesCount) * 100.0));
+                if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
+
+                    int generationsSinceFirstSubmission = (await GenerationUtils.GetGenerationsAsync()).Where(x => x.EndTimestamp > userInfo.FirstSubmissionTimestamp).Count();
+                    double speciesPerGeneration = generationsSinceFirstSubmission <= 0 ? userSpeciesCount : (double)userSpeciesCount / generationsSinceFirstSubmission;
+
+                    embed.WithDescription(string.Format("{0} made their first species during **{1}**.\nSince then, they have submitted **{2:0.0}** species per generation.\n\nTheir submissions make up **{3:0.0}%** of all species.",
+                        user.Username,
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp),
+                        speciesPerGeneration,
+                        (double)userSpeciesCount / speciesCount * 100.0));
+
+                }
+                else {
+
+                    embed.WithDescription(string.Format("{0} made their first species on **{1}**.\nSince then, they have submitted **{2:0.0}** species per day.\n\nTheir submissions make up **{3:0.0}%** of all species.",
+                        user.Username,
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp),
+                        daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
+                        (double)userSpeciesCount / speciesCount * 100.0));
+
+                }
 
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", userSpeciesCount, userRank.Rank), inline: true);
 

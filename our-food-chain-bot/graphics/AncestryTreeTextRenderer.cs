@@ -11,7 +11,10 @@ namespace OurFoodChain {
         // Public members
 
         public TreeNode<AncestryTree.NodeData> Tree { get; set; } = null;
+
         public int MaxLength { get; set; } = int.MaxValue;
+        public bool DrawLines { get; set; } = true;
+        public Func<long, string> TimestampFormatter { get; set; }
 
         public AncestryTreeTextRenderer() {
         }
@@ -27,8 +30,25 @@ namespace OurFoodChain {
 
         private string _treeToString() {
 
+            // If no tree has been provided, there is nothing to render.
+
             if (Tree is null)
                 return string.Empty;
+
+            // Generate timestamp strings for each entry ahead of time, so we can make sure that they're all the same length.
+
+            int maxTimestampLength = 0;
+
+            TreeUtils.PreOrderTraverse(Tree, x => {
+
+                int length = _timestampToString(x.Value.Species.timestamp).Length;
+
+                if (length > maxTimestampLength)
+                    maxTimestampLength = length;
+
+            });
+
+            // Render the tree.
 
             List<string> lines = new List<string>();
             Stack<Tuple<int, int>> sibling_line_positions = new Stack<Tuple<int, int>>();
@@ -37,10 +57,10 @@ namespace OurFoodChain {
 
                 string line = "";
 
-                line += x.Value.Species.GetTimeStampAsDateString();
+                line += _timestampToString(x.Value.Species.timestamp).PadRight(maxTimestampLength);
                 line += " " + (x.Value.Species.isExtinct ? "*" : "-");
 
-                if (x.Parent != null)
+                if (DrawLines && x.Parent != null)
                     for (int i = 0; i < x.Depth * 2 - 1; ++i) {
 
                         if (sibling_line_positions.Count() > 0 && sibling_line_positions.Any(y => y.Item2 == line.Length + 1))
@@ -59,7 +79,8 @@ namespace OurFoodChain {
 
                     if (x.Parent.Children.Count() > 1 && x.Parent.Children.Last() != x) {
 
-                        line += "├─";
+                        if (DrawLines)
+                            line += "├─";
 
                         // If this is the first sibling, take note of the index to draw connecting lines.
 
@@ -69,7 +90,8 @@ namespace OurFoodChain {
                     }
                     else if (x.Parent.Children.Last() == x) {
 
-                        line += "└─";
+                        if (DrawLines)
+                            line += "└─";
 
                         // If this is the last sibling, remove the stored index.
 
@@ -103,6 +125,11 @@ namespace OurFoodChain {
             }
 
             return sb.ToString();
+
+        }
+        private string _timestampToString(long timestamp) {
+
+            return TimestampFormatter is null ? DateUtils.TimestampToShortDateString(timestamp) : TimestampFormatter(timestamp);
 
         }
 

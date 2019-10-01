@@ -24,6 +24,11 @@ namespace OurFoodChain {
 
                 });
 
+            // Make sure that we always have at least one generation.
+
+            if (generations.Count() <= 0)
+                generations.Add(await GetCurrentGenerationAsync());
+
             return generations.ToArray();
 
         }
@@ -76,7 +81,7 @@ namespace OurFoodChain {
 
             generation = new Generation {
                 Number = generation is null ? 1 : generation.Number + 1,
-                StartTimestamp = DateUtils.GetCurrentTimestamp(),
+                StartTimestamp = generation is null ? 0 : DateUtils.GetCurrentTimestamp(),
                 EndTimestamp = DateUtils.GetMaxTimestamp()
             };
 

@@ -8,9 +8,9 @@ namespace OurFoodChain {
 
     public enum AncestryTreeGenerationFlags {
         None = 0,
-        Full,
-        AncestorsOnly,
-        DescendantsOnly
+        Full = 1,
+        AncestorsOnly = 2,
+        DescendantsOnly = 4
     }
 
     public class AncestryTree {
@@ -58,8 +58,12 @@ namespace OurFoodChain {
                         }
                     };
 
-                    queue.First().AddChild(node);
-                    queue.Enqueue(node);
+                    if (!flags.HasFlag(AncestryTreeGenerationFlags.AncestorsOnly) || node.Value.IsAncestor) {
+
+                        queue.First().AddChild(node);
+                        queue.Enqueue(node);
+
+                    }
 
                 }
 

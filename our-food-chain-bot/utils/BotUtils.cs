@@ -1643,6 +1643,20 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<string> TimestampToDateStringAsync(long timestamp, TimestampToDateStringFormat format = TimestampToDateStringFormat.Default) {
+
+            if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
+
+                Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(timestamp);
+
+                return gen is null ? "Gen ???" : gen.Name;
+
+            }
+
+            return DateUtils.TimestampToDateString(timestamp, format);
+
+        }
+
     }
 
 }

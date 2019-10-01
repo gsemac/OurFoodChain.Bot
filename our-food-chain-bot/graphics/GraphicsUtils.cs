@@ -100,6 +100,25 @@ namespace OurFoodChain {
 
         }
 
+        public static Bitmap TryCreateBitmap(string filename) {
+
+            Bitmap result = null;
+
+            if (System.IO.File.Exists(filename)) {
+
+                try {
+
+                    result = new Bitmap(filename);
+
+                }
+                catch (Exception) { }
+
+            }
+
+            return result;
+
+        }
+
     }
 
 }

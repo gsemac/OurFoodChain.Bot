@@ -437,56 +437,56 @@ namespace OurFoodChain.Gotchi {
 
             // Create the temporary directory where the GIF will be saved.
 
-            string temp_dir = Global.TempDirectory + "gotchi";
+            string tempDirectory = Global.TempDirectory + "gotchi";
 
-            if (!System.IO.Directory.Exists(temp_dir))
-                System.IO.Directory.CreateDirectory(temp_dir);
+            if (!System.IO.Directory.Exists(tempDirectory))
+                System.IO.Directory.CreateDirectory(tempDirectory);
 
             // Get the image for this gotchi.
 
-            Dictionary<long, Bitmap> gotchi_images = new Dictionary<long, Bitmap>();
-            List<string> gotchi_image_paths = new List<string>();
+            Dictionary<long, Bitmap> gotchiImages = new Dictionary<long, Bitmap>();
+            List<string> gotchiImagePaths = new List<string>();
 
             foreach (GotchiGifCreatorParams p in gifParams) {
 
-                string gotchi_image_path = await DownloadGotchiImageAsync(p.gotchi);
+                string gotchiImagePath = await DownloadGotchiImageAsync(p.gotchi);
 
-                gotchi_image_paths.Add(gotchi_image_path);
-                gotchi_images[p.gotchi.Id] = System.IO.File.Exists(gotchi_image_path) ? new Bitmap(gotchi_image_path) : null;
+                gotchiImagePaths.Add(gotchiImagePath);
+                gotchiImages[p.gotchi.Id] = GraphicsUtils.TryCreateBitmap(gotchiImagePath);
 
             }
 
             // Create the gotchi GIF.
 
-            string output_path = System.IO.Path.Combine(temp_dir, string.Format("{0}.gif", StringUtils.CreateMD5(string.Join("", gotchi_image_paths))));
+            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtils.CreateMD5(string.Join("", gotchiImagePaths))));
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 
-                string background_fpath = System.IO.Path.Combine(Global.GotchiImagesDirectory, extraParams.backgroundFileName);
+                string backgroundFilename = System.IO.Path.Combine(Global.GotchiImagesDirectory, extraParams.backgroundFileName);
 
-                if (System.IO.File.Exists(background_fpath))
-                    gif.SetBackground(background_fpath);
+                if (System.IO.File.Exists(backgroundFilename))
+                    gif.SetBackground(backgroundFilename);
 
                 foreach (GotchiGifCreatorParams p in gifParams) {
 
                     if (p.auto)
-                        gif.AddGotchi(gotchi_images[p.gotchi.Id], p.gotchi.State());
+                        gif.AddGotchi(gotchiImages[p.gotchi.Id], p.gotchi.State());
                     else
-                        gif.AddGotchi(p.x, p.y, gotchi_images[p.gotchi.Id], p.state);
+                        gif.AddGotchi(p.x, p.y, gotchiImages[p.gotchi.Id], p.state);
 
                 }
 
-                gif.Save(output_path, extraParams.overlay);
+                gif.Save(outputPath, extraParams.overlay);
 
             }
 
             // Free all bitmaps.
 
-            foreach (long key in gotchi_images.Keys)
-                if (!(gotchi_images[key] is null))
-                    gotchi_images[key].Dispose();
+            foreach (long key in gotchiImages.Keys)
+                if (!(gotchiImages[key] is null))
+                    gotchiImages[key].Dispose();
 
-            return output_path;
+            return outputPath;
 
         }
         public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, Gotchi gotchi) {

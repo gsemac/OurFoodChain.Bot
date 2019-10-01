@@ -605,7 +605,7 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        [Command("forfeit")]
+        [Command("run"), Alias("forfeit", "quit")]
         public async Task Forfeit() {
 
             // Get the battle state that the user is involved with.

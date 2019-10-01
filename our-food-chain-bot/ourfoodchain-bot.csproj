@@ -355,7 +355,7 @@
     <None Include="data\help\delete.json" />
     <None Include="data\help\evolution2.json" />
     <None Include="data\help\gotchi\buy.json" />
-    <None Include="data\help\gotchi\forfeit.json" />
+    <None Include="data\help\gotchi\run.json" />
     <None Include="data\help\gotchi\list.json" />
     <None Include="data\help\gotchi\release.json" />
     <None Include="data\help\gotchi\set.json" />

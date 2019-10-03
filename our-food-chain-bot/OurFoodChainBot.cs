@@ -191,7 +191,7 @@ namespace OurFoodChain {
             if (!_isUserMessage(message))
                 return;
 
-            if (await MultistageCommand.HandleResponseAsync(message))
+            if (await MultiPartMessage.HandleResponseAsync(message))
                 return;
 
             if (!_isBotCommand(message as SocketUserMessage))

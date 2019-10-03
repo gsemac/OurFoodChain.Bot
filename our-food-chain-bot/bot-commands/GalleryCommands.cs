@@ -320,7 +320,7 @@ namespace OurFoodChain {
 
                 }
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, message);
+                await CommandUtils.SendMessageAsync(context, message);
 
             }
 

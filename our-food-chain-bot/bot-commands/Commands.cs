@@ -107,10 +107,10 @@ namespace OurFoodChain.Commands {
 
             sp_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            PaginatedMessage embed = new PaginatedMessage();
             embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list, fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build(), "There are currently no extinct species.");
+            await CommandUtils.SendMessageAsync(Context, embed.Build(), "There are currently no extinct species.");
 
         }
 
@@ -476,17 +476,17 @@ namespace OurFoodChain.Commands {
                     }
                     else {
 
-                        PaginatedEmbedBuilder embed;
+                        PaginatedMessage embed;
 
                         if (result.HasGroup(SearchQuery.DEFAULT_GROUP)) {
 
                             // If there's only one group, just list the species without creating separate fields.
-                            embed = new PaginatedEmbedBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+                            embed = new PaginatedMessage(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
 
                         }
                         else {
 
-                            embed = new PaginatedEmbedBuilder();
+                            embed = new PaginatedMessage();
                             embed.AddPages(EmbedUtils.SearchQueryResultToEmbedPages(result));
 
                         }
@@ -494,7 +494,7 @@ namespace OurFoodChain.Commands {
                         embed.SetFooter("");
                         embed.AddPageNumbers();
 
-                        await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                        await CommandUtils.SendMessageAsync(Context, embed.Build());
                     }
 
                 }
@@ -739,14 +739,14 @@ namespace OurFoodChain.Commands {
 
             // Create the embed.
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            PaginatedMessage embed = new PaginatedMessage();
             embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
             embed.SetTitle(string.Format("🏆 Leaderboard ({0})", lines.Count));
             embed.SetColor(255, 204, 77);
             embed.AddPageNumbers();
 
             // Send the embed.
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+            await CommandUtils.SendMessageAsync(Context, embed.Build());
 
         }
 
@@ -857,12 +857,12 @@ namespace OurFoodChain.Commands {
             }
             else {
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.LinesToEmbedPages(lines));
+                PaginatedMessage embed = new PaginatedMessage(EmbedUtils.LinesToEmbedPages(lines));
                 embed.SetTitle(string.Format("⭐ Species favorited by {0} ({1})", Context.User.Username, lines.Count()));
                 embed.SetThumbnailUrl(Context.User.GetAvatarUrl(size: 32));
                 embed.AddPageNumbers();
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                await CommandUtils.SendMessageAsync(Context, embed.Build());
 
             }
 

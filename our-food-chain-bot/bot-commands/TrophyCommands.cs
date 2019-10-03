@@ -119,7 +119,7 @@ namespace OurFoodChain.Trophies {
             if (!(embed is null))
                 message.pages.Add(embed.Build());
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, message);
+            await CommandUtils.SendMessageAsync(Context, message);
 
         }
 

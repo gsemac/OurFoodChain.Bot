@@ -13,7 +13,7 @@ end
 
 function OnMove(args) 
 	
-	amount = rand(0, 60)
+	amount = Rand(0, 60)
 
 	args.RecoverPercent(amount)
 

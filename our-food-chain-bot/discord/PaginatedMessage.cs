@@ -7,7 +7,33 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public class PaginatedEmbedBuilder {
+    public enum PaginatedMessageReaction {
+        None,
+        Next,
+        Previous,
+        Yes,
+        No
+    }
+
+    public class PaginatedMessageCallbackArgs {
+
+        // Public members
+
+        public IUserMessage DiscordMessage { get; set; }
+        public CommandUtils.PaginatedMessage PaginatedMessage { get; set; }
+
+        public bool ReactionAdded { get; set; } = false;
+
+        public string Reaction { get; set; } = "";
+        public PaginatedMessageReaction ReactionType {
+            get {
+                return OurFoodChain.PaginatedMessage.StringToReactionType(Reaction);
+            }
+        }
+
+    }
+
+    public class PaginatedMessage {
 
         public string Message { get; set; }
         public string Title {
@@ -35,6 +61,10 @@ namespace OurFoodChain {
             }
         }
 
+        public Action<PaginatedMessageCallbackArgs> Callback { get; set; }
+
+        public bool Restricted { get; set; } = false;
+
         public int Length {
             get {
                 return _pages.Count > 0 ? _pages[0].Length : 0;
@@ -52,8 +82,8 @@ namespace OurFoodChain {
             }
         }
 
-        public PaginatedEmbedBuilder() { }
-        public PaginatedEmbedBuilder(List<EmbedBuilder> pages) {
+        public PaginatedMessage() { }
+        public PaginatedMessage(List<EmbedBuilder> pages) {
 
             _pages.AddRange(pages);
         }
@@ -162,10 +192,8 @@ namespace OurFoodChain {
 
         }
 
-        public void SetCallback(Action<CommandUtils.PaginatedMessageCallbackArgs> callback) {
-
-            _callback = callback;
-
+        public void SetCallback(Action<PaginatedMessageCallbackArgs> callback) {
+            Callback = callback;
         }
 
         public void AddReaction(string reaction) {
@@ -173,17 +201,26 @@ namespace OurFoodChain {
             _reactions.Add(reaction);
 
         }
+        public void AddReaction(PaginatedMessageReaction reaction) {
+
+            string str = ReactionTypeToString(reaction);
+
+            if (!string.IsNullOrEmpty(str))
+                AddReaction(str);
+
+        }
 
         public CommandUtils.PaginatedMessage Build() {
 
-            CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
-
-            message.message = Message;
+            CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage {
+                message = Message,
+                RespondToSenderOnly = Restricted
+            };
 
             foreach (EmbedBuilder page in _pages)
                 message.pages.Add(page.Build());
 
-            message.callback = _callback;
+            message.callback = Callback;
 
             // In the future, all reactions should be added.
             if (_reactions.Count() > 0)
@@ -193,12 +230,56 @@ namespace OurFoodChain {
 
         }
 
+        public static string ReactionTypeToString(PaginatedMessageReaction reaction) {
+
+            switch (reaction) {
+
+                case PaginatedMessageReaction.Next:
+                    return "▶";
+
+                case PaginatedMessageReaction.Previous:
+                    return "◀";
+
+                case PaginatedMessageReaction.Yes:
+                    return "👍";
+
+                case PaginatedMessageReaction.No:
+                    return "👎";
+
+                default:
+                    return string.Empty;
+
+            }
+
+        }
+        public static PaginatedMessageReaction StringToReactionType(string reaction) {
+
+            switch (reaction) {
+
+                case "▶":
+                    return PaginatedMessageReaction.Next;
+
+                case "◀":
+                    return PaginatedMessageReaction.Previous;
+
+                case "👍":
+                    return PaginatedMessageReaction.Yes;
+
+                case "👎":
+                    return PaginatedMessageReaction.No;
+
+                default:
+                    return PaginatedMessageReaction.None;
+
+            }
+
+        }
+
         private string _title = "";
         private string _description = "";
         private Color _color = Color.DarkGrey;
 
         private List<EmbedBuilder> _pages = new List<EmbedBuilder>();
-        private Action<CommandUtils.PaginatedMessageCallbackArgs> _callback;
         private List<string> _reactions = new List<string>();
 
     }

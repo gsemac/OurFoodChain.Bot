@@ -4,6 +4,7 @@
 	move.SetDescription("Boosts defense by a small amount.")
 
 	move.SetPP(10)
+	move.SetIgnoreAccuracy(true)
 	
 	move.Requires.DescriptionMatch("shell|carapace")
 

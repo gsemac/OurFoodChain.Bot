@@ -63,7 +63,7 @@ namespace OurFoodChain.Commands {
             foreach (EmbedBuilder page in pages)
                 reply.pages.Add(page.Build());
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, reply);
+            await CommandUtils.SendMessageAsync(Context, reply);
 
         }
         [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
@@ -127,7 +127,7 @@ namespace OurFoodChain.Commands {
             foreach (EmbedBuilder page in pages)
                 reply.pages.Add(page.Build());
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, reply);
+            await CommandUtils.SendMessageAsync(Context, reply);
 
         }
 
@@ -629,11 +629,11 @@ namespace OurFoodChain.Commands {
 
                     }
 
-                    PaginatedEmbedBuilder builder = new PaginatedEmbedBuilder(pages);
+                    PaginatedMessage builder = new PaginatedMessage(pages);
                     builder.AddPageNumbers();
                     builder.SetColor(embed_color);
 
-                    await CommandUtils.ReplyAsync_SendPaginatedMessage(context, builder.Build());
+                    await CommandUtils.SendMessageAsync(context, builder.Build());
 
                 }
                 else {
@@ -702,12 +702,12 @@ namespace OurFoodChain.Commands {
             }
             else {
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList,
+                PaginatedMessage embed = new PaginatedMessage(EmbedUtils.SpeciesListToEmbedPages(speciesList,
                     fieldName: string.Format("Species owned by {0} ({1})", username, speciesList.Count())));
 
                 embed.SetThumbnailUrl(thumbnailUrl);
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                await CommandUtils.SendMessageAsync(Context, embed.Build());
 
             }
 

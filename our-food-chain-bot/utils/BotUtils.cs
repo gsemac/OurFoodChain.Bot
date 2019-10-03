@@ -761,18 +761,19 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(suggestion))
                 sb.Append(string.Format(" Did you mean **{0}**?", suggestion));
 
-            PaginatedEmbedBuilder message_content = new PaginatedEmbedBuilder {
-                Message = sb.ToString()
+            PaginatedMessage message_content = new PaginatedMessage {
+                Message = sb.ToString(),
+                Restricted = true
             };
 
             if (onConfirmSuggestion != null && !string.IsNullOrEmpty(suggestion)) {
 
-                message_content.AddReaction("👍");
-                message_content.SetCallback(async (CommandUtils.PaginatedMessageCallbackArgs args) => {
+                message_content.AddReaction(PaginatedMessageReaction.Yes);
+                message_content.SetCallback(async (PaginatedMessageCallbackArgs args) => {
 
-                    if (args.reaction == "👍") {
+                    if (args.ReactionType == PaginatedMessageReaction.Yes) {
 
-                        args.paginatedMessage.Enabled = false;
+                        args.PaginatedMessage.Enabled = false;
 
                         await onConfirmSuggestion(new ConfirmSuggestionArgs(suggestion));
 
@@ -782,7 +783,7 @@ namespace OurFoodChain {
 
             }
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(context, message_content.Build(), respondToSenderOnly: true);
+            await CommandUtils.SendMessageAsync(context, message_content.Build(), respondToSenderOnly: true);
 
         }
         public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, Species[] speciesList) {
@@ -1106,7 +1107,7 @@ namespace OurFoodChain {
             string title = string.Format("All {0} ({1})", Taxon.GetRankName(type, plural: true), taxon_count);
             List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: title);
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
+            PaginatedMessage embed = new PaginatedMessage(embed_pages);
 
             if (embed_pages.Count <= 0) {
 
@@ -1117,7 +1118,7 @@ namespace OurFoodChain {
             else
                 embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(type, plural: true)));
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
+            await CommandUtils.SendMessageAsync(context, embed.Build());
 
         }
         public static async Task Command_ShowTaxon(ICommandContext context, TaxonRank type, string name) {
@@ -1227,7 +1228,7 @@ namespace OurFoodChain {
                 }
 
                 List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: field_title);
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(embed_pages);
+                PaginatedMessage embed = new PaginatedMessage(embed_pages);
 
                 embed.SetTitle(title);
                 embed.SetThumbnailUrl(thumbnail_url);
@@ -1236,7 +1237,7 @@ namespace OurFoodChain {
                 if (items.Count() > 0 && taxon.type != TaxonRank.Genus)
                     embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(taxon.GetChildRank(), plural: true)));
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
+                await CommandUtils.SendMessageAsync(context, embed.Build());
 
             }
 
@@ -1334,16 +1335,16 @@ namespace OurFoodChain {
             if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                 return;
 
-            MultistageCommand p = new MultistageCommand(context) {
-                Arguments = new string[] { name },
-                Callback = async (MultistageCommandCallbackArgs args) => {
+            MultiPartMessage p = new MultiPartMessage(context) {
+                UserData = new string[] { name },
+                Callback = async (MultiPartMessageCallbackArgs args) => {
 
-                    await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon, args.MessageContent);
+                    await BotUtils.Command_SetTaxonDescription(args.Message.Context, taxon, args.ResponseContent);
 
                 }
             };
 
-            await MultistageCommand.SendAsync(p,
+            await MultiPartMessage.SendMessageAsync(p,
                 string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon.GetTypeName(), taxon.GetName()));
 
 
@@ -1620,7 +1621,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task ZonesToEmbedPagesAsync(PaginatedEmbedBuilder embed, Zone[] zones, bool showIcon = true) {
+        public static async Task ZonesToEmbedPagesAsync(PaginatedMessage embed, Zone[] zones, bool showIcon = true) {
 
             List<string> lines = new List<string>();
             int zones_per_page = 20;

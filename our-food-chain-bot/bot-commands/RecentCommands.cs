@@ -35,7 +35,7 @@ namespace OurFoodChain.Commands {
 
         }
 
-        public static async Task<PaginatedEmbedBuilder> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
+        public static async Task<PaginatedMessage> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
             // Get all species created within the given timespan.
 
@@ -79,7 +79,7 @@ namespace OurFoodChain.Commands {
 
             // Build embed.
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            PaginatedMessage embed = new PaginatedMessage();
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
             List<string> field_lines = new List<string>();
 
@@ -119,9 +119,9 @@ namespace OurFoodChain.Commands {
         }
         public static async Task ShowRecentEventsAsync(ICommandContext context, long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
-            PaginatedEmbedBuilder embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
+            PaginatedMessage embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
+            await CommandUtils.SendMessageAsync(context, embed.Build());
 
         }
 

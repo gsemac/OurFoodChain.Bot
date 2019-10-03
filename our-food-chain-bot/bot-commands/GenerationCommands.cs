@@ -42,9 +42,9 @@ namespace OurFoodChain.Commands {
 
         }
 
-        private async Task<PaginatedEmbedBuilder> _buildGenerationEmbedAsync(Generation generation) {
+        private async Task<PaginatedMessage> _buildGenerationEmbedAsync(Generation generation) {
 
-            PaginatedEmbedBuilder embed = await RecentCommands.BuildRecentEventsEmbedAsync(generation.StartTimestamp, generation.EndTimestamp);
+            PaginatedMessage embed = await RecentCommands.BuildRecentEventsEmbedAsync(generation.StartTimestamp, generation.EndTimestamp);
             TimeAmount time_amount_since = new TimeAmount(DateUtils.GetCurrentTimestamp() - generation.EndTimestamp, TimeUnits.Seconds);
 
             embed.SetTitle(string.Format("{0} ({1})",
@@ -56,9 +56,9 @@ namespace OurFoodChain.Commands {
         }
         private async Task _showGenerationAsync(ICommandContext context, Generation generation) {
 
-            PaginatedEmbedBuilder embed = await _buildGenerationEmbedAsync(generation);
+            PaginatedMessage embed = await _buildGenerationEmbedAsync(generation);
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(context, embed.Build());
+            await CommandUtils.SendMessageAsync(context, embed.Build());
 
         }
 

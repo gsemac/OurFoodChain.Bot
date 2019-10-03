@@ -174,13 +174,13 @@ namespace OurFoodChain {
             species_list.RemoveAll(x => x.isExtinct);
             species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
+            PaginatedMessage embed = new PaginatedMessage(EmbedUtils.SpeciesListToEmbedPages(species_list,
                 fieldName: string.Format("Extant species with this role ({0}):", species_list.Count())));
 
             embed.SetTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
             embed.SetDescription(role.GetDescriptionOrDefault());
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+            await CommandUtils.SendMessageAsync(Context, embed.Build());
 
         }
         [Command("roles"), Alias("role")]

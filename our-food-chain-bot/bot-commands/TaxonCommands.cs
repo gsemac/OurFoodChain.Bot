@@ -579,19 +579,19 @@ namespace OurFoodChain.Commands {
                 if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
-                MultistageCommand p = new MultistageCommand(Context) {
-                    Arguments = new string[] { taxonNameOrGenus, descriptionOrSpecies },
-                    Callback = async (MultistageCommandCallbackArgs args) => {
+                MultiPartMessage p = new MultiPartMessage(Context) {
+                    UserData = new string[] { taxonNameOrGenus, descriptionOrSpecies },
+                    Callback = async (MultiPartMessageCallbackArgs args) => {
 
-                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Command.Arguments[0], args.Command.Arguments[1]);
+                        Species[] species = await BotUtils.GetSpeciesFromDb(args.Message.UserData[0], args.Message.UserData[1]);
 
-                        if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
-                            await _setSpeciesDescriptionAsync(species[0], args.MessageContent);
+                        if (await BotUtils.ReplyValidateSpeciesAsync(args.Message.Context, species))
+                            await _setSpeciesDescriptionAsync(species[0], args.ResponseContent);
 
                     }
                 };
 
-                await MultistageCommand.SendAsync(p,
+                await MultiPartMessage.SendMessageAsync(p,
                     string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
 
             }
@@ -706,16 +706,16 @@ namespace OurFoodChain.Commands {
             if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
                 return;
 
-            MultistageCommand p = new MultistageCommand(Context) {
-                Callback = async (MultistageCommandCallbackArgs args) => {
+            MultiPartMessage p = new MultiPartMessage(Context) {
+                Callback = async (MultiPartMessageCallbackArgs args) => {
 
-                    if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
-                        await _setSpeciesDescriptionAsync(species, args.MessageContent);
+                    if (await BotUtils.ReplyValidateSpeciesAsync(args.Message.Context, species))
+                        await _setSpeciesDescriptionAsync(species, args.ResponseContent);
 
                 }
             };
 
-            await MultistageCommand.SendAsync(p,
+            await MultiPartMessage.SendMessageAsync(p,
                 string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.ShortName));
 
         }
@@ -738,16 +738,16 @@ namespace OurFoodChain.Commands {
 
             else if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) { // moderator use only
 
-                MultistageCommand p = new MultistageCommand(Context) {
-                    Arguments = new string[] { taxon.name },
-                    Callback = async (MultistageCommandCallbackArgs args) => {
+                MultiPartMessage p = new MultiPartMessage(Context) {
+                    UserData = new string[] { taxon.name },
+                    Callback = async (MultiPartMessageCallbackArgs args) => {
 
-                        await BotUtils.Command_SetTaxonDescription(args.Command.Context, taxon, args.MessageContent);
+                        await BotUtils.Command_SetTaxonDescription(args.Message.Context, taxon, args.ResponseContent);
 
                     }
                 };
 
-                await MultistageCommand.SendAsync(p,
+                await MultiPartMessage.SendMessageAsync(p,
                     string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon.GetTypeName(), taxon.GetName()));
 
             }
@@ -755,16 +755,16 @@ namespace OurFoodChain.Commands {
         }
         private async Task _appendDescriptionAsync(Species species) {
 
-            MultistageCommand p = new MultistageCommand(Context) {
-                Callback = async (MultistageCommandCallbackArgs args) => {
+            MultiPartMessage p = new MultiPartMessage(Context) {
+                Callback = async (MultiPartMessageCallbackArgs args) => {
 
-                    if (await BotUtils.ReplyValidateSpeciesAsync(args.Command.Context, species))
-                        await _appendDescriptionAsync(species, args.MessageContent);
+                    if (await BotUtils.ReplyValidateSpeciesAsync(args.Message.Context, species))
+                        await _appendDescriptionAsync(species, args.ResponseContent);
 
                 }
             };
 
-            await MultistageCommand.SendAsync(p,
+            await MultiPartMessage.SendMessageAsync(p,
                 string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.GetShortName()));
 
         }

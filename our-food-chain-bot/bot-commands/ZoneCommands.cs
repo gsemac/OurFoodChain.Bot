@@ -82,7 +82,7 @@ namespace OurFoodChain {
 
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
-                    PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder {
+                    PaginatedMessage embed = new PaginatedMessage {
                         Title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
                         Description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
                             OurFoodChainBot.Instance.Config.Prefix,
@@ -97,7 +97,7 @@ namespace OurFoodChain {
                     if (ZoneUtils.ZoneTypeIsValid(zone_type))
                         embed.SetColor(DiscordUtils.ConvertColor(zone_type.Color));
 
-                    await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                    await CommandUtils.SendMessageAsync(Context, embed.Build());
 
                 }
                 else {
@@ -132,7 +132,7 @@ namespace OurFoodChain {
                     // The message will have a paginated species list, and a toggle button to display the species sorted by role.
 
                     List<EmbedBuilder> embed_pages = EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: (string.Format("Extant species in this zone ({0}):", species_list.Count())));
-                    PaginatedEmbedBuilder paginated = new PaginatedEmbedBuilder(embed_pages);
+                    PaginatedMessage paginated = new PaginatedMessage(embed_pages);
 
                     if (embed_pages.Count() <= 0)
                         embed_pages.Add(new EmbedBuilder());
@@ -208,23 +208,23 @@ namespace OurFoodChain {
                         // Add the page to the builder.
 
                         paginated.AddReaction("🇷");
-                        paginated.SetCallback(async (CommandUtils.PaginatedMessageCallbackArgs args) => {
+                        paginated.SetCallback(async (PaginatedMessageCallbackArgs args) => {
 
-                            if (args.reaction != "🇷")
+                            if (args.Reaction != "🇷")
                                 return;
 
-                            args.paginatedMessage.paginationEnabled = !args.on;
+                            args.PaginatedMessage.paginationEnabled = !args.ReactionAdded;
 
-                            if (args.on)
-                                await args.discordMessage.ModifyAsync(msg => msg.Embed = role_page.Build());
+                            if (args.ReactionAdded)
+                                await args.DiscordMessage.ModifyAsync(msg => msg.Embed = role_page.Build());
                             else
-                                await args.discordMessage.ModifyAsync(msg => msg.Embed = args.paginatedMessage.pages[args.paginatedMessage.index]);
+                                await args.DiscordMessage.ModifyAsync(msg => msg.Embed = args.PaginatedMessage.pages[args.PaginatedMessage.index]);
 
                         });
 
                     }
 
-                    await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, paginated.Build());
+                    await CommandUtils.SendMessageAsync(Context, paginated.Build());
 
                 }
 
@@ -312,7 +312,7 @@ namespace OurFoodChain {
 
                 Zone[] zones = await ZoneUtils.GetZonesAsync(type);
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder {
+                PaginatedMessage embed = new PaginatedMessage {
                     Title = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count()),
                     Description = type.Description + "\n\n",
                     Color = DiscordUtils.ConvertColor(type.Color)
@@ -321,7 +321,7 @@ namespace OurFoodChain {
                 await BotUtils.ZonesToEmbedPagesAsync(embed, zones, showIcon: false);
                 embed.AddPageNumbers();
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                await CommandUtils.SendMessageAsync(Context, embed.Build());
 
             }
             else

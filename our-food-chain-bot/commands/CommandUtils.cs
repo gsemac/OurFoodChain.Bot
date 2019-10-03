@@ -16,15 +16,6 @@ namespace OurFoodChain {
 
         private const int MAX_PAGINATED_MESSAGES = 50;
 
-        public class PaginatedMessageCallbackArgs {
-
-            public IUserMessage discordMessage = null;
-            public PaginatedMessage paginatedMessage = null;
-            public bool on = false;
-            public string reaction = "";
-
-        }
-
         public class PaginatedMessage {
 
             public List<Embed> pages = new List<Embed>();
@@ -45,7 +36,7 @@ namespace OurFoodChain {
 
         public static Dictionary<ulong, PaginatedMessage> PAGINATED_MESSAGES = new Dictionary<ulong, PaginatedMessage>();
 
-        public static async Task ReplyAsync_SendPaginatedMessage(ICommandContext context, PaginatedMessage message, string defaultMessage = "", bool respondToSenderOnly = false) {
+        public static async Task SendMessageAsync(ICommandContext context, PaginatedMessage message, string defaultMessage = "", bool respondToSenderOnly = false) {
 
             // If the message does not have any pages and does not have a message, quit.
 
@@ -122,10 +113,10 @@ namespace OurFoodChain {
 
             if (!(message.callback is null))
                 message.callback(new PaginatedMessageCallbackArgs {
-                    discordMessage = await cached.DownloadAsync(),
-                    paginatedMessage = message,
-                    on = added,
-                    reaction = emote
+                    DiscordMessage = await cached.DownloadAsync(),
+                    PaginatedMessage = message,
+                    ReactionAdded = added,
+                    Reaction = emote
                 });
 
             if (message.pages is null || message.pages.Count() <= 0)

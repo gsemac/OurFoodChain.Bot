@@ -134,27 +134,27 @@ namespace OurFoodChain.Gotchi {
         }
 
         [Command("release")]
+        public async Task Release() {
+
+            Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
+
+            if (GotchiUtils.ValidateGotchi(gotchi))
+                await _releaseGotchiAsync(Context, gotchi);
+            else
+                await BotUtils.ReplyAsync_Error(Context, "You do not have a gotchi to release.");
+
+        }
+        [Command("release")]
         public async Task Release(string name) {
 
             // Find the Gotchi with the given name.
 
             Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User.Id, name);
 
-            if (gotchi is null) {
-
+            if (gotchi is null)
                 await BotUtils.ReplyAsync_Error(Context, string.Format("No Gotchi with the name \"{0}\" exists.", name));
-
-                return;
-
-            }
-
-            // Delete the Gotchi from the database.
-            await GotchiUtils.DeleteGotchiAsync(gotchi.Id);
-
-            if (gotchi.IsDead())
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtils.ToTitleCase(gotchi.Name)));
             else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Gotchi **{0}** was successfully released. Take care, **{0}**!", StringUtils.ToTitleCase(gotchi.Name)));
+                await _releaseGotchiAsync(Context, gotchi);
 
         }
 
@@ -715,7 +715,7 @@ namespace OurFoodChain.Gotchi {
 
             // Create the embed.
 
-            PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+            PaginatedMessage embed = new PaginatedMessage();
 
             embed.AddPages(EmbedUtils.FieldsToEmbedPages(item_fields));
             embed.SetTitle("🛒 Gotchi Shop");
@@ -725,7 +725,7 @@ namespace OurFoodChain.Gotchi {
             embed.SetColor(Color.LightOrange);
             embed.AddPageNumbers();
 
-            await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+            await CommandUtils.SendMessageAsync(Context, embed.Build());
 
         }
 
@@ -883,13 +883,13 @@ namespace OurFoodChain.Gotchi {
 
                 GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
 
-                PaginatedEmbedBuilder embed = new PaginatedEmbedBuilder();
+                PaginatedMessage embed = new PaginatedMessage();
                 embed.AddPages(EmbedUtils.ListToEmbedPages(gotchi_list, fieldName: string.Format("{0}'s Gotchis ({1}/{2})",
                     Context.User.Username,
                     gotchi_list.Count,
                     user_data.GotchiLimit)));
 
-                await CommandUtils.ReplyAsync_SendPaginatedMessage(Context, embed.Build());
+                await CommandUtils.SendMessageAsync(Context, embed.Build());
 
             }
 
@@ -1101,6 +1101,40 @@ namespace OurFoodChain.Gotchi {
 
             await BotUtils.ReplyAsync_Success(context, string.Format("All right **{0}**, take care of your new **{1}**!", context.User.Username, species.ShortName));
 
+
+        }
+        private static async Task _releaseGotchiAsync(ICommandContext context, Gotchi gotchi) {
+
+            if (gotchi != null) {
+
+                PaginatedMessage message = new PaginatedMessage {
+                    Message = string.Format("Are you sure you want to release **{0}**?", gotchi.Name),
+                    Restricted = true,
+                    Callback = async args => {
+
+                        if (args.ReactionAdded && args.ReactionType == PaginatedMessageReaction.Yes) {
+
+                            // Delete the Gotchi from the database.
+                            await GotchiUtils.DeleteGotchiAsync(gotchi.Id);
+
+                            // Show confirmation message.
+
+                            if (gotchi.IsDead())
+                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtils.ToTitleCase(gotchi.Name)));
+                            else
+                                await BotUtils.ReplyAsync_Success(context, string.Format("Gotchi **{0}** was successfully released. Take care, **{0}**!", StringUtils.ToTitleCase(gotchi.Name)));
+
+
+                        }
+
+                    }
+                };
+
+                message.AddReaction(PaginatedMessageReaction.Yes);
+
+                await CommandUtils.SendMessageAsync(context, message.Build());
+
+            }
 
         }
 

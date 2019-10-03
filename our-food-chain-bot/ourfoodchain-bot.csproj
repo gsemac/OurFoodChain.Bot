@@ -296,7 +296,7 @@
     <Compile Include="utils\DateUtils.cs" />
     <Compile Include="utils\HelpUtils.cs" />
     <Compile Include="utils\IoUtils.cs" />
-    <Compile Include="commands\MultistageCommand.cs" />
+    <Compile Include="discord\MultiPartMessage.cs" />
     <Compile Include="reviews\ReviewCache.cs" />
     <Compile Include="reviews\ReviewChannelInfo.cs" />
     <Compile Include="reviews\ReviewInfo.cs" />
@@ -304,7 +304,7 @@
     <Compile Include="discord\EmbedUtils.cs" />
     <Compile Include="utils\LevenshteinDistance.cs" />
     <Compile Include="commands\CommandUtils.cs" />
-    <Compile Include="discord\PaginatedEmbedBuilder.cs" />
+    <Compile Include="discord\PaginatedMessage.cs" />
     <Compile Include="taxa\SearchQuery.cs" />
     <Compile Include="taxa\SpeciesUtils.cs" />
     <Compile Include="utils\LogMessage.cs" />

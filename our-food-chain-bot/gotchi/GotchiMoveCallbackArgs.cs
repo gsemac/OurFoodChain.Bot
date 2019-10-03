@@ -51,6 +51,9 @@ namespace OurFoodChain.Gotchi {
 
         public bool IsCritical { get; set; } = false;
 
+        public void SetTimes(int value) {
+            Times = value;
+        }
         public void SetText(string value) {
             Text = value;
         }

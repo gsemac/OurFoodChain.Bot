@@ -32,7 +32,14 @@ namespace OurFoodChain.Gotchi {
         /// <summary>
         /// The amount of currency (G) owned by the user.
         /// </summary>
-        public long G { get; set; } = 0;
+        public long G {
+            get {
+                return _g;
+            }
+            set {
+                _g = Math.Max(0, value);
+            }
+        }
         /// <summary>
         /// The Discord user ID of the user.
         /// </summary>
@@ -45,6 +52,10 @@ namespace OurFoodChain.Gotchi {
         /// The ID of the user's primary gotchi.
         /// </summary>
         public long PrimaryGotchiId { get; set; } = Gotchi.NullGotchiId;
+
+        // Private members
+
+        private long _g = 0;
 
     }
 

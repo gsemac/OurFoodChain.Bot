@@ -752,6 +752,8 @@ namespace OurFoodChain.Gotchi {
 
                 if (item.cost > (ulong)user_data.G) {
 
+                    item_failed = true;
+
                     await BotUtils.ReplyAsync_Error(Context, string.Format("You don't have enough G to afford this item ({0:n0}G).", item.cost));
 
                 }

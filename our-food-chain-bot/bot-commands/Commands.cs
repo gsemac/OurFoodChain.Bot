@@ -627,52 +627,61 @@ namespace OurFoodChain.Commands {
         [Command("profile")]
         public async Task Profile(IUser user) {
 
-            // Get basic information about the user.
-
-            UserInfo userInfo = await UserUtils.GetUserInfoAsync(user.Username, user.Id, UserInfoQueryFlags.MatchBoth);
-            long daysSinceFirstSubmission = (DateUtils.GetCurrentTimestamp() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
-            UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchBoth);
-
-            // Get the user's most active genus.
-
-            Species[] userSpecies = await UserUtils.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchBoth);
-
-            IGrouping<string, string> favoriteGenusGrouping = userSpecies
-                .Select(x => x.GenusName)
-                .GroupBy(x => x)
-                .OrderByDescending(x => x.Count())
-                .FirstOrDefault();
-
-            string favoriteGenus = favoriteGenusGrouping is null ? "N/A" : favoriteGenusGrouping.First();
-            int favoriteGenusCount = favoriteGenusGrouping is null ? 0 : favoriteGenusGrouping.Count();
-
-            int userSpeciesCount = userSpecies.Count();
-            int speciesCount = await SpeciesUtils.GetSpeciesCount();
-
-            // Get the user's rarest trophy.
-
-            string rarest_trophy = "N/A";
-
-            Trophies.UnlockedTrophyInfo[] unlocked = await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
-
-            if (unlocked.Count() > 0) {
-
-                Array.Sort(unlocked, (lhs, rhs) => lhs.timesUnlocked.CompareTo(rhs.timesUnlocked));
-
-                Trophies.Trophy trophy = await Global.TrophyRegistry.GetTrophyByIdentifierAsync(unlocked[0].identifier);
-
-                rarest_trophy = trophy.GetName();
-
-            }
-
-            // Put together the user's profile.
+            // Begin building the embed (add default parameters).
 
             EmbedBuilder embed = new EmbedBuilder();
 
             embed.WithTitle(string.Format("{0}'s profile", user.Username));
             embed.WithThumbnailUrl(user.GetAvatarUrl(size: 64));
 
-            if (userSpecies.Count() > 0) {
+            // Get basic information about the user.
+            // This will return null if the user hasn't been seen before.
+
+            UserInfo userInfo = await UserUtils.GetUserInfoAsync(user.Username, user.Id, UserInfoQueryFlags.MatchBoth);
+
+            if (userInfo is null) {
+
+                embed.WithDescription(string.Format("{0} has not submitted any species.", user.Username));
+
+            }
+            else {
+
+                long daysSinceFirstSubmission = (DateUtils.GetCurrentTimestamp() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
+                UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchBoth);
+
+                // Get the user's most active genus.
+
+                Species[] userSpecies = await UserUtils.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchBoth);
+
+                IGrouping<string, string> favoriteGenusGrouping = userSpecies
+                    .Select(x => x.GenusName)
+                    .GroupBy(x => x)
+                    .OrderByDescending(x => x.Count())
+                    .FirstOrDefault();
+
+                string favoriteGenus = favoriteGenusGrouping is null ? "N/A" : favoriteGenusGrouping.First();
+                int favoriteGenusCount = favoriteGenusGrouping is null ? 0 : favoriteGenusGrouping.Count();
+
+                int userSpeciesCount = userSpecies.Count();
+                int speciesCount = await SpeciesUtils.GetSpeciesCount();
+
+                // Get the user's rarest trophy.
+
+                string rarest_trophy = "N/A";
+
+                Trophies.UnlockedTrophyInfo[] unlocked = await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
+
+                if (unlocked.Count() > 0) {
+
+                    Array.Sort(unlocked, (lhs, rhs) => lhs.timesUnlocked.CompareTo(rhs.timesUnlocked));
+
+                    Trophies.Trophy trophy = await Global.TrophyRegistry.GetTrophyByIdentifierAsync(unlocked[0].identifier);
+
+                    rarest_trophy = trophy.GetName();
+
+                }
+
+                // Put together the user's profile.
 
                 if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
 
@@ -711,8 +720,6 @@ namespace OurFoodChain.Commands {
                 }
 
             }
-            else
-                embed.WithDescription(string.Format("{0} has not submitted any species.", user.Username));
 
             await ReplyAsync("", false, embed.Build());
 

@@ -811,6 +811,14 @@ namespace OurFoodChain {
 
                                 break;
 
+                            case "size":
+
+                                await result.FilterByAsync((x) => {
+                                    return Task.FromResult(SpeciesSizeMatch.Match(x.description).ToString() == SpeciesSizeMatch.UNKNOWN_SIZE_STRING);
+                                }, subtract);
+
+                                break;
+
                         }
 
                     }

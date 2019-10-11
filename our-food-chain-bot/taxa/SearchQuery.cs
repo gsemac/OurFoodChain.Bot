@@ -817,12 +817,31 @@ namespace OurFoodChain {
 
                     break;
 
+                case "anc":
                 case "ancestor": {
 
-                        Species[] species_list = await SpeciesUtils.GetSpeciesAsync(value);
+                        // Filter all species that don't have the given species as an ancestor.
+
+                        Species species = await SpeciesUtils.GetUniqueSpeciesAsync(value);
 
                         await result.FilterByAsync(async (x) => {
-                            return species_list.Count() != 1 || !(await SpeciesUtils.GetAncestorIdsAsync(x.id)).Any(id => id == species_list[0].id);
+                            return species is null || !(await SpeciesUtils.GetAncestorIdsAsync(x.id)).Any(id => id == species.id);
+                        }, subtract);
+
+                    }
+
+                    break;
+
+                case "evo":
+                case "descendant": {
+
+                        // Filter all species that don't have the given species as a descendant.
+
+                        Species species = await SpeciesUtils.GetUniqueSpeciesAsync(value);
+                        long[] ancestorIds = await SpeciesUtils.GetAncestorIdsAsync(species.id);
+
+                        await result.FilterByAsync((x) => {
+                            return Task.FromResult(ancestorIds.Length <= 0 || !ancestorIds.Any(id => id == x.id));
                         }, subtract);
 
                     }

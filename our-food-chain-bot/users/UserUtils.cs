@@ -12,7 +12,7 @@ namespace OurFoodChain {
         // If a user ID is provided, only return results that match that user ID.
         PreferUserIdMatch = 0,
         // Returns results that match the user ID or the username.
-        MatchBoth = 1,
+        MatchEither = 1,
         Default = PreferUserIdMatch
     }
 
@@ -38,7 +38,7 @@ namespace OurFoodChain {
 
                 string query;
 
-                if (flags.HasFlag(UserInfoQueryFlags.MatchBoth)) {
+                if (flags.HasFlag(UserInfoQueryFlags.MatchEither)) {
 
                     query = "SELECT owner, user_id, timestamp FROM Species WHERE user_id = $user_id OR owner = $owner";
 
@@ -131,16 +131,18 @@ namespace OurFoodChain {
         public static async Task<UserRank> GetRankAsync(UserInfo userInfo, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
 
             return (await GetRanksAsync())
-                .Where(x => x.User.Id == userInfo.Id || ((flags.HasFlag(UserInfoQueryFlags.MatchBoth) || x.User.Id == UserInfo.NullId) && x.User.Username == userInfo.Username))
+                .Where(x => x.User.Id == userInfo.Id || ((flags.HasFlag(UserInfoQueryFlags.MatchEither) || x.User.Id == UserInfo.NullId) && x.User.Username == userInfo.Username))
                 .FirstOrDefault();
 
         }
 
         public static async Task<Species[]> GetSpeciesAsync(UserInfo userInfo, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
 
-            string query = "SELECT * FROM Species WHERE user_id = $user_id";
+            string query = userInfo.Id == UserInfo.NullId ?
+                "SELECT * FROM Species WHERE owner = $owner" :
+                "SELECT * FROM Species WHERE user_id = $user_id";
 
-            if (flags.HasFlag(UserInfoQueryFlags.MatchBoth))
+            if (flags.HasFlag(UserInfoQueryFlags.MatchEither))
                 query = "SELECT * FROM Species WHERE owner = $owner OR user_id = $user_id";
 
             List<Species> result = new List<Species>();

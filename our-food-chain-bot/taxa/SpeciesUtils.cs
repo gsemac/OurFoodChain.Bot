@@ -529,7 +529,11 @@ namespace OurFoodChain {
 
                 cmd.Parameters.AddWithValue("$id", species.id);
                 cmd.Parameters.AddWithValue("$owner", ownerName);
-                cmd.Parameters.AddWithValue("$user_id", ownerId);
+
+                if (ownerId == UserInfo.NullId)
+                    cmd.Parameters.AddWithValue("$user_id", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("$user_id", ownerId);
 
                 await Database.ExecuteNonQuery(cmd);
 

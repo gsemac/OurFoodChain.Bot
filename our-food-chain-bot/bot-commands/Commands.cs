@@ -637,7 +637,7 @@ namespace OurFoodChain.Commands {
             // Get basic information about the user.
             // This will return null if the user hasn't been seen before.
 
-            UserInfo userInfo = await UserUtils.GetUserInfoAsync(user.Username, user.Id, UserInfoQueryFlags.MatchBoth);
+            UserInfo userInfo = await UserUtils.GetUserInfoAsync(user.Username, user.Id, UserInfoQueryFlags.MatchEither);
 
             if (userInfo is null) {
 
@@ -647,11 +647,11 @@ namespace OurFoodChain.Commands {
             else {
 
                 long daysSinceFirstSubmission = (DateUtils.GetCurrentTimestamp() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
-                UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchBoth);
+                UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchEither);
 
                 // Get the user's most active genus.
 
-                Species[] userSpecies = await UserUtils.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchBoth);
+                Species[] userSpecies = await UserUtils.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchEither);
 
                 IGrouping<string, string> favoriteGenusGrouping = userSpecies
                     .Select(x => x.GenusName)

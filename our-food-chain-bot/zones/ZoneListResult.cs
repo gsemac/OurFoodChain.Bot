@@ -9,7 +9,7 @@ namespace OurFoodChain {
     public class ZoneListResult {
 
         public Zone[] Zones { get; set; }
-        public string[] Invalid { get; set; }
+        public string[] InvalidZones { get; set; }
 
     }
 

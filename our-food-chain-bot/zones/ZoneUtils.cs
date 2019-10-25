@@ -13,6 +13,8 @@ namespace OurFoodChain {
 
     public static class ZoneUtils {
 
+        // Public members
+
         public static async Task<Zone> GetZoneAsync(long zoneId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id = $zone_id")) {
@@ -95,7 +97,7 @@ namespace OurFoodChain {
 
             return new ZoneListResult {
                 Zones = valid.ToArray(),
-                Invalid = invalid.ToArray()
+                InvalidZones = invalid.ToArray()
             };
 
         }
@@ -274,6 +276,8 @@ namespace OurFoodChain {
             return true;
 
         }
+
+        // Private members
 
         private static string[] _parseZoneList(string zoneList) {
 

@@ -317,6 +317,7 @@
     <Compile Include="utils\TimeAmount.cs" />
     <Compile Include="utils\Tree.cs" />
     <Compile Include="utils\Utils.cs" />
+    <Compile Include="zones\SpeciesZoneCollection.cs" />
     <Compile Include="zones\Zone.cs" />
     <Compile Include="zones\ZoneListResult.cs" />
     <Compile Include="zones\ZoneType.cs" />

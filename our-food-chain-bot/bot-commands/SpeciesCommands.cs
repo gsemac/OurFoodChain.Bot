@@ -324,13 +324,13 @@ namespace OurFoodChain.Commands {
             // Remove the zones from the species.
             await SpeciesUtils.RemoveZonesAsync(sp, zones.Zones);
 
-            if (zones.Invalid.Count() > 0) {
+            if (zones.InvalidZones.Count() > 0) {
 
                 // Show a warning if the user provided any invalid zones.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtils.ConjunctiveJoin(", ", zones.Invalid.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
-                    zones.Invalid.Count() == 1 ? "does" : "do"));
+                    StringUtils.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
+                    zones.InvalidZones.Count() == 1 ? "does" : "do"));
 
             }
 
@@ -540,27 +540,7 @@ namespace OurFoodChain.Commands {
 
                 embed.AddField("Owner", await species.GetOwnerOrDefault(context), inline: true);
 
-                // Group zones according to the ones that have the same notes.
-
-                List<string> zones_value_builder = new List<string>();
-
                 SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(species);
-
-                zone_list.GroupBy(x => string.IsNullOrEmpty(x.Notes) ? "" : x.Notes)
-                    .OrderBy(x => x.Key)
-                    .ToList()
-                    .ForEach(x => {
-
-                        // Create an array of zone names, and sort them according to name.
-                        List<string> zones_array = x.Select(y => y.Zone.GetShortName()).ToList();
-                        zones_array.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
-
-                        if (string.IsNullOrEmpty(x.Key))
-                            zones_value_builder.Add(StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "));
-                        else
-                            zones_value_builder.Add(string.Format("{0} ({1})", StringUtils.CollapseAlphanumericList(string.Join(", ", zones_array), ", "), x.Key.ToLower()));
-
-                    });
 
                 if (zone_list.Count() > 0) {
 
@@ -572,7 +552,7 @@ namespace OurFoodChain.Commands {
 
                 }
 
-                string zones_value = string.Join("; ", zones_value_builder);
+                string zones_value = new SpeciesZoneCollection(zone_list).ToString(SpeciesZoneCollectionToStringOptions.Default, DiscordUtils.MaxFieldLength);
 
                 embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
 
@@ -672,13 +652,13 @@ namespace OurFoodChain.Commands {
             // Add the zones to the species.
             await SpeciesUtils.AddZonesAsync(species, zones.Zones, notes);
 
-            if (zones.Invalid.Count() > 0) {
+            if (zones.InvalidZones.Count() > 0) {
 
                 // Show a warning if the user provided any invalid zones.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtils.ConjunctiveJoin(", ", zones.Invalid.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
-                    zones.Invalid.Count() == 1 ? "does" : "do"));
+                    StringUtils.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
+                    zones.InvalidZones.Count() == 1 ? "does" : "do"));
 
             }
 

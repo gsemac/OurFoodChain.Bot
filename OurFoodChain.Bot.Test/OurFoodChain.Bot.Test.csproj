@@ -56,9 +56,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\our-food-chain-bot\ourfoodchain-bot.csproj">
+    <ProjectReference Include="..\OurFoodChain.Bot\OurFoodChain.Bot.csproj">
       <Project>{8ea1fe67-f170-45b4-abb0-a1dd6142c389}</Project>
-      <Name>ourfoodchain-bot</Name>
+      <Name>OurFoodChain.Bot</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

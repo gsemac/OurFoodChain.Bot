@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28306.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ourfoodchain-bot", "our-food-chain-bot\ourfoodchain-bot.csproj", "{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot", "OurFoodChain.Bot\OurFoodChain.Bot.csproj", "{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ourfoodchainwiki-bot", "ourfoodchainwiki-bot\ourfoodchainwiki-bot.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Wiki", "OurFoodChain.Wiki\OurFoodChain.Wiki.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ourfoodchain-bot-tests", "ourfoodchain-bot-tests\ourfoodchain-bot-tests.csproj", "{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot.Test", "OurFoodChain.Bot.Test\OurFoodChain.Bot.Test.csproj", "{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

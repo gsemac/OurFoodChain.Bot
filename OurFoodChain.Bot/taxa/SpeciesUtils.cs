@@ -345,13 +345,16 @@ namespace OurFoodChain {
         }
 
         public static async Task<SpeciesZone[]> GetZonesAsync(Species species) {
+            return await GetZonesAsync(species.id);
+        }
+        public static async Task<SpeciesZone[]> GetZonesAsync(long speciesId) {
 
             List<SpeciesZone> zones = new List<SpeciesZone>();
 
             using (SQLiteConnection conn = await Database.GetConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesZones WHERE species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
 
                 using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
                     foreach (DataRow row in rows.Rows) {

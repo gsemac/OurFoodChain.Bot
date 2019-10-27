@@ -132,17 +132,50 @@ namespace OurFoodChain {
 
             // Consider a species "endangered" if:
             // - All of its prey has gone extinct.
+            // - It has a descendant in the same zone that consumes all of the same prey items.
+
+            bool isEndangered = false;
 
             if (species.isExtinct)
-                return false;
+                return isEndangered;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM Predates WHERE eats_id NOT IN (SELECT species_id FROM Extinctions)) AND id IN (SELECT species_id from Predates)")) {
+            if (!isEndangered) {
 
-                cmd.Parameters.AddWithValue("$id", species.id);
+                // Check if all of this species' prey species have gone extinct.
 
-                return await Database.GetScalar<long>(cmd) > 0;
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM Predates WHERE eats_id NOT IN (SELECT species_id FROM Extinctions)) AND id IN (SELECT species_id from Predates)")) {
+
+                    cmd.Parameters.AddWithValue("$id", species.id);
+
+                    isEndangered = await Database.GetScalar<long>(cmd) > 0;
+
+                }
 
             }
+
+            if (!isEndangered) {
+
+                // Check if this species has a direct descendant in the same zone that consumes all of the same prey items.
+
+                string query =
+                    @"SELECT COUNT(*) FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id) AND EXISTS (
+                        SELECT * FROM (SELECT COUNT(*) AS prey_count FROM Predates WHERE species_id = $ancestor_id) WHERE prey_count > 0 AND prey_count = (
+			                SELECT COUNT(*) FROM ((SELECT * FROM Predates WHERE species_id = Species.id) Predates1 INNER JOIN (SELECT * FROM Predates WHERE species_id = $ancestor_id) Predates2 ON Predates1.eats_id = Predates2.eats_id)
+                        )
+	                )
+                    AND EXISTS (SELECT * FROM SpeciesZones WHERE species_id = Species.id AND zone_id IN (SELECT zone_id FROM SpeciesZones WHERE species_id = $ancestor_id))";
+
+                using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
+                    cmd.Parameters.AddWithValue("$ancestor_id", species.id);
+
+                    isEndangered = await Database.GetScalar<long>(cmd) > 0;
+
+                }
+
+            }
+
+            return isEndangered;
 
         }
 

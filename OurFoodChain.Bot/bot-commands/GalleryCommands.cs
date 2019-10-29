@@ -104,16 +104,20 @@ namespace OurFoodChain {
 
             Picture[] pictures = await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species));
 
-            bool first_picture = pictures.Count() <= 0;
-            bool picture_already_exists = pictures.Any(x => x.url == imageUrl);
+            bool firstPicture = pictures.Count() <= 0;
+            bool pictureAlreadyExists = pictures.Any(x => x.url == imageUrl);
 
-            await SpeciesUtils.AddPictureAsync(species, new Picture {
-                url = imageUrl,
-                description = description,
-                artist = first_picture ? species.owner : Context.User.Username
-            });
+            Picture picture = pictures.Where(x => x.url == imageUrl).FirstOrDefault() ?? new Picture();
 
-            if (picture_already_exists)
+            picture.url = imageUrl;
+            picture.description = description;
+
+            if (string.IsNullOrEmpty(picture.artist))
+                picture.artist = firstPicture ? species.owner : Context.User.Username;
+
+            await SpeciesUtils.AddPictureAsync(species, picture);
+
+            if (pictureAlreadyExists)
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
             else
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));

@@ -13,7 +13,7 @@ namespace OurFoodChain.Wiki {
         public Species[] AllSpecies { get; set; }
         public WikiPageTemplate Template { get; set; }
         public WikiLinkList LinkList { get; set; }
-        public string PictureFilename { get; set; }
+        public List<string> PictureFilenames { get; set; } = new List<string>();
 
         public SpeciesPageBuilder(Species species, WikiPageTemplate template) {
 
@@ -95,15 +95,18 @@ namespace OurFoodChain.Wiki {
             Template.ReplaceToken("ancestor", await GetAncestorTokenValueAsync());
             Template.ReplaceToken("creation_date", await GetCreationDateTokenValueAsync());
             Template.ReplaceToken("extinction_date", await GetExtinctionDateTokenValueAsync());
-            Template.ReplaceToken("extinction_reason", await GetExtinctionDateTokenValueAsync());
+            Template.ReplaceToken("extinction_reason", await GetExtinctionReasonTokenValueAsync());
             Template.ReplaceToken("description", await GetDescriptionTokenValueAsync());
+            Template.ReplaceToken("gallery", await GetGalleryTokenValueAsync());
 
-            return Template.Text;
+            return Template.Text.Trim();
 
         }
 
         private async Task<string> GetPictureTokenValueAsync() {
-            return await Task.FromResult(string.IsNullOrEmpty(PictureFilename) ? string.Empty : string.Format("File:{0}", PictureFilename));
+
+            return await Task.FromResult(PictureFilenames.Count() <= 0 ? string.Empty : string.Format("File:{0}", PictureFilenames.First()));
+
         }
         private async Task<string> GetOwnerTokenValueAsync() {
             return await Task.FromResult(Species.owner);
@@ -169,6 +172,24 @@ namespace OurFoodChain.Wiki {
             description = WikiPageUtils.ReplaceMarkdownWithWikiMarkup(description);
 
             return await Task.FromResult(description);
+
+        }
+        private async Task<string> GetGalleryTokenValueAsync() {
+
+            if (PictureFilenames.Count() <= 1)
+                return await Task.FromResult(string.Empty);
+
+            StringBuilder galleryBuilder = new StringBuilder();
+
+            galleryBuilder.AppendLine("== Gallery ==");
+            galleryBuilder.AppendLine("<gallery>");
+
+            foreach (string filename in PictureFilenames.Skip(1))
+                galleryBuilder.AppendLine(string.Format("File:{0}", filename));
+
+            galleryBuilder.AppendLine("</gallery>");
+
+            return await Task.FromResult(galleryBuilder.ToString());
 
         }
 

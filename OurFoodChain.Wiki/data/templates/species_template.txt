@@ -14,3 +14,4 @@
 |ExtinctionReason=%extinction_reason%
 }}
 %description%
+%gallery%

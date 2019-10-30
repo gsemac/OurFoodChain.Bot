@@ -62,7 +62,9 @@ namespace OurFoodChain.Wiki {
 
                     // Attempt to upload the species' picture.
 
-                    pageBuilder.PictureFilename = await _uploadSpeciesPictureAsync(client, history, species);
+                    pageBuilder.PictureFilenames.Add(await UploadSpeciesPictureAsync(client, history, species));
+                    pageBuilder.PictureFilenames.AddRange(await UploadSpeciesGalleryAsync(client, history, species));
+                    pageBuilder.PictureFilenames.RemoveAll(x => string.IsNullOrWhiteSpace(x));
 
                     // Generate page content.
 
@@ -87,7 +89,7 @@ namespace OurFoodChain.Wiki {
                     }
 
                     _log(string.Format("finished synchronizing species {0}", species.GetShortName()));
-
+            
                 }
 
             }
@@ -113,7 +115,7 @@ namespace OurFoodChain.Wiki {
             });
 
         }
-        private static void _log(OurFoodChain.LogMessage message) {
+        private static void _log(LogMessage message) {
 
             if (string.IsNullOrEmpty(LogFilePath)) {
 
@@ -129,19 +131,6 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private static string _generateSpeciesPictureFileName(OurFoodChain.Species species) {
-
-            if (string.IsNullOrEmpty(species.pics))
-                return string.Empty;
-
-            string image_url = species.pics;
-
-            if (image_url.Contains("?"))
-                image_url = image_url.Substring(0, image_url.LastIndexOf("?"));
-
-            return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(image_url).ToLower());
-
-        }
         private static async Task<WikiLinkList> _generateLinkifyListAsync() {
 
             // Returns a dictionary of substrings that should be turned into page links in page content.
@@ -150,9 +139,9 @@ namespace OurFoodChain.Wiki {
 
             // Add species names to the dictionary.
 
-            OurFoodChain.Species[] species_list = await OurFoodChain.SpeciesUtils.GetSpeciesAsync();
+            Species[] species_list = await SpeciesUtils.GetSpeciesAsync();
 
-            foreach (OurFoodChain.Species species in species_list) {
+            foreach (Species species in species_list) {
 
                 list.Add(species.ShortName.ToLower(), species.FullName);
                 list.Add(species.FullName.ToLower(), species.FullName);
@@ -163,7 +152,7 @@ namespace OurFoodChain.Wiki {
 
             }
 
-            foreach (OurFoodChain.Species species in species_list) {
+            foreach (Species species in species_list) {
 
                 // Also linkify binomial names that might be using outdated genera (e.g. Species moved to a new genus since the description was written).
                 // Only do this for species that have a unique name-- otherwise, there's no way to know for sure which species to link to!
@@ -176,9 +165,9 @@ namespace OurFoodChain.Wiki {
 
             // Add zone names to the dictionary.
 
-            OurFoodChain.Zone[] zones_list = await OurFoodChain.ZoneUtils.GetZonesAsync();
+            Zone[] zones_list = await ZoneUtils.GetZonesAsync();
 
-            foreach (OurFoodChain.Zone zone in zones_list) {
+            foreach (Zone zone in zones_list) {
 
                 list.Add(zone.FullName.ToLower(), zone.FullName);
 
@@ -188,28 +177,99 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private static async Task<string> _uploadSpeciesPictureAsync(MediaWikiClient client, EditHistory history, OurFoodChain.Species species) {
+        private static string GeneratePictureFilenameFromSpecies(Species species) {
+
+            if (string.IsNullOrEmpty(species.pics))
+                return string.Empty;
+
+            string pictureFilename = GetPictureFilenameFromPictureUrl(species.pics);
+
+            return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(pictureFilename).ToLower());
+
+        }
+        private static string GeneratePictureFilenameFromSpecies(Species species, string pictureUrl) {
+
+            string pictureFilename = GetPictureFilenameFromPictureUrl(pictureUrl);
+
+            return string.Format("{0}-{1}{2}", species.GetFullName().ToLower().Replace(' ', '_'), StringUtils.CreateMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
+
+        }
+        private static string GetPictureFilenameFromPictureUrl(string pictureUrl) {
+
+            if (string.IsNullOrEmpty(pictureUrl))
+                return string.Empty;
+
+            if (pictureUrl.Contains("?"))
+                pictureUrl = pictureUrl.Substring(0, pictureUrl.LastIndexOf("?"));
+
+            return System.IO.Path.GetFileName(pictureUrl);
+
+        }
+        private static async Task<string> UploadSpeciesPictureAsync(MediaWikiClient client, EditHistory history, Species species) {
 
             // Generate a filename for the image, which will be the filename when it's uploaded to the wiki.
-            string upload_filename = _generateSpeciesPictureFileName(species);
 
-            if (!string.IsNullOrEmpty(upload_filename)) {
+            string uploadedFilename = GeneratePictureFilenameFromSpecies(species);
+
+            if (!string.IsNullOrEmpty(uploadedFilename)) {
 
                 // Attempt to upload the image.
 
-                UploadParameters upload_parameters = new UploadParameters {
-                    UploadFileName = upload_filename,
+                UploadParameters uploadParameters = new UploadParameters {
+                    UploadFileName = uploadedFilename,
                     FilePath = species.pics
                 };
 
-                return await _uploadPictureAsync(client, history, upload_parameters, true);
+                return await UploadPictureAsync(client, history, uploadParameters, true);
 
             }
 
             return string.Empty;
 
         }
-        private static async Task<string> _uploadPictureAsync(MediaWikiClient client, EditHistory history, UploadParameters parameters, bool allowRetry) {
+        private static async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, Species species) {
+
+            // Upload all images in the given species' gallery.
+
+            Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
+            List<string> uploadedFilenames = new List<string>();
+
+            if (pictures != null) {
+
+                foreach (Picture picture in pictures) {
+
+                    // Skip the image if it's the same as the species' default image, because we would've already uploaded it
+
+                    if (picture.url == species.pics)
+                        continue;
+
+                    string uploadedFilename = GeneratePictureFilenameFromSpecies(species, picture.url);
+
+                    if (!string.IsNullOrEmpty(uploadedFilename)) {
+
+                        UploadParameters uploadParameters = new UploadParameters {
+                            UploadFileName = uploadedFilename,
+                            FilePath = picture.url,
+                            Text = picture.description
+                        };
+
+                        uploadedFilename = await UploadPictureAsync(client, history, uploadParameters, true);
+
+                        if (!string.IsNullOrEmpty(uploadedFilename))
+                            uploadedFilenames.Add(uploadedFilename);
+
+                    }
+                    else
+                        _log(string.Format("Failed to generate filename for picture: {0}", picture.url));
+
+                }
+
+            }
+
+            return uploadedFilenames.ToArray();
+
+        }
+        private static async Task<string> UploadPictureAsync(MediaWikiClient client, EditHistory history, UploadParameters parameters, bool allowRetry) {
 
             // Check if we've already uploaded this file before. 
             // If we've uploaded it before, return the filename that we uploaded it with.
@@ -229,6 +289,8 @@ namespace OurFoodChain.Wiki {
 
                     try {
 
+                        parameters.Text = BotFlag + '\n' + parameters.Text;
+
                         MediaWikiApiRequestResult result = client.Upload(parameters);
 
                         if (!result.Success)
@@ -246,7 +308,7 @@ namespace OurFoodChain.Wiki {
 
                             _log("file extension didn't match, retrying upload");
 
-                            return await _uploadPictureAsync(client, history, parameters, false);
+                            return await UploadPictureAsync(client, history, parameters, false);
 
                         }
                         else {
@@ -257,7 +319,7 @@ namespace OurFoodChain.Wiki {
                                 await history.AddUploadRecordAsync(parameters.FilePath, parameters.UploadFileName);
 
                                 // Add the bot flag to the page content.
-                                client.Edit(parameters.PageTitle, new EditParameters { Text = BotFlag });
+                                // client.Edit(parameters.PageTitle, new EditParameters { Text = BotFlag });
 
                             }
                             else
@@ -293,7 +355,7 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private static async Task _editSpeciesPageAsync(MediaWikiClient client, EditHistory history, OurFoodChain.Species species, string pageTitle, string pageContent) {
+        private static async Task _editSpeciesPageAsync(MediaWikiClient client, EditHistory history, Species species, string pageTitle, string pageContent) {
 
             if (await _editPageAsync(client, history, pageTitle, pageContent)) {
 

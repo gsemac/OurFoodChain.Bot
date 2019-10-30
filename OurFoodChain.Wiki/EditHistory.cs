@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChainWikiBot {
+namespace OurFoodChain.Wiki {
 
     public class UploadRecord {
         public long Timestamp { get; set; }

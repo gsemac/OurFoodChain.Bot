@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChainWikiBot {
+namespace OurFoodChain.Wiki {
 
     class Program {
 
@@ -40,68 +40,49 @@ namespace OurFoodChainWikiBot {
 
                 _log("generating link dictionary");
 
-                LinkifyList LinkifyList = await _generateLinkifyListAsync();
+                WikiLinkList LinkifyList = await _generateLinkifyListAsync();
 
                 _log("synchronizing species");
                 _log("getting species from database");
 
-                OurFoodChain.Species[] speciesList = await OurFoodChain.SpeciesUtils.GetSpeciesAsync();
+                Species[] speciesList = await SpeciesUtils.GetSpeciesAsync();
 
                 _log(string.Format("got {0} results", speciesList.Count()));
 
-                foreach (OurFoodChain.Species species in speciesList) {
+                foreach (Species species in speciesList) {
 
                     _log(string.Format("synchronizing species {0}", species.GetShortName()));
 
-                    // Create species page builder data (required for generating page titles).
-
-                    SpeciesPageBuilderSpeciesData speciesData = new SpeciesPageBuilderSpeciesData(species) {
-                        CommonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(species)
-                    };
-
-                    OurFoodChain.Species ancestorSpecies = await OurFoodChain.SpeciesUtils.GetAncestorAsync(species);
-
-                    SpeciesPageBuilderSpeciesData ancestorSpeciesData = ancestorSpecies != null ? new SpeciesPageBuilderSpeciesData(ancestorSpecies) {
-                        CommonNames = await OurFoodChain.SpeciesUtils.GetCommonNamesAsync(ancestorSpecies)
-                    } : null;
-
                     // Create the page builder.
 
-                    SpeciesPageBuilder pageBuilder = new SpeciesPageBuilder(speciesData, PageTemplate.FromFile(SpeciesTemplateFilePath)) {
-                        SpeciesList = speciesList,
-                        AncestorSpeciesData = ancestorSpeciesData,
-                        ExtinctionInfo = await OurFoodChain.SpeciesUtils.GetExtinctionInfoAsync(species),
-                        LinkifyList = LinkifyList,
-                        Roles = await OurFoodChain.SpeciesUtils.GetRolesAsync(species),
-                        Zones = await OurFoodChain.SpeciesUtils.GetZonesAsync(species)
+                    SpeciesPageBuilder pageBuilder = new SpeciesPageBuilder(species, WikiPageTemplate.Open(SpeciesTemplateFilePath)) {
+                        AllSpecies = speciesList,
+                        LinkList = LinkifyList
                     };
-
-                    // Pages are created based on the first/primary common name (where available).
-                    // The full species name is added as a redirect.
-
-                    string page_title = pageBuilder.Title;
-                    bool create_redirect = page_title != species.GetFullName();
 
                     // Attempt to upload the species' picture.
 
-                    pageBuilder.PictureFileName = await _uploadSpeciesPictureAsync(client, history, species);
+                    pageBuilder.PictureFilename = await _uploadSpeciesPictureAsync(client, history, species);
 
                     // Generate page content.
 
-                    string page_content = pageBuilder.Build();
+                    WikiPage wikiPage = await pageBuilder.BuildAsync();
+
+                    string pageTitle = wikiPage.Title;
+                    bool createRedirect = pageTitle != species.GetFullName();
 
                     // Upload page content.
 
-                    await _editSpeciesPageAsync(client, history, species, page_title, page_content);
+                    await _editSpeciesPageAsync(client, history, species, pageTitle, wikiPage.Body);
 
                     // Attempt to create the redirect page for the species (if applicable).
-              
-                    if (create_redirect) {
+
+                    if (createRedirect) {
 
                         string redirect_page_title = species.GetFullName();
 
-                        if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", page_title) + "\n" + BotFlag))
-                            await history.AddRedirectRecordAsync(redirect_page_title, page_title);
+                        if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", pageTitle) + "\n" + BotFlag))
+                            await history.AddRedirectRecordAsync(redirect_page_title, pageTitle);
 
                     }
 
@@ -161,11 +142,11 @@ namespace OurFoodChainWikiBot {
             return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(image_url).ToLower());
 
         }
-        private static async Task<LinkifyList> _generateLinkifyListAsync() {
+        private static async Task<WikiLinkList> _generateLinkifyListAsync() {
 
             // Returns a dictionary of substrings that should be turned into page links in page content.
 
-            LinkifyList list = new LinkifyList();
+            WikiLinkList list = new WikiLinkList();
 
             // Add species names to the dictionary.
 
@@ -189,7 +170,7 @@ namespace OurFoodChainWikiBot {
                 // This might create some false-positives, so it could be a good idea to limit matches only to known genera (at the expense of a significantly longer regex).
 
                 if (list.Count(x => x.Value == species.Name.ToLower()) == 1)
-                    list.Add(string.Format(PageUtils.UnlinkedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower())), species.FullName, LinkifyListDataType.Regex);
+                    list.Add(string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower())), species.FullName, WikiLinkListDataType.Regex);
 
             }
 

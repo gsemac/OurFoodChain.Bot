@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{FBFC575F-C02A-485E-AB50-487805FDBC54}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OurFoodChainWikiBot</RootNamespace>
-    <AssemblyName>ourfoodchainwiki-bot</AssemblyName>
+    <RootNamespace>OurFoodChain.Wiki</RootNamespace>
+    <AssemblyName>OurFoodChain.Wiki</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -67,16 +67,17 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="EditHistory.cs" />
-    <Compile Include="LinkifyList.cs" />
-    <Compile Include="PageTemplate.cs" />
+    <Compile Include="WikiLinkList.cs" />
+    <Compile Include="WikiPageTemplate.cs" />
     <Compile Include="SpeciesPageBuilder.cs" />
-    <Compile Include="utils\PageUtils.cs" />
+    <Compile Include="WikiPageUtils.cs" />
     <Compile Include="WebClientEx.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="MediaWikiClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WikiPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

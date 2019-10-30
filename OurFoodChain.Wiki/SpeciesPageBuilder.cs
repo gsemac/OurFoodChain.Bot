@@ -5,114 +5,68 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChainWikiBot {
-
-    public class SpeciesPageBuilderSpeciesData {
-
-        public SpeciesPageBuilderSpeciesData(OurFoodChain.Species species) {
-            Species = species;
-        }
-
-        public OurFoodChain.Species Species { get; set; }
-        public OurFoodChain.CommonName[] CommonNames { get; set; } = new OurFoodChain.CommonName[] { };
-
-    }
+namespace OurFoodChain.Wiki {
 
     public class SpeciesPageBuilder {
 
-        // Public members
+        public Species Species { get; set; }
+        public Species[] AllSpecies { get; set; }
+        public WikiPageTemplate Template { get; set; }
+        public WikiLinkList LinkList { get; set; }
+        public string PictureFilename { get; set; }
 
-        public string Title {
-            get {
+        public SpeciesPageBuilder(Species species, WikiPageTemplate template) {
 
-                if (!string.IsNullOrEmpty(_title))
-                    return _title;
+            if (species is null)
+                throw new ArgumentNullException("species");
 
-                return _generateTitle(SpeciesData);
+            if (template is null)
+                throw new ArgumentNullException("template");
 
-            }
-            set {
-                _title = value;
-            }
-        }
-        public string PictureFileName { get; set; }
-
-        public SpeciesPageBuilderSpeciesData SpeciesData { get; set; } = null;
-        public SpeciesPageBuilderSpeciesData AncestorSpeciesData { get; set; } = null;
-        public OurFoodChain.ExtinctionInfo ExtinctionInfo { get; set; } = null;
-        public OurFoodChain.SpeciesZone[] Zones { get; set; } = new OurFoodChain.SpeciesZone[] { };
-        public OurFoodChain.Role[] Roles { get; set; } = new OurFoodChain.Role[] { };
-
-        public OurFoodChain.Species[] SpeciesList { get; set; } = new OurFoodChain.Species[] { };
-        public LinkifyList LinkifyList { get; set; } = new LinkifyList();
-
-        public SpeciesPageBuilder(SpeciesPageBuilderSpeciesData speciesData, PageTemplate pageTemplate) {
-
-            SpeciesData = speciesData;
-
-            _template = pageTemplate;
+            Species = species;
+            Template = template;
 
         }
 
-        public string Build() {
+        public async Task<WikiPage> BuildAsync() {
 
-            if (_template is null)
-                throw new Exception("Page template is null");
-
-            string content = _build(_template);
-
-            return content;
+            return new WikiPage {
+                Title = await BuildTitleAsync(),
+                Body = await BuildBodyAsync()
+            };
 
         }
 
-        public override string ToString() {
-            return Build();
+        private async Task<string> BuildTitleAsync() {
+            return await BuildTitleAsync(Species);
         }
+        private async Task<string> BuildTitleAsync(Species species) {
 
-        // Private members
+            if (species is null)
+                throw new ArgumentNullException("species");
 
-        private string _title;
-        private readonly PageTemplate _template;
-
-        private string _build(PageTemplate template) {
-
-            if (SpeciesData is null || SpeciesData.Species is null)
-                throw new Exception("Species is null");
-
-            template.ReplaceToken("picture", string.IsNullOrEmpty(PictureFileName) ? "" : string.Format("File:{0}", PictureFileName));
-            template.ReplaceToken("owner", SpeciesData.Species.owner);
-            template.ReplaceToken("status", SpeciesData.Species.isExtinct ? "Extinct" : "Extant");
-            template.ReplaceToken("common_names", string.Join(", ", SpeciesData.CommonNames.Select(x => x.Value)));
-            template.ReplaceToken("zones", string.Join(", ", Zones.Select(x => x.Zone.ShortName)));
-            template.ReplaceToken("roles", string.Join(", ", Roles.Select(x => x.Name)));
-            template.ReplaceToken("genus", SpeciesData.Species.GenusName);
-            template.ReplaceToken("species", SpeciesData.Species.Name.ToLower());
-            template.ReplaceToken("ancestor", AncestorSpeciesData is null ? "Unknown" : _generateTitle(AncestorSpeciesData));
-            template.ReplaceToken("creation_date", _formatDate(DateTimeOffset.FromUnixTimeSeconds(SpeciesData.Species.timestamp).Date));
-            template.ReplaceToken("extinction_date", ExtinctionInfo is null || !ExtinctionInfo.IsExtinct ? "" : _formatDate(ExtinctionInfo.Date));
-            template.ReplaceToken("extinction_reason", ExtinctionInfo is null || !ExtinctionInfo.IsExtinct ? "" : ExtinctionInfo.Reason);
-            template.ReplaceToken("description", _formatSpeciesDescription());
-
-            return template.Text;
-
-        }
-
-        private static string _generateTitle(SpeciesPageBuilderSpeciesData speciesData) {
+            // Pages are created based on the first/primary common name (where available).
+            // The full species name is added as a redirect.
 
             string title = string.Empty;
 
-            if (speciesData is null || speciesData.Species is null)
-                throw new Exception("Species is null");
+            if (!string.IsNullOrWhiteSpace(species.CommonName))
+                title = species.CommonName;
+            else {
 
-            if (!string.IsNullOrWhiteSpace(speciesData.Species.CommonName))
-                title = speciesData.Species.CommonName;
-            else if (speciesData.CommonNames.Count() > 0)
-                title = speciesData.CommonNames.First().Value;
+                CommonName[] commonNames = await SpeciesUtils.GetCommonNamesAsync(species);
+
+                if (commonNames.Count() > 0)
+                    title = commonNames.First().Value;
+                else
+                    title = species.FullName;
+
+            }
 
             // If the title is empty for whatever reason (common names set to whitespace, for example), use the species' binomial name.
 
             if (string.IsNullOrWhiteSpace(title))
-                title = speciesData.Species.FullName;
+                title = species.FullName;
 
             // Trim any surrounding whitespace from the title.
 
@@ -122,87 +76,175 @@ namespace OurFoodChainWikiBot {
             return title;
 
         }
+        private async Task<string> BuildBodyAsync() {
 
-        private string _formatSpeciesDescription() {
+            if (Species is null)
+                throw new Exception("Species cannot be null.");
 
-            if (SpeciesData is null || SpeciesData.Species is null)
-                throw new Exception("Species is null");
+            if (Template is null)
+                throw new ArgumentNullException("Template cannot be null.");
 
-            string description = SpeciesData.Species.GetDescriptionOrDefault();
+            Template.ReplaceToken("picture", await GetPictureTokenValueAsync());
+            Template.ReplaceToken("owner", await GetOwnerTokenValueAsync());
+            Template.ReplaceToken("status", await GetStatusTokenValueAsync());
+            Template.ReplaceToken("common_names", await GetCommonNamesTokenValueAsync());
+            Template.ReplaceToken("zones", await GetZonesTokenValueAsync());
+            Template.ReplaceToken("roles", await GetRolesTokenValueAsync());
+            Template.ReplaceToken("genus", await GetGenusTokenValueAsync());
+            Template.ReplaceToken("species", await GetSpeciesTokenValueAsync());
+            Template.ReplaceToken("ancestor", await GetAncestorTokenValueAsync());
+            Template.ReplaceToken("creation_date", await GetCreationDateTokenValueAsync());
+            Template.ReplaceToken("extinction_date", await GetExtinctionDateTokenValueAsync());
+            Template.ReplaceToken("extinction_reason", await GetExtinctionDateTokenValueAsync());
+            Template.ReplaceToken("description", await GetDescriptionTokenValueAsync());
 
-            description = _italicizeBinomialNames(description); // do this before replacing links so that links can be italicized more easily
-            description = _replaceLinks(description);
-            description = _emboldenFirstMentionOfSpecies(description);
-            description = PageUtils.ReplaceMarkdownWithWikiMarkup(description);
+            return Template.Text;
 
-            return description;
+        }
+
+        private async Task<string> GetPictureTokenValueAsync() {
+            return await Task.FromResult(string.IsNullOrEmpty(PictureFilename) ? string.Empty : string.Format("File:{0}", PictureFilename));
+        }
+        private async Task<string> GetOwnerTokenValueAsync() {
+            return await Task.FromResult(Species.owner);
+        }
+        private async Task<string> GetStatusTokenValueAsync() {
+            return await Task.FromResult(Species.isExtinct ? "Extinct" : "Extant");
+        }
+        private async Task<string> GetCommonNamesTokenValueAsync() {
+            return await Task.FromResult(string.Join(", ", SpeciesUtils.GetCommonNamesAsync(Species).Result.Select(x => x.Value)));
+        }
+        private async Task<string> GetZonesTokenValueAsync() {
+            return string.Join(", ", (await SpeciesUtils.GetZonesAsync(Species)).Select(x => x.Zone.ShortName));
+        }
+        private async Task<string> GetRolesTokenValueAsync() {
+            return string.Join(", ", (await SpeciesUtils.GetRolesAsync(Species)).Select(x => x.Name));
+        }
+        private async Task<string> GetGenusTokenValueAsync() {
+            return await Task.FromResult(Species.GenusName);
+        }
+        private async Task<string> GetSpeciesTokenValueAsync() {
+            return await Task.FromResult(Species.Name.ToLower());
+        }
+        private async Task<string> GetAncestorTokenValueAsync() {
+
+            Species ancestorSpecies = await SpeciesUtils.GetAncestorAsync(Species);
+
+            if (ancestorSpecies != null)
+                return await BuildTitleAsync(ancestorSpecies);
+            else
+                return await Task.FromResult("Unknown");
+
+        }
+        private async Task<string> GetCreationDateTokenValueAsync() {
+            return await Task.FromResult(FormatDate(DateTimeOffset.FromUnixTimeSeconds(Species.timestamp).Date));
+        }
+        private async Task<string> GetExtinctionDateTokenValueAsync() {
+
+            ExtinctionInfo extinctionInfo = await SpeciesUtils.GetExtinctionInfoAsync(Species);
+
+            if (extinctionInfo.IsExtinct)
+                return await Task.FromResult(FormatDate(extinctionInfo.Date));
+            else
+                return await Task.FromResult(string.Empty);
+
+        }
+        private async Task<string> GetExtinctionReasonTokenValueAsync() {
+
+            ExtinctionInfo extinctionInfo = await SpeciesUtils.GetExtinctionInfoAsync(Species);
+
+            if (extinctionInfo.IsExtinct)
+                return await Task.FromResult(extinctionInfo.Reason);
+            else
+                return await Task.FromResult(string.Empty);
+
+        }
+        private async Task<string> GetDescriptionTokenValueAsync() {
+
+            string description = Species.GetDescriptionOrDefault();
+
+            description = ItalicizeBinomialNames(description); // do this before replacing links so that links can be italicized more easily
+            description = ReplaceLinks(description);
+            description = EmboldenFirstMentionOfSpecies(description);
+            description = WikiPageUtils.ReplaceMarkdownWithWikiMarkup(description);
+
+            return await Task.FromResult(description);
 
         }
 
-        private string _replaceLinks(string Content) {
+        private string FormatDate(DateTime date) {
 
-            // Only replace links that don't refer to the current species (either by name or by target).
+            string dayString = date.Day.ToString();
 
-            return PageUtils.FormatPageLinksIf(Content, LinkifyList, x => !_stringMatchesSpeciesName(x.Value, SpeciesData.Species) && !_stringMatchesSpeciesName(x.Target, SpeciesData.Species));
+            if (dayString.Last() == '1' && !dayString.EndsWith("11"))
+                dayString += "st";
+            else if (dayString.Last() == '2' && !dayString.EndsWith("12"))
+                dayString += "nd";
+            else if (dayString.Last() == '3' && !dayString.EndsWith("13"))
+                dayString += "rd";
+            else
+                dayString += "th";
 
-        }
-        private string _emboldenFirstMentionOfSpecies(string content) {
-
-            List<string> to_match = new List<string> {
-                string.Format(PageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(SpeciesData.Species.FullName.ToLower())),
-                string.Format(PageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(SpeciesData.Species.ShortName.ToLower())),
-                string.Format(PageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(SpeciesData.Species.Name.ToLower()))
-            };
-
-            if (!string.IsNullOrEmpty(SpeciesData.Species.CommonName))
-                string.Format(PageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(SpeciesData.Species.CommonName.ToLower()));
-
-            Regex regex = new Regex(string.Join("|", to_match), RegexOptions.IgnoreCase);
-
-            return PageUtils.FormatFirstMatch(content, regex, TextFormatting.Bold);
+            return string.Format("{1:MMMM} {0}, {1:yyyy}", dayString, date);
 
         }
-        private string _italicizeBinomialNames(string content) {
 
-            foreach (OurFoodChain.Species species in SpeciesList) {
+        private string ReplaceLinks(string input) {
 
-                List<string> to_match = new List<string> {
-                    string.Format(PageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.FullName)),
-                    string.Format(PageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.ShortName)),
-                };
+            if (LinkList != null) {
 
-                Regex regex = new Regex(string.Join("|", to_match), RegexOptions.IgnoreCase);
+                // Only replace links that don't refer to the current species (either by name or by target).
 
-                content = PageUtils.FormatAllMatches(content, regex, TextFormatting.Italic);
-
-                // Also italicize binomial names that might be using outdated genera (e.g. Species moved to a new genus since the description was written).
-                // This might create some false-positives, so it could be a good idea to limit matches only to known genera (at the expense of a significantly longer regex).
-                content = PageUtils.FormatAllMatches(content, new Regex(string.Format(PageUtils.UnformattedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower()))), TextFormatting.Italic);
+                input = WikiPageUtils.FormatPageLinksIf(input, LinkList, x => !StringMatchesSpeciesName(x.Value, Species) && !StringMatchesSpeciesName(x.Target, Species));
 
             }
 
-            return content;
+            return input;
 
         }
+        private string EmboldenFirstMentionOfSpecies(string input) {
 
-        private string _formatDate(DateTime date) {
+            List<string> toMatch = new List<string> {
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.FullName.ToLower())),
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.ShortName.ToLower())),
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.Name.ToLower()))
+            };
 
-            string day_string = date.Day.ToString();
+            if (!string.IsNullOrEmpty(Species.CommonName))
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.CommonName.ToLower()));
 
-            if (day_string.Last() == '1' && !day_string.EndsWith("11"))
-                day_string += "st";
-            else if (day_string.Last() == '2' && !day_string.EndsWith("12"))
-                day_string += "nd";
+            Regex regex = new Regex(string.Join("|", toMatch), RegexOptions.IgnoreCase);
 
-            else if (day_string.Last() == '3' && !day_string.EndsWith("13"))
-                day_string += "rd";
-            else
-                day_string += "th";
-
-            return string.Format("{1:MMMM} {0}, {1:yyyy}", day_string, date);
+            return WikiPageUtils.FormatFirstMatch(input, regex, TextFormatting.Bold);
 
         }
-        private bool _stringMatchesSpeciesName(string name, OurFoodChain.Species species) {
+        private string ItalicizeBinomialNames(string input) {
+
+            if (AllSpecies != null) {
+
+                foreach (Species species in AllSpecies) {
+
+                    List<string> to_match = new List<string> {
+                    string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.FullName)),
+                    string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.ShortName)),
+                };
+
+                    Regex regex = new Regex(string.Join("|", to_match), RegexOptions.IgnoreCase);
+
+                    input = WikiPageUtils.FormatAllMatches(input, regex, TextFormatting.Italic);
+
+                    // Also italicize binomial names that might be using outdated genera (e.g. Species moved to a new genus since the description was written).
+                    // This might create some false-positives, so it could be a good idea to limit matches only to known genera (at the expense of a significantly longer regex).
+                    input = WikiPageUtils.FormatAllMatches(input, new Regex(string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower()))), TextFormatting.Italic);
+
+                }
+
+            }
+
+            return input;
+
+        }
+        private bool StringMatchesSpeciesName(string name, Species species) {
 
             name = name.ToLower();
 

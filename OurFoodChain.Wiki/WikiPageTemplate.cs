@@ -5,9 +5,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChainWikiBot {
+namespace OurFoodChain.Wiki {
 
-    public class PageTemplate {
+    public class WikiPageTemplate {
 
         // Public members
 
@@ -18,7 +18,7 @@ namespace OurFoodChainWikiBot {
             }
         }
 
-        public PageTemplate(string templateText) {
+        public WikiPageTemplate(string templateText) {
 
             TemplateText = templateText;
 
@@ -43,8 +43,8 @@ namespace OurFoodChainWikiBot {
             return _build();
         }
 
-        public static PageTemplate FromFile(string templateFilePath) {
-            return new PageTemplate(System.IO.File.ReadAllText(templateFilePath));
+        public static WikiPageTemplate Open(string templateFilePath) {
+            return new WikiPageTemplate(System.IO.File.ReadAllText(templateFilePath));
         }
 
         // Private members

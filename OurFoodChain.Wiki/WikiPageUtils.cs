@@ -5,14 +5,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChainWikiBot {
+namespace OurFoodChain.Wiki {
 
     public enum TextFormatting {
         Bold,
         Italic
     }
 
-    public class PageUtils {
+    public static class WikiPageUtils {
 
         // Public members
 
@@ -48,10 +48,10 @@ namespace OurFoodChainWikiBot {
 
         }
 
-        public static string FormatPageLinks(string content, LinkifyList linkifyList) {
+        public static string FormatPageLinks(string content, WikiLinkList linkifyList) {
             return FormatPageLinksIf(content, linkifyList, x => true);
         }
-        public static string FormatPageLinksIf(string content, LinkifyList linkifyList, Func<LinkifyListData, bool> condition) {
+        public static string FormatPageLinksIf(string content, WikiLinkList linkifyList, Func<WikiLinkListData, bool> condition) {
 
             // Keys to be replaced are sorted by length so longer strings are replaced before their substrings.
             // For example, "one two" should have higher priority over "one" and "two" individually.
@@ -60,13 +60,13 @@ namespace OurFoodChainWikiBot {
             // This can cause some incorrect mappings, but it's the best we can do.
             // Note that "GroupBy" preserves the order of the elements.
 
-            foreach (LinkifyListData data in linkifyList.GroupBy(x => x.Value).Select(x => x.First()).OrderByDescending(x => x.Value.Length)) {
+            foreach (WikiLinkListData data in linkifyList.GroupBy(x => x.Value).Select(x => x.First()).OrderByDescending(x => x.Value.Length)) {
 
                 if (!condition(data))
                     continue;
 
                 string pageTitle = data.Target;
-                Regex regex = data.Type == LinkifyListDataType.Find ? new Regex(string.Format(UnlinkedWikiTextPatternFormat, Regex.Escape(data.Value)), RegexOptions.IgnoreCase)
+                Regex regex = data.Type == WikiLinkListDataType.Find ? new Regex(string.Format(UnlinkedWikiTextPatternFormat, Regex.Escape(data.Value)), RegexOptions.IgnoreCase)
                     : new Regex(data.Value);
 
                 content = regex.Replace(content, m => {

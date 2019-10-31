@@ -366,8 +366,13 @@ namespace OurFoodChain {
         private LengthUnit _parseUnits(string value) {
 
             LengthUnit units = LengthUnit.Unknown;
-            
-            switch (value.ToLower()) {
+
+            if (!string.IsNullOrEmpty(value))
+                value = value.Trim().ToLowerInvariant();
+
+            value = Regex.Replace(value, @"metre(s?)$", "meter$1");
+            Console.WriteLine(value);
+            switch (value) {
 
                 case "ym":
                 case "yoctometer":
@@ -706,7 +711,7 @@ namespace OurFoodChain {
             // April 7th, 2019: I added an optional opening parenthesis to the "pass 1" pattern to pick up the size from phrases like "growing to ten centimeters (10 cm)".
 
             string number_pattern = @"(\d+(?:\.\d+)?(?:\-\d+(?:\.\d+)?)?)";
-            string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|[nμmc]?m|(?:nano|micro|milli|centi)?meters?)";
+            string units_pattern = "(in(?:ch|ches)?|ft|feet|foot|[nμmc]?m|(?:nano|micro|milli|centi)?met(?:er|re)s?)";
             string pass_1_pattern = @"(?:get|being|are|grow(?:ing)? up to|grow(?:ing)? to|up to|size:|max(?:imum)? size (?:of|is))[\s\w]*?\(?" + number_pattern + @"[\s]*?" + units_pattern + @"\b";
 
             Regex pass_1 = new Regex(pass_1_pattern, RegexOptions.IgnoreCase);

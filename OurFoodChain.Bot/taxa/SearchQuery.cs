@@ -462,6 +462,14 @@ namespace OurFoodChain {
                             });
                             break;
 
+                        case "gen":
+                        case "generation":
+                            if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
+                                await result.GroupByAsync(async (x) => {
+                                    return new string[] { (await GenerationUtils.GetGenerationByTimestampAsync(x.timestamp)).Name };
+                                });
+                            break;
+
                     }
 
                     break;
@@ -854,6 +862,18 @@ namespace OurFoodChain {
 
                     }
 
+                    break;
+
+                case "gen":
+                case "generation":
+                    if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
+                        await result.FilterByAsync(async (x) => {
+
+                            Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(x.timestamp);
+
+                            return gen == null || gen.Number.ToString() != value;
+
+                        }, subtract);
                     break;
 
             }

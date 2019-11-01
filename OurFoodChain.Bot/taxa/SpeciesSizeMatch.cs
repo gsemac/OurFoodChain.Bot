@@ -371,7 +371,7 @@ namespace OurFoodChain {
                 value = value.Trim().ToLowerInvariant();
 
             value = Regex.Replace(value, @"metre(s?)$", "meter$1");
-            Console.WriteLine(value);
+         
             switch (value) {
 
                 case "ym":

@@ -29,9 +29,9 @@ namespace OurFoodChain {
             List<long> ancestor_ids = new List<long>();
 
             if (!flags.HasFlag(AncestryTreeGenerationFlags.DescendantsOnly))
-                ancestor_ids.AddRange(await SpeciesUtils.GetAncestorIdsAsync(species.id));
+                ancestor_ids.AddRange(await SpeciesUtils.GetAncestorIdsAsync(species.Id));
 
-            ancestor_ids.Add(species.id);
+            ancestor_ids.Add(species.Id);
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
@@ -54,7 +54,7 @@ namespace OurFoodChain {
                     TreeNode<NodeData> node = new TreeNode<NodeData> {
                         Value = new NodeData {
                             Species = descendant,
-                            IsAncestor = ancestor_ids.Contains(descendant.id)
+                            IsAncestor = ancestor_ids.Contains(descendant.Id)
                         }
                     };
 

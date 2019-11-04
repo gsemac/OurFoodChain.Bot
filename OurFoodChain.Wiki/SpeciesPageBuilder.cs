@@ -109,10 +109,10 @@ namespace OurFoodChain.Wiki {
 
         }
         private async Task<string> GetOwnerTokenValueAsync() {
-            return await Task.FromResult(Species.owner);
+            return await Task.FromResult(Species.OwnerName);
         }
         private async Task<string> GetStatusTokenValueAsync() {
-            return await Task.FromResult(Species.isExtinct ? "Extinct" : "Extant");
+            return await Task.FromResult(Species.IsExtinct ? "Extinct" : "Extant");
         }
         private async Task<string> GetCommonNamesTokenValueAsync() {
             return await Task.FromResult(string.Join(", ", SpeciesUtils.GetCommonNamesAsync(Species).Result.Select(x => x.Value)));
@@ -140,7 +140,7 @@ namespace OurFoodChain.Wiki {
 
         }
         private async Task<string> GetCreationDateTokenValueAsync() {
-            return await Task.FromResult(FormatDate(DateTimeOffset.FromUnixTimeSeconds(Species.timestamp).Date));
+            return await Task.FromResult(FormatDate(DateTimeOffset.FromUnixTimeSeconds(Species.Timestamp).Date));
         }
         private async Task<string> GetExtinctionDateTokenValueAsync() {
 

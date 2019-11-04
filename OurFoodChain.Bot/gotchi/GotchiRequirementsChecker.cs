@@ -73,7 +73,7 @@ namespace OurFoodChain.Gotchi {
 
             try {
 
-                if (Regex.IsMatch(species.description, requirements.DescriptionPattern, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(species.Description, requirements.DescriptionPattern, RegexOptions.IgnoreCase))
                     return true;
 
             }

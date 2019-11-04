@@ -15,7 +15,7 @@ namespace OurFoodChain {
         }
         public static string SpeciesToGalleryName(Species species) {
 
-            string gallery_name = "species" + species.id.ToString();
+            string gallery_name = "species" + species.Id.ToString();
 
             return gallery_name;
 

@@ -155,9 +155,9 @@ namespace OurFoodChain {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     foreach (DataRow row in rows.Rows)
-                        result.Add(await Species.FromDataRow(row));
+                        result.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
-                    result.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                    result.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
                 }
 

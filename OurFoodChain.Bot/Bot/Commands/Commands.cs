@@ -58,10 +58,10 @@ namespace OurFoodChain.Commands {
             });
 
             await BotUtils.ReplyAsync_Success(Context, string.Format(
-                species.isExtinct ?
+                species.IsExtinct ?
                 "Updated extinction details for **{0}**." :
                 "The last **{0}** has perished, and the species is now extinct.",
-                species.GetShortName()));
+                species.ShortName));
 
         }
 
@@ -79,9 +79,9 @@ namespace OurFoodChain.Commands {
 
             // If the species is not extinct, don't do anything.
 
-            if (!sp.isExtinct) {
+            if (!sp.IsExtinct) {
 
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is not extinct.", sp.GetShortName()));
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is not extinct.", sp.ShortName));
 
                 return;
 
@@ -91,7 +91,7 @@ namespace OurFoodChain.Commands {
 
             await SpeciesUtils.SetExtinctionInfoAsync(sp, new ExtinctionInfo { IsExtinct = false });
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("A population of **{0}** has been discovered! The species is no longer considered extinct.", sp.GetShortName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("A population of **{0}** has been discovered! The species is no longer considered extinct.", sp.ShortName));
 
         }
 
@@ -103,9 +103,9 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Extinctions);"))
             using (DataTable rows = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in rows.Rows)
-                    sp_list.Add(await Species.FromDataRow(row));
+                    sp_list.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
-            sp_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+            sp_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
             PaginatedMessage embed = new PaginatedMessage();
             embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list, fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
@@ -138,7 +138,7 @@ namespace OurFoodChain.Commands {
                 await BotUtils.ReplyAsync_Error(Context, "The child species does not exist.");
             else if (ancestor_list.Count() == 0)
                 await BotUtils.ReplyAsync_Error(Context, "The parent species does not exist.");
-            else if (descendant_list[0].id == ancestor_list[0].id)
+            else if (descendant_list[0].Id == ancestor_list[0].Id)
                 await BotUtils.ReplyAsync_Error(Context, "A species cannot be its own ancestor.");
             else {
 
@@ -151,7 +151,7 @@ namespace OurFoodChain.Commands {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", descendant.id);
+                    cmd.Parameters.AddWithValue("$species_id", descendant.Id);
 
                     DataRow row = await Database.GetRowAsync(cmd);
 
@@ -167,9 +167,9 @@ namespace OurFoodChain.Commands {
 
                 // If the ancestor has already been set to the species specified, quit.
 
-                if (!(existing_ancestor_sp is null) && existing_ancestor_sp.id == ancestor.id) {
+                if (!(existing_ancestor_sp is null) && existing_ancestor_sp.Id == ancestor.Id) {
 
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has already been set as the ancestor of **{1}**.", ancestor.GetShortName(), descendant.GetShortName()));
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has already been set as the ancestor of **{1}**.", ancestor.ShortName, descendant.ShortName));
 
                     return;
 
@@ -179,17 +179,17 @@ namespace OurFoodChain.Commands {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Ancestors(species_id, ancestor_id) VALUES($species_id, $ancestor_id);")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", descendant.id);
-                    cmd.Parameters.AddWithValue("$ancestor_id", ancestor.id);
+                    cmd.Parameters.AddWithValue("$species_id", descendant.Id);
+                    cmd.Parameters.AddWithValue("$ancestor_id", ancestor.Id);
 
                     await Database.ExecuteNonQuery(cmd);
 
                 }
 
                 if (existing_ancestor_sp is null)
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been set as the ancestor of **{1}**.", ancestor.GetShortName(), descendant.GetShortName()));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been set as the ancestor of **{1}**.", ancestor.ShortName, descendant.ShortName));
                 else
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has replaced **{1}** as the ancestor of **{2}**.", ancestor.GetShortName(), existing_ancestor_sp.GetShortName(), descendant.GetShortName()));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has replaced **{1}** as the ancestor of **{2}**.", ancestor.ShortName, existing_ancestor_sp.ShortName, descendant.ShortName));
 
             }
 
@@ -331,10 +331,10 @@ namespace OurFoodChain.Commands {
                     if (zone_groups[i].Count() <= 0)
                         continue;
 
-                    long ts = i == 0 ? species.timestamp : zone_groups[i].First().Timestamp;
+                    long ts = i == 0 ? species.Timestamp : zone_groups[i].First().Timestamp;
 
                     if (ts <= 0)
-                        ts = species.timestamp;
+                        ts = species.Timestamp;
 
                     result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts, TimestampToDateStringFormat.Short)));
                     result.Append(i == 0 ? "Started in " : "Spread to ");
@@ -417,12 +417,12 @@ namespace OurFoodChain.Commands {
 
             // Attempt to get the size of the species.
 
-            SpeciesSizeMatch match = SpeciesSizeMatch.Match(species.description);
+            SpeciesSizeMatch match = SpeciesSizeMatch.Match(species.Description);
 
             // Output the result.
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.Title = string.Format("Size of {0}", species.GetFullName());
+            embed.Title = string.Format("Size of {0}", species.FullName);
             embed.WithDescription(units == LengthUnit.Unknown ? match.ToString() : match.ToString(units));
             embed.WithFooter("Size is determined from species description, and may not be accurate.");
 
@@ -548,8 +548,8 @@ namespace OurFoodChain.Commands {
                 return;
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("Taxonomy of {0}", sp.GetShortName()));
-            embed.WithThumbnailUrl(sp.pics);
+            embed.WithTitle(string.Format("Taxonomy of {0}", sp.ShortName));
+            embed.WithThumbnailUrl(sp.Picture);
 
             TaxonSet set = await BotUtils.GetFullTaxaFromDb(sp);
 
@@ -569,7 +569,7 @@ namespace OurFoodChain.Commands {
             embed.AddField("Order", order_name, inline: true);
             embed.AddField("Family", family_name, inline: true);
             embed.AddField("Genus", genus_name, inline: true);
-            embed.AddField("Species", StringUtils.ToTitleCase(sp.name), inline: true);
+            embed.AddField("Species", StringUtils.ToTitleCase(sp.Name), inline: true);
 
             await ReplyAsync("", false, embed.Build());
 
@@ -587,7 +587,7 @@ namespace OurFoodChain.Commands {
                 if (row is null)
                     await BotUtils.ReplyAsync_Info(Context, "There are currently no extant species.");
                 else
-                    await SpeciesCommands.ShowSpeciesInfoAsync(Context, await Species.FromDataRow(row));
+                    await SpeciesCommands.ShowSpeciesInfoAsync(Context, await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -611,7 +611,7 @@ namespace OurFoodChain.Commands {
 
             List<Species> species = new List<Species>();
             species.AddRange(await BotUtils.GetSpeciesInTaxonFromDb(taxon));
-            species.RemoveAll(x => x.isExtinct);
+            species.RemoveAll(x => x.IsExtinct);
 
             if (species.Count() <= 0)
                 await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtils.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
@@ -778,13 +778,13 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Favorites(user_id, species_id) VALUES($user_id, $species_id);")) {
 
                 cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added **{0}** to **{1}**'s favorites list.", sp.GetShortName(), Context.User.Username));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added **{0}** to **{1}**'s favorites list.", sp.ShortName, Context.User.Username));
 
         }
         [Command("-fav")]
@@ -808,13 +808,13 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Favorites WHERE user_id = $user_id AND species_id = $species_id;")) {
 
                 cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed **{0}** from **{1}**'s favorites list.", sp.GetShortName(), Context.User.Username));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed **{0}** from **{1}**'s favorites list.", sp.ShortName, Context.User.Username));
 
         }
         [Command("favs"), Alias("fav", "favorites", "favourites")]
@@ -832,20 +832,20 @@ namespace OurFoodChain.Commands {
 
                     foreach (DataRow row in rows.Rows) {
 
-                        Species sp = await Species.FromDataRow(row);
+                        Species sp = await SpeciesUtils.SpeciesFromDataRow(row);
                         long fav_count = 0;
 
                         // Get the number of times this species has been favorited.
 
                         using (SQLiteCommand cmd2 = new SQLiteCommand("SELECT COUNT(*) FROM Favorites WHERE species_id = $species_id;")) {
 
-                            cmd2.Parameters.AddWithValue("$species_id", sp.id);
+                            cmd2.Parameters.AddWithValue("$species_id", sp.Id);
 
                             fav_count = await Database.GetScalar<long>(cmd2);
 
                         }
 
-                        lines.Add(sp.GetShortName() + (fav_count > 1 ? string.Format(" ({0} favs)", fav_count) : ""));
+                        lines.Add(sp.ShortName + (fav_count > 1 ? string.Format(" ({0} favs)", fav_count) : ""));
 
                     }
 

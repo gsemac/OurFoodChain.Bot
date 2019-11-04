@@ -38,7 +38,7 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species;"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
-                    species.Add(await Species.FromDataRow(row));
+                    species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             // If there are no species, state so.
 
@@ -52,7 +52,7 @@ namespace OurFoodChain.Commands {
 
             // Create embed pages.
 
-            species.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+            species.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
             List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("All species ({0}):", species.Count()));
 
@@ -86,7 +86,7 @@ namespace OurFoodChain.Commands {
             List<Species> species = new List<Species>();
             species.AddRange(await BotUtils.GetSpeciesInTaxonFromDb(taxon));
 
-            species.Sort((lhs, rhs) => lhs.GetFullName().CompareTo(rhs.GetFullName()));
+            species.Sort((lhs, rhs) => lhs.FullName.CompareTo(rhs.FullName));
 
             // We might get a lot of species, which may not fit in one embed.
             // We'll need to use a paginated embed to reliably display the full list.
@@ -150,13 +150,13 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name=$name WHERE id=$species_id;")) {
 
                 cmd.Parameters.AddWithValue("$name", newName.ToLower());
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been successfully renamed to **{1}**.", sp.GetShortName(), BotUtils.GenerateSpeciesName(sp.genus, newName)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been successfully renamed to **{1}**.", sp.ShortName, BotUtils.GenerateSpeciesName(sp.GenusName, newName)));
 
         }
 
@@ -189,7 +189,7 @@ namespace OurFoodChain.Commands {
 
             Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
             Species sp = sp_list.Count() > 0 ? sp_list[0] : null;
-            long species_id = sp == null ? -1 : sp.id;
+            long species_id = sp == null ? -1 : sp.Id;
 
             if (species_id < 0) {
                 await BotUtils.ReplyAsync_Error(Context, "Failed to add species (invalid Species ID).");
@@ -230,7 +230,7 @@ namespace OurFoodChain.Commands {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -316,7 +316,7 @@ namespace OurFoodChain.Commands {
             // Get the zones that the species currently resides in.
             // These will be used to show warning messages (e.g., doesn't exist in the given zone).
 
-            long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.id)).Select(x => x.Id).ToArray();
+            long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.Id)).Select(x => x.Id).ToArray();
 
             // Get the zones from user input.
             ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
@@ -339,7 +339,7 @@ namespace OurFoodChain.Commands {
                 // Show a warning if the species wasn't in one or more of the zones provided.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.",
-                    sp.GetShortName(),
+                    sp.ShortName,
                     StringUtils.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
@@ -349,7 +349,7 @@ namespace OurFoodChain.Commands {
                 // Show a confirmation of all valid zones.
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.",
-                    sp.GetShortName(),
+                    sp.ShortName,
                     StringUtils.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
@@ -374,7 +374,7 @@ namespace OurFoodChain.Commands {
                 if (OurFoodChainBot.Instance.Config.TrophiesEnabled)
                     await Global.TrophyScanner.AddToQueueAsync(Context, user.Id);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.GetShortName(), user.Username));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.ShortName, user.Username));
 
             }
 
@@ -404,7 +404,7 @@ namespace OurFoodChain.Commands {
                 else
                     await SpeciesUtils.SetOwnerAsync(species, ownerName);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.GetShortName(), ownerName));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.ShortName, ownerName));
 
             }
 
@@ -432,9 +432,9 @@ namespace OurFoodChain.Commands {
                 using (DataTable rows = await Database.GetRowsAsync(cmd)) {
 
                     foreach (DataRow row in rows.Rows)
-                        species_list.Add(await Species.FromDataRow(row));
+                        species_list.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
-                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                    species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
                 }
 
@@ -478,7 +478,7 @@ namespace OurFoodChain.Commands {
                 EmbedBuilder embed = new EmbedBuilder();
                 StringBuilder description_builder = new StringBuilder();
 
-                string embed_title = species.GetFullName();
+                string embed_title = species.FullName;
                 Color embed_color = Color.Blue;
 
                 CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species);
@@ -490,13 +490,13 @@ namespace OurFoodChain.Commands {
 
                 if (OurFoodChainBot.Instance.Config.GenerationsEnabled) {
 
-                    Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.timestamp);
+                    Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.Timestamp);
 
                     embed.AddField("Gen", gen is null ? "???" : gen.Number.ToString(), inline: true);
 
                 }
 
-                embed.AddField("Owner", await species.GetOwnerOrDefault(context), inline: true);
+                embed.AddField("Owner", await SpeciesUtils.GetOwnerOrDefaultAsync(species, context), inline: true);
 
                 SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(species);
 
@@ -517,7 +517,7 @@ namespace OurFoodChain.Commands {
                 // Check if the species is extinct.
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", species.id);
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                     DataRow row = await Database.GetRowAsync(cmd);
 
@@ -539,7 +539,7 @@ namespace OurFoodChain.Commands {
                 description_builder.Append(species.GetDescriptionOrDefault());
 
                 embed.WithTitle(embed_title);
-                embed.WithThumbnailUrl(species.pics);
+                embed.WithThumbnailUrl(species.Picture);
                 embed.WithColor(embed_color);
 
                 // If the description puts us over the character limit, we'll paginate.
@@ -625,7 +625,7 @@ namespace OurFoodChain.Commands {
                 // Show a confirmation of all valid zones.
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now inhabits {1}.",
-                      species.GetShortName(),
+                      species.ShortName,
                       StringUtils.ConjunctiveJoin(", ", zones.Zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }

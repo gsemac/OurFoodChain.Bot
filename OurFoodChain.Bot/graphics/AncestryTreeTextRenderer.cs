@@ -41,7 +41,7 @@ namespace OurFoodChain {
 
             TreeUtils.PreOrderTraverse(Tree, x => {
 
-                int length = _timestampToString(x.Value.Species.timestamp).Length;
+                int length = _timestampToString(x.Value.Species.Timestamp).Length;
 
                 if (length > maxTimestampLength)
                     maxTimestampLength = length;
@@ -57,8 +57,8 @@ namespace OurFoodChain {
 
                 string line = "";
 
-                line += _timestampToString(x.Value.Species.timestamp).PadRight(maxTimestampLength);
-                line += " " + (x.Value.Species.isExtinct ? "*" : "-");
+                line += _timestampToString(x.Value.Species.Timestamp).PadRight(maxTimestampLength);
+                line += " " + (x.Value.Species.IsExtinct ? "*" : "-");
 
                 if (DrawLines && x.Parent != null)
                     for (int i = 0; i < x.Depth * 2 - 1; ++i) {

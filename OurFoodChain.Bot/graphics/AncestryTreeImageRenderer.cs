@@ -34,7 +34,7 @@ namespace OurFoodChain {
 
                 TreeUtils.PostOrderTraverse(root, (node) => {
 
-                    SizeF size = GraphicsUtils.MeasureString(node.Value.Species.GetShortName(), font);
+                    SizeF size = GraphicsUtils.MeasureString(node.Value.Species.ShortName, font);
 
                     node.Value.Bounds.Width = size.Width + horizontal_padding;
                     node.Value.Bounds.Height = size.Height;
@@ -80,7 +80,7 @@ namespace OurFoodChain {
                     if (!System.IO.Directory.Exists(out_dir))
                         System.IO.Directory.CreateDirectory(out_dir);
 
-                    string fpath = System.IO.Path.Combine(out_dir, species.GetShortName() + ".png");
+                    string fpath = System.IO.Path.Combine(out_dir, species.ShortName + ".png");
 
                     bmp.Save(fpath);
 
@@ -112,7 +112,7 @@ namespace OurFoodChain {
 
             // Cross-out the species if it's extinct.
 
-            if (node.Value.Species.isExtinct)
+            if (node.Value.Species.IsExtinct)
                 using (Brush brush = new SolidBrush(Color.White))
                 using (Pen pen = new Pen(brush, 1.0f))
                     gfx.DrawLine(pen,
@@ -121,8 +121,8 @@ namespace OurFoodChain {
 
             // Draw the name of the species.
 
-            using (Brush brush = new SolidBrush(node.Value.Species.id == selectedSpecies.id ? Color.Yellow : Color.White))
-                gfx.DrawString(node.Value.Species.GetShortName(), font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
+            using (Brush brush = new SolidBrush(node.Value.Species.Id == selectedSpecies.Id ? Color.Yellow : Color.White))
+                gfx.DrawString(node.Value.Species.ShortName, font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
 
             // Draw child nodes.
 

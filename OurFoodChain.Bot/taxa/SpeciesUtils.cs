@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Discord;
+using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -23,7 +25,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT name FROM SpeciesCommonNames WHERE species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows)
@@ -33,8 +35,8 @@ namespace OurFoodChain {
 
             // Add the common name from the "Species" table if one was provided.
 
-            if (!string.IsNullOrEmpty(species.commonName))
-                common_names.Add(new CommonName(species.commonName));
+            if (!string.IsNullOrEmpty(species.CommonName))
+                common_names.Add(new CommonName(species.CommonName));
 
             // Return a sorted array of common names without any duplicates.
             return common_names.GroupBy(x => x.Value).Select(x => x.First()).OrderBy(x => x.Value).ToArray();
@@ -48,7 +50,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
-                    species.Add(await Species.FromDataRow(row));
+                    species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             return species.ToArray();
 
@@ -71,7 +73,7 @@ namespace OurFoodChain {
 
                         using (DataTable table = await Database.GetRowsAsync(cmd))
                             foreach (DataRow row in table.Rows)
-                                species.Add(await Species.FromDataRow(row));
+                                species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
                     }
 
@@ -110,7 +112,7 @@ namespace OurFoodChain {
 
                 Species[] result = await GetSpeciesAsync(input.SpeciesName);
 
-                return result.Where(x => !string.IsNullOrEmpty(x.genus) && x.genus.ToLower().StartsWith(input.GenusName.ToLower())).ToArray();
+                return result.Where(x => !string.IsNullOrEmpty(x.GenusName) && x.GenusName.ToLower().StartsWith(input.GenusName.ToLower())).ToArray();
 
             }
             else {
@@ -133,7 +135,7 @@ namespace OurFoodChain {
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
-                return row is null ? null : await Species.FromDataRow(row);
+                return row is null ? null : await SpeciesUtils.SpeciesFromDataRow(row);
 
             }
 
@@ -167,7 +169,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors)"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
-                    species.Add(await Species.FromDataRow(row));
+                    species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             return species.ToArray();
 
@@ -182,31 +184,37 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Predates WHERE eats_id = $species_id)")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows)
-                        result.Add(await Species.FromDataRow(row));
+                        result.Add(await SpeciesFromDataRow(row));
 
             }
 
             return result.ToArray();
 
         }
-        public static async Task<Species[]> GetPreyAsync(Species species) {
-            return await GetPreyAsync(species.id);
+        public static async Task<PreyInfo[]> GetPreyAsync(Species species) {
+            return await GetPreyAsync(species.Id);
         }
-        public static async Task<Species[]> GetPreyAsync(long speciesId) {
+        public static async Task<PreyInfo[]> GetPreyAsync(long speciesId) {
 
-            List<Species> result = new List<Species>();
+            List<PreyInfo> result = new List<PreyInfo>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM (SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)) INNER JOIN Predates WHERE eats_id = id AND species_id = $species_id;")) {
 
                 cmd.Parameters.AddWithValue("$species_id", speciesId);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        result.Add(await Species.FromDataRow(row));
+                    foreach (DataRow row in table.Rows) {
+
+                        result.Add(new PreyInfo {
+                            Prey = await SpeciesFromDataRow(row),
+                            Notes = row.Field<string>("notes")
+                        });
+
+                    }
 
             }
 
@@ -247,7 +255,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
@@ -257,7 +265,7 @@ namespace OurFoodChain {
 
         }
         public static async Task<Species[]> GetAncestorsAsync(Species species) {
-            return await GetAncestorsAsync(species.id);
+            return await GetAncestorsAsync(species.Id);
         }
         public static async Task<Species[]> GetAncestorsAsync(long speciesId) {
 
@@ -276,11 +284,11 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id)")) {
 
-                cmd.Parameters.AddWithValue("$ancestor_id", species.id);
+                cmd.Parameters.AddWithValue("$ancestor_id", species.Id);
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        result.Add(await Species.FromDataRow(row));
+                        result.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -296,7 +304,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesCommonNames(species_id, name) VALUES($species_id, $name)")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
                 cmd.Parameters.AddWithValue("$name", commonName);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -305,7 +313,7 @@ namespace OurFoodChain {
 
             // If the species doesn't already have a common name set in the "Species" table, update it there.
 
-            if (overwriteSpeciesTable || string.IsNullOrEmpty(species.commonName))
+            if (overwriteSpeciesTable || string.IsNullOrEmpty(species.CommonName))
                 await _setCommonNameInSpeciesTable(species, commonName);
 
         }
@@ -317,7 +325,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesCommonNames WHERE name = $common_name AND species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
                 cmd.Parameters.AddWithValue("$common_name", commonName);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -326,7 +334,7 @@ namespace OurFoodChain {
 
             // If this name is also recorded in the "Species" table, remove it from there as well.
 
-            if (commonName == species.commonName.ToLower())
+            if (commonName == species.CommonName.ToLower())
                 await _setCommonNameInSpeciesTable(species, string.Empty);
 
         }
@@ -334,7 +342,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesCommonNames WHERE species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -345,7 +353,7 @@ namespace OurFoodChain {
         }
 
         public static async Task<SpeciesZone[]> GetZonesAsync(Species species) {
-            return await GetZonesAsync(species.id);
+            return await GetZonesAsync(species.Id);
         }
         public static async Task<SpeciesZone[]> GetZonesAsync(long speciesId) {
 
@@ -388,7 +396,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesZones(species_id, zone_id, notes, timestamp) VALUES($species_id, $zone_id, $notes, $timestamp)")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", species.id);
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
                     cmd.Parameters.AddWithValue("$zone_id", zone.Id);
                     cmd.Parameters.AddWithValue("$notes", string.IsNullOrEmpty(notes) ? "" : notes.Trim().ToLower());
                     cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -406,7 +414,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id = $species_id AND zone_id = $zone_id")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", species.id);
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
                     cmd.Parameters.AddWithValue("$zone_id", zone.Id);
 
                     await Database.ExecuteNonQuery(cmd);
@@ -424,7 +432,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics = $url WHERE id = $species_id")) {
 
                 cmd.Parameters.AddWithValue("$url", picture is null ? string.Empty : picture.url);
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -432,7 +440,7 @@ namespace OurFoodChain {
 
             // Update the "pics" value for the species so we don't run into an infinite loop below.
             // "AddPicture" will call this function if the "pics" value is empty.
-            species.pics = picture is null ? string.Empty : picture.url;
+            species.Picture = picture is null ? string.Empty : picture.url;
 
             // Add the picture to this species' picture gallery (does nothing if it's already been added).
 
@@ -454,7 +462,7 @@ namespace OurFoodChain {
 
                 // If the species doesn't have a default picture yet, use this picture as the default picture.
 
-                if (string.IsNullOrEmpty(species.pics))
+                if (string.IsNullOrEmpty(species.Picture))
                     await SetPictureAsync(species, picture);
 
             }
@@ -481,7 +489,7 @@ namespace OurFoodChain {
 
             }
 
-            if (species.pics == picture.url) {
+            if (species.Picture == picture.url) {
 
                 await SetPictureAsync(species, null);
 
@@ -500,14 +508,14 @@ namespace OurFoodChain {
 
             pictures.AddRange(await GalleryUtils.GetPicturesAsync(gallery));
 
-            if (!string.IsNullOrEmpty(species.pics) && !pictures.Any(x => x.url == species.pics))
+            if (!string.IsNullOrEmpty(species.Picture) && !pictures.Any(x => x.url == species.Picture))
                 pictures.Insert(0, new Picture {
-                    url = species.pics,
-                    artist = species.owner
+                    url = species.Picture,
+                    artist = species.OwnerName
                 });
 
             pictures.ForEach(x => {
-                x.footer = string.Format("Depiction of {0}", species.GetShortName());
+                x.footer = string.Format("Depiction of {0}", species.ShortName);
             });
 
             return pictures.ToArray();
@@ -518,7 +526,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner, user_id = NULL WHERE id = $id")) {
 
-                cmd.Parameters.AddWithValue("$id", species.id);
+                cmd.Parameters.AddWithValue("$id", species.Id);
                 cmd.Parameters.AddWithValue("$owner", ownerName);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -530,7 +538,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET owner = $owner, user_id = $user_id WHERE id = $id")) {
 
-                cmd.Parameters.AddWithValue("$id", species.id);
+                cmd.Parameters.AddWithValue("$id", species.Id);
                 cmd.Parameters.AddWithValue("$owner", ownerName);
 
                 if (ownerId == UserInfo.NullId)
@@ -587,14 +595,14 @@ namespace OurFoodChain {
 
         }
         public static async Task<Role[]> GetRolesAsync(Species species) {
-            return await GetRolesAsync(species.id);
+            return await GetRolesAsync(species.Id);
         }
 
         public static async Task<ExtinctionInfo> GetExtinctionInfoAsync(Species species) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 DataRow row = await Database.GetRowAsync(cmd);
 
@@ -623,7 +631,7 @@ namespace OurFoodChain {
 
                     using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp)")) {
 
-                        cmd.Parameters.AddWithValue("$species_id", species.id);
+                        cmd.Parameters.AddWithValue("$species_id", species.Id);
                         cmd.Parameters.AddWithValue("$reason", extinctionInfo.Reason);
                         cmd.Parameters.AddWithValue("$timestamp", extinctionInfo.Timestamp);
 
@@ -638,7 +646,7 @@ namespace OurFoodChain {
 
                     using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Extinctions SET reason = $reason WHERE species_id = $species_id")) {
 
-                        cmd.Parameters.AddWithValue("$species_id", species.id);
+                        cmd.Parameters.AddWithValue("$species_id", species.Id);
                         cmd.Parameters.AddWithValue("$reason", extinctionInfo.Reason);
 
                         await Database.ExecuteNonQuery(cmd);
@@ -654,7 +662,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE species_id = $species_id")) {
 
-                    cmd.Parameters.AddWithValue("$species_id", species.id);
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                     await Database.ExecuteNonQuery(cmd);
 
@@ -692,6 +700,66 @@ namespace OurFoodChain {
 
         }
 
+        public static async Task<Species> SpeciesFromDataRow(DataRow row, Taxon genusInfo) {
+
+            Species species = new Species {
+                Id = row.Field<long>("id"),
+                GenusId = row.Field<long>("genus_id"),
+                Name = row.Field<string>("name"),
+                // The genus should never be null, but there was instance where a user manually edited the database and the genus ID was invalid.
+                // We should at least try to handle this situation gracefully.
+                GenusName = genusInfo is null ? "?" : genusInfo.name,
+                Description = row.Field<string>("description"),
+                OwnerName = row.Field<string>("owner"),
+                Timestamp = (long)row.Field<decimal>("timestamp"),
+                CommonName = row.Field<string>("common_name"),
+                Picture = row.Field<string>("pics")
+            };
+
+            species.OwnerUserId = row.IsNull("user_id") ? -1 : row.Field<long>("user_id");
+            species.IsExtinct = false;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                if (!(await Database.GetRowAsync(cmd) is null))
+                    species.IsExtinct = true;
+
+            }
+
+            return species;
+
+        }
+        public static async Task<Species> SpeciesFromDataRow(DataRow row) {
+
+            long genus_id = row.Field<long>("genus_id");
+            Taxon genus_info = await BotUtils.GetGenusFromDb(genus_id);
+
+            return await SpeciesFromDataRow(row, genus_info);
+
+        }
+
+        public static async Task<string> GetOwnerOrDefaultAsync(Species species, ICommandContext context) {
+
+            string result = species.OwnerName;
+
+            if (!(context is null || context.Guild is null) && species.OwnerUserId > 0) {
+
+                IUser user = await context.Guild.GetUserAsync((ulong)species.OwnerUserId);
+
+                if (!(user is null))
+                    result = user.Username;
+
+            }
+
+            if (string.IsNullOrEmpty(result))
+                result = "?";
+
+            return result;
+
+        }
+
         private static GenusSpeciesPair _parseGenusAndSpeciesFromUserInput(string inputGenus, string inputSpecies) {
 
             return GenusSpeciesPair.Parse(inputGenus, inputSpecies);
@@ -716,7 +784,7 @@ namespace OurFoodChain {
                 if (result is null)
                     return null;
 
-                return await Species.FromDataRow(result, genus_info);
+                return await SpeciesFromDataRow(result, genus_info);
 
             }
 
@@ -734,7 +802,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET common_name = $common_name WHERE id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
                 cmd.Parameters.AddWithValue("$common_name", _formatCommonNameForDatabase(commonName));
 
                 await Database.ExecuteNonQuery(cmd);

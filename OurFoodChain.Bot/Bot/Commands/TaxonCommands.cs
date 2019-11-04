@@ -108,13 +108,13 @@ namespace OurFoodChain.Commands {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET genus_id=$genus_id WHERE id=$species_id;")) {
 
                 cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(genus_info.name)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.ShortName, StringUtils.ToTitleCase(genus_info.name)));
 
         }
         [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -417,7 +417,7 @@ namespace OurFoodChain.Commands {
                 await SpeciesUtils.RemoveCommonNamesAsync(species_info);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed all common names from **{0}**.",
-                    species_info.GetShortName()));
+                    species_info.ShortName));
 
             }
             else {
@@ -430,7 +430,7 @@ namespace OurFoodChain.Commands {
                 await SpeciesUtils.AddCommonNameAsync(species_info, commonName, overwriteSpeciesTable: true);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
-                    species_info.GetShortName(),
+                    species_info.ShortName,
                     StringUtils.ToTitleCase(commonName)));
 
             }
@@ -463,7 +463,7 @@ namespace OurFoodChain.Commands {
                 await SpeciesUtils.AddCommonNameAsync(species_info, commonName, overwriteSpeciesTable: false);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
-                    species_info.GetShortName(),
+                    species_info.ShortName,
                     StringUtils.ToTitleCase(commonName)));
 
             }
@@ -501,7 +501,7 @@ namespace OurFoodChain.Commands {
                 await SpeciesUtils.RemoveCommonNameAsync(species_info, commonName);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is no longer known as the **{1}**.",
-                    species_info.GetShortName(),
+                    species_info.ShortName,
                     StringUtils.ToTitleCase(commonName)));
 
             }
@@ -592,7 +592,7 @@ namespace OurFoodChain.Commands {
                 };
 
                 await MultiPartMessage.SendMessageAsync(p,
-                    string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].GetShortName()));
+                    string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].ShortName));
 
             }
 
@@ -727,7 +727,7 @@ namespace OurFoodChain.Commands {
 
             await BotUtils.UpdateSpeciesDescription(species, description);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.ShortName));
 
         }
 
@@ -765,7 +765,7 @@ namespace OurFoodChain.Commands {
             };
 
             await MultiPartMessage.SendMessageAsync(p,
-                string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.GetShortName()));
+                string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.ShortName));
 
         }
         private async Task _appendDescriptionAsync(Species species, string description) {
@@ -781,7 +781,7 @@ namespace OurFoodChain.Commands {
 
             const int MAX_DESCRIPTION_LENGTH = 10000;
 
-            if (species.description.Length + description.Length > MAX_DESCRIPTION_LENGTH) {
+            if (species.Description.Length + description.Length > MAX_DESCRIPTION_LENGTH) {
 
                 await BotUtils.ReplyAsync_Error(Context, string.Format("The description length exceeds the maximum allowed length ({0} characters).", MAX_DESCRIPTION_LENGTH));
 
@@ -793,14 +793,14 @@ namespace OurFoodChain.Commands {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description = $description WHERE id = $id")) {
 
-                cmd.Parameters.AddWithValue("$id", species.id);
-                cmd.Parameters.AddWithValue("$description", (species.description + description).Trim());
+                cmd.Parameters.AddWithValue("$id", species.Id);
+                cmd.Parameters.AddWithValue("$description", (species.Description + description).Trim());
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.GetShortName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", species.ShortName));
 
         }
         private async Task _setTaxonCommonNameAsync(Taxon taxon, string commonName) {

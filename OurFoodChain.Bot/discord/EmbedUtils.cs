@@ -217,10 +217,10 @@ namespace OurFoodChain {
                 StringBuilder builder = new StringBuilder();
 
                 foreach (Species sp in column)
-                    if (flags.HasFlag(EmbedPagesFlag.CrossOutExtinctSpecies) && sp.isExtinct)
-                        builder.AppendLine(string.Format("~~{0}~~", sp.GetShortName()));
+                    if (flags.HasFlag(EmbedPagesFlag.CrossOutExtinctSpecies) && sp.IsExtinct)
+                        builder.AppendLine(string.Format("~~{0}~~", sp.ShortName));
                     else
-                        builder.AppendLine(sp.GetShortName());
+                        builder.AppendLine(sp.ShortName);
 
                 if (is_first_field) {
 

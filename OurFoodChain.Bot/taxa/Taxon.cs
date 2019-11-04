@@ -74,6 +74,8 @@ namespace OurFoodChain {
 
     public class Taxon {
 
+        public const long NullId = -1;
+
         public Taxon(TaxonRank type) {
 
             id = -1;
@@ -82,8 +84,8 @@ namespace OurFoodChain {
 
         }
 
-        public long id = -1;
-        public long parent_id = -1; // For genera, this is the family_id, etc.
+        public long id = NullId;
+        public long parent_id = NullId; // For genera, this is the family_id, etc.
         public string name = "";
         public string CommonName {
             get {

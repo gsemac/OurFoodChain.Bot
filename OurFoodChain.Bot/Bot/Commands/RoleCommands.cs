@@ -52,13 +52,13 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesRoles(species_id, role_id, notes) VALUES($species_id, $role_id, $notes);")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
                 cmd.Parameters.AddWithValue("$notes", notes);
 
                 await Database.ExecuteNonQuery(cmd);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.GetShortName(), StringUtils.ToTitleCase(role_info.name)));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.ShortName, StringUtils.ToTitleCase(role_info.name)));
 
             }
 
@@ -89,12 +89,12 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesRoles WHERE species_id=$species_id AND role_id=$role_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
 
                 await Database.ExecuteNonQuery(cmd);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtils.ToTitleCase(role_info.name), sp.GetShortName()));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtils.ToTitleCase(role_info.name), sp.ShortName));
 
             }
 
@@ -171,8 +171,8 @@ namespace OurFoodChain {
 
             List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByRole(role));
 
-            species_list.RemoveAll(x => x.isExtinct);
-            species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+            species_list.RemoveAll(x => x.IsExtinct);
+            species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
             PaginatedMessage embed = new PaginatedMessage(EmbedUtils.SpeciesListToEmbedPages(species_list,
                 fieldName: string.Format("Extant species with this role ({0}):", species_list.Count())));
@@ -199,7 +199,7 @@ namespace OurFoodChain {
             Role[] roles = await SpeciesUtils.GetRolesAsync(species);
 
             if (roles.Count() <= 0) {
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not been assigned any roles.", species.GetShortName()));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not been assigned any roles.", species.ShortName));
                 return;
             }
 
@@ -220,7 +220,7 @@ namespace OurFoodChain {
 
             EmbedBuilder embed = new EmbedBuilder();
 
-            embed.WithTitle(string.Format("{0}'s role(s) ({1})", species.GetShortName(), roles.Count()));
+            embed.WithTitle(string.Format("{0}'s role(s) ({1})", species.ShortName, roles.Count()));
             embed.WithDescription(lines.ToString());
 
             await ReplyAsync("", false, embed.Build());

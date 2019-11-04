@@ -133,19 +133,19 @@ namespace OurFoodChain.Gotchi {
 
             int weight = 20;
 
-            if (Regex.IsMatch(species.description, "photosynthesi(s|izes)", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(species.Description, "photosynthesi(s|izes)", RegexOptions.IgnoreCase))
                 stats.MaxHp += weight;
 
-            if (Regex.IsMatch(species.description, "spikes?|claws?|teeth|jaws|fangs", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(species.Description, "spikes?|claws?|teeth|jaws|fangs", RegexOptions.IgnoreCase))
                 stats.Atk += weight;
 
-            if (Regex.IsMatch(species.description, "shell|carapace|exoskeleton", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(species.Description, "shell|carapace|exoskeleton", RegexOptions.IgnoreCase))
                 stats.Def += weight;
 
-            foreach (Match m in Regex.Matches(species.description, "flies|fly|quick|fast|agile|nimble", RegexOptions.IgnoreCase))
+            foreach (Match m in Regex.Matches(species.Description, "flies|fly|quick|fast|agile|nimble", RegexOptions.IgnoreCase))
                 stats.Spd += weight;
 
-            foreach (Match m in Regex.Matches(species.description, "slow|heavy", RegexOptions.IgnoreCase))
+            foreach (Match m in Regex.Matches(species.Description, "slow|heavy", RegexOptions.IgnoreCase))
                 stats.Spd -= weight;
 
         }

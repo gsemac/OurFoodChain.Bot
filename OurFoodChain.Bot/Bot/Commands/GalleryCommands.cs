@@ -34,10 +34,10 @@ namespace OurFoodChain {
 
                 await SpeciesUtils.SetPictureAsync(species, new Picture {
                     url = imageUrl,
-                    artist = first_picture ? species.owner : Context.User.Username
+                    artist = first_picture ? species.OwnerName : Context.User.Username
                 });
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", species.GetShortName()));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", species.ShortName));
 
             }
 
@@ -113,14 +113,14 @@ namespace OurFoodChain {
             picture.description = description;
 
             if (string.IsNullOrEmpty(picture.artist))
-                picture.artist = firstPicture ? species.owner : Context.User.Username;
+                picture.artist = firstPicture ? species.OwnerName : Context.User.Username;
 
             await SpeciesUtils.AddPictureAsync(species, picture);
 
             if (pictureAlreadyExists)
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.ShortName, imageUrl));
             else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.GetShortName(), imageUrl));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.ShortName, imageUrl));
 
         }
 
@@ -158,9 +158,9 @@ namespace OurFoodChain {
                 bool success = await SpeciesUtils.RemovePictureAsync(species, picture);
 
                 if (success)
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed [picture]({1}) from **{0}**.", species.GetShortName(), picture.url));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed [picture]({1}) from **{0}**.", species.ShortName, picture.url));
                 else
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has no picture at this index.", species.GetShortName()));
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has no picture at this index.", species.ShortName));
 
             }
 
@@ -205,7 +205,7 @@ namespace OurFoodChain {
 
             }
             else
-                await BotUtils.ReplyAsync_Error(Context, string.Format("**{0}** has no picture at this index.", species.GetShortName()));
+                await BotUtils.ReplyAsync_Error(Context, string.Format("**{0}** has no picture at this index.", species.ShortName));
 
         }
         [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -286,7 +286,7 @@ namespace OurFoodChain {
 
             Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
 
-            await ShowGalleryAsync(Context, species.GetShortName(), pictures);
+            await ShowGalleryAsync(Context, species.ShortName, pictures);
 
         }
 

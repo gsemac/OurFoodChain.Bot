@@ -417,7 +417,7 @@ namespace OurFoodChain.Gotchi {
                     args.IsCritical =
                         !user.SelectedMove.IgnoreCritical &&
                         (BotUtils.RandomInteger(0, (int)(10 / user.SelectedMove.CriticalRate)) == 0 ||
-                        (await SpeciesUtils.GetPreyAsync(user.Gotchi.Gotchi.SpeciesId)).Any(x => x.id == target.Gotchi.Gotchi.Id));
+                        (await SpeciesUtils.GetPreyAsync(user.Gotchi.Gotchi.SpeciesId)).Any(x => x.Prey.Id == target.Gotchi.Gotchi.Id));
 
                     if (is_hit) {
 
@@ -741,7 +741,7 @@ namespace OurFoodChain.Gotchi {
             List<Species> species_list = new List<Species>();
 
             foreach (SpeciesZone zone in await SpeciesUtils.GetZonesAsync(await SpeciesUtils.GetSpeciesAsync(player1.Gotchi.Gotchi.SpeciesId)))
-                species_list.AddRange((await ZoneUtils.GetSpeciesAsync(zone.Zone)).Where(x => !x.isExtinct));
+                species_list.AddRange((await ZoneUtils.GetSpeciesAsync(zone.Zone)).Where(x => !x.IsExtinct));
 
             player2 = new PlayerState();
 
@@ -818,7 +818,7 @@ namespace OurFoodChain.Gotchi {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(winner.Gotchi.Gotchi.SpeciesId);
 
-                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", winner.Gotchi.Gotchi.Name, sp.GetShortName()));
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", winner.Gotchi.Gotchi.Name, sp.ShortName));
 
                     }
 
@@ -849,7 +849,7 @@ namespace OurFoodChain.Gotchi {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(loser.Gotchi.Gotchi.SpeciesId);
 
-                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", loser.Gotchi.Gotchi.Name, sp.GetShortName()));
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", loser.Gotchi.Gotchi.Name, sp.ShortName));
 
                     }
 

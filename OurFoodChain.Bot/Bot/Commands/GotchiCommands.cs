@@ -63,7 +63,7 @@ namespace OurFoodChain.Gotchi {
                     break;
 
                 case GotchiState.ReadyToEvolve:
-                    status = "Congratulations, {0} " + string.Format("evolved into {0}!", sp.GetShortName());
+                    status = "Congratulations, {0} " + string.Format("evolved into {0}!", sp.ShortName);
                     break;
 
                 case GotchiState.Sleeping:
@@ -94,7 +94,7 @@ namespace OurFoodChain.Gotchi {
             EmbedBuilder embed = new EmbedBuilder();
 
             embed.WithTitle(string.Format("{0}'s \"{1}\"", Context.User.Username, StringUtils.ToTitleCase(gotchi.Name)));
-            embed.WithDescription(string.Format("{0}, age {1}", sp.GetShortName(), gotchi.Age));
+            embed.WithDescription(string.Format("{0}, age {1}", sp.ShortName, gotchi.Age));
             embed.WithImageUrl(gif_url);
             embed.WithFooter(string.Format(status, StringUtils.ToTitleCase(gotchi.Name)));
 
@@ -254,8 +254,8 @@ namespace OurFoodChain.Gotchi {
 
             EmbedBuilder stats_page = new EmbedBuilder();
 
-            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
-            stats_page.WithThumbnailUrl(sp.pics);
+            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.ShortName, gotchi.Age));
+            stats_page.WithThumbnailUrl(sp.Picture);
             stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
             stats_page.AddField("❤ Hit points", stats.Hp, inline: true);
@@ -296,8 +296,8 @@ namespace OurFoodChain.Gotchi {
             EmbedBuilder set_page = new EmbedBuilder();
             GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
 
-            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
-            set_page.WithThumbnailUrl(sp.pics);
+            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.ShortName, gotchi.Age));
+            set_page.WithThumbnailUrl(sp.Picture);
             set_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
             int move_index = 1;
@@ -789,7 +789,7 @@ namespace OurFoodChain.Gotchi {
                                     if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desired_evo)) {
 
                                         await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
-                                            (await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId)).GetShortName()));
+                                            (await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId)).ShortName));
 
                                     }
                                     else {
@@ -876,7 +876,7 @@ namespace OurFoodChain.Gotchi {
                     gotchi_list.Add(string.Format("{0}. **{1}** ({2}), Lv. {3}",
                         index,
                         StringUtils.ToTitleCase(i.Name),
-                        (await BotUtils.GetSpeciesFromDb(i.SpeciesId)).GetShortName(),
+                        (await BotUtils.GetSpeciesFromDb(i.SpeciesId)).ShortName,
                         GotchiExperienceCalculator.GetLevel(ExperienceGroup.Default, i)));
 
                     ++index;

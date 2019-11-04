@@ -60,7 +60,7 @@ namespace OurFoodChain {
 
                     using (DataTable table = await Database.GetRowsAsync(cmd))
                         foreach (DataRow row in table.Rows)
-                            species.Add(await Species.FromDataRow(row));
+                            species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
                 }
 

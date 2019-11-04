@@ -31,7 +31,7 @@ namespace OurFoodChain.Gotchi {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Gotchi(species_id, name, owner_id, fed_ts, born_ts, died_ts, evolved_ts) VALUES($species_id, $name, $owner_id, $fed_ts, $born_ts, $died_ts, $evolved_ts);")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
                 cmd.Parameters.AddWithValue("$owner_id", user.Id);
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
                 cmd.Parameters.AddWithValue("$fed_ts", ts - 60 * 60); // subtract an hour to keep it from eating immediately after creation
@@ -241,12 +241,12 @@ namespace OurFoodChain.Gotchi {
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Ancestors WHERE ancestor_id = $ancestor_id AND species_id = $species_id")) {
 
                     cmd.Parameters.AddWithValue("$ancestor_id", gotchi.SpeciesId);
-                    cmd.Parameters.AddWithValue("$species_id", sp[0].id);
+                    cmd.Parameters.AddWithValue("$species_id", sp[0].Id);
 
                     if (await Database.GetScalar<long>(cmd) <= 0)
                         return false;
 
-                    gotchi.SpeciesId = sp[0].id;
+                    gotchi.SpeciesId = sp[0].Id;
 
                     evolved = true;
 
@@ -301,7 +301,7 @@ namespace OurFoodChain.Gotchi {
             }
 
             if (!(species is null))
-                result.Gotchi.SpeciesId = species.id;
+                result.Gotchi.SpeciesId = species.Id;
 
             // Evolve it the given number of times.
 
@@ -329,7 +329,7 @@ namespace OurFoodChain.Gotchi {
 
             // Generate a name for the gotchi.
 
-            result.Gotchi.Name = (species is null ? "Wild Gotchi" : species.GetShortName()) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.Level);
+            result.Gotchi.Name = (species is null ? "Wild Gotchi" : species.ShortName) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.Level);
 
             return result;
 
@@ -402,11 +402,11 @@ namespace OurFoodChain.Gotchi {
 
             string gotchi_pic = Global.GotchiImagesDirectory + "default.png";
 
-            if (!string.IsNullOrEmpty(sp.pics) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.pics, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
+            if (!string.IsNullOrEmpty(sp.Picture) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.Picture, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
 
                 string downloads_dir = Global.TempDirectory + "downloads";
-                string ext = Regex.Match(sp.pics, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
-                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtils.CreateMD5(sp.pics) + ext);
+                string ext = Regex.Match(sp.Picture, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
+                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtils.CreateMD5(sp.Picture) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -415,7 +415,7 @@ namespace OurFoodChain.Gotchi {
 
                     if (!System.IO.File.Exists(disk_fpath))
                         using (System.Net.WebClient client = new System.Net.WebClient())
-                            await client.DownloadFileTaskAsync(new Uri(sp.pics), disk_fpath);
+                            await client.DownloadFileTaskAsync(new Uri(sp.Picture), disk_fpath);
 
                     if (System.IO.File.Exists(disk_fpath))
                         gotchi_pic = disk_fpath;
@@ -424,7 +424,7 @@ namespace OurFoodChain.Gotchi {
                 catch (Exception ex) {
 
                     // We'll just keep using the default picture if this happens.
-                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.pics, ex.ToString()));
+                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.Picture, ex.ToString()));
 
                 }
 
@@ -677,7 +677,7 @@ namespace OurFoodChain.Gotchi {
             // We'll generate some names using some portion of the species name.
             // For example, "gigas" might generate "gi-gi", "mr. giga", or "giga".
 
-            string species_name = species.name;
+            string species_name = species.Name;
             MatchCollection vowel_matches = Regex.Matches(species_name, "[aeiou]");
             string[] roots = vowel_matches.Cast<Match>().Where(x => x.Index > 1).Select(x => species_name.Substring(0, x.Index + 1)).ToArray();
 

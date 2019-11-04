@@ -54,7 +54,7 @@ namespace OurFoodChain.Commands {
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows)
-                        new_species.Add(await Species.FromDataRow(row));
+                        new_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -86,7 +86,7 @@ namespace OurFoodChain.Commands {
             if (new_species.Count() > 0) {
 
                 foreach (Species sp in new_species)
-                    field_lines.Add(sp.GetFullName());
+                    field_lines.Add(sp.FullName);
 
                 EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
 
@@ -97,7 +97,7 @@ namespace OurFoodChain.Commands {
             if (extinct_species.Count() > 0) {
 
                 foreach (Species sp in extinct_species)
-                    field_lines.Add(sp.GetFullName());
+                    field_lines.Add(sp.FullName);
 
                 EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
 

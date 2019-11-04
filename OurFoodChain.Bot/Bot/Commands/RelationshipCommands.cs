@@ -69,7 +69,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesRelationships LEFT JOIN Relationships ON SpeciesRelationships.relationship_id = Relationships.id WHERE species1_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows) {
@@ -84,7 +84,7 @@ namespace OurFoodChain {
                         if (!items.ContainsKey(relationship.BeneficiaryName(plural: true)))
                             items[relationship.BeneficiaryName(plural: true)] = new List<string>();
 
-                        items[relationship.BeneficiaryName(plural: true)].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                        items[relationship.BeneficiaryName(plural: true)].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
 
                     }
 
@@ -94,7 +94,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesRelationships LEFT JOIN Relationships ON SpeciesRelationships.relationship_id = Relationships.id WHERE species2_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows) {
@@ -109,7 +109,7 @@ namespace OurFoodChain {
                         if (!items.ContainsKey(relationship.BenefactorName(plural: true)))
                             items[relationship.BenefactorName(plural: true)] = new List<string>();
 
-                        items[relationship.BenefactorName(plural: true)].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                        items[relationship.BenefactorName(plural: true)].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
 
                     }
 
@@ -119,7 +119,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE species_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows) {
@@ -133,7 +133,7 @@ namespace OurFoodChain {
                         if (!items.ContainsKey("prey"))
                             items["prey"] = new List<string>();
 
-                        items["prey"].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                        items["prey"].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
 
                     }
 
@@ -141,7 +141,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE eats_id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", sp.id);
+                cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows) {
@@ -155,7 +155,7 @@ namespace OurFoodChain {
                         if (!items.ContainsKey("predators"))
                             items["predators"] = new List<string>();
 
-                        items["predators"].Add(other_species.isExtinct ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                        items["predators"].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
 
                     }
 
@@ -165,7 +165,7 @@ namespace OurFoodChain {
 
             if (items.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not have any relationships with other species.", sp.GetShortName()));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not have any relationships with other species.", sp.ShortName));
 
                 return;
 
@@ -186,7 +186,7 @@ namespace OurFoodChain {
 
             }
 
-            embed.WithTitle(string.Format("Relationships involving {0} ({1})", sp.GetShortName(), relationship_count));
+            embed.WithTitle(string.Format("Relationships involving {0} ({1})", sp.ShortName, relationship_count));
 
             await ReplyAsync("", false, embed.Build());
 
@@ -254,7 +254,7 @@ namespace OurFoodChain {
             if (sp2 is null)
                 return;
 
-            if (sp1.id == sp2.id) {
+            if (sp1.Id == sp2.Id) {
 
                 await BotUtils.ReplyAsync_Warning(Context, "A species cannot be in a relationship with itself.");
 
@@ -266,8 +266,8 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesRelationships(species1_id, species2_id, relationship_id) VALUES($species1_id, $species2_id, $relationship_id)")) {
 
-                cmd.Parameters.AddWithValue("$species1_id", sp1.id);
-                cmd.Parameters.AddWithValue("$species2_id", sp2.id);
+                cmd.Parameters.AddWithValue("$species1_id", sp1.Id);
+                cmd.Parameters.AddWithValue("$species2_id", sp2.Id);
                 cmd.Parameters.AddWithValue("$relationship_id", relation.id);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -275,9 +275,9 @@ namespace OurFoodChain {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been set as a {1} of **{2}**.",
-                sp2.GetShortName(),
+                sp2.ShortName,
                 relation.BeneficiaryName(),
-                sp1.GetShortName()));
+                sp1.ShortName));
 
         }
         [Command("-relationship"), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -313,13 +313,13 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesRelationships WHERE (species1_id=$species1_id OR species1_id=$species2_id OR species2_id=$species1_id OR species2_id=$species2_id) AND relationship_id=$relationship_id;")) {
 
-                cmd.Parameters.AddWithValue("$species1_id", sp1.id);
-                cmd.Parameters.AddWithValue("$species2_id", sp2.id);
+                cmd.Parameters.AddWithValue("$species1_id", sp1.Id);
+                cmd.Parameters.AddWithValue("$species2_id", sp2.Id);
                 cmd.Parameters.AddWithValue("$relationship_id", relation.id);
 
                 if (await Database.GetScalar<long>(cmd) <= 0) {
 
-                    await BotUtils.ReplyAsync_Error(Context, string.Format("No such relationship exists between **{0}** and **{1}**.", sp1.GetShortName(), sp2.GetShortName()));
+                    await BotUtils.ReplyAsync_Error(Context, string.Format("No such relationship exists between **{0}** and **{1}**.", sp1.ShortName, sp2.ShortName));
 
                     return;
 
@@ -331,15 +331,15 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesRelationships WHERE (species1_id=$species1_id OR species1_id=$species2_id OR species2_id=$species1_id OR species2_id=$species2_id) AND relationship_id=$relationship_id;")) {
 
-                cmd.Parameters.AddWithValue("$species1_id", sp1.id);
-                cmd.Parameters.AddWithValue("$species2_id", sp2.id);
+                cmd.Parameters.AddWithValue("$species1_id", sp1.Id);
+                cmd.Parameters.AddWithValue("$species2_id", sp2.Id);
                 cmd.Parameters.AddWithValue("$relationship_id", relation.id);
 
                 await Database.ExecuteNonQuery(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** and **{1}** no longer have a {2} relationship.", sp1.GetShortName(), sp2.GetShortName(), relation.DescriptorName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** and **{1}** no longer have a {2} relationship.", sp1.ShortName, sp2.ShortName, relation.DescriptorName()));
 
         }
 

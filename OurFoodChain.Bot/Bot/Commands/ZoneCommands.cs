@@ -126,7 +126,7 @@ namespace OurFoodChain {
 
                     List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByZone(zone));
 
-                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                    species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
                     // Starting building a paginated message.
                     // The message will have a paginated species list, and a toggle button to display the species sorted by role.
@@ -187,7 +187,7 @@ namespace OurFoodChain {
                         // Sort the list of species belonging to each role.
 
                         foreach (List<Species> i in roles_map.Values)
-                            i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                            i.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
                         // Create a sorted list of keys so that the roles are in order.
 
@@ -199,7 +199,7 @@ namespace OurFoodChain {
                             StringBuilder lines = new StringBuilder();
 
                             foreach (Species j in roles_map[i])
-                                lines.AppendLine(j.GetShortName());
+                                lines.AppendLine(j.ShortName);
 
                             role_page.AddField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
 

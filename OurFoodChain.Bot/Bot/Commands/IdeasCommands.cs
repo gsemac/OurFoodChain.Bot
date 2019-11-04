@@ -64,7 +64,7 @@ namespace OurFoodChain {
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors) AND id NOT IN (SELECT ancestor_id FROM Ancestors) AND id NOT IN (SELECT species_id FROM Extinctions);"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
-                    ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", (await Species.FromDataRow(row)).GetShortName()));
+                    ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", (await SpeciesUtils.SpeciesFromDataRow(row)).ShortName));
 
             return ideas.ToArray();
 
@@ -83,9 +83,9 @@ namespace OurFoodChain {
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows) {
 
-                    Species species = await Species.FromDataRow(row);
+                    Species species = await SpeciesUtils.SpeciesFromDataRow(row);
 
-                    ideas.Add(string.Format("There are no species that feed on **{0}**. Why not make one?", species.GetShortName()));
+                    ideas.Add(string.Format("There are no species that feed on **{0}**. Why not make one?", species.ShortName));
 
                 }
 

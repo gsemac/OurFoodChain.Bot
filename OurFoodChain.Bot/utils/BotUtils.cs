@@ -29,7 +29,6 @@ namespace OurFoodChain {
 
     class BotUtils {
 
-        public const string DEFAULT_SPECIES_DESCRIPTION = "No description provided.";
         public const string DEFAULT_GENUS_DESCRIPTION = "No description provided.";
         public const string DEFAULT_ZONE_DESCRIPTION = "No description provided.";
         public const string DEFAULT_DESCRIPTION = "No description provided.";
@@ -96,7 +95,7 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        species.Add(await Species.FromDataRow(row));
+                        species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -121,7 +120,7 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        species.Add(await Species.FromDataRow(row));
+                        species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -136,7 +135,7 @@ namespace OurFoodChain {
 
             bool isEndangered = false;
 
-            if (species.isExtinct)
+            if (species.IsExtinct)
                 return isEndangered;
 
             if (!isEndangered) {
@@ -145,7 +144,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM Predates WHERE eats_id NOT IN (SELECT species_id FROM Extinctions)) AND id IN (SELECT species_id from Predates)")) {
 
-                    cmd.Parameters.AddWithValue("$id", species.id);
+                    cmd.Parameters.AddWithValue("$id", species.Id);
 
                     isEndangered = await Database.GetScalar<long>(cmd) > 0;
 
@@ -167,7 +166,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand(query)) {
 
-                    cmd.Parameters.AddWithValue("$ancestor_id", species.id);
+                    cmd.Parameters.AddWithValue("$ancestor_id", species.Id);
 
                     isEndangered = await Database.GetScalar<long>(cmd) > 0;
 
@@ -275,7 +274,7 @@ namespace OurFoodChain {
                 DataRow row = await Database.GetRowAsync(cmd);
 
                 if (!(row is null))
-                    return await Species.FromDataRow(row);
+                    return await SpeciesUtils.SpeciesFromDataRow(row);
 
             }
 
@@ -571,12 +570,12 @@ namespace OurFoodChain {
             TaxonSet set = new TaxonSet {
 
                 Species = new Taxon(TaxonRank.Species) {
-                    id = sp.id,
-                    name = sp.name,
-                    description = sp.description
+                    id = sp.Id,
+                    name = sp.Name,
+                    description = sp.Description
                 },
 
-                Genus = await GetTaxonFromDb(sp.genusId, TaxonRank.Genus)
+                Genus = await GetTaxonFromDb(sp.GenusId, TaxonRank.Genus)
 
             };
 
@@ -678,7 +677,7 @@ namespace OurFoodChain {
         }
         public static string GenerateSpeciesName(Species species) {
 
-            return GenerateSpeciesName(species.genus, species.name);
+            return GenerateSpeciesName(species.GenusName, species.Name);
 
         }
 
@@ -691,7 +690,7 @@ namespace OurFoodChain {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET description=$description WHERE id=$species_id;")) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.id);
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
                 cmd.Parameters.AddWithValue("$description", description);
 
                 await Database.ExecuteNonQuery(cmd);
@@ -757,7 +756,7 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        sp_list.Add(await Species.FromDataRow(row));
+                        sp_list.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -766,11 +765,11 @@ namespace OurFoodChain {
 
             foreach (Species sp in sp_list) {
 
-                int dist = LevenshteinDistance.Compute(species, sp.name);
+                int dist = LevenshteinDistance.Compute(species, sp.Name);
 
                 if (dist < min_dist) {
                     min_dist = dist;
-                    suggestion = sp.GetShortName();
+                    suggestion = sp.ShortName;
                 }
 
             }
@@ -836,7 +835,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyValidateSpeciesAsync(ICommandContext context, Species species) {
 
-            if (species is null || species.id < 0) {
+            if (species is null || species.Id < 0) {
 
                 await ReplyAsync_NoSuchSpeciesExists(context);
 
@@ -989,7 +988,7 @@ namespace OurFoodChain {
                     StringBuilder field_content = new StringBuilder();
 
                     foreach (Taxon taxon in taxa_dict[type])
-                        field_content.AppendLine(type == TaxonRank.Species ? (await GetSpeciesFromDb(taxon.id)).GetShortName() : taxon.GetName());
+                        field_content.AppendLine(type == TaxonRank.Species ? (await GetSpeciesFromDb(taxon.id)).ShortName : taxon.GetName());
 
                     embed.AddField(string.Format("{0}{1} ({2})",
                         taxa_dict.Keys.Count() == 1 ? "Matching " : "",
@@ -1107,7 +1106,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, IUser user, PrivilegeLevel level, Species species) {
 
-            if (user.Id == (ulong)species.user_id)
+            if (user.Id == (ulong)species.OwnerUserId)
                 return true;
 
             return await ReplyHasPrivilegeAsync(context, user, level);
@@ -1186,13 +1185,13 @@ namespace OurFoodChain {
 
                     Species[] species = await GetSpeciesInTaxonFromDb(taxon);
 
-                    Array.Sort(species, (lhs, rhs) => lhs.name.ToLower().CompareTo(rhs.name.ToLower()));
+                    Array.Sort(species, (lhs, rhs) => lhs.Name.ToLower().CompareTo(rhs.Name.ToLower()));
 
                     foreach (Species s in species)
-                        if (s.isExtinct)
-                            items.Add(string.Format("~~{0}~~", s.name.ToLower()));
+                        if (s.IsExtinct)
+                            items.Add(string.Format("~~{0}~~", s.Name.ToLower()));
                         else
-                            items.Add(s.name.ToLower());
+                            items.Add(s.Name.ToLower());
 
                 }
                 else {

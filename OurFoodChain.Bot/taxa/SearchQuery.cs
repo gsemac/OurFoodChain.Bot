@@ -73,7 +73,7 @@ namespace OurFoodChain {
 
                 _groups.Clear();
 
-                species = species.GroupBy(x => x.id).Select(x => x.First()).ToList();
+                species = species.GroupBy(x => x.Id).Select(x => x.First()).ToList();
 
                 // Assign the species into groups according to the callback.
 
@@ -191,24 +191,24 @@ namespace OurFoodChain {
                 switch (OrderBy) {
 
                     case OrderBy.Newest:
-                        Items.Sort((lhs, rhs) => rhs.timestamp.CompareTo(lhs.timestamp));
+                        Items.Sort((lhs, rhs) => rhs.Timestamp.CompareTo(lhs.Timestamp));
                         break;
 
                     case OrderBy.Oldest:
-                        Items.Sort((lhs, rhs) => lhs.timestamp.CompareTo(rhs.timestamp));
+                        Items.Sort((lhs, rhs) => lhs.Timestamp.CompareTo(rhs.Timestamp));
                         break;
 
                     case OrderBy.Smallest:
-                        Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters()));
+                        Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(lhs.Description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(rhs.Description).MaxSize.ToMeters()));
                         break;
 
                     case OrderBy.Largest:
-                        Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(rhs.description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(lhs.description).MaxSize.ToMeters()));
+                        Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(rhs.Description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(lhs.Description).MaxSize.ToMeters()));
                         break;
 
                     default:
                     case OrderBy.Default:
-                        Items.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                        Items.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
                         break;
 
                 }
@@ -219,28 +219,28 @@ namespace OurFoodChain {
 
             private string _speciesToString(Species species) {
 
-                string str = species.GetShortName();
+                string str = species.ShortName;
 
                 switch (DisplayFormat) {
 
                     case DisplayFormat.CommonName:
 
-                        if (!string.IsNullOrEmpty(species.commonName))
-                            str = StringUtils.ToTitleCase(species.commonName);
+                        if (!string.IsNullOrEmpty(species.CommonName))
+                            str = StringUtils.ToTitleCase(species.CommonName);
 
                         break;
 
                     case DisplayFormat.FullName:
-                        str = species.GetFullName();
+                        str = species.FullName;
                         break;
 
                     case DisplayFormat.SpeciesOnly:
-                        str = species.name.ToLower();
+                        str = species.Name.ToLower();
                         break;
 
                 }
 
-                if (species.isExtinct)
+                if (species.IsExtinct)
                     str = string.Format("~~{0}~~", str);
 
                 return str;
@@ -308,7 +308,7 @@ namespace OurFoodChain {
 
                 using (DataTable rows = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in rows.Rows)
-                        matches.Add(await Species.FromDataRow(row));
+                        matches.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -365,14 +365,14 @@ namespace OurFoodChain {
                         case "zones":
                         case "zone":
                             await result.GroupByAsync(async (x) => {
-                                return (await BotUtils.GetZonesFromDb(x.id)).Select(z => z.GetFullName()).ToArray();
+                                return (await BotUtils.GetZonesFromDb(x.Id)).Select(z => z.GetFullName()).ToArray();
                             });
                             break;
 
                         case "g":
                         case "genus":
                             await result.GroupByAsync((x) => {
-                                return Task.FromResult(new string[] { x.genus });
+                                return Task.FromResult(new string[] { x.GenusName });
                             });
                             break;
 
@@ -444,7 +444,7 @@ namespace OurFoodChain {
 
                         case "owner":
                             await result.GroupByAsync(async (x) => {
-                                return new string[] { await x.GetOwnerOrDefault(_context) };
+                                return new string[] { await SpeciesUtils.GetOwnerOrDefaultAsync(x, _context) };
                             });
                             break;
 
@@ -452,13 +452,13 @@ namespace OurFoodChain {
                         case "extant":
                         case "extinct":
                             await result.GroupByAsync((x) => {
-                                return Task.FromResult(new string[] { x.isExtinct ? "extinct" : "extant" });
+                                return Task.FromResult(new string[] { x.IsExtinct ? "extinct" : "extant" });
                             });
                             break;
 
                         case "role":
                             await result.GroupByAsync(async (x) => {
-                                return (await SpeciesUtils.GetRolesAsync(x.id)).Select(z => z.name).ToArray();
+                                return (await SpeciesUtils.GetRolesAsync(x.Id)).Select(z => z.name).ToArray();
                             });
                             break;
 
@@ -466,7 +466,7 @@ namespace OurFoodChain {
                         case "generation":
                             if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
                                 await result.GroupByAsync(async (x) => {
-                                    return new string[] { (await GenerationUtils.GetGenerationByTimestampAsync(x.timestamp)).Name };
+                                    return new string[] { (await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp)).Name };
                                 });
                             break;
 
@@ -520,7 +520,7 @@ namespace OurFoodChain {
                     long[] zone_list = (await ZoneUtils.GetZonesByZoneListAsync(value)).Zones.Select(x => x.Id).ToArray();
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await BotUtils.GetZonesFromDb(x.id)).Any(z => zone_list.Contains(z.Id));
+                        return !(await BotUtils.GetZonesFromDb(x.Id)).Any(z => zone_list.Contains(z.Id));
                     }, subtract);
 
                     break;
@@ -533,7 +533,7 @@ namespace OurFoodChain {
                     string[] role_list = value.Split(',').Select(x => x.Trim().ToLower()).ToArray();
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await SpeciesUtils.GetRolesAsync(x.id)).Any(r => role_list.Contains(r.name.ToLower()));
+                        return !(await SpeciesUtils.GetRolesAsync(x.Id)).Any(r => role_list.Contains(r.name.ToLower()));
                     }, subtract);
 
                     break;
@@ -579,7 +579,7 @@ namespace OurFoodChain {
                     Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(_context, value);
 
                     await result.FilterByAsync(async (x) => {
-                        return (user is null) ? ((await x.GetOwnerOrDefault(_context)).ToLower() != value.ToLower()) : (ulong)x.user_id != user.Id;
+                        return (user is null) ? ((await SpeciesUtils.GetOwnerOrDefaultAsync(x, _context)).ToLower() != value.ToLower()) : (ulong)x.OwnerUserId != user.Id;
                     }, subtract);
 
                     break;
@@ -592,7 +592,7 @@ namespace OurFoodChain {
                         case "extant":
 
                             await result.FilterByAsync((x) => {
-                                return Task.FromResult(x.isExtinct);
+                                return Task.FromResult(x.IsExtinct);
                             }, subtract);
 
                             break;
@@ -601,7 +601,7 @@ namespace OurFoodChain {
                         case "extinct":
 
                             await result.FilterByAsync((x) => {
-                                return Task.FromResult(!x.isExtinct);
+                                return Task.FromResult(!x.IsExtinct);
                             }, subtract);
 
                             break;
@@ -622,9 +622,9 @@ namespace OurFoodChain {
                 case "s":
                 case "species":
 
-                    await result.FilterByAsync((x) => {
-                        return Task.FromResult(x.name.ToLower() != value.ToLower());
-                    }, subtract);
+                    await result.FilterByAsync((Func<Species, Task<bool>>)((x) => {
+                        return Task.FromResult(x.Name.ToLower() != value.ToLower());
+                    }), subtract);
 
                     break;
 
@@ -632,7 +632,7 @@ namespace OurFoodChain {
                 case "genus":
 
                     await result.FilterByAsync((x) => {
-                        return Task.FromResult(x.genus.ToLower() != value.ToLower());
+                        return Task.FromResult(x.GenusName.ToLower() != value.ToLower());
                     }, subtract);
 
                     break;
@@ -709,12 +709,12 @@ namespace OurFoodChain {
                             break;
 
                         // Generate N random IDs from the results.
-                        long[] ids = result.ToArray().OrderBy(i => BotUtils.RandomInteger(int.MaxValue)).Take(count).Select(i => i.id).ToArray();
+                        long[] ids = result.ToArray().OrderBy(i => BotUtils.RandomInteger(int.MaxValue)).Take(count).Select(i => i.Id).ToArray();
 
                         // Filter all but those results.
 
                         await result.FilterByAsync((x) => {
-                            return Task.FromResult(!ids.Contains(x.id));
+                            return Task.FromResult(!ids.Contains(x.Id));
                         }, subtract);
 
                     }
@@ -731,7 +731,7 @@ namespace OurFoodChain {
                         Species[] predator_list = prey_list.Count() == 1 ? await SpeciesUtils.GetPredatorsAsync(prey_list[0]) : new Species[] { };
 
                         await result.FilterByAsync((x) => {
-                            return Task.FromResult(!predator_list.Any(i => i.id == x.id));
+                            return Task.FromResult(!predator_list.Any(i => i.Id == x.Id));
                         }, subtract);
 
                     }
@@ -744,15 +744,28 @@ namespace OurFoodChain {
                         // Filters out all species that are not in the prey list of the given species.
 
                         Species[] predator_list = await SpeciesUtils.GetSpeciesAsync(value);
-                        Species[] prey_list = predator_list.Count() == 1 ? await SpeciesUtils.GetPreyAsync(predator_list[0]) : new Species[] { };
+                        PreyInfo[] prey_list = predator_list.Count() == 1 ? await SpeciesUtils.GetPreyAsync(predator_list[0]) : new PreyInfo[] { };
 
                         await result.FilterByAsync((x) => {
-                            return Task.FromResult(!prey_list.Any(i => i.id == x.id));
+                            return Task.FromResult(!prey_list.Any(i => i.Prey.Id == x.Id));
                         }, subtract);
 
                     }
 
                     break;
+
+                case "preynote":
+                case "preynotes": {
+
+                        // Filters out species that don't have the given keyword in the prey notes.
+
+                        await result.FilterByAsync(async (x) => {
+                            return !(await SpeciesUtils.GetPreyAsync(x)).Where(n => n.Notes.ToLower().Contains(value.ToLower())).Any();
+                        }, subtract);
+
+                        break;
+
+                    }
 
                 case "has": {
 
@@ -822,7 +835,7 @@ namespace OurFoodChain {
                             case "size":
 
                                 await result.FilterByAsync((x) => {
-                                    return Task.FromResult(SpeciesSizeMatch.Match(x.description).ToString() == SpeciesSizeMatch.UNKNOWN_SIZE_STRING);
+                                    return Task.FromResult(SpeciesSizeMatch.Match(x.Description).ToString() == SpeciesSizeMatch.UNKNOWN_SIZE_STRING);
                                 }, subtract);
 
                                 break;
@@ -841,7 +854,7 @@ namespace OurFoodChain {
                         Species species = await SpeciesUtils.GetUniqueSpeciesAsync(value);
 
                         await result.FilterByAsync(async (x) => {
-                            return species is null || !(await SpeciesUtils.GetAncestorIdsAsync(x.id)).Any(id => id == species.id);
+                            return species is null || !(await SpeciesUtils.GetAncestorIdsAsync(x.Id)).Any(id => id == species.Id);
                         }, subtract);
 
                     }
@@ -854,10 +867,10 @@ namespace OurFoodChain {
                         // Filter all species that don't have the given species as a descendant.
 
                         Species species = await SpeciesUtils.GetUniqueSpeciesAsync(value);
-                        long[] ancestorIds = await SpeciesUtils.GetAncestorIdsAsync(species.id);
+                        long[] ancestorIds = await SpeciesUtils.GetAncestorIdsAsync(species.Id);
 
                         await result.FilterByAsync((x) => {
-                            return Task.FromResult(ancestorIds.Length <= 0 || !ancestorIds.Any(id => id == x.id));
+                            return Task.FromResult(ancestorIds.Length <= 0 || !ancestorIds.Any(id => id == x.Id));
                         }, subtract);
 
                     }
@@ -869,7 +882,7 @@ namespace OurFoodChain {
                     if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
                         await result.FilterByAsync(async (x) => {
 
-                            Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(x.timestamp);
+                            Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp);
 
                             return gen == null || gen.Number.ToString() != value;
 

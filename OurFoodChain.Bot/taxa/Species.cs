@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public class Species {
+    public class Species :
+        IComparable<Species> {
 
         // Public members
 
@@ -77,7 +78,11 @@ namespace OurFoodChain {
             return Description;
 
         }
-   
+
+        public int CompareTo(Species other) {
+            return FullName.CompareTo(other.FullName);
+        }
+
         // Private members
 
         private string name;

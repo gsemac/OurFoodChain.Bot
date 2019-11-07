@@ -927,6 +927,14 @@ namespace OurFoodChain.Taxa {
 
                     break;
 
+                case "artist":
+
+                    await result.FilterByAsync(async (x) => {
+                        return !(await SpeciesUtils.GetPicturesAsync(x)).Any(n => n.artist.ToLowerInvariant().Equals(value.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase));
+                    }, subtract);
+
+                    break;
+
                 // The following are only available when generations are enabled.
 
                 case "gen":

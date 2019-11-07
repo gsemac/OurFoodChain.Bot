@@ -444,8 +444,8 @@ namespace OurFoodChain.Commands {
 
             // Create and execute the search query.
 
-            SearchQuery query = new SearchQuery(Context, queryString);
-            SearchQuery.FindResult result = await query.FindMatchesAsync();
+            Taxa.SearchQuery query = new Taxa.SearchQuery(Context, queryString);
+            Taxa.SearchQueryResult result = await query.GetResultAsync();
 
             // Build the embed.
 
@@ -456,7 +456,7 @@ namespace OurFoodChain.Commands {
             }
             else {
 
-                if (result.DisplayFormat == SearchQuery.DisplayFormat.Gallery) {
+                if (result.DisplayFormat == Taxa.DisplayFormat.Gallery) {
 
                     List<Picture> pictures = new List<Picture>();
 
@@ -478,10 +478,10 @@ namespace OurFoodChain.Commands {
 
                         PaginatedMessage embed;
 
-                        if (result.HasGroup(SearchQuery.DEFAULT_GROUP)) {
+                        if (result.HasGroup(Taxa.SearchQuery.DefaultGroupName)) {
 
                             // If there's only one group, just list the species without creating separate fields.
-                            embed = new PaginatedMessage(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+                            embed = new PaginatedMessage(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToStringArray().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
 
                         }
                         else {

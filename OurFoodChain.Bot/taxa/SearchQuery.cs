@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -7,186 +8,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Taxa {
 
-    public class SearchQuery {
+    public enum DisplayFormat {
+        FullName,
+        ShortName,
+        CommonName,
+        SpeciesOnly,
+        Gallery
+    }
 
-        public const string DEFAULT_GROUP = "";
+    public enum OrderBy {
+        Default,
+        Newest,
+        Oldest,
+        Smallest,
+        Largest,
+        Count
+    }
 
-        public enum DisplayFormat {
-            FullName,
-            ShortName,
-            CommonName,
-            SpeciesOnly,
-            Gallery
-        }
+    public class SearchQueryResult {
 
-        public enum OrderBy {
-            Default,
-            Newest,
-            Oldest,
-            Smallest,
-            Largest,
-            Count
-        }
+        // Public members
 
-        public class FindResult {
+        public class Group :
+            IEnumerable<Species> {
 
-            public void Add(string group, Species species) {
-                Add(group, new Species[] { species });
-            }
-            public void Add(string group, Species[] species) {
+            // Public members
 
-                if (!_groups.ContainsKey(group))
-                    _groups.Add(group, new FindResultGroup {
-                        Name = group,
-                        Items = new List<Species>(species)
-                    });
-                else
-                    _groups[group].Items.AddRange(species);
-
-            }
-            public int Count() {
-
-                int count = 0;
-
-                foreach (FindResultGroup group in _groups.Values)
-                    count += group.Items.Count();
-
-                return count;
-
-            }
-
-            public bool HasGroup(string name) {
-                return _groups.ContainsKey(name);
-            }
-
-            public async Task GroupByAsync(Func<Species, Task<string[]>> func) {
-
-                // Take all species that have already been grouped, assembly them into a single list, and then clear the groupings.
-                // Remove any duplicates in the process, since species may have been assigned to multiple groups.
-
-                List<Species> species = new List<Species>();
-
-                foreach (FindResultGroup group in _groups.Values)
-                    species.AddRange(group.Items);
-
-                _groups.Clear();
-
-                species = species.GroupBy(x => x.Id).Select(x => x.First()).ToList();
-
-                // Assign the species into groups according to the callback.
-
-                foreach (Species s in species)
-                    foreach (string group in await func(s))
-                        Add(group, s);
-
-            }
-            /// <summary>
-            /// Removes all results for which the given condition is met.
-            /// </summary>
-            /// <param name="func">The condition to use when checking each result.</param>
-            /// <param name="constructive">If true, removes results for which the condition is not met instead.</param>
-            /// <returns></returns>
-            public async Task FilterByAsync(Func<Species, Task<bool>> func, bool constructive = false) {
-
-                foreach (FindResultGroup group in _groups.Values) {
-
-                    int index = group.Items.Count() - 1;
-
-                    while (index >= 0) {
-
-                        bool condition_met = await func(group.Items[index]);
-
-                        if ((condition_met && !constructive) || (!condition_met && constructive))
-                            group.Items.RemoveAt(index);
-
-                        --index;
-
-                    }
-
-                }
-
-            }
-
-            public Species[] ToArray() {
-
-                List<Species> results = new List<Species>();
-
-                foreach (FindResultGroup group in Groups)
-                    results.AddRange(group.Items);
-
-                return results.ToArray();
-
-            }
-
-            public FindResultGroup DefaultGroup {
-                get {
-                    return _groups[DEFAULT_GROUP];
-                }
-            }
-            public FindResultGroup[] Groups {
-                get {
-
-                    List<FindResultGroup> groups = new List<FindResultGroup>();
-
-                    foreach (FindResultGroup group in _groups.Values)
-                        groups.Add(group);
-
-                    switch (OrderBy) {
-
-                        case OrderBy.Count:
-                            groups.Sort((x, y) => y.Items.Count.CompareTo(x.Items.Count));
-                            break;
-
-                    }
-
-                    return groups.ToArray();
-
-                }
-            }
-
-            public OrderBy OrderBy {
-                get {
-                    return _order_by;
-                }
-                set {
-
-                    foreach (FindResultGroup group in _groups.Values)
-                        group.OrderBy = value;
-
-                    _order_by = value;
-
-                }
-            }
-            public DisplayFormat DisplayFormat {
-                get {
-                    return _display_format;
-                }
-                set {
-
-                    foreach (FindResultGroup group in _groups.Values)
-                        group.DisplayFormat = value;
-
-                    _display_format = value;
-
-                }
-            }
-
-            private SortedDictionary<string, FindResultGroup> _groups = new SortedDictionary<string, FindResultGroup>(new ArrayUtils.NaturalStringComparer());
-            private OrderBy _order_by = OrderBy.Default;
-            private DisplayFormat _display_format = DisplayFormat.ShortName;
-
-        }
-
-        public class FindResultGroup {
-
-            public string Name { get; set; } = DEFAULT_GROUP;
+            public string Name { get; set; } = SearchQuery.DefaultGroupName;
             public OrderBy OrderBy { get; set; } = OrderBy.Default;
             public DisplayFormat DisplayFormat { get; set; } = DisplayFormat.ShortName;
             public List<Species> Items { get; set; } = new List<Species>();
 
-            public List<string> ToList() {
+            public string[] ToStringArray() {
+
+                return ToArray().Select(x => SpeciesToString(x)).ToArray();
+
+            }
+            public Species[] ToArray() {
 
                 switch (OrderBy) {
 
@@ -213,11 +73,20 @@ namespace OurFoodChain {
 
                 }
 
-                return Items.Select(x => _speciesToString(x)).ToList();
+                return Items.ToArray();
 
             }
 
-            private string _speciesToString(Species species) {
+            public IEnumerator<Species> GetEnumerator() {
+                return Items.GetEnumerator();
+            }
+            IEnumerator IEnumerable.GetEnumerator() {
+                return Items.GetEnumerator();
+            }
+
+            // Private members
+
+            private string SpeciesToString(Species species) {
 
                 string str = species.ShortName;
 
@@ -249,12 +118,174 @@ namespace OurFoodChain {
 
         }
 
+        public void Add(string group, Species species) {
+
+            Add(group, new Species[] { species });
+
+        }
+        public void Add(string group, Species[] species) {
+
+            if (!groups.ContainsKey(group)) {
+
+                groups.Add(group, new Group {
+                    Name = group,
+                    Items = new List<Species>(species)
+                });
+
+            }
+            else
+                groups[group].Items.AddRange(species);
+
+        }
+        public int Count() {
+
+            int count = 0;
+
+            foreach (Group group in groups.Values)
+                count += group.Items.Count();
+
+            return count;
+
+        }
+
+        public bool HasGroup(string name) {
+
+            return groups.ContainsKey(name);
+
+        }
+
+        public async Task GroupByAsync(Func<Species, Task<string[]>> func) {
+
+            // Take all species that have already been grouped, assembly them into a single list, and then clear the groupings.
+            // Remove any duplicates in the process, since species may have been assigned to multiple groups.
+
+            List<Species> species = new List<Species>();
+
+            foreach (Group group in groups.Values)
+                species.AddRange(group.Items);
+
+            groups.Clear();
+
+            species = species.GroupBy(x => x.Id).Select(x => x.First()).ToList();
+
+            // Assign the species into groups according to the callback.
+
+            foreach (Species s in species)
+                foreach (string group in await func(s))
+                    Add(group, s);
+
+        }
+        /// <summary>
+        /// Removes all results for which the given condition is met.
+        /// </summary>
+        /// <param name="func">The condition to use when checking each result.</param>
+        /// <param name="constructive">If true, removes results for which the condition is not met instead.</param>
+        /// <returns></returns>
+        public async Task FilterByAsync(Func<Species, Task<bool>> func, bool constructive = false) {
+
+            foreach (Group group in groups.Values) {
+
+                int index = group.Items.Count() - 1;
+
+                while (index >= 0) {
+
+                    bool condition_met = await func(group.Items[index]);
+
+                    if ((condition_met && !constructive) || (!condition_met && constructive))
+                        group.Items.RemoveAt(index);
+
+                    --index;
+
+                }
+
+            }
+
+        }
+
+        public Species[] ToArray() {
+
+            List<Species> results = new List<Species>();
+
+            foreach (Group group in Groups)
+                results.AddRange(group.ToArray());
+
+            return results.ToArray();
+
+        }
+
+        public Group DefaultGroup {
+            get {
+                return groups[SearchQuery.DefaultGroupName];
+            }
+        }
+        public Group[] Groups {
+            get {
+
+                List<Group> groups = new List<Group>();
+
+                foreach (Group group in this.groups.Values)
+                    groups.Add(group);
+
+                switch (OrderBy) {
+
+                    case OrderBy.Count:
+                        groups.Sort((x, y) => y.Items.Count.CompareTo(x.Items.Count));
+                        break;
+
+                }
+
+                return groups.ToArray();
+
+            }
+        }
+
+        public OrderBy OrderBy {
+            get {
+                return orderBy;
+            }
+            set {
+
+                foreach (Group group in groups.Values)
+                    group.OrderBy = value;
+
+                orderBy = value;
+
+            }
+        }
+        public DisplayFormat DisplayFormat {
+            get {
+                return displayFormat;
+            }
+            set {
+
+                foreach (Group group in groups.Values)
+                    group.DisplayFormat = value;
+
+                displayFormat = value;
+
+            }
+        }
+
+        // Private members
+
+        private SortedDictionary<string, Group> groups = new SortedDictionary<string, Group>(new ArrayUtils.NaturalStringComparer());
+        private OrderBy orderBy = OrderBy.Default;
+        private DisplayFormat displayFormat = DisplayFormat.ShortName;
+
+    }
+
+    public class SearchQuery {
+
+        // Public members
+
+        public const string DefaultGroupName = "";
+
         public SearchQuery(ICommandContext context, string queryString) :
-            this(context, _parseQueryString(queryString)) {
+            this(context, ParseQueryString(queryString)) {
         }
         public SearchQuery(ICommandContext context, string[] keywords) {
 
-            _context = context;
+            this.context = context;
 
             // Filter out the basic search terms from the modifiers.
 
@@ -265,16 +296,16 @@ namespace OurFoodChain {
                 if (string.IsNullOrEmpty(keyword))
                     continue;
 
-                if (_isModifier(keyword))
-                    _modifiers.Add(keyword);
+                if (IsSearchModifier(keyword))
+                    searchModifiers.Add(keyword);
                 else
-                    _terms.Add(keyword);
+                    searchTerms.Add(keyword);
 
             }
 
         }
 
-        public async Task<FindResult> FindMatchesAsync() {
+        public async Task<SearchQueryResult> GetResultAsync() {
 
             // Build up a list of conditions to query for.
 
@@ -282,7 +313,7 @@ namespace OurFoodChain {
 
             // Create a condition for each basic search term.
 
-            for (int i = 0; i < _terms.Count(); ++i)
+            for (int i = 0; i < searchTerms.Count(); ++i)
                 conditions.Add(string.Format("(name LIKE {0} OR description LIKE {0} OR common_name LIKE {0})", string.Format("$term{0}", i)));
 
             // Build the SQL query.
@@ -299,8 +330,8 @@ namespace OurFoodChain {
 
                 // Replace all parameters with their respective terms.
 
-                for (int i = 0; i < _terms.Count(); ++i) {
-                    string term = "%" + _terms[i].Trim() + "%";
+                for (int i = 0; i < searchTerms.Count(); ++i) {
+                    string term = "%" + searchTerms[i].Trim() + "%";
                     cmd.Parameters.AddWithValue(string.Format("$term{0}", i), term);
                 }
 
@@ -313,31 +344,33 @@ namespace OurFoodChain {
             }
 
             // Apply any post-match modifiers (e.g. groupings), and return the result.
-            FindResult result = await _applyPostMatchModifiersAsync(matches);
+            SearchQueryResult result = await ApplyPostMatchModifiersAsync(matches);
 
             // Return the result.
             return result;
 
         }
 
-        private bool _isModifier(string input) {
+        // Private members
+
+        private bool IsSearchModifier(string input) {
 
             return input.Contains(":");
 
         }
-        private async Task<FindResult> _applyPostMatchModifiersAsync(List<Species> matches) {
+        private async Task<SearchQueryResult> ApplyPostMatchModifiersAsync(List<Species> matches) {
 
-            FindResult result = new FindResult();
+            SearchQueryResult result = new SearchQueryResult();
 
-            result.Add(DEFAULT_GROUP, matches.ToArray());
+            result.Add(DefaultGroupName, matches.ToArray());
 
-            foreach (string modifier in _modifiers)
-                await _applyPostMatchModifierAsync(result, modifier);
+            foreach (string modifier in searchModifiers)
+                await ApplyPostMatchModifierAsync(result, modifier);
 
             return result;
 
         }
-        private async Task _applyPostMatchModifierAsync(FindResult result, string modifier) {
+        private async Task ApplyPostMatchModifierAsync(SearchQueryResult result, string modifier) {
 
             int split_index = modifier.IndexOf(':');
             string name = modifier.Substring(0, split_index).Trim();
@@ -444,7 +477,7 @@ namespace OurFoodChain {
 
                         case "owner":
                             await result.GroupByAsync(async (x) => {
-                                return new string[] { await SpeciesUtils.GetOwnerOrDefaultAsync(x, _context) };
+                                return new string[] { await SpeciesUtils.GetOwnerOrDefaultAsync(x, context) };
                             });
                             break;
 
@@ -576,10 +609,10 @@ namespace OurFoodChain {
 
                 case "owner":
 
-                    Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(_context, value);
+                    Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(context, value);
 
                     await result.FilterByAsync(async (x) => {
-                        return (user is null) ? ((await SpeciesUtils.GetOwnerOrDefaultAsync(x, _context)).ToLower() != value.ToLower()) : (ulong)x.OwnerUserId != user.Id;
+                        return (user is null) ? ((await SpeciesUtils.GetOwnerOrDefaultAsync(x, context)).ToLower() != value.ToLower()) : (ulong)x.OwnerUserId != user.Id;
                     }, subtract);
 
                     break;
@@ -877,6 +910,25 @@ namespace OurFoodChain {
 
                     break;
 
+                case "limit": {
+
+                        // Filter all species that aren't in the first n results.
+
+                        if (int.TryParse(value, out int limit)) {
+
+                            Species[] searchResults = result.ToArray().Take(limit).ToArray();
+
+                            await result.FilterByAsync(async (x) =>
+                                await Task.FromResult(!searchResults.Any(n => n.Id == x.Id)), subtract);
+
+                        }
+
+                    }
+
+                    break;
+
+                // The following are only available when generations are enabled.
+
                 case "gen":
                 case "generation":
                     if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
@@ -889,11 +941,12 @@ namespace OurFoodChain {
                         }, subtract);
                     break;
 
+
             }
 
         }
 
-        private static string[] _parseQueryString(string queryString) {
+        private static string[] ParseQueryString(string queryString) {
 
             List<string> keywords = new List<string>();
 
@@ -927,9 +980,9 @@ namespace OurFoodChain {
 
         }
 
-        private readonly ICommandContext _context;
-        private List<string> _terms = new List<string>();
-        private List<string> _modifiers = new List<string>();
+        private readonly ICommandContext context;
+        private List<string> searchTerms = new List<string>();
+        private List<string> searchModifiers = new List<string>();
 
     }
 

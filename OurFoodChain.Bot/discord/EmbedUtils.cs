@@ -97,14 +97,14 @@ namespace OurFoodChain {
             return pages;
 
         }
-        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(SearchQuery.FindResult result, int itemsPerField = 10) {
+        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(Taxa.SearchQueryResult result, int itemsPerField = 10) {
 
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
             int fields_per_page = 6;
 
-            foreach (SearchQuery.FindResultGroup group in result.Groups) {
+            foreach (Taxa.SearchQueryResult.Group group in result.Groups) {
 
-                List<string> items = group.ToList();
+                List<string> items = group.ToStringArray().ToList();
 
                 List<List<string>> columns = ListToColumns(items, itemsPerField);
                 int column_index = 1;

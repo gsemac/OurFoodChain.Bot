@@ -837,7 +837,7 @@ namespace OurFoodChain.Commands {
 
                     await TaxonUtils.DeleteTaxonAsync(taxa[0]);
 
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("{0} **{1}** was successfully deleted.", taxa[0].GetTypeName(), taxa[0].GetName()));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("{0} **{1}** was successfully deleted.", StringUtils.ToTitleCase(taxa[0].GetTypeName()), taxa[0].GetName()));
 
                 }
 

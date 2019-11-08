@@ -201,6 +201,11 @@ namespace OurFoodChain.Taxa {
 
             }
 
+            // Remove all empty groups.
+
+            foreach (string key in groups.Keys.Where(x => groups[x].Count() <= 0).ToArray())
+                groups.Remove(key);
+
         }
 
         public Species[] ToArray() {

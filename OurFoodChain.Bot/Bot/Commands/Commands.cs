@@ -493,7 +493,7 @@ namespace OurFoodChain.Commands {
                             groupRanks[group].ToString("000"),
                             UserRank.GetRankIcon(groupRanks[group]),
                             group.Count().ToString("000"),
-                            string.Format(groupRanks[group] <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(group.Name) ? "Results" : group.Name)
+                            string.Format(groupRanks[group] <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(group.Name) ? "Results" : StringUtils.ToTitleCase(group.Name))
                         ));
 
                     }

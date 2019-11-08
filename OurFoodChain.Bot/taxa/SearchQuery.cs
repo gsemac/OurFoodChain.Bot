@@ -15,7 +15,8 @@ namespace OurFoodChain.Taxa {
         ShortName,
         CommonName,
         SpeciesOnly,
-        Gallery
+        Gallery,
+        Leaderboard
     }
 
     public enum OrderBy {
@@ -601,6 +602,17 @@ namespace OurFoodChain.Taxa {
 
                         case "gallery":
                             result.DisplayFormat = DisplayFormat.Gallery;
+                            break;
+
+                        case "group":
+                        case "groups":
+                        case "leaderboard":
+
+                            result.DisplayFormat = DisplayFormat.Leaderboard;
+
+                            if (result.OrderBy == OrderBy.Default)
+                                result.OrderBy = OrderBy.Count;
+
                             break;
 
                     }

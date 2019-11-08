@@ -14,23 +14,29 @@ namespace OurFoodChain {
         public string Icon {
             get {
 
-                switch (Rank) {
-
-                    case 1:
-                        return "👑";
-
-                    case 2:
-                        return "🥈";
-
-                    case 3:
-                        return "🥉";
-
-                    default:
-                        return "➖";
-
-                }
+                return GetRankIcon(Rank);
 
             }
+        }
+
+        public static string GetRankIcon(long rank) {
+
+            switch (rank) {
+
+                case 1:
+                    return "👑";
+
+                case 2:
+                    return "🥈";
+
+                case 3:
+                    return "🥉";
+
+                default:
+                    return "➖";
+
+            }
+
         }
 
     }

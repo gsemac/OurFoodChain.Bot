@@ -466,6 +466,48 @@ namespace OurFoodChain.Commands {
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 
                 }
+                else if (result.DisplayFormat == Taxa.DisplayFormat.Leaderboard) {
+
+                    // Match each group to a rank depending on how many results it contains.
+
+                    Dictionary<Taxa.SearchQueryResult.Group, long> groupRanks = new Dictionary<Taxa.SearchQueryResult.Group, long>();
+
+                    long rank = 0;
+                    int lastCount = -1;
+
+                    foreach (Taxa.SearchQueryResult.Group group in result.Groups.OrderByDescending(x => x.Count())) {
+
+                        groupRanks[group] = (lastCount >= 0 && group.Count() == lastCount) ? rank : ++rank;
+
+                        lastCount = group.Count();
+
+                    }
+
+                    // Create a list of groups that will be displayed to the user.
+
+                    List<string> lines = new List<string>();
+
+                    foreach (Taxa.SearchQueryResult.Group group in result.Groups) {
+
+                        lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
+                            groupRanks[group].ToString("000"),
+                            UserRank.GetRankIcon(groupRanks[group]),
+                            group.Count().ToString("000"),
+                            string.Format(groupRanks[group] <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(group.Name) ? "Results" : group.Name)
+                        ));
+
+                    }
+
+                    PaginatedMessage embed = new PaginatedMessage {
+                        Title = string.Format("Search results ({0})", result.Groups.Count())
+                    };
+
+                    embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
+                    embed.AddPageNumbers();
+
+                    await CommandUtils.SendMessageAsync(Context, embed.Build());
+
+                }
                 else {
 
                     if (result.Count() == 1) {
@@ -495,6 +537,7 @@ namespace OurFoodChain.Commands {
                         embed.AddPageNumbers();
 
                         await CommandUtils.SendMessageAsync(Context, embed.Build());
+
                     }
 
                 }

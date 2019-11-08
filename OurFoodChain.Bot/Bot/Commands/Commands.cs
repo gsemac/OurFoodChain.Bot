@@ -489,7 +489,7 @@ namespace OurFoodChain.Commands {
 
                     foreach (Taxa.SearchQueryResult.Group group in result.Groups) {
 
-                        lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
+                        lines.Add(string.Format("**`{0}.`**{1}`{2}` {3}",
                             groupRanks[group].ToString("000"),
                             UserRank.GetRankIcon(groupRanks[group]),
                             group.Count().ToString("000"),

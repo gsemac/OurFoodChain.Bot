@@ -845,7 +845,7 @@ namespace OurFoodChain.Commands {
 
                         }
 
-                        lines.Add(sp.ShortName + (fav_count > 1 ? string.Format(" ({0} favs)", fav_count) : ""));
+                        lines.Add(sp.ShortName + (fav_count > 1 ? string.Format(" (+{0})", fav_count) : ""));
 
                     }
 

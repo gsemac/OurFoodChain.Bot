@@ -281,16 +281,19 @@ namespace OurFoodChain {
             if (user is null)
                 return false;
 
-            usernameOrMention = usernameOrMention.ToLower();
-
             string username = string.IsNullOrEmpty(user.Username) ? string.Empty : user.Username.ToLower();
             string nickname = string.IsNullOrEmpty(user.Nickname) ? string.Empty : user.Nickname.ToLower();
             string full_username = string.Format("{0}#{1}", username, user.Discriminator).ToLower();
 
+            // Mentions may look like either of the following:
+            // <@id>
+            // <@!id>
+            // The exclamation mark means that they have a nickname: https://stackoverflow.com/questions/45269613/discord-userid-vs-userid
+
             return username == usernameOrMention ||
                 nickname == usernameOrMention ||
                 full_username == usernameOrMention ||
-                Regex.Matches(usernameOrMention, @"^<@(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString());
+                Regex.Matches(usernameOrMention, @"^<@!?(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString()); 
 
         }
 

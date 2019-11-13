@@ -71,6 +71,9 @@ namespace OurFoodChain.Bot {
 
             // Send the embed.
 
+            paginatedMessage.PrevEmoji = string.Empty;
+            paginatedMessage.NextEmoji = string.Empty;
+
             if (paginatedMessage.Pages.Count > 1)
                 paginatedMessage.ToggleEmoji = "🇿";
 

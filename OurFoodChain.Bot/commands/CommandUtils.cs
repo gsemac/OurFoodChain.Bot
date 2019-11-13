@@ -149,7 +149,7 @@ namespace OurFoodChain {
 
             // If there are no privileges set up in the configuration file, grant all users full privileges.
 
-            Config config = OurFoodChainBot.Instance.Config;
+            Bot.BotConfig config = OurFoodChainBot.Instance.Config;
 
             if ((config.BotAdminUserIds is null || config.BotAdminUserIds.Count() <= 0) &&
                (config.ModRoleIds is null || config.ModRoleIds.Count() <= 0))

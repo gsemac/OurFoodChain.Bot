@@ -43,6 +43,8 @@ namespace OurFoodChain {
 
             // Build the embed.
 
+            string worldName = OurFoodChainBot.Instance.Config.WorldName;
+            string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", worldName);
             string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
 
             CommandUtils.PaginatedMessage pagination_message = new CommandUtils.PaginatedMessage();
@@ -50,6 +52,7 @@ namespace OurFoodChain {
             // Add the first page (primary image without zone labels).
 
             pagination_message.pages.Add(new EmbedBuilder {
+                Title = title,
                 ImageUrl = primary.url,
                 Footer = new EmbedFooterBuilder { Text = footer }
             }.Build());
@@ -59,6 +62,7 @@ namespace OurFoodChain {
             if (!(labeled is null)) {
 
                 pagination_message.pages.Add(new EmbedBuilder {
+                    Title = title,
                     ImageUrl = labeled.url,
                     Footer = new EmbedFooterBuilder { Text = footer }
                 }.Build());

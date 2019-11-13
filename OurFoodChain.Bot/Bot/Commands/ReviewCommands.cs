@@ -14,7 +14,7 @@ namespace OurFoodChain {
         [Command("reviews"), Alias("review")]
         public async Task Reviews() {
 
-            Config config = OurFoodChainBot.Instance.Config;
+            Bot.BotConfig config = OurFoodChainBot.Instance.Config;
 
             ReviewChannelInfo[] channel_info_array = ReviewChannelInfo.FromArray(config.ReviewChannels);
 

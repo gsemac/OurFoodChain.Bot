@@ -18,7 +18,7 @@ namespace OurFoodChain {
 
             // Set up a default configuration.
 
-            Config = new Config();
+            Config = new Bot.BotConfig();
 
             _discord_client = new DiscordSocketClient(
                 new DiscordSocketConfig() {
@@ -46,7 +46,7 @@ namespace OurFoodChain {
                 Environment.Exit(-1);
             }
 
-            Config = Config.FromFile(filePath);
+            Config = Bot.BotConfig.FromFile(filePath);
 
             if (string.IsNullOrEmpty(Config.Token)) {
                 await LogAsync(Discord.LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
@@ -54,7 +54,7 @@ namespace OurFoodChain {
             }
 
             if (string.IsNullOrEmpty(Config.Prefix))
-                Config.Prefix = Config.DEFAULT_PREFIX;
+                Config.Prefix = Bot.BotConfig.DefaultPrefix;
 
         }
 
@@ -157,7 +157,7 @@ namespace OurFoodChain {
         }
         public CommandService CommandService { get; private set; }
         public IServiceProvider ServiceProvider { get; private set; }
-        public Config Config { get; set; } = new Config();
+        public Bot.BotConfig Config { get; set; } = new Bot.BotConfig();
 
         public static OurFoodChainBot Instance { get; private set; } = null;
 

@@ -225,7 +225,7 @@
     <Compile Include="Bot\Commands\ZoneCommands.cs" />
     <Compile Include="commands\DifficultyLevelAttribute.cs" />
     <Compile Include="commands\RequiredConfigSettingEnabledAttribute.cs" />
-    <Compile Include="Bot\Config.cs" />
+    <Compile Include="Bot\BotConfig.cs" />
     <Compile Include="ConfigBase.cs" />
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Bot\Global.cs" />

@@ -9,13 +9,13 @@
 
   "scratch_channel": 0,
   "scratch_server": 0,
-
   "review_channels": [],
+
+  "world_name": "",
 
   "trophies_enabled": true,
   "gotchis_enabled": true,
   "generations_enabled": false,
-
   "advanced_commands_enabled": false
 
 }

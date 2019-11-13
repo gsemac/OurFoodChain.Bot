@@ -62,12 +62,12 @@ namespace OurFoodChain.Gotchis {
 
             List<GotchiMove> moves = new List<GotchiMove>();
 
-            // all gotchis can use hit regardless of species
+            //// all gotchis can use hit regardless of species
 
-            GotchiMove universalMove = await _getMoveAsync("hit");
+            //GotchiMove universalMove = await _getMoveAsync("hit");
 
-            if (universalMove != null)
-                moves.Add(universalMove);
+            //if (universalMove != null)
+            //    moves.Add(universalMove);
 
             foreach (GotchiMove move in Registry.Values)
                 if (await new GotchiRequirementsChecker { Requires = move.Requires }.CheckAsync(gotchi))

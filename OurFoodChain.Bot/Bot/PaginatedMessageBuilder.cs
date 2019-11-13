@@ -1,5 +1,6 @@
 ﻿using Discord;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class PaginatedMessageBuilder {
+    public class PaginatedMessageBuilder :
+        ICollection<EmbedBuilder> {
 
         public string Message { get; set; }
         public string Title {
@@ -56,6 +58,9 @@ namespace OurFoodChain.Bot {
             }
         }
 
+        public int Count => _pages.Count;
+        public bool IsReadOnly => false;
+
         public PaginatedMessageBuilder() { }
         public PaginatedMessageBuilder(List<EmbedBuilder> pages) {
 
@@ -96,6 +101,15 @@ namespace OurFoodChain.Bot {
 
             foreach (EmbedBuilder page in _pages)
                 page.WithThumbnailUrl(thumbnailUrl);
+
+        }
+        public void SetImageUrl(string value) {
+
+            if (_pages.Count <= 0)
+                _pages.Add(new EmbedBuilder());
+
+            foreach (EmbedBuilder page in _pages)
+                page.WithImageUrl(value);
 
         }
         public void SetFooter(string footer) {
@@ -202,6 +216,28 @@ namespace OurFoodChain.Bot {
 
             return message;
 
+        }
+
+        public void Add(EmbedBuilder item) {
+            _pages.Add(item);
+        }
+        public void Clear() {
+            _pages.Clear();
+        }
+        public bool Contains(EmbedBuilder item) {
+            return _pages.Contains(item);
+        }
+        public void CopyTo(EmbedBuilder[] array, int arrayIndex) {
+            _pages.CopyTo(array, arrayIndex);
+        }
+        public bool Remove(EmbedBuilder item) {
+            return _pages.Remove(item);
+        }
+        public IEnumerator<EmbedBuilder> GetEnumerator() {
+            return _pages.GetEnumerator();
+        }
+        IEnumerator IEnumerable.GetEnumerator() {
+            return _pages.GetEnumerator();
         }
 
         private string _title = "";

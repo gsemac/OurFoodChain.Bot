@@ -1,0 +1,10 @@
+﻿{
+  "name": "dex",
+  "aliases": [],
+  "category": "general",
+  "description": "Shows stats and learnset for the given species.",
+  "examples": [
+    "dex <species>",
+    "dex aspersum"
+  ]
+}

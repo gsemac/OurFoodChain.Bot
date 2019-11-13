@@ -329,6 +329,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="data\help\gotchi\dex.json" />
     <None Include="data\help\gotchi\inventory.json" />
     <None Include="data\help\gotchi\useitem.json" />
     <None Include="gotchi-config.json" />

@@ -1,12 +1,13 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Gotchis;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OurFoodChain.Gotchis;
 
 namespace OurFoodChain.Bot {
 
@@ -1024,6 +1025,82 @@ namespace OurFoodChain.Bot {
                 await GotchiUtils.UpdateUserInfoAsync(user_data);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set primary Gotchi to **{0}**.", StringUtils.ToTitleCase(name)));
+
+            }
+
+        }
+
+        [Command("dex")]
+        public async Task Dex(string speciesName) {
+            await Dex(string.Empty, speciesName);
+        }
+        [Command("dex")]
+        public async Task Dex(string genusName, string speciesName) {
+
+            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+
+            if (species != null) {
+
+                Gotchi gotchi = new Gotchi() {
+                    SpeciesId = species.Id,
+                    Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.Default, 100)
+                };
+
+                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi);
+                GotchiMove[] moves = await Global.GotchiContext.MoveRegistry.GetLearnSetAsync(gotchi);
+                GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetBaseStatsAsync(gotchi);
+
+                // Create the stats page.
+
+                string typesString = string.Format("**Type(s):** {0}", string.Join(", ", types.Select(t => t.Name)));
+
+                StringBuilder descriptionBuilder = new StringBuilder();
+                descriptionBuilder.AppendLine(string.IsNullOrEmpty(typesString) ? "None" : typesString);
+                descriptionBuilder.AppendLine();
+                descriptionBuilder.AppendLine(string.Format("*{0}*", StringUtils.GetFirstSentence(species.Description)));
+                descriptionBuilder.AppendLine("\u200B");
+
+                EmbedBuilder statsPageBuilder = new EmbedBuilder {
+                    Title = string.Format("{0} (#{1}) — Overview", species.ShortName, species.Id),
+                    Description = descriptionBuilder.ToString(),
+                    ImageUrl = species.Picture
+                };
+
+                statsPageBuilder.AddField("❤ Base HP", stats.MaxHp, inline: true);
+                statsPageBuilder.AddField("💥 Base Attack", stats.Atk, inline: true);
+                statsPageBuilder.AddField("🛡 Base Defense", stats.Def, inline: true);
+                statsPageBuilder.AddField("💨 Base Speed", stats.Spd, inline: true);
+
+                // Create the learnset pages.
+
+                List<EmbedFieldBuilder> moveFields = new List<EmbedFieldBuilder>();
+
+                foreach (GotchiMove move in moves.OrderBy(m => m.Requires.MinimumLevelValue)) {
+
+                    EmbedFieldBuilder field = new EmbedFieldBuilder {
+                        Name = string.Format("{0}. **{1}** ({2} PP)", moveFields.Count + 1, move.Name, move.PP),
+                        Value = move.Description
+                    };
+
+                    moveFields.Add(field);
+
+                }
+
+                PaginatedMessageBuilder message = new PaginatedMessageBuilder {
+                    statsPageBuilder
+                };
+
+                message.AddPages(EmbedUtils.FieldsToEmbedPages(moveFields).Select(p => {
+
+                    p.Title = string.Format("{0} (#{1}) — Learnset", species.ShortName, species.Id);
+
+                    return p;
+
+                }));
+
+                message.AddPageNumbers();
+
+                await DiscordUtils.SendMessageAsync(Context, message.Build());
 
             }
 

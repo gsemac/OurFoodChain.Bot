@@ -44,7 +44,7 @@ namespace OurFoodChain {
             // Build the embed.
 
             string worldName = OurFoodChainBot.Instance.Config.WorldName;
-            string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", worldName);
+            string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", StringUtils.ToTitleCase(worldName));
             string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
 
             CommandUtils.PaginatedMessage pagination_message = new CommandUtils.PaginatedMessage();

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class ZoneCommands :
         ModuleBase {
@@ -82,7 +82,7 @@ namespace OurFoodChain {
 
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
-                    PaginatedMessage embed = new PaginatedMessage {
+                    Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
                         Title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
                         Description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
                             OurFoodChainBot.Instance.Config.Prefix,
@@ -95,9 +95,9 @@ namespace OurFoodChain {
                     embed.AddPageNumbers();
 
                     if (ZoneUtils.ZoneTypeIsValid(zone_type))
-                        embed.SetColor(DiscordUtils.ConvertColor(zone_type.Color));
+                        embed.SetColor(Bot.DiscordUtils.ConvertColor(zone_type.Color));
 
-                    await CommandUtils.SendMessageAsync(Context, embed.Build());
+                    await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                 }
                 else {
@@ -120,7 +120,7 @@ namespace OurFoodChain {
                     ZoneType type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId) ?? new ZoneType();
                     string title = string.Format("{0} {1}", type.Icon, zone.FullName);
                     string description = zone.GetDescriptionOrDefault();
-                    Color color = DiscordUtils.ConvertColor(type.Color);
+                    Color color = Bot.DiscordUtils.ConvertColor(type.Color);
 
                     // Get all species living in this zone.
 
@@ -132,7 +132,7 @@ namespace OurFoodChain {
                     // The message will have a paginated species list, and a toggle button to display the species sorted by role.
 
                     List<EmbedBuilder> embed_pages = EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: (string.Format("Extant species in this zone ({0}):", species_list.Count())));
-                    PaginatedMessage paginated = new PaginatedMessage(embed_pages);
+                    Bot.PaginatedMessageBuilder paginated = new Bot.PaginatedMessageBuilder(embed_pages);
 
                     if (embed_pages.Count() <= 0)
                         embed_pages.Add(new EmbedBuilder());
@@ -208,23 +208,23 @@ namespace OurFoodChain {
                         // Add the page to the builder.
 
                         paginated.AddReaction("🇷");
-                        paginated.SetCallback(async (PaginatedMessageCallbackArgs args) => {
+                        paginated.SetCallback(async (args) => {
 
                             if (args.Reaction != "🇷")
                                 return;
 
-                            args.PaginatedMessage.paginationEnabled = !args.ReactionAdded;
+                            args.PaginatedMessage.PaginationEnabled = !args.ReactionAdded;
 
                             if (args.ReactionAdded)
                                 await args.DiscordMessage.ModifyAsync(msg => msg.Embed = role_page.Build());
                             else
-                                await args.DiscordMessage.ModifyAsync(msg => msg.Embed = args.PaginatedMessage.pages[args.PaginatedMessage.index]);
+                                await args.DiscordMessage.ModifyAsync(msg => msg.Embed = args.PaginatedMessage.Pages[args.PaginatedMessage.PageIndex]);
 
                         });
 
                     }
 
-                    await CommandUtils.SendMessageAsync(Context, paginated.Build());
+                    await Bot.DiscordUtils.SendMessageAsync(Context, paginated.Build());
 
                 }
 
@@ -312,16 +312,16 @@ namespace OurFoodChain {
 
                 Zone[] zones = await ZoneUtils.GetZonesAsync(type);
 
-                PaginatedMessage embed = new PaginatedMessage {
+                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
                     Title = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count()),
                     Description = type.Description + "\n\n",
-                    Color = DiscordUtils.ConvertColor(type.Color)
+                    Color = Bot.DiscordUtils.ConvertColor(type.Color)
                 };
 
                 await BotUtils.ZonesToEmbedPagesAsync(embed, zones, showIcon: false);
                 embed.AddPageNumbers();
 
-                await CommandUtils.SendMessageAsync(Context, embed.Build());
+                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
             }
             else
@@ -357,7 +357,7 @@ namespace OurFoodChain {
 
                     for (int i = 1; i < args.Count(); ++i) {
 
-                        if (DiscordUtils.IsEmoji(args[i]))
+                        if (Bot.DiscordUtils.IsEmoji(args[i]))
                             icon = args[i];
                         else if (StringUtils.TryParseColor(args[i], out System.Drawing.Color result))
                             color = result;

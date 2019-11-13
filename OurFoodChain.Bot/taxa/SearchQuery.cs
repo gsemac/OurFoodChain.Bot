@@ -503,7 +503,7 @@ namespace OurFoodChain.Taxa {
 
                         case "gen":
                         case "generation":
-                            if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
+                            if (Bot.OurFoodChainBot.Instance.Config.GenerationsEnabled)
                                 await result.GroupByAsync(async (x) => {
                                     return new string[] { (await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp)).Name };
                                 });
@@ -626,7 +626,7 @@ namespace OurFoodChain.Taxa {
 
                 case "owner":
 
-                    Discord.IUser user = await CommandUtils.GetUserFromUsernameOrMentionAsync(context, value);
+                    Discord.IUser user = await Bot.DiscordUtils.GetUserFromUsernameOrMentionAsync(context, value);
 
                     await result.FilterByAsync(async (x) => {
                         return (user is null) ? ((await SpeciesUtils.GetOwnerOrDefaultAsync(x, context)).ToLower() != value.ToLower()) : (ulong)x.OwnerUserId != user.Id;
@@ -956,7 +956,7 @@ namespace OurFoodChain.Taxa {
 
                 case "gen":
                 case "generation":
-                    if (OurFoodChainBot.Instance.Config.GenerationsEnabled)
+                    if (Bot.OurFoodChainBot.Instance.Config.GenerationsEnabled)
                         await result.FilterByAsync(async (x) => {
 
                             Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp);

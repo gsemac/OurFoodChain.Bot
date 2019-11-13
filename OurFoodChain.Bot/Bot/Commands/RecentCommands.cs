@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Commands {
+namespace OurFoodChain.Bot {
 
     public class RecentCommands :
         ModuleBase {
@@ -35,7 +35,7 @@ namespace OurFoodChain.Commands {
 
         }
 
-        public static async Task<PaginatedMessage> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
+        public static async Task<Bot.PaginatedMessageBuilder> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
             // Get all species created within the given timespan.
 
@@ -79,7 +79,7 @@ namespace OurFoodChain.Commands {
 
             // Build embed.
 
-            PaginatedMessage embed = new PaginatedMessage();
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
             List<string> field_lines = new List<string>();
 
@@ -119,9 +119,9 @@ namespace OurFoodChain.Commands {
         }
         public static async Task ShowRecentEventsAsync(ICommandContext context, long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
-            PaginatedMessage embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
+            Bot.PaginatedMessageBuilder embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
 
-            await CommandUtils.SendMessageAsync(context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 
         }
 

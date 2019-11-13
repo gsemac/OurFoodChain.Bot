@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class RoleCommands :
         ModuleBase {
@@ -174,13 +174,13 @@ namespace OurFoodChain {
             species_list.RemoveAll(x => x.IsExtinct);
             species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
-            PaginatedMessage embed = new PaginatedMessage(EmbedUtils.SpeciesListToEmbedPages(species_list,
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
                 fieldName: string.Format("Extant species with this role ({0}):", species_list.Count())));
 
             embed.SetTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
             embed.SetDescription(role.GetDescriptionOrDefault());
 
-            await CommandUtils.SendMessageAsync(Context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
         }
         [Command("roles"), Alias("role")]

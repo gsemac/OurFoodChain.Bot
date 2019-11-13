@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class MapCommands :
          ModuleBase {
@@ -47,11 +47,11 @@ namespace OurFoodChain {
             string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", worldName);
             string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
 
-            CommandUtils.PaginatedMessage pagination_message = new CommandUtils.PaginatedMessage();
+            Bot.PaginatedMessage paginatedMessage = new Bot.PaginatedMessage();
 
             // Add the first page (primary image without zone labels).
 
-            pagination_message.pages.Add(new EmbedBuilder {
+            paginatedMessage.Pages.Add(new EmbedBuilder {
                 Title = title,
                 ImageUrl = primary.url,
                 Footer = new EmbedFooterBuilder { Text = footer }
@@ -61,7 +61,7 @@ namespace OurFoodChain {
 
             if (!(labeled is null)) {
 
-                pagination_message.pages.Add(new EmbedBuilder {
+                paginatedMessage.Pages.Add(new EmbedBuilder {
                     Title = title,
                     ImageUrl = labeled.url,
                     Footer = new EmbedFooterBuilder { Text = footer }
@@ -71,16 +71,10 @@ namespace OurFoodChain {
 
             // Send the embed.
 
-            IUserMessage message = await ReplyAsync("", false, pagination_message.pages[0]);
+            if (paginatedMessage.Pages.Count > 1)
+                paginatedMessage.ToggleEmoji = "🇿";
 
-            if (pagination_message.pages.Count > 1) {
-
-                pagination_message.emojiToggle = "🇿";
-                await message.AddReactionAsync(new Emoji("🇿"));
-
-                CommandUtils.PAGINATED_MESSAGES.Add(message.Id, pagination_message);
-
-            }
+            await Bot.DiscordUtils.SendMessageAsync(Context, paginatedMessage);
 
         }
 

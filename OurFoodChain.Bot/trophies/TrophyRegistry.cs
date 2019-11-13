@@ -173,7 +173,7 @@ namespace OurFoodChain.Trophies {
             if (_registry.Count > 0)
                 return;
 
-            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Registering trophies");
+            await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Registering trophies");
 
             // Creation achievements
 
@@ -219,7 +219,7 @@ namespace OurFoodChain.Trophies {
             _registry.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
             _registry.Add(new Trophy("Imposter", "Be the first to create a species that mimics another species.", TrophyFlags.Hidden | TrophyFlags.OneTime, _checkTrophy_Placeholder));
 
-            await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Finished registering trophies");
+            await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Finished registering trophies");
 
         }
 

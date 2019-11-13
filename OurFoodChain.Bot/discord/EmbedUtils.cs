@@ -16,9 +16,6 @@ namespace OurFoodChain {
 
     public class EmbedUtils {
 
-        public const int MAX_FIELD_COUNT = 25;
-        public const int MAX_EMBED_LENGTH = 2048;
-
         public static List<List<string>> ListToColumns(List<string> items, int itemsPerColumn) {
 
             List<List<string>> columns = new List<List<string>>();
@@ -127,7 +124,7 @@ namespace OurFoodChain {
 
                     int field_length = field.Name.ToString().Length + field.Value.ToString().Length;
 
-                    if (pages.Count() <= 0 || pages.Last().Fields.Count() >= fields_per_page || pages.Last().Length + field_length > MAX_EMBED_LENGTH)
+                    if (pages.Count() <= 0 || pages.Last().Fields.Count() >= fields_per_page || pages.Last().Length + field_length > Bot.DiscordUtils.MaxEmbedLength)
                         pages.Add(new EmbedBuilder());
 
                     pages.Last().Fields.Add(field);

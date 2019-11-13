@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Commands {
+namespace OurFoodChain.Bot {
 
     public class TaxonCommands :
         ModuleBase {
@@ -579,9 +579,9 @@ namespace OurFoodChain.Commands {
                 if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species_list[0]))
                     return;
 
-                MultiPartMessage p = new MultiPartMessage(Context) {
+                Bot.MultiPartMessage p = new Bot.MultiPartMessage(Context) {
                     UserData = new string[] { taxonNameOrGenus, descriptionOrSpecies },
-                    Callback = async (MultiPartMessageCallbackArgs args) => {
+                    Callback = async (args) => {
 
                         Species[] species = await BotUtils.GetSpeciesFromDb(args.Message.UserData[0], args.Message.UserData[1]);
 
@@ -591,7 +591,7 @@ namespace OurFoodChain.Commands {
                     }
                 };
 
-                await MultiPartMessage.SendMessageAsync(p,
+                await Bot.DiscordUtils.SendMessageAsync(Context, p,
                     string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species_list[0].ShortName));
 
             }
@@ -706,8 +706,8 @@ namespace OurFoodChain.Commands {
             if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, PrivilegeLevel.ServerModerator, species))
                 return;
 
-            MultiPartMessage p = new MultiPartMessage(Context) {
-                Callback = async (MultiPartMessageCallbackArgs args) => {
+            Bot.MultiPartMessage p = new Bot.MultiPartMessage(Context) {
+                Callback = async (args) => {
 
                     if (await BotUtils.ReplyValidateSpeciesAsync(args.Message.Context, species))
                         await _setSpeciesDescriptionAsync(species, args.ResponseContent);
@@ -715,7 +715,7 @@ namespace OurFoodChain.Commands {
                 }
             };
 
-            await MultiPartMessage.SendMessageAsync(p,
+            await Bot.DiscordUtils.SendMessageAsync(Context, p,
                 string.Format("Reply with the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.ShortName));
 
         }
@@ -738,16 +738,16 @@ namespace OurFoodChain.Commands {
 
             else if (await BotUtils.ReplyHasPrivilegeAsync(Context, PrivilegeLevel.ServerModerator)) { // moderator use only
 
-                MultiPartMessage p = new MultiPartMessage(Context) {
+                Bot.MultiPartMessage p = new Bot.MultiPartMessage(Context) {
                     UserData = new string[] { taxon.name },
-                    Callback = async (MultiPartMessageCallbackArgs args) => {
+                    Callback = async (args) => {
 
                         await BotUtils.Command_SetTaxonDescription(args.Message.Context, taxon, args.ResponseContent);
 
                     }
                 };
 
-                await MultiPartMessage.SendMessageAsync(p,
+                await Bot.DiscordUtils.SendMessageAsync(Context, p,
                     string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon.GetTypeName(), taxon.GetName()));
 
             }
@@ -755,8 +755,8 @@ namespace OurFoodChain.Commands {
         }
         private async Task _appendDescriptionAsync(Species species) {
 
-            MultiPartMessage p = new MultiPartMessage(Context) {
-                Callback = async (MultiPartMessageCallbackArgs args) => {
+            Bot.MultiPartMessage p = new Bot.MultiPartMessage(Context) {
+                Callback = async (args) => {
 
                     if (await BotUtils.ReplyValidateSpeciesAsync(args.Message.Context, species))
                         await _appendDescriptionAsync(species, args.ResponseContent);
@@ -764,7 +764,7 @@ namespace OurFoodChain.Commands {
                 }
             };
 
-            await MultiPartMessage.SendMessageAsync(p,
+            await Bot.DiscordUtils.SendMessageAsync(Context, p,
                 string.Format("Reply with the text to append to the description for **{0}**.\nTo cancel the update, reply with \"cancel\".", species.ShortName));
 
         }

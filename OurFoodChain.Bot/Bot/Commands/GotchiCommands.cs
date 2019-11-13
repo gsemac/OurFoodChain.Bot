@@ -6,11 +6,12 @@ using System.Data;
 using System.Data.SQLite;
 using System.Text;
 using System.Threading.Tasks;
+using OurFoodChain.Gotchis;
 
-namespace OurFoodChain.Gotchi {
+namespace OurFoodChain.Bot {
 
     [Group("gotchi")]
-    public class Commands :
+    public class GotchiCommands :
      ModuleBase {
 
         [Command]
@@ -715,7 +716,7 @@ namespace OurFoodChain.Gotchi {
 
             // Create the embed.
 
-            PaginatedMessage embed = new PaginatedMessage();
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
 
             embed.AddPages(EmbedUtils.FieldsToEmbedPages(item_fields));
             embed.SetTitle("🛒 Gotchi Shop");
@@ -725,7 +726,7 @@ namespace OurFoodChain.Gotchi {
             embed.SetColor(Color.LightOrange);
             embed.AddPageNumbers();
 
-            await CommandUtils.SendMessageAsync(Context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
         }
 
@@ -806,7 +807,7 @@ namespace OurFoodChain.Gotchi {
 
             }
 
-            PaginatedMessage embed = new PaginatedMessage {
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
                 Title = string.Format("{0}'s inventory", user.Username)
             };
 
@@ -817,7 +818,7 @@ namespace OurFoodChain.Gotchi {
             if (lines.Count <= 0)
                 embed.SetDescription("Your inventory is empty.");
 
-            await CommandUtils.SendMessageAsync(Context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
         }
 
@@ -863,13 +864,13 @@ namespace OurFoodChain.Gotchi {
 
                                 // Allow the user to pick the species their gotchi evolves into.
 
-                                MultiPartMessage message = new MultiPartMessage(Context) {
-                                    Callback = async (MultiPartMessageCallbackArgs args) => {
+                                Bot.MultiPartMessage message = new Bot.MultiPartMessage(Context) {
+                                    Callback = async (args) => {
                                         await doUseItem(args.ResponseContent);
                                     }
                                 };
 
-                                await MultiPartMessage.SendMessageAsync(message,
+                                await Bot.DiscordUtils.SendMessageAsync(Context, message,
                                     string.Format("Reply with the name of the desired species, or \"cancel\"."));
 
                             }
@@ -954,13 +955,13 @@ namespace OurFoodChain.Gotchi {
 
                 GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
 
-                PaginatedMessage embed = new PaginatedMessage();
+                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
                 embed.AddPages(EmbedUtils.ListToEmbedPages(gotchi_list, fieldName: string.Format("{0}'s Gotchis ({1}/{2})",
                     Context.User.Username,
                     gotchi_list.Count,
                     user_data.GotchiLimit)));
 
-                await CommandUtils.SendMessageAsync(Context, embed.Build());
+                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
             }
 
@@ -979,7 +980,7 @@ namespace OurFoodChain.Gotchi {
 
             }
 
-            long gotchi_id = OurFoodChain.Gotchi.Gotchi.NullGotchiId;
+            long gotchi_id = OurFoodChain.Gotchis.Gotchi.NullGotchiId;
             string name = "";
 
             if (StringUtils.IsNumeric(nameOrIndex)) {
@@ -996,7 +997,7 @@ namespace OurFoodChain.Gotchi {
 
             }
 
-            if (gotchi_id == OurFoodChain.Gotchi.Gotchi.NullGotchiId) {
+            if (gotchi_id == OurFoodChain.Gotchis.Gotchi.NullGotchiId) {
 
                 Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User.Id, nameOrIndex.ToLower());
 
@@ -1009,7 +1010,7 @@ namespace OurFoodChain.Gotchi {
 
             }
 
-            if (gotchi_id == OurFoodChain.Gotchi.Gotchi.NullGotchiId) {
+            if (gotchi_id == OurFoodChain.Gotchis.Gotchi.NullGotchiId) {
 
                 await BotUtils.ReplyAsync_Error(Context, string.Format("No Gotchi with the name \"{0}\" exists.", nameOrIndex));
 
@@ -1178,12 +1179,12 @@ namespace OurFoodChain.Gotchi {
 
             if (gotchi != null) {
 
-                PaginatedMessage message = new PaginatedMessage {
+                Bot.PaginatedMessageBuilder message = new Bot.PaginatedMessageBuilder {
                     Message = string.Format("Are you sure you want to release **{0}**?", gotchi.Name),
                     Restricted = true,
                     Callback = async args => {
 
-                        if (args.ReactionAdded && args.ReactionType == PaginatedMessageReaction.Yes) {
+                        if (args.ReactionAdded && args.ReactionType == Bot.PaginatedMessageReaction.Yes) {
 
                             // Delete the Gotchi from the database.
                             await GotchiUtils.DeleteGotchiAsync(gotchi.Id);
@@ -1201,9 +1202,9 @@ namespace OurFoodChain.Gotchi {
                     }
                 };
 
-                message.AddReaction(PaginatedMessageReaction.Yes);
+                message.AddReaction(Bot.PaginatedMessageReaction.Yes);
 
-                await CommandUtils.SendMessageAsync(context, message.Build());
+                await Bot.DiscordUtils.SendMessageAsync(context, message.Build());
 
             }
 

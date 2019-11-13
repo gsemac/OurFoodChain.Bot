@@ -29,7 +29,7 @@ namespace OurFoodChain {
 
         // Gotchis
 
-        public static Gotchi.GotchiContext GotchiContext { get; set; } = null;
+        public static Gotchis.GotchiContext GotchiContext { get; set; } = null;
 
     }
 

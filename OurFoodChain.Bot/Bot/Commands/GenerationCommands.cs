@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Commands {
+namespace OurFoodChain.Bot {
 
     public class GenerationCommands :
         ModuleBase {
@@ -42,9 +42,9 @@ namespace OurFoodChain.Commands {
 
         }
 
-        private async Task<PaginatedMessage> _buildGenerationEmbedAsync(Generation generation) {
+        private async Task<Bot.PaginatedMessageBuilder> _buildGenerationEmbedAsync(Generation generation) {
 
-            PaginatedMessage embed = await RecentCommands.BuildRecentEventsEmbedAsync(generation.StartTimestamp, generation.EndTimestamp);
+            Bot.PaginatedMessageBuilder embed = await RecentCommands.BuildRecentEventsEmbedAsync(generation.StartTimestamp, generation.EndTimestamp);
             TimeAmount time_amount_since = new TimeAmount(DateUtils.GetCurrentTimestamp() - generation.EndTimestamp, TimeUnits.Seconds);
 
             embed.SetTitle(string.Format("{0} ({1})",
@@ -56,9 +56,9 @@ namespace OurFoodChain.Commands {
         }
         private async Task _showGenerationAsync(ICommandContext context, Generation generation) {
 
-            PaginatedMessage embed = await _buildGenerationEmbedAsync(generation);
+            Bot.PaginatedMessageBuilder embed = await _buildGenerationEmbedAsync(generation);
 
-            await CommandUtils.SendMessageAsync(context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 
         }
 

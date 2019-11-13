@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class GalleryCommands :
         ModuleBase {
@@ -303,7 +303,7 @@ namespace OurFoodChain {
 
                 // Display a paginated image gallery.
 
-                CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
+                Bot.PaginatedMessage message = new Bot.PaginatedMessage();
                 int index = 1;
 
                 foreach (Picture p in pictures) {
@@ -318,13 +318,13 @@ namespace OurFoodChain {
                     embed.WithDescription(p.description);
                     embed.WithFooter(footer);
 
-                    message.pages.Add(embed.Build());
+                    message.Pages.Add(embed.Build());
 
                     ++index;
 
                 }
 
-                await CommandUtils.SendMessageAsync(context, message);
+                await Bot.DiscordUtils.SendMessageAsync(context, message);
 
             }
 

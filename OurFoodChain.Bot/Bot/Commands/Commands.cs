@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Commands {
+namespace OurFoodChain.Bot {
 
     public class Commands :
         ModuleBase {
@@ -107,10 +107,10 @@ namespace OurFoodChain.Commands {
 
             sp_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
-            PaginatedMessage embed = new PaginatedMessage();
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
             embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list, fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
 
-            await CommandUtils.SendMessageAsync(Context, embed.Build(), "There are currently no extinct species.");
+            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build(), "There are currently no extinct species.");
 
         }
 
@@ -211,7 +211,7 @@ namespace OurFoodChain.Commands {
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
                     DrawLines = false,
-                    MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
+                    MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
                     TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, TimestampToDateStringFormat.Short).Result
                 };
 
@@ -253,7 +253,7 @@ namespace OurFoodChain.Commands {
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
-                    MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
+                    MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
                     TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, TimestampToDateStringFormat.Short).Result
                 };
 
@@ -498,14 +498,14 @@ namespace OurFoodChain.Commands {
 
                     }
 
-                    PaginatedMessage embed = new PaginatedMessage {
+                    Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
                         Title = string.Format("Search results ({0})", result.Groups.Count())
                     };
 
                     embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
                     embed.AddPageNumbers();
 
-                    await CommandUtils.SendMessageAsync(Context, embed.Build());
+                    await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                 }
                 else {
@@ -518,17 +518,17 @@ namespace OurFoodChain.Commands {
                     }
                     else {
 
-                        PaginatedMessage embed;
+                        Bot.PaginatedMessageBuilder embed;
 
                         if (result.HasGroup(Taxa.SearchQuery.DefaultGroupName)) {
 
                             // If there's only one group, just list the species without creating separate fields.
-                            embed = new PaginatedMessage(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToStringArray().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+                            embed = new Bot.PaginatedMessageBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToStringArray().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
 
                         }
                         else {
 
-                            embed = new PaginatedMessage();
+                            embed = new Bot.PaginatedMessageBuilder();
                             embed.AddPages(EmbedUtils.SearchQueryResultToEmbedPages(result));
 
                         }
@@ -536,7 +536,7 @@ namespace OurFoodChain.Commands {
                         embed.SetFooter("");
                         embed.AddPageNumbers();
 
-                        await CommandUtils.SendMessageAsync(Context, embed.Build());
+                        await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                     }
 
@@ -789,14 +789,14 @@ namespace OurFoodChain.Commands {
 
             // Create the embed.
 
-            PaginatedMessage embed = new PaginatedMessage();
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
             embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
             embed.SetTitle(string.Format("🏆 Leaderboard ({0})", lines.Count));
             embed.SetColor(255, 204, 77);
             embed.AddPageNumbers();
 
             // Send the embed.
-            await CommandUtils.SendMessageAsync(Context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
         }
 
@@ -907,12 +907,12 @@ namespace OurFoodChain.Commands {
             }
             else {
 
-                PaginatedMessage embed = new PaginatedMessage(EmbedUtils.LinesToEmbedPages(lines));
+                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.LinesToEmbedPages(lines));
                 embed.SetTitle(string.Format("⭐ Species favorited by {0} ({1})", Context.User.Username, lines.Count()));
                 embed.SetThumbnailUrl(Context.User.GetAvatarUrl(size: 32));
                 embed.AddPageNumbers();
 
-                await CommandUtils.SendMessageAsync(Context, embed.Build());
+                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
             }
 

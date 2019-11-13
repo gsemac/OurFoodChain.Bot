@@ -72,7 +72,7 @@ namespace OurFoodChain.Trophies {
 
             Task.Run(async () => {
 
-                await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Starting trophy scanner");
+                await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Starting trophy scanner");
 
                 while (_scan_queue.Count > 0) {
 
@@ -94,7 +94,7 @@ namespace OurFoodChain.Trophies {
                 // When we've processed all users in the queue, shut down the scanner.
                 _scanner_running = false;
 
-                await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Shutting down trophy scanner");
+                await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Trophies", "Shutting down trophy scanner");
 
             });
 
@@ -129,7 +129,7 @@ namespace OurFoodChain.Trophies {
                 // If an error occurs when checking a trophy, we'll just move on to the next one.
                 catch (Exception ex) {
 
-                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "Trophies", string.Format("Exception occured while checking \"{0}\" trophy: {1}",
+                    await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "Trophies", string.Format("Exception occured while checking \"{0}\" trophy: {1}",
                         trophy.GetName(),
                         ex.ToString()
                         ));

@@ -172,8 +172,8 @@ namespace OurFoodChain {
 
                 if (System.IO.File.Exists(config_fname))
                     config = JsonConvert.DeserializeObject<DatabaseUpdaterConfig>(System.IO.File.ReadAllText(config_fname));
-                else if (OurFoodChainBot.Instance != null)
-                    await OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Warning, "Database", "Database updates config not found");
+                else if (Bot.OurFoodChainBot.Instance != null)
+                    await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Warning, "Database", "Database updates config not found");
 
                 config.UpdatesDirectory = Global.DatabaseUpdatesDirectory;
 

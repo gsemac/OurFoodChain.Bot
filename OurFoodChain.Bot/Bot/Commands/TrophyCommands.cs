@@ -1,14 +1,15 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Trophies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Trophies {
+namespace OurFoodChain.Bot {
 
-    public class Commands :
+    public class TrophyCommands :
         ModuleBase {
 
         [Command("trophies"), Alias("achievements")]
@@ -60,7 +61,7 @@ namespace OurFoodChain.Trophies {
             int current_page = 0;
             int current_page_trophy_count = 0;
 
-            CommandUtils.PaginatedMessage message = new CommandUtils.PaginatedMessage();
+            Bot.PaginatedMessage message = new Bot.PaginatedMessage();
             EmbedBuilder embed = null;
 
             IReadOnlyCollection<Trophy> trophy_list = await Global.TrophyRegistry.GetTrophiesAsync();
@@ -107,7 +108,7 @@ namespace OurFoodChain.Trophies {
 
                 if (current_page_trophy_count >= trophies_per_page) {
 
-                    message.pages.Add(embed.Build());
+                    message.Pages.Add(embed.Build());
 
                     current_page_trophy_count = 0;
 
@@ -117,9 +118,9 @@ namespace OurFoodChain.Trophies {
 
             // Add the last embed to the message.
             if (!(embed is null))
-                message.pages.Add(embed.Build());
+                message.Pages.Add(embed.Build());
 
-            await CommandUtils.SendMessageAsync(Context, message);
+            await Bot.DiscordUtils.SendMessageAsync(Context, message);
 
         }
 

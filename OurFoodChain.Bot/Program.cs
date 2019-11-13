@@ -13,7 +13,7 @@ namespace OurFoodChain {
 
         public async Task MainAsync(string[] args) {
 
-            OurFoodChainBot bot = new OurFoodChainBot();
+            Bot.OurFoodChainBot bot = new Bot.OurFoodChainBot();
 
             await bot.LoadConfigAsync("config.json");
 

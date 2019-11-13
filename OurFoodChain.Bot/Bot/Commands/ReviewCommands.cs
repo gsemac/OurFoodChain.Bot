@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class ReviewCommands :
         ModuleBase {
@@ -59,8 +59,8 @@ namespace OurFoodChain {
                     // Read submissions and discussion messages from the appropriate channels.
                     // In the future, perhaps we should cache this result and update the status of reviews dynamically.
 
-                    IMessage[] submission_messages = await DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(submission_channel_id) as IMessageChannel, 100);
-                    IMessage[] discussion_messages = await DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(discussion_channel_id) as IMessageChannel, 100);
+                    IMessage[] submission_messages = await Bot.DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(submission_channel_id) as IMessageChannel, 100);
+                    IMessage[] discussion_messages = await Bot.DiscordUtils.DownloadAllMessagesAsync(await Context.Guild.GetChannelAsync(discussion_channel_id) as IMessageChannel, 100);
 
                     ReviewCache cache = new ReviewCache();
                     await cache.AddSubmissionMessagesAsync(submission_messages);
@@ -90,7 +90,7 @@ namespace OurFoodChain {
 
                             string append = string.Format("[**{0}**]({1}) ⁠— {2} {3}", info.Title, info.SubmissionMessageUrl, question_link, answer_link);
 
-                            if (sb.Length + append.Length <= DiscordUtils.MaxFieldLength)
+                            if (sb.Length + append.Length <= Bot.DiscordUtils.MaxFieldLength)
                                 sb.AppendLine(append);
 
                         }
@@ -116,7 +116,7 @@ namespace OurFoodChain {
 
                             string append = string.Format("[**{0}**]({1}) ⁠— {2} {3}", info.Title, info.SubmissionMessageUrl, question_link, answer_link);
 
-                            if (sb.Length + append.Length <= DiscordUtils.MaxFieldLength)
+                            if (sb.Length + append.Length <= Bot.DiscordUtils.MaxFieldLength)
                                 sb.AppendLine(append);
 
                         }

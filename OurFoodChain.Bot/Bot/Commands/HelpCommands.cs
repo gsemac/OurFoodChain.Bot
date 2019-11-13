@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class HelpCommands :
         ModuleBase {
@@ -65,7 +65,7 @@ namespace OurFoodChain {
 
                 foreach (CommandHelpInfo c in commands_lists[cat]) {
 
-                    if (await CommandUtils.CommandIsEnabledAsync(context, c.Name))
+                    if (await Bot.CommandUtils.CommandIsEnabledAsync(context, c.Name))
                         command_str_list.Add(string.Format("`{0}`", c.Name));
 
                 }

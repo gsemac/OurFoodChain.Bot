@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Bot {
 
     public class OurFoodChainBot {
 
@@ -42,14 +42,14 @@ namespace OurFoodChain {
         public async Task LoadConfigAsync(string filePath) {
 
             if (!System.IO.File.Exists(filePath)) {
-                await LogAsync(Discord.LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
+                await LogAsync(LogSeverity.Error, "Config", "The config.json file is missing. Please place this file in the same directory as the executable.");
                 Environment.Exit(-1);
             }
 
             Config = Bot.BotConfig.Open(filePath);
 
             if (string.IsNullOrEmpty(Config.Token)) {
-                await LogAsync(Discord.LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
+                await LogAsync(LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
                 Environment.Exit(-1);
             }
 
@@ -157,7 +157,7 @@ namespace OurFoodChain {
         }
         public CommandService CommandService { get; private set; }
         public IServiceProvider ServiceProvider { get; private set; }
-        public Bot.BotConfig Config { get; set; } = new Bot.BotConfig();
+        public BotConfig Config { get; set; } = new BotConfig();
 
         public static OurFoodChainBot Instance { get; private set; } = null;
 
@@ -171,10 +171,10 @@ namespace OurFoodChain {
             await CommandService.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), ServiceProvider);
 
             if (!Config.TrophiesEnabled)
-                await CommandService.RemoveModuleAsync<Trophies.Commands>();
+                await CommandService.RemoveModuleAsync<TrophyCommands>();
 
             if (!Config.GotchisEnabled)
-                await CommandService.RemoveModuleAsync<Gotchi.Commands>();
+                await CommandService.RemoveModuleAsync<GotchiCommands>();
 
         }
 
@@ -191,7 +191,7 @@ namespace OurFoodChain {
             if (!_isUserMessage(message))
                 return;
 
-            if (await MultiPartMessage.HandleResponseAsync(message))
+            if (await Bot.DiscordUtils.HandleMultiPartMessageResponseAsync(message))
                 return;
 
             if (!_isBotCommand(message as SocketUserMessage))
@@ -201,10 +201,10 @@ namespace OurFoodChain {
 
         }
         private async Task _onReactionReceivedAsync(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
-            await CommandUtils.HandlePaginatedMessageReaction(cached, channel, reaction, true);
+            await Bot.DiscordUtils.HandlePaginatedMessageReactionAsync(cached, channel, reaction, true);
         }
         private async Task _onReactionRemovedAsync(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
-            await CommandUtils.HandlePaginatedMessageReaction(cached, channel, reaction, false);
+            await Bot.DiscordUtils.HandlePaginatedMessageReactionAsync(cached, channel, reaction, false);
         }
 
         private bool _isUserMessage(SocketMessage message) {
@@ -286,14 +286,14 @@ namespace OurFoodChain {
 
         private async Task _initializeGotchiContextAsync() {
 
-            Gotchi.GotchiContext gotchiContext = new Gotchi.GotchiContext();
+            Gotchis.GotchiContext gotchiContext = new Gotchis.GotchiContext();
 
             gotchiContext.LogAsync += async x => await LogAsync(x);
 
             // Load gotchi config.
 
             if (System.IO.File.Exists("gotchi-config.json"))
-                gotchiContext.Config = Gotchi.GotchiConfig.Open("gotchi-config.json");
+                gotchiContext.Config = Gotchis.GotchiConfig.Open("gotchi-config.json");
 
             // Initialize registries.
 

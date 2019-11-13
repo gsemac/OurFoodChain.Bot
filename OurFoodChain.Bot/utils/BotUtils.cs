@@ -1,11 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Bot;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -793,17 +793,17 @@ namespace OurFoodChain {
             if (!string.IsNullOrEmpty(suggestion))
                 sb.Append(string.Format(" Did you mean **{0}**?", suggestion));
 
-            PaginatedMessage message_content = new PaginatedMessage {
+            Bot.PaginatedMessageBuilder message_content = new Bot.PaginatedMessageBuilder {
                 Message = sb.ToString(),
                 Restricted = true
             };
 
             if (onConfirmSuggestion != null && !string.IsNullOrEmpty(suggestion)) {
 
-                message_content.AddReaction(PaginatedMessageReaction.Yes);
-                message_content.SetCallback(async (PaginatedMessageCallbackArgs args) => {
+                message_content.AddReaction(Bot.PaginatedMessageReaction.Yes);
+                message_content.SetCallback(async (args) => {
 
-                    if (args.ReactionType == PaginatedMessageReaction.Yes) {
+                    if (args.ReactionType == Bot.PaginatedMessageReaction.Yes) {
 
                         args.PaginatedMessage.Enabled = false;
 
@@ -815,7 +815,7 @@ namespace OurFoodChain {
 
             }
 
-            await CommandUtils.SendMessageAsync(context, message_content.Build(), respondToSenderOnly: true);
+            await Bot.DiscordUtils.SendMessageAsync(context, message_content.Build(), respondToSenderOnly: true);
 
         }
         public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, Species[] speciesList) {
@@ -1037,7 +1037,7 @@ namespace OurFoodChain {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(string.Format("⚠️ {0}", text));
-            embed.WithColor(Discord.Color.Orange);
+            embed.WithColor(Color.Orange);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -1046,7 +1046,7 @@ namespace OurFoodChain {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(string.Format("❌ {0}", text));
-            embed.WithColor(Discord.Color.Red);
+            embed.WithColor(Color.Red);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -1055,7 +1055,7 @@ namespace OurFoodChain {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(string.Format("✅ {0}", text));
-            embed.WithColor(Discord.Color.Green);
+            embed.WithColor(Color.Green);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -1064,7 +1064,7 @@ namespace OurFoodChain {
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(text);
-            embed.WithColor(Discord.Color.LightGrey);
+            embed.WithColor(Color.LightGrey);
 
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -1075,7 +1075,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, IUser user, PrivilegeLevel level) {
 
-            if (CommandUtils.HasPrivilege(user, level))
+            if (Bot.CommandUtils.HasPrivilege(user, level))
                 return true;
 
             string privilege_name = "";
@@ -1139,7 +1139,7 @@ namespace OurFoodChain {
             string title = string.Format("All {0} ({1})", Taxon.GetRankName(type, plural: true), taxon_count);
             List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: title);
 
-            PaginatedMessage embed = new PaginatedMessage(embed_pages);
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(embed_pages);
 
             if (embed_pages.Count <= 0) {
 
@@ -1150,7 +1150,7 @@ namespace OurFoodChain {
             else
                 embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(type, plural: true)));
 
-            await CommandUtils.SendMessageAsync(context, embed.Build());
+            await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 
         }
         public static async Task Command_ShowTaxon(ICommandContext context, TaxonRank type, string name) {
@@ -1173,7 +1173,7 @@ namespace OurFoodChain {
 
                     Species species = await SpeciesUtils.GetSpeciesAsync(taxon.id);
 
-                    await Commands.SpeciesCommands.ShowSpeciesInfoAsync(context, species);
+                    await SpeciesCommands.ShowSpeciesInfoAsync(context, species);
 
                     return;
 
@@ -1260,7 +1260,7 @@ namespace OurFoodChain {
                 }
 
                 List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(items, fieldName: field_title);
-                PaginatedMessage embed = new PaginatedMessage(embed_pages);
+                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(embed_pages);
 
                 embed.SetTitle(title);
                 embed.SetThumbnailUrl(thumbnail_url);
@@ -1269,7 +1269,7 @@ namespace OurFoodChain {
                 if (items.Count() > 0 && taxon.type != TaxonRank.Genus)
                     embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(taxon.GetChildRank(), plural: true)));
 
-                await CommandUtils.SendMessageAsync(context, embed.Build());
+                await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 
             }
 
@@ -1367,16 +1367,16 @@ namespace OurFoodChain {
             if (!await ReplyAsync_ValidateTaxonWithSuggestion(context, type, taxon, name))
                 return;
 
-            MultiPartMessage p = new MultiPartMessage(context) {
+            Bot.MultiPartMessage p = new Bot.MultiPartMessage(context) {
                 UserData = new string[] { name },
-                Callback = async (MultiPartMessageCallbackArgs args) => {
+                Callback = async (args) => {
 
                     await BotUtils.Command_SetTaxonDescription(args.Message.Context, taxon, args.ResponseContent);
 
                 }
             };
 
-            await MultiPartMessage.SendMessageAsync(p,
+            await Bot.DiscordUtils.SendMessageAsync(context, p,
                 string.Format("Reply with the description for {0} **{1}**.\nTo cancel the update, reply with \"cancel\".", taxon.GetTypeName(), taxon.GetName()));
 
 
@@ -1653,11 +1653,11 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task ZonesToEmbedPagesAsync(PaginatedMessage embed, Zone[] zones, bool showIcon = true) {
+        public static async Task ZonesToEmbedPagesAsync(Bot.PaginatedMessageBuilder embed, Zone[] zones, bool showIcon = true) {
 
             List<string> lines = new List<string>();
             int zones_per_page = 20;
-            int max_line_length = Math.Min(showIcon ? 78 : 80, (EmbedUtils.MAX_EMBED_LENGTH - embed.Length) / zones_per_page);
+            int max_line_length = Math.Min(showIcon ? 78 : 80, (Bot.DiscordUtils.MaxEmbedLength - embed.Length) / zones_per_page);
 
             foreach (Zone zone in zones) {
 

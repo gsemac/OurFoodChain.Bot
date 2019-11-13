@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Commands {
+namespace OurFoodChain.Bot {
 
     public class SpeciesCommands :
         ModuleBase {
@@ -58,12 +58,12 @@ namespace OurFoodChain.Commands {
 
             // Send the result.
 
-            CommandUtils.PaginatedMessage reply = new CommandUtils.PaginatedMessage();
+            Bot.PaginatedMessage reply = new Bot.PaginatedMessage();
 
             foreach (EmbedBuilder page in pages)
-                reply.pages.Add(page.Build());
+                reply.Pages.Add(page.Build());
 
-            await CommandUtils.SendMessageAsync(Context, reply);
+            await Bot.DiscordUtils.SendMessageAsync(Context, reply);
 
         }
         [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
@@ -122,12 +122,12 @@ namespace OurFoodChain.Commands {
 
             // Send the result.
 
-            CommandUtils.PaginatedMessage reply = new CommandUtils.PaginatedMessage();
+            Bot.PaginatedMessage reply = new Bot.PaginatedMessage();
 
             foreach (EmbedBuilder page in pages)
-                reply.pages.Add(page.Build());
+                reply.Pages.Add(page.Build());
 
-            await CommandUtils.SendMessageAsync(Context, reply);
+            await Bot.DiscordUtils.SendMessageAsync(Context, reply);
 
         }
 
@@ -502,7 +502,7 @@ namespace OurFoodChain.Commands {
 
                 if (zone_list.Count() > 0) {
 
-                    embed_color = DiscordUtils.ConvertColor((await ZoneUtils.GetZoneTypeAsync(zone_list
+                    embed_color = Bot.DiscordUtils.ConvertColor((await ZoneUtils.GetZoneTypeAsync(zone_list
                         .GroupBy(x => x.Zone.ZoneTypeId)
                         .OrderBy(x => x.Count())
                         .Last()
@@ -510,7 +510,7 @@ namespace OurFoodChain.Commands {
 
                 }
 
-                string zones_value = new SpeciesZoneCollection(zone_list).ToString(SpeciesZoneCollectionToStringOptions.Default, DiscordUtils.MaxFieldLength);
+                string zones_value = new SpeciesZoneCollection(zone_list).ToString(SpeciesZoneCollectionToStringOptions.Default, Bot.DiscordUtils.MaxFieldLength);
 
                 embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
 
@@ -544,11 +544,11 @@ namespace OurFoodChain.Commands {
 
                 // If the description puts us over the character limit, we'll paginate.
 
-                if (embed.Length + description_builder.Length > CommandUtils.MAX_EMBED_LENGTH) {
+                if (embed.Length + description_builder.Length > Bot.DiscordUtils.MaxEmbedLength) {
 
                     List<EmbedBuilder> pages = new List<EmbedBuilder>();
 
-                    int chunk_size = (description_builder.Length - ((embed.Length + description_builder.Length) - CommandUtils.MAX_EMBED_LENGTH)) - 3;
+                    int chunk_size = description_builder.Length - (embed.Length + description_builder.Length - Bot.DiscordUtils.MaxEmbedLength) - 3;
                     int written_size = 0;
                     string desc = description_builder.ToString();
 
@@ -567,11 +567,11 @@ namespace OurFoodChain.Commands {
 
                     }
 
-                    PaginatedMessage builder = new PaginatedMessage(pages);
+                    Bot.PaginatedMessageBuilder builder = new Bot.PaginatedMessageBuilder(pages);
                     builder.AddPageNumbers();
                     builder.SetColor(embed_color);
 
-                    await CommandUtils.SendMessageAsync(context, builder.Build());
+                    await Bot.DiscordUtils.SendMessageAsync(context, builder.Build());
 
                 }
                 else {
@@ -640,12 +640,12 @@ namespace OurFoodChain.Commands {
             }
             else {
 
-                PaginatedMessage embed = new PaginatedMessage(EmbedUtils.SpeciesListToEmbedPages(speciesList,
+                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList,
                     fieldName: string.Format("Species owned by {0} ({1})", username, speciesList.Count())));
 
                 embed.SetThumbnailUrl(thumbnailUrl);
 
-                await CommandUtils.SendMessageAsync(Context, embed.Build());
+                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
 
             }
 

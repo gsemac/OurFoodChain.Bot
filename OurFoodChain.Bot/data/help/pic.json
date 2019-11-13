@@ -3,7 +3,9 @@
   "aliases": [
     "pics",
     "gallery",
-    "pictures"
+    "pictures",
+    "image",
+    "images"
   ],
   "category": "info",
   "description": "Displays an image gallery for the given species or taxon.",

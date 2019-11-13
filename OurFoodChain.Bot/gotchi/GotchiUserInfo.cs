@@ -21,7 +21,7 @@ namespace OurFoodChain.Gotchi {
 
             return new GotchiUserInfo((ulong)row.Field<long>("user_id")) {
                 G = row.Field<long>("g"),
-                GotchiLimit = (ulong)row.Field<long>("gotchi_limit"),
+                GotchiLimit = row.Field<long>("gotchi_limit"),
                 PrimaryGotchiId = row.Field<long>("primary_gotchi_id")
             };
 
@@ -47,7 +47,7 @@ namespace OurFoodChain.Gotchi {
         /// <summary>
         /// The number of Gotchis the user is allowed to have at one time.
         /// </summary>
-        public ulong GotchiLimit { get; set; } = 1;
+        public long GotchiLimit { get; set; } = 1;
         /// <summary>
         /// The ID of the user's primary gotchi.
         /// </summary>

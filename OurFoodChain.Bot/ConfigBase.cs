@@ -12,10 +12,10 @@ namespace OurFoodChain {
 
         // Public members
 
-        public static T FromFile(string filePath) {
-            return FromJson(System.IO.File.ReadAllText(filePath));
+        public static T Open(string filePath) {
+            return Parse(System.IO.File.ReadAllText(filePath));
         }
-        public static T FromJson(string json) {
+        public static T Parse(string json) {
             return JsonConvert.DeserializeObject<T>(json);
         }
         public void Save(string filePath) {

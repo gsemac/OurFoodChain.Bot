@@ -46,7 +46,7 @@ namespace OurFoodChain {
                 Environment.Exit(-1);
             }
 
-            Config = Bot.BotConfig.FromFile(filePath);
+            Config = Bot.BotConfig.Open(filePath);
 
             if (string.IsNullOrEmpty(Config.Token)) {
                 await LogAsync(Discord.LogSeverity.Error, "Config", "You must specify your bot token in the config.json file. For details, see the README.");
@@ -293,7 +293,7 @@ namespace OurFoodChain {
             // Load gotchi config.
 
             if (System.IO.File.Exists("gotchi-config.json"))
-                gotchiContext.Config = Gotchi.GotchiConfig.FromFile("gotchi-config.json");
+                gotchiContext.Config = Gotchi.GotchiConfig.Open("gotchi-config.json");
 
             // Initialize registries.
 

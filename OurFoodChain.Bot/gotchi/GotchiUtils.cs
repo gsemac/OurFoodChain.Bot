@@ -164,7 +164,7 @@ namespace OurFoodChain.Gotchi {
         public static async Task<GotchiUserInfo> GetUserInfoAsync(IUser user) {
             return await GetUserInfoAsync(user.Id);
         }
-        public static async Task<ulong> GetUserGotchiCountAsync(IUser user) {
+        public static async Task<long> GetUserGotchiCountAsync(IUser user) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Gotchi WHERE owner_id = $user_id;")) {
 
@@ -174,19 +174,19 @@ namespace OurFoodChain.Gotchi {
 
                 Debug.Assert(count >= 0);
 
-                return (ulong)count;
+                return count;
 
             }
 
         }
-        public static async Task UpdateUserInfoAsync(GotchiUserInfo userData) {
+        public static async Task UpdateUserInfoAsync(GotchiUserInfo userInfo) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO GotchiUser(user_id, g, gotchi_limit, primary_gotchi_id) VALUES ($user_id, $g, $gotchi_limit, $primary_gotchi_id);")) {
 
-                cmd.Parameters.AddWithValue("$user_id", userData.UserId);
-                cmd.Parameters.AddWithValue("$g", userData.G);
-                cmd.Parameters.AddWithValue("$gotchi_limit", userData.GotchiLimit);
-                cmd.Parameters.AddWithValue("$primary_gotchi_id", userData.PrimaryGotchiId);
+                cmd.Parameters.AddWithValue("$user_id", userInfo.UserId);
+                cmd.Parameters.AddWithValue("$g", userInfo.G);
+                cmd.Parameters.AddWithValue("$gotchi_limit", userInfo.GotchiLimit);
+                cmd.Parameters.AddWithValue("$primary_gotchi_id", userInfo.PrimaryGotchiId);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -335,7 +335,7 @@ namespace OurFoodChain.Gotchi {
 
         }
 
-        public static GotchiItem[] GetGotchiItems() {
+        public static async Task<GotchiItem[]> GetGotchiItemsAsync() {
 
             List<GotchiItem> items = new List<GotchiItem>();
             string[] files = System.IO.Directory.GetFiles(Global.GotchiItemsDirectory, "*.json");
@@ -348,22 +348,77 @@ namespace OurFoodChain.Gotchi {
 
             }
 
-            return items.ToArray();
+            return await Task.FromResult(items.ToArray());
 
         }
-        public static GotchiItem GetGotchiItem(string nameOrId) {
+        public static async Task<GotchiItem> GetGotchiItemAsync(long identifier) {
+            return await GetGotchiItemAsync(identifier.ToString());
+        }
+        public static async Task<GotchiItem> GetGotchiItemAsync(string identifier) {
 
-            GotchiItem[] items = GetGotchiItems();
+            GotchiItem[] items = await GetGotchiItemsAsync();
             long id = -1;
 
-            if (StringUtils.IsNumeric(nameOrId))
-                id = long.Parse(nameOrId);
+            if (StringUtils.IsNumeric(identifier))
+                id = long.Parse(identifier);
 
             foreach (GotchiItem item in items)
-                if (item.name.ToLower() == nameOrId.ToLower() || (id != GotchiItem.NULL_ITEM_ID && item.id == id))
+                if (item.Name.ToLower() == identifier.ToLower() || (id != GotchiItem.NullId && item.Id == id))
                     return item;
 
             return null;
+
+        }
+
+        public static async Task<GotchiInventory> GetInventoryAsync(ulong userId) {
+
+            List<GotchiInventoryItem> items = new List<GotchiInventoryItem>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM GotchiInventory WHERE user_id = $user_id")) {
+
+                cmd.Parameters.AddWithValue("$user_id", userId);
+
+                using (DataTable table = await Database.GetRowsAsync(cmd))
+                    foreach (DataRow row in table.Rows) {
+
+                        items.Add(new GotchiInventoryItem {
+                            Item = await GetGotchiItemAsync(row.Field<long>("item_id")),
+                            Count = row is null ? 0 : row.Field<long>("count")
+                        });
+
+                    }
+
+            }
+
+            return new GotchiInventory(items.OrderBy(x => x.Item.Id));
+
+        }
+        public static async Task<GotchiInventoryItem> AddItemToInventoryAsync(ulong userId, GotchiItem item, long count) {
+
+            // We could just increment the "count" field, but the user is not guaranteed to already have the item.
+
+            GotchiInventoryItem inventoryItem = await GetItemFromInventoryAsync(userId, item);
+
+            inventoryItem.Count = Math.Max(0, inventoryItem.Count + count);
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO GotchiInventory(user_id, item_id, count) VALUES($user_id, $item_id, $count)")) {
+
+                cmd.Parameters.AddWithValue("$user_id", userId);
+                cmd.Parameters.AddWithValue("$item_id", item is null ? GotchiItem.NullId : item.Id);
+                cmd.Parameters.AddWithValue("$count", inventoryItem.Count);
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            return inventoryItem;
+
+        }
+        public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(ulong userId, GotchiItem item) {
+
+            return (await GetInventoryAsync(userId))
+                .Where(i => i.Item.Id == item.Id)
+                .FirstOrDefault() ?? new GotchiInventoryItem { Item = item, Count = 0 };
 
         }
 

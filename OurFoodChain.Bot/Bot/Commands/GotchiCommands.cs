@@ -694,21 +694,21 @@ namespace OurFoodChain.Gotchi {
 
             // Generate a field for each item.
 
-            GotchiItem[] items = GotchiUtils.GetGotchiItems();
+            GotchiItem[] items = await GotchiUtils.GetGotchiItemsAsync();
             List<EmbedFieldBuilder> item_fields = new List<EmbedFieldBuilder>();
 
             foreach (GotchiItem item in items) {
 
                 // (Tank expansions cost extra the more the user has already.)
 
-                if (item.id == 1)
-                    item.cost *= user_data.GotchiLimit;
+                if (item.Id == 1)
+                    item.Price *= user_data.GotchiLimit;
 
                 // Build the field.
 
                 item_fields.Add(new EmbedFieldBuilder {
-                    Name = string.Format("{0}. {1} {2} — {3}", item.id, item.icon, item.Name, item.cost <= 0 ? "Not Available" : (item.cost.ToString("n0") + "G")),
-                    Value = item.description
+                    Name = string.Format("{0}. {1} {2} — {3}", item.Id, item.Icon, item.Name, item.Price <= 0 ? "Not Available" : (item.Price.ToString("n0") + "G")),
+                    Value = item.Description
                 });
 
             }
@@ -730,130 +730,199 @@ namespace OurFoodChain.Gotchi {
         }
 
         [Command("buy")]
-        public async Task Buy(string itemIdentifier, params string[] arguments) {
+        public async Task Buy(string itemIdentifier, long count = 1) {
 
-            GotchiItem item = GotchiUtils.GetGotchiItem(itemIdentifier);
+            GotchiItem item = await GotchiUtils.GetGotchiItemAsync(itemIdentifier);
+            GotchiUserInfo userInfo = await GotchiUtils.GetUserInfoAsync(Context.User);
 
-            if (item is null || item.id == GotchiItem.NULL_ITEM_ID) {
+            // Calculate the price of the item.
 
-                await BotUtils.ReplyAsync_Error(Context, "Invalid item selection.");
+            long totalPrice = 0;
+
+            if (item != null && userInfo != null && count >= 1) {
+
+                // Tank expansions cost extra the more the user has already.
+
+                if (item.Id == (int)GotchiItemId.TankExpansion)
+                    for (long i = userInfo.GotchiLimit; i < count + userInfo.GotchiLimit; ++i)
+                        totalPrice += item.Price * i;
+                else
+                    totalPrice = item.Price * count;
 
             }
-            else {
 
-                GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
+            if (item != null && item.Id != GotchiItem.NullId && count >= 1) {
 
-                // (Tank expansions cost extra the more the user has already.)
+                if (totalPrice <= userInfo.G) {
 
-                if (item.id == 1)
-                    item.cost *= user_data.GotchiLimit;
+                    // The user can afford the item, so purchase it and add it to their inventory.
 
-                bool item_failed = false;
+                    await GotchiUtils.AddItemToInventoryAsync(userInfo.UserId, item, count);
 
-                if (item.cost > (ulong)user_data.G) {
+                    // Update the user.
 
-                    item_failed = true;
+                    userInfo.G -= totalPrice;
 
-                    await BotUtils.ReplyAsync_Error(Context, string.Format("You don't have enough G to afford this item ({0:n0}G).", item.cost));
+                    if (item.Id == (int)GotchiItemId.TankExpansion)
+                        userInfo.GotchiLimit += count;
+
+                    await GotchiUtils.UpdateUserInfoAsync(userInfo);
+
+                    await BotUtils.ReplyAsync_Success(Context,
+                        string.Format("Successfully added **{0}**{1} to {2}'s inventory.", item.Name, count == 1 ? "" : "×" + count, Context.User.Username));
 
                 }
                 else {
 
-                    switch (item.id) {
+                    // The user cannot afford the purchase.
 
-                        case 1: // tank expansion
-
-                            user_data.GotchiLimit += 1;
-
-                            await BotUtils.ReplyAsync_Success(Context, string.Format("Your Gotchi limit has been increased to {0}!", user_data.GotchiLimit));
-
-                            break;
-
-                        case 2: // evo stone
-                        case 3: // glowing evo stone
-                            {
-
-                                Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
-                                string desired_evo = item.id == 3 ? string.Join(" ", arguments) : string.Empty;
-
-                                if (item.id == 3 && string.IsNullOrEmpty(desired_evo)) {
-
-                                    await BotUtils.ReplyAsync_Error(Context,
-                                        string.Format("Please specify the desired species when buying this item.\n\nEx: `{0}gotchi buy 3 aspersum`", OurFoodChainBot.Instance.Config.Prefix));
-
-                                    item_failed = true;
-
-                                }
-                                else {
-
-                                    if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desired_evo)) {
-
-                                        await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
-                                            (await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId)).ShortName));
-
-                                    }
-                                    else {
-
-                                        item_failed = true;
-
-                                        await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is not able to evolve at the current time.");
-
-                                    }
-
-                                }
-
-                            }
-
-                            break;
-
-                        case 4: // alarm clock
-                            {
-
-                                Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
-
-                                if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && gotchi.IsSleeping()) {
-
-                                    using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET born_ts = $born_ts WHERE id = $id")) {
-
-                                        long born_ts = gotchi.BornTimestamp;
-                                        born_ts -= gotchi.HoursOfSleepLeft() * 60 * 60;
-
-                                        cmd.Parameters.AddWithValue("$id", gotchi.Id);
-                                        cmd.Parameters.AddWithValue("$born_ts", born_ts);
-
-                                        await Database.ExecuteNonQuery(cmd);
-
-                                    }
-
-                                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** woke up! Its sleep schedule has been reset.",
-                                        StringUtils.ToTitleCase(gotchi.Name)));
-
-                                }
-                                else {
-
-                                    item_failed = true;
-
-                                    await BotUtils.ReplyAsync_Error(Context, "Your Gotchi is already awake.");
-
-                                }
-
-                            }
-
-                            break;
-
-                    }
+                    await BotUtils.ReplyAsync_Error(Context, string.Format("You don't have enough G to afford this purchase ({0:n0}G).", totalPrice));
 
                 }
 
-                // If using the item was successful, subtract the cost of the item from the user's balance.
+            }
+            else
+                await BotUtils.ReplyAsync_Error(Context, "Invalid item selection.");
 
-                if (!item_failed)
-                    user_data.G -= (long)item.cost;
+        }
 
-                // Update the user.
-                await GotchiUtils.UpdateUserInfoAsync(user_data);
+        [Command("inventory"), Alias("inv", "items", "bag")]
+        public async Task Inventory() {
+
+            IUser user = Context.User;
+            GotchiUserInfo userInfo = await GotchiUtils.GetUserInfoAsync(user);
+            GotchiInventory inventory = await GotchiUtils.GetInventoryAsync(user.Id);
+
+            List<string> lines = new List<string>();
+
+            foreach (GotchiInventoryItem item in inventory) {
+
+                lines.Add(string.Format("**`{0}.`** {1} {3} ⨯**{2}**",
+                    (lines.Count + 1).ToString("000"),
+                    string.IsNullOrEmpty(item.Item.Icon) ? "➖" : item.Item.Icon,
+                    item.Count.ToString(),
+                    string.IsNullOrEmpty(item.Item.Name) ? "Unknown Item" : item.Item.Name
+                ));
 
             }
+
+            PaginatedMessage embed = new PaginatedMessage {
+                Title = string.Format("{0}'s inventory", user.Username)
+            };
+
+            embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
+            embed.SetFooter(string.Format("You currently have {0:n0}G.", userInfo.G));
+            embed.AddPageNumbers();
+
+            if (lines.Count <= 0)
+                embed.SetDescription("Your inventory is empty.");
+
+            await CommandUtils.SendMessageAsync(Context, embed.Build());
+
+        }
+
+        [Command("useitem")]
+        public async Task UseItem(string itemIdentifier) {
+
+            IUser user = Context.User;
+
+            Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(user);
+            GotchiInventory inventory = await GotchiUtils.GetInventoryAsync(user.Id);
+            GotchiInventoryItem item = null;
+
+            if (int.TryParse(itemIdentifier, out int itemIndex))
+                item = inventory.GetItemByIndex(itemIndex);
+            else
+                item = inventory.GetItemByIdentifier(itemIdentifier);
+
+            if (item != null && item.Count > 0) {
+
+                switch ((GotchiItemId)item.Item.Id) {
+
+                    case GotchiItemId.EvoStone:
+                    case GotchiItemId.GlowingEvoStone: {
+
+                            async Task doUseItem(string desiredEvo) {
+
+                                if (desiredEvo.Equals("cancel", StringComparison.OrdinalIgnoreCase))
+                                    return;
+
+                                if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desiredEvo)) {
+
+                                    await GotchiUtils.AddItemToInventoryAsync(user.Id, item.Item, -1);
+
+                                    await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
+                                        (await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId)).ShortName));
+
+                                }
+                                else
+                                    await BotUtils.ReplyAsync_Info(Context, "Your Gotchi is not able to evolve at the current time.");
+                            }
+
+                            if ((GotchiItemId)item.Item.Id == GotchiItemId.GlowingEvoStone) {
+
+                                // Allow the user to pick the species their gotchi evolves into.
+
+                                MultiPartMessage message = new MultiPartMessage(Context) {
+                                    Callback = async (MultiPartMessageCallbackArgs args) => {
+                                        await doUseItem(args.ResponseContent);
+                                    }
+                                };
+
+                                await MultiPartMessage.SendMessageAsync(message,
+                                    string.Format("Reply with the name of the desired species, or \"cancel\"."));
+
+                            }
+                            else {
+
+                                // Pick a species at random for the gotchi to evolve into.
+
+                                await doUseItem(string.Empty);
+
+                            }
+
+                        }
+
+                        break;
+
+                    case GotchiItemId.AlarmClock: {
+
+                            if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && gotchi.IsSleeping()) {
+
+                                gotchi.BornTimestamp -= gotchi.HoursOfSleepLeft() * 60 * 60;
+
+                                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET born_ts = $born_ts WHERE id = $id")) {
+
+                                    cmd.Parameters.AddWithValue("$id", gotchi.Id);
+                                    cmd.Parameters.AddWithValue("$born_ts", gotchi.BornTimestamp);
+
+                                    await Database.ExecuteNonQuery(cmd);
+
+                                }
+
+                                await GotchiUtils.AddItemToInventoryAsync(user.Id, item.Item, -1);
+
+                                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** woke up! Its sleep schedule has been reset.",
+                                    StringUtils.ToTitleCase(gotchi.Name)));
+
+                            }
+                            else
+                                await BotUtils.ReplyAsync_Info(Context, "Your Gotchi is already awake.");
+
+                        }
+
+                        break;
+
+                    default:
+                        await BotUtils.ReplyAsync_Info(Context, "This item cannot be used.");
+                        break;
+
+                }
+
+            }
+            else
+                await BotUtils.ReplyAsync_Error(Context, "This item is not in your inventory.");
+
         }
 
         [Command("list")]
@@ -1077,7 +1146,7 @@ namespace OurFoodChain.Gotchi {
             // If the user has already reached their gotchi limit, don't allow them to get any more.
 
             GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(context.User);
-            ulong gotchi_count = await GotchiUtils.GetUserGotchiCountAsync(context.User);
+            long gotchi_count = await GotchiUtils.GetUserGotchiCountAsync(context.User);
 
             if (gotchi_count >= user_data.GotchiLimit) {
 

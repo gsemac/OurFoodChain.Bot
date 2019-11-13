@@ -225,7 +225,7 @@ namespace OurFoodChain {
             await SetArtist(genusName, speciesName, pictureIndex, user.Username);
         }
 
-        [Command("gallery"), Alias("pic", "pics", "picture", "pictures")]
+        [Command("gallery"), Alias("pic", "pics", "picture", "pictures", "image", "images")]
         public async Task Gallery(string speciesOrTaxon) {
 
             // Prioritize species galleries first.
@@ -270,7 +270,7 @@ namespace OurFoodChain {
             }
 
         }
-        [Command("gallery"), Alias("pic", "pics", "picture", "pictures")]
+        [Command("gallery"), Alias("pic", "pics", "picture", "pictures", "image", "images")]
         public async Task Gallery(string genus, string species) {
 
             Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);

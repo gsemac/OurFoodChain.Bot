@@ -129,7 +129,7 @@ namespace OurFoodChain {
                         builder.AddField("Description", info.Description.Replace("\\prefix", OurFoodChainBot.Instance.Config.Prefix));
 
                         if (info.Aliases.Count() > 0)
-                            builder.AddField("Aliases", string.Join(", ", info.Aliases));
+                            builder.AddField("Aliases", string.Join(", ", info.Aliases.OrderBy(x => x)));
 
                         if (info.Examples.Count() > 0) {
 

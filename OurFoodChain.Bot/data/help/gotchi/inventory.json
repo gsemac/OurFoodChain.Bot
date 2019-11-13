@@ -1,0 +1,9 @@
+﻿{
+  "name": "inventory",
+  "aliases": [ "items", "inv", "bag" ],
+  "category": "general",
+  "description": "Shows the user's inventory.",
+  "examples": [
+    "inventory"
+  ]
+}

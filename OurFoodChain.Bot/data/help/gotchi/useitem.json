@@ -1,0 +1,11 @@
+﻿{
+  "name": "useitem",
+  "aliases": [],
+  "category": "general",
+  "description": "Uses an item from the user's inventory.",
+  "examples": [
+    "useitem <inventory index or name>",
+    "useitem 1",
+    "useitem \"evo stone\""
+  ]
+}

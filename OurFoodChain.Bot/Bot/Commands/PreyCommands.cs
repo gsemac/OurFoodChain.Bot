@@ -220,25 +220,27 @@ namespace OurFoodChain.Bot {
 
                         prey_list.Sort((lhs, rhs) => lhs.Item1.ShortName.CompareTo(rhs.Item1.ShortName));
 
-                        StringBuilder description = new StringBuilder();
+                        List<string> lines = new List<string>();
 
                         foreach (Tuple<Species, string> prey in prey_list) {
 
-                            description.Append(prey.Item1.IsExtinct ? BotUtils.Strikeout(prey.Item1.ShortName) : prey.Item1.ShortName);
+                            string line = prey.Item1.IsExtinct ? BotUtils.Strikeout(prey.Item1.ShortName) : prey.Item1.ShortName;
 
                             if (!string.IsNullOrEmpty(prey.Item2))
-                                description.Append(string.Format(" ({0})", prey.Item2.ToLower()));
+                                line += (string.Format(" ({0})", prey.Item2.ToLower()));
 
-                            description.AppendLine();
+                            lines.Add(line);
 
                         }
 
-                        EmbedBuilder embed = new EmbedBuilder();
+                        PaginatedMessageBuilder embed = new PaginatedMessageBuilder();
 
-                        embed.WithTitle(string.Format("Species preyed upon by {0} ({1})", sp.ShortName, prey_list.Count()));
-                        embed.WithDescription(description.ToString());
+                        embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
 
-                        await ReplyAsync("", false, embed.Build());
+                        embed.SetTitle(string.Format("Species preyed upon by {0} ({1})", sp.ShortName, prey_list.Count()));
+                        embed.AddPageNumbers();
+
+                        await DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                     }
 

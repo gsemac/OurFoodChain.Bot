@@ -65,7 +65,7 @@ namespace OurFoodChain {
         public static string GetFirstSentence(string value) {
 
             string result = value;
-            Match match = Regex.Match(value, @"^.+?(?:\.+|[;!\?])");
+            Match match = Regex.Match(value, @"^.+?[\.;!\?]+", RegexOptions.Multiline);
 
             if (match.Success && match.Length > 0)
                 result = match.Value;

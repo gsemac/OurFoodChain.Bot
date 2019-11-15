@@ -35,46 +35,57 @@ namespace OurFoodChain.Bot {
             // If the user provided a prey list, it's easier to determine what they meant-- Check for that first.
 
             if (_isSpeciesList(arg1))
+                // <speciesName> <preyList> <notes>
                 await _addPrey(string.Empty, arg0, _splitSpeciesList(arg1), arg2);
-            else if (_isSpeciesList(arg2))
-                await _addPrey(arg0, arg1, _splitSpeciesList(arg2), string.Empty);
             else {
 
                 Species species = null, preySpecies = null;
                 string notes = string.Empty;
 
-                // <genusName> <speciesName> <preySpeciesName>
+                // <genusName> <speciesName> <preyList>
 
                 species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0, arg1);
-                preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg2);
-                notes = string.Empty;
 
-                if (species is null || preySpecies is null) {
+                if (species != null && _isSpeciesList(arg2)) {
 
-                    // <speciesName> <preyGenusName> <preySpeciesName>
+                    await _addPrey(arg0, arg1, _splitSpeciesList(arg2), string.Empty);
 
-                    species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0);
-                    preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg1, arg2);
+                }
+                else {
+
+                    // <genusName> <speciesName> <preySpeciesName>
+
+                    preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg2);
                     notes = string.Empty;
 
+                    if (species is null || preySpecies is null) {
+
+                        // <speciesName> <preyGenusName> <preySpeciesName>
+
+                        species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0);
+                        preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg1, arg2);
+                        notes = string.Empty;
+
+                    }
+
+                    if (species is null || preySpecies is null) {
+
+                        // <speciesName> <preySpeciesName> <Notes>
+
+                        species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0);
+                        preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg1);
+                        notes = arg2;
+
+                    }
+
+                    if (species is null)
+                        await BotUtils.ReplyAsync_Error(Context, "The given species does not exist.");
+                    else if (preySpecies is null)
+                        await BotUtils.ReplyAsync_Error(Context, "The given prey species does not exist.");
+                    else
+                        await _addPrey(species, new Species[] { preySpecies }, notes);
+
                 }
-
-                if (species is null || preySpecies is null) {
-
-                    // <speciesName> <preySpecieName> <Notes>
-
-                    species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0);
-                    preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg1);
-                    notes = arg2;
-
-                }
-
-                if (species is null)
-                    await BotUtils.ReplyAsync_Error(Context, "The given species does not exist.");
-                else if (preySpecies is null)
-                    await BotUtils.ReplyAsync_Error(Context, "The given prey species does not exist.");
-                else
-                    await _addPrey(species, new Species[] { preySpecies }, notes);
 
             }
 

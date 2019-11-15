@@ -11,6 +11,7 @@ namespace OurFoodChain {
         // Directories
 
         public static string DataDirectory { get; } = "data/";
+        public static string CustomDataDirectory { get; } = "customdata/";
         public static string TempDirectory { get; } = DataDirectory + "temp/";
 
         public static string GotchiDataDirectory { get; } = DataDirectory + "gotchi/";

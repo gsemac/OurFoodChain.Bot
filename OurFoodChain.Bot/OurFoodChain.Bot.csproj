@@ -595,6 +595,9 @@ move /y "$(TargetDir)*.xml" "$(TargetDir)lib\"
 move /y "$(TargetDir)x86" "$(TargetDir)lib\"
 move /Y "$(TargetDir)x64" "$(TargetDir)lib\"
 
+mkdir "$(TargetDir)customdata\"
+xcopy "$(ProjectDir)customdata\*.*" "$(TargetDir)customdata" /y /i /e
+
 if $(ConfigurationName) == Release (
     del "$(TargetDir)*.pdb"
     del "$(TargetDir)lib\*.xml"

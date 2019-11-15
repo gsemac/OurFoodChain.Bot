@@ -62,9 +62,15 @@ namespace OurFoodChain.Bot {
 
             await LogAsync(LogSeverity.Info, "OurFoodChain", "Starting bot");
 
+            // Initialize the database (apply updates, etc.).
+
             await LogAsync(LogSeverity.Info, "Database", "Initializing database");
 
             await Database.InitializeAsync();
+
+            // Copy user's custom data to the main data directory.
+
+            await CopyCustomDataFiles();
 
             if (Config.GotchisEnabled)
                 await _initializeGotchiContextAsync();
@@ -316,6 +322,37 @@ namespace OurFoodChain.Bot {
             await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi moves");
 
             Global.GotchiContext = gotchiContext;
+
+        }
+        private async Task CopyCustomDataFiles() {
+
+            if (System.IO.Directory.Exists(Global.CustomDataDirectory)) {
+
+                IEnumerable<string> customFiles = System.IO.Directory.EnumerateFiles(Global.CustomDataDirectory, "*", System.IO.SearchOption.AllDirectories)
+                    .Where(f => f != System.IO.Path.Combine(Global.CustomDataDirectory, "README.txt"));
+
+                if (customFiles.Count() > 0) {
+
+                    await LogAsync(LogSeverity.Info, "Database", "Copying custom data files");
+
+                    foreach (string inputFilePath in customFiles) {
+
+                        string relativeInputFilePath = inputFilePath.Replace(Global.CustomDataDirectory, string.Empty);
+
+                        string relativeOutputDirectoryPath = System.IO.Path.GetDirectoryName(relativeInputFilePath);
+                        
+                        if (!string.IsNullOrEmpty(relativeOutputDirectoryPath)) 
+                            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(Global.DataDirectory, relativeOutputDirectoryPath));
+
+                        string outputFilePath = System.IO.Path.Combine(Global.DataDirectory, relativeInputFilePath);
+
+                        System.IO.File.Copy(inputFilePath, outputFilePath, true);
+
+                    }
+
+                }
+
+            }
 
         }
 

@@ -29,17 +29,17 @@ namespace OurFoodChain.Bot {
 
             // For all Gotchis owned by the user, evolve them if they're ready to evolve.
 
-            foreach (Gotchi i in gotchis) {
+            foreach (Gotchi gotchiToEvolve in gotchis) {
 
                 bool evolved = false;
 
-                if (gotchi.IsReadyToEvolve())
-                    evolved = await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi);
+                if (gotchiToEvolve.IsReadyToEvolve())
+                    evolved = await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchiToEvolve);
 
                 // If the gotchi tried to evolve but failed, update its evolution timestamp so that we get a valid state (i.e., not "ready to evolve").
                 // (Note that it will have already been updated in the database by this point.)
-                if (gotchi.IsReadyToEvolve() && !evolved)
-                    gotchi.EvolvedTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                if (gotchiToEvolve.IsReadyToEvolve() && !evolved)
+                    gotchiToEvolve.EvolvedTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             }
 

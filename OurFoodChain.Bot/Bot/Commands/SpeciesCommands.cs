@@ -476,7 +476,7 @@ namespace OurFoodChain.Bot {
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 
                 EmbedBuilder embed = new EmbedBuilder();
-                StringBuilder description_builder = new StringBuilder();
+                StringBuilder descriptionBuilder = new StringBuilder();
 
                 string embed_title = species.FullName;
                 Color embed_color = Color.Blue;
@@ -530,53 +530,49 @@ namespace OurFoodChain.Bot {
                         long timestamp = (long)row.Field<decimal>("timestamp");
 
                         if (!string.IsNullOrEmpty(reason))
-                            description_builder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(timestamp), reason));
+                            descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(timestamp), reason));
 
                     }
 
                 }
 
-                description_builder.Append(species.GetDescriptionOrDefault());
+                descriptionBuilder.Append(species.GetDescriptionOrDefault());
 
                 embed.WithTitle(embed_title);
                 embed.WithThumbnailUrl(species.Picture);
                 embed.WithColor(embed_color);
 
-                // If the description puts us over the character limit, we'll paginate.
+                if (embed.Length + descriptionBuilder.Length > DiscordUtils.MaxEmbedLength) {
 
-                if (embed.Length + description_builder.Length > Bot.DiscordUtils.MaxEmbedLength) {
+                    // If the description puts us over the character limit, we'll paginate.
+
+                    int pageLength = DiscordUtils.MaxEmbedLength - embed.Length;
 
                     List<EmbedBuilder> pages = new List<EmbedBuilder>();
 
-                    int chunk_size = description_builder.Length - (embed.Length + description_builder.Length - Bot.DiscordUtils.MaxEmbedLength) - 3;
-                    int written_size = 0;
-                    string desc = description_builder.ToString();
-
-                    while (written_size < desc.Length) {
+                    foreach (string pageText in new StringPaginator(descriptionBuilder.ToString()) { MaxPageLength = pageLength }) {
 
                         EmbedBuilder page = new EmbedBuilder();
 
                         page.WithTitle(embed.Title);
                         page.WithThumbnailUrl(embed.ThumbnailUrl);
                         page.WithFields(embed.Fields);
-                        page.WithDescription(desc.Substring(written_size, Math.Min(chunk_size, desc.Length - written_size)) + (written_size + chunk_size < desc.Length ? "..." : ""));
-
-                        written_size += chunk_size;
+                        page.WithDescription(pageText);
 
                         pages.Add(page);
 
                     }
 
-                    Bot.PaginatedMessageBuilder builder = new Bot.PaginatedMessageBuilder(pages);
+                    PaginatedMessageBuilder builder = new Bot.PaginatedMessageBuilder(pages);
                     builder.AddPageNumbers();
                     builder.SetColor(embed_color);
 
-                    await Bot.DiscordUtils.SendMessageAsync(context, builder.Build());
+                    await DiscordUtils.SendMessageAsync(context, builder.Build());
 
                 }
                 else {
 
-                    embed.WithDescription(description_builder.ToString());
+                    embed.WithDescription(descriptionBuilder.ToString());
 
                     await context.Channel.SendMessageAsync("", false, embed.Build());
 

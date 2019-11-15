@@ -311,6 +311,7 @@
     <Compile Include="Taxa\SearchQuery.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
     <Compile Include="utils\LogMessage.cs" />
+    <Compile Include="utils\StringPaginator.cs" />
     <Compile Include="utils\TreeUtils.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />

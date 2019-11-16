@@ -69,12 +69,16 @@ namespace OurFoodChain.Gotchis {
                 if (userInfo != null && userInfo.G >= costPerFeeding) {
 
                     int gotchisFed = userGotchis.Where(g => g.IsHungry()).Count();
-                
-                    await GotchiUtils.FeedGotchisAsync(userId);
 
-                    userInfo.G = Math.Max(0, userInfo.G - (costPerFeeding * gotchisFed));
+                    if (gotchisFed > 0) {
 
-                    await GotchiUtils.UpdateUserInfoAsync(userInfo);
+                        await GotchiUtils.FeedGotchisAsync(userId);
+
+                        userInfo.G = Math.Max(0, userInfo.G - (costPerFeeding * gotchisFed));
+
+                        await GotchiUtils.UpdateUserInfoAsync(userInfo);
+
+                    }
 
                 }
 

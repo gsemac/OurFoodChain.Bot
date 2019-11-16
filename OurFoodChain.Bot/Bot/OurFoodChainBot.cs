@@ -18,7 +18,7 @@ namespace OurFoodChain.Bot {
 
             // Set up a default configuration.
 
-            Config = new Bot.BotConfig();
+            Config = new BotConfig();
 
             _discord_client = new DiscordSocketClient(
                 new DiscordSocketConfig() {
@@ -70,10 +70,16 @@ namespace OurFoodChain.Bot {
 
             // Copy user's custom data to the main data directory.
 
-            await CopyCustomDataFiles();
+            await CopyCustomDataFilesAsync();
 
             if (Config.GotchisEnabled)
                 await _initializeGotchiContextAsync();
+
+            // Initialize services.
+
+            await LogAsync(LogSeverity.Info, "OurFoodChain", "Configuring services");
+
+            await ConfigureServicesAsync();
 
             await ConnectAsync();
 
@@ -172,7 +178,6 @@ namespace OurFoodChain.Bot {
         private async Task _installCommandsAsync() {
 
             CommandService = new CommandService();
-            ServiceProvider = new ServiceCollection().BuildServiceProvider();
 
             await CommandService.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), ServiceProvider);
 
@@ -324,7 +329,16 @@ namespace OurFoodChain.Bot {
             Global.GotchiContext = gotchiContext;
 
         }
-        private async Task CopyCustomDataFiles() {
+        private async Task ConfigureServicesAsync() {
+
+            ServiceProvider = new ServiceCollection()
+                .AddSingleton<Gotchis.GotchiBackgroundService>()
+                .BuildServiceProvider();
+
+            await ServiceProvider.GetService<Gotchis.GotchiBackgroundService>().StartAsync();
+
+        }
+        private async Task CopyCustomDataFilesAsync() {
 
             if (System.IO.Directory.Exists(Global.CustomDataDirectory)) {
 
@@ -340,8 +354,8 @@ namespace OurFoodChain.Bot {
                         string relativeInputFilePath = inputFilePath.Replace(Global.CustomDataDirectory, string.Empty);
 
                         string relativeOutputDirectoryPath = System.IO.Path.GetDirectoryName(relativeInputFilePath);
-                        
-                        if (!string.IsNullOrEmpty(relativeOutputDirectoryPath)) 
+
+                        if (!string.IsNullOrEmpty(relativeOutputDirectoryPath))
                             System.IO.Directory.CreateDirectory(System.IO.Path.Combine(Global.DataDirectory, relativeOutputDirectoryPath));
 
                         string outputFilePath = System.IO.Path.Combine(Global.DataDirectory, relativeInputFilePath);

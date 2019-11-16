@@ -231,6 +231,7 @@
     <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Bot\Global.cs" />
     <Compile Include="Gotchis\BattleGotchi.cs" />
+    <Compile Include="Gotchis\GotchiBackgroundService.cs" />
     <Compile Include="Gotchis\GotchiConfig.cs" />
     <Compile Include="Gotchis\GotchiContext.cs" />
     <Compile Include="Gotchis\GotchiExperienceCalculator.cs" />
@@ -330,6 +331,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json" />
+    <None Include="data\gotchi\items\005_auto_feeder.json" />
     <None Include="data\help\gotchi\dex.json" />
     <None Include="data\help\gotchi\inventory.json" />
     <None Include="data\help\gotchi\useitem.json" />

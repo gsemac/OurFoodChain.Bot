@@ -9,9 +9,10 @@ namespace OurFoodChain.Gotchis {
 
     public enum GotchiItemId {
         TankExpansion = 1,
-        EvoStone = 2,
-        GlowingEvoStone = 3,
-        AlarmClock = 4
+        EvoStone,
+        GlowingEvoStone,
+        AlarmClock,
+        AutoFeeder
     }
 
     public class GotchiItem {

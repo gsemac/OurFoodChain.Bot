@@ -132,6 +132,18 @@ namespace OurFoodChain.Gotchis {
             return gotchi;
 
         }
+        public static async Task<Gotchi[]> GetGotchisAsync() {
+
+            List<Gotchi> gotchis = new List<Gotchi>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi"))
+            using (DataTable table = await Database.GetRowsAsync(cmd))
+                foreach (DataRow row in table.Rows)
+                    gotchis.Add(GotchiFromDataRow(row));
+
+            return gotchis.ToArray();
+
+        }
         public static async Task DeleteGotchiAsync(long gotchiId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE id = $id")) {
@@ -268,6 +280,25 @@ namespace OurFoodChain.Gotchis {
             }
 
             return evolved;
+
+        }
+
+        public static async Task<bool> FeedGotchiAsync(Gotchi gotchi) {
+
+            if (gotchi.IsDead())
+                return false;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET fed_ts = $fed_ts WHERE owner_id = $owner_id AND fed_ts >= $min_ts")) {
+
+                cmd.Parameters.AddWithValue("$fed_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                cmd.Parameters.AddWithValue("$owner_id", gotchi.OwnerId);
+                cmd.Parameters.AddWithValue("$min_ts", MinimumFedTimestamp());
+
+                await Database.ExecuteNonQuery(cmd);
+
+            }
+
+            return true;
 
         }
 
@@ -416,9 +447,14 @@ namespace OurFoodChain.Gotchis {
         }
         public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(ulong userId, GotchiItem item) {
 
+            return await GetItemFromInventoryAsync(userId, (GotchiItemId)item.Id);
+
+        }
+        public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(ulong userId, GotchiItemId itemId) {
+
             return (await GetInventoryAsync(userId))
-                .Where(i => i.Item.Id == item.Id)
-                .FirstOrDefault() ?? new GotchiInventoryItem { Item = item, Count = 0 };
+                .Where(i => i.Item.Id == (int)itemId)
+                .FirstOrDefault() ?? new GotchiInventoryItem { Item = await GetGotchiItemAsync((long)itemId), Count = 0 };
 
         }
 

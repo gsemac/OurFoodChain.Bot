@@ -9,7 +9,7 @@ namespace OurFoodChain.Gotchis {
 
     public class GotchiBackgroundService {
 
-        public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromSeconds(3).TotalMilliseconds;
+        public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
 
         public async Task StartAsync() {
 
@@ -68,7 +68,11 @@ namespace OurFoodChain.Gotchis {
 
                 if (userInfo != null && userInfo.G >= costPerFeeding) {
 
-                    userInfo.G = Math.Max(0, userInfo.G - (costPerFeeding * await GotchiUtils.FeedGotchisAsync(userId)));
+                    int gotchisFed = userGotchis.Where(g => g.IsHungry()).Count();
+                
+                    await GotchiUtils.FeedGotchisAsync(userId);
+
+                    userInfo.G = Math.Max(0, userInfo.G - (costPerFeeding * gotchisFed));
 
                     await GotchiUtils.UpdateUserInfoAsync(userInfo);
 

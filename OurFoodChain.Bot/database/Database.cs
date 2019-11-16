@@ -86,28 +86,28 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task ExecuteNonQuery(string query) {
+        public static async Task<int> ExecuteNonQuery(string query) {
 
             using (SQLiteCommand cmd = new SQLiteCommand(query))
-                await ExecuteNonQuery(cmd);
+                return await ExecuteNonQuery(cmd);
 
         }
-        public static async Task ExecuteNonQuery(SQLiteCommand command) {
+        public static async Task<int> ExecuteNonQuery(SQLiteCommand command) {
 
             using (SQLiteConnection conn = await GetConnectionAsync()) {
 
                 await conn.OpenAsync();
 
-                await ExecuteNonQuery(conn, command);
+                return await ExecuteNonQuery(conn, command);
 
             }
 
         }
-        public static async Task ExecuteNonQuery(SQLiteConnection conn, SQLiteCommand command) {
+        public static async Task<int> ExecuteNonQuery(SQLiteConnection conn, SQLiteCommand command) {
 
             command.Connection = conn;
 
-            await command.ExecuteNonQueryAsync();
+            return await command.ExecuteNonQueryAsync();
 
         }
         public static async Task<T> GetScalar<T>(SQLiteCommand command) {

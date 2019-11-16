@@ -283,22 +283,17 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public static async Task<bool> FeedGotchiAsync(Gotchi gotchi) {
-
-            if (gotchi.IsDead())
-                return false;
+        public static async Task<int> FeedGotchisAsync(ulong userId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET fed_ts = $fed_ts WHERE owner_id = $owner_id AND fed_ts >= $min_ts")) {
 
                 cmd.Parameters.AddWithValue("$fed_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                cmd.Parameters.AddWithValue("$owner_id", gotchi.OwnerId);
+                cmd.Parameters.AddWithValue("$owner_id", userId);
                 cmd.Parameters.AddWithValue("$min_ts", MinimumFedTimestamp());
 
-                await Database.ExecuteNonQuery(cmd);
+                return await Database.ExecuteNonQuery(cmd);
 
             }
-
-            return true;
 
         }
 

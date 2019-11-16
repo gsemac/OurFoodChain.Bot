@@ -16,13 +16,14 @@ namespace OurFoodChain.Gotchis {
             Task.Run(async () => {
 
                 while (!cancellationTokenSource.Token.IsCancellationRequested) {
-                
+
                     try {
                         await DoBackgroundLoopAsync();
-                    } catch(Exception ex) {
+                    }
+                    catch (Exception ex) {
                         // Exceptions shouldn't kill the task.
                         // #todo log the error
-                    }                    
+                    }
 
                     await Task.Delay(DelayMilliseconds, cancellationTokenSource.Token);
 
@@ -59,23 +60,15 @@ namespace OurFoodChain.Gotchis {
         private async Task DoAutoFeederAsync(ulong userId, IEnumerable<Gotchi> userGotchis) {
 
             // Auto-feeder
-          
+
             if ((await GotchiUtils.GetItemFromInventoryAsync(userId, GotchiItemId.AutoFeeder)).Count > 0) {
-       
+
                 GotchiUserInfo userInfo = await GotchiUtils.GetUserInfoAsync(userId);
                 const int costPerFeeding = 5;
 
-                if (userInfo != null) {
+                if (userInfo != null && userInfo.G >= costPerFeeding) {
 
-                    foreach (Gotchi gotchi in userGotchis)
-                        if (!gotchi.IsDead() && gotchi.IsHungry() && userInfo.G >= costPerFeeding) {
-
-                            await GotchiUtils.FeedGotchiAsync(gotchi);
-
-                            userInfo.G -= costPerFeeding;
-
-                        }
-
+                    userInfo.G = Math.Max(0, userInfo.G - (costPerFeeding * await GotchiUtils.FeedGotchisAsync(userId)));
 
                     await GotchiUtils.UpdateUserInfoAsync(userInfo);
 

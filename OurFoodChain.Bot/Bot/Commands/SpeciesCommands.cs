@@ -547,8 +547,8 @@ namespace OurFoodChain.Bot {
                     // Discord automatically encodes certain characters in URIs, which doesn't allow us to update the config via Discord when we have "{0}" in the URL.
                     // Replace this with the proper string before attempting to call string.Format.
                     string format = OurFoodChainBot.Instance.Config.WikiUrlFormat.Replace("%7B0%7D", "{0}");
-
-                    embed.WithUrl(string.Format(format, GetWikiPageTitleForSpecies(species, common_names).Replace(" ", "_")));
+                
+                    embed.WithUrl(string.Format(format, Uri.EscapeUriString(GetWikiPageTitleForSpecies(species, common_names))));
 
                 }
 

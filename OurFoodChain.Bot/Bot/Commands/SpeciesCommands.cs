@@ -542,6 +542,16 @@ namespace OurFoodChain.Bot {
                 embed.WithThumbnailUrl(species.Picture);
                 embed.WithColor(embed_color);
 
+                if (!string.IsNullOrEmpty(OurFoodChainBot.Instance.Config.WikiUrlFormat)) {
+
+                    // Discord automatically encodes certain characters in URIs, which doesn't allow us to update the config via Discord when we have "{0}" in the URL.
+                    // Replace this with the proper string before attempting to call string.Format.
+                    string format = OurFoodChainBot.Instance.Config.WikiUrlFormat.Replace("%7B0%7D", "{0}");
+
+                    embed.WithUrl(string.Format(format, GetWikiPageTitleForSpecies(species, common_names).Replace(" ", "_")));
+
+                }
+
                 if (embed.Length + descriptionBuilder.Length > DiscordUtils.MaxEmbedLength) {
 
                     // If the description puts us over the character limit, we'll paginate.
@@ -646,6 +656,34 @@ namespace OurFoodChain.Bot {
             }
 
         }
+        private static string GetWikiPageTitleForSpecies(Species species, CommonName[] commonNames) {
+
+            // This is the same process as used in SpeciesPageBuilder.BuildTitleAsync.
+            // #todo Instead of being copy-pasted, this process should be in its own function used by both classes.
+
+            string title = string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(species.CommonName))
+                title = species.CommonName;
+            else {
+
+                if (commonNames.Count() > 0)
+                    title = commonNames.First().Value;
+                else
+                    title = species.FullName;
+
+            }
+
+            if (string.IsNullOrWhiteSpace(title))
+                title = species.FullName;
+
+            if (!string.IsNullOrEmpty(title))
+                title = title.Trim();
+
+            return title;
+
+        }
+
 
     }
 

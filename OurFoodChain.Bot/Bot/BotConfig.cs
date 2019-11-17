@@ -43,6 +43,9 @@ namespace OurFoodChain.Bot {
         [JsonProperty("world_name")]
         public string WorldName { get; set; } = DefaultWorldName;
 
+        [JsonProperty("wiki_url_format")]
+        public string WikiUrlFormat { get; set; } = "";
+
         [JsonProperty("trophies_enabled")]
         public bool TrophiesEnabled { get; set; } = true;
         [JsonProperty("gotchis_enabled")]

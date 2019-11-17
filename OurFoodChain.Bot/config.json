@@ -13,6 +13,8 @@
 
   "world_name": "",
 
+  "wiki_url_format": "",
+
   "trophies_enabled": true,
   "gotchis_enabled": true,
   "generations_enabled": false,

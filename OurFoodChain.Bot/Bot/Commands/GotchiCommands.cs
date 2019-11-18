@@ -19,27 +19,27 @@ namespace OurFoodChain.Bot {
         public async Task Gotchi() {
 
             // Get this user's primary Gotchi.
-            Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
 
-            // Get all Gotchis owned by this user so we can update them if necessary (e.g. evolve them if they're ready).
-            Gotchi[] gotchis = await GotchiUtils.GetUserGotchisAsync(Context.User.Id);
+            Gotchi gotchi = await GotchiUtils.GetUserGotchiAsync(Context.User);
 
             if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
                 return;
 
+            // Get all Gotchis owned by this user so we can update them if necessary (e.g. evolve them if they're ready).
             // For all Gotchis owned by the user, evolve them if they're ready to evolve.
 
-            foreach (Gotchi gotchiToEvolve in gotchis) {
+            foreach (Gotchi gotchiToEvolve in await GotchiUtils.GetUserGotchisAsync(Context.User.Id)) {
 
                 bool evolved = false;
 
                 if (gotchiToEvolve.IsReadyToEvolve())
                     evolved = await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchiToEvolve);
 
-                // If the gotchi tried to evolve but failed, update its evolution timestamp so that we get a valid state (i.e., not "ready to evolve").
-                // (Note that it will have already been updated in the database by this point.)
-                if (gotchiToEvolve.IsReadyToEvolve() && !evolved)
-                    gotchiToEvolve.EvolvedTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                // If the user's primary gotchi was ready to evolve but wasn't able to, reset its evolution timestamp.
+                // The timestamp will have already been updated in the database, but we don't want "IsReadyToEvolve" to return true. 
+
+                if (gotchi.Id == gotchiToEvolve.Id && gotchiToEvolve.IsReadyToEvolve() && !evolved)
+                    gotchi.EvolvedTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             }
 

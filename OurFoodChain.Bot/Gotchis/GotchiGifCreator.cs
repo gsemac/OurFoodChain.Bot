@@ -7,18 +7,6 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchis {
 
-    public enum GotchiState {
-        Happy,
-        Hungry,
-        Eating,
-        Dead,
-        Energetic,
-        Sleeping,
-        Tired,
-        ReadyToEvolve,
-        Visiting
-    }
-
     public class GotchiGifCreatorParams {
 
         public Gotchi gotchi = null;
@@ -340,7 +328,7 @@ namespace OurFoodChain.Gotchis {
                     fname = "bubble_tired.png";
                     break;
 
-                case GotchiState.ReadyToEvolve:
+                case GotchiState.Evolved:
                     fname = "bubble_evolved.png";
                     break;
 

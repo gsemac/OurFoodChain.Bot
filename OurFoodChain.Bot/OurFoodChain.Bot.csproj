@@ -522,6 +522,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\updates\update025.sql" />
+    <Content Include="data\updates\update026.sql" />
     <None Include="data\help\addzonetype.json" />
     <Content Include="data\updates\update001.sql" />
     <Content Include="data\updates\update010.sql" />

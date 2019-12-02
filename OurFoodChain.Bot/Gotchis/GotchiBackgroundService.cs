@@ -51,8 +51,21 @@ namespace OurFoodChain.Gotchis {
                 foreach (IGrouping<ulong, Gotchi> userGotchis in (await GotchiUtils.GetGotchisAsync()).GroupBy(g => g.OwnerId)) {
 
                     await DoAutoFeederAsync(userGotchis.Key, userGotchis);
+                    await DoEvolveAsync(userGotchis.Key, userGotchis);
 
                 }
+
+            }
+
+        }
+        private async Task DoEvolveAsync(ulong userId, IEnumerable<Gotchi> userGotchis) {
+
+            // Gotchi evolution (time-based)
+
+            foreach (Gotchi gotchi in userGotchis) {
+
+                if (gotchi.CanEvolve)
+                    await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi);
 
             }
 
@@ -68,7 +81,7 @@ namespace OurFoodChain.Gotchis {
 
                 if (userInfo != null && userInfo.G >= costPerFeeding) {
 
-                    int gotchisFed = userGotchis.Where(g => g.IsHungry()).Count();
+                    int gotchisFed = userGotchis.Where(g => g.IsHungry).Count();
 
                     if (gotchisFed > 0) {
 

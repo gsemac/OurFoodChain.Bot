@@ -7,6 +7,17 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchis {
 
+    public enum GotchiState {
+        Happy,
+        Hungry,
+        Eating,
+        Dead,
+        Energetic,
+        Sleeping,
+        Tired,
+        Evolved
+    }
+
     public class Gotchi {
 
         // Public members
@@ -29,6 +40,7 @@ namespace OurFoodChain.Gotchis {
         public long BornTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
         public long DiedTimestamp { get; set; } = 0;
         public long EvolvedTimestamp { get; set; } = 0;
+        public long ViewedTimestamp { get; set; } = 0;
 
         public int Experience { get; set; } = 0;
 
@@ -42,14 +54,80 @@ namespace OurFoodChain.Gotchis {
             }
         }
 
-        public bool IsSleeping() {
+        public bool IsAlive {
+            get {
 
-            return (HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - Global.GotchiContext.Config.SleepHours);
+                return HoursSinceFed() <= (HoursPerDay * Global.GotchiContext.Config.MaxMissedFeedings);
 
+            }
         }
+        public bool IsSleeping {
+            get {
+
+                return (HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - Global.GotchiContext.Config.SleepHours);
+
+            }
+        }
+        public bool IsEating {
+            get {
+
+                return HoursSinceFed() < 1;
+
+            }
+        }
+        public bool IsHungry {
+            get {
+
+                return HoursSinceFed() > 12;
+
+            }
+        }
+        public bool IsEvolved {
+            get {
+
+                // Returns true if the gotchi has evolved since the last time it was viewed.
+                // The gotchi must have been viewed at least once before (to prevent new gotchis from appearing to have evolved).
+
+                return ViewedTimestamp > 0 && ViewedTimestamp < EvolvedTimestamp;
+
+            }
+        }
+
+        public bool CanEvolve {
+            get {
+
+                return IsAlive && HoursSinceEvolved() >= 7 * 24;
+
+            }
+        }
+
+        public GotchiState State {
+            get {
+
+                if (!IsAlive)
+                    return GotchiState.Dead;
+                else if (IsSleeping)
+                    return GotchiState.Sleeping;
+                else if (IsEvolved)
+                    return GotchiState.Evolved;
+                else if (IsHungry)
+                    return GotchiState.Hungry;
+                else if (IsEating)
+                    return GotchiState.Eating;
+                else if (HoursSinceLastSlept() < 1)
+                    return GotchiState.Energetic;
+                else if (HoursUntilSleep() <= 1)
+                    return GotchiState.Tired;
+
+                return GotchiState.Happy;
+
+
+            }
+        }
+
         public long HoursOfSleepLeft() {
 
-            if (!IsSleeping())
+            if (!IsSleeping)
                 return 0;
 
             return HoursPerDay - (HoursSinceBirth() % HoursPerDay);
@@ -57,7 +135,7 @@ namespace OurFoodChain.Gotchis {
         }
         public long HoursSinceLastSlept() {
 
-            if (IsSleeping())
+            if (IsSleeping)
                 return 0;
 
             return HoursSinceBirth() % HoursPerDay;
@@ -65,25 +143,10 @@ namespace OurFoodChain.Gotchis {
         }
         public long HoursUntilSleep() {
 
-            if (IsSleeping())
+            if (IsSleeping)
                 return 0;
 
             return (HoursPerDay - Global.GotchiContext.Config.SleepHours) - (HoursSinceBirth() % HoursPerDay);
-
-        }
-        public bool IsEating() {
-
-            return HoursSinceFed() < 1;
-
-        }
-        public bool IsHungry() {
-
-            return HoursSinceFed() > 12;
-
-        }
-        public bool IsDead() {
-
-            return HoursSinceFed() > (HoursPerDay * Global.GotchiContext.Config.MaxMissedFeedings);
 
         }
         public long HoursSinceBirth() {
@@ -114,31 +177,6 @@ namespace OurFoodChain.Gotchis {
             long hours_diff = ts_diff / 60 / 60;
 
             return hours_diff;
-
-        }
-        public bool IsReadyToEvolve() {
-
-            return !IsDead() && HoursSinceEvolved() >= 7 * 24;
-
-        }
-        public GotchiState State() {
-
-            if (IsDead())
-                return GotchiState.Dead;
-            else if (IsSleeping())
-                return GotchiState.Sleeping;
-            else if (IsReadyToEvolve())
-                return GotchiState.ReadyToEvolve;
-            else if (IsHungry())
-                return GotchiState.Hungry;
-            else if (IsEating())
-                return GotchiState.Eating;
-            else if (HoursSinceLastSlept() < 1)
-                return GotchiState.Energetic;
-            else if (HoursUntilSleep() <= 1)
-                return GotchiState.Tired;
-
-            return GotchiState.Happy;
 
         }
 

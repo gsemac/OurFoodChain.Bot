@@ -285,12 +285,17 @@ namespace OurFoodChain.Gotchis {
             }
 
             // Update the gotchi in the database.
-            // Update the evolution timestamp, even if it didn't evolve (in case it has an evolution available next week).
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts WHERE id=$id;")) {
 
                 cmd.Parameters.AddWithValue("$species_id", gotchi.SpeciesId);
-                cmd.Parameters.AddWithValue("$evolved_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+
+                // The "last evolved" timestamp is now only updated in the event the gotchi evolves (in order to make the "IsEvolved" check work correctly).
+                // Note that this means that the background service will attempt to evolve the gotchi at every iteration (unless it evolves by leveling).
+
+                if (evolved)
+                    cmd.Parameters.AddWithValue("$evolved_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+
                 cmd.Parameters.AddWithValue("$id", gotchi.Id);
 
                 await Database.ExecuteNonQuery(cmd);

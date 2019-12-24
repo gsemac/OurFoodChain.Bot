@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -311,7 +312,7 @@ namespace OurFoodChain.Taxa {
 
         }
 
-        public async Task<SearchQueryResult> GetResultAsync() {
+        public async Task<SearchQueryResult> GetResultAsync(Bot.IOurFoodChainBotConfiguration botConfiguration) {
 
             // Build up a list of conditions to query for.
 
@@ -350,7 +351,7 @@ namespace OurFoodChain.Taxa {
             }
 
             // Apply any post-match modifiers (e.g. groupings), and return the result.
-            SearchQueryResult result = await ApplyPostMatchModifiersAsync(matches);
+            SearchQueryResult result = await ApplyPostMatchModifiersAsync(matches, botConfiguration);
 
             // Return the result.
             return result;
@@ -364,19 +365,19 @@ namespace OurFoodChain.Taxa {
             return input.Contains(":");
 
         }
-        private async Task<SearchQueryResult> ApplyPostMatchModifiersAsync(List<Species> matches) {
+        private async Task<SearchQueryResult> ApplyPostMatchModifiersAsync(List<Species> matches, Bot.IOurFoodChainBotConfiguration botConfiguration) {
 
             SearchQueryResult result = new SearchQueryResult();
 
             result.Add(DefaultGroupName, matches.ToArray());
 
             foreach (string modifier in searchModifiers)
-                await ApplyPostMatchModifierAsync(result, modifier);
+                await ApplyPostMatchModifierAsync(result, modifier, botConfiguration);
 
             return result;
 
         }
-        private async Task ApplyPostMatchModifierAsync(SearchQueryResult result, string modifier) {
+        private async Task ApplyPostMatchModifierAsync(SearchQueryResult result, string modifier, Bot.IOurFoodChainBotConfiguration botConfiguration) {
 
             int split_index = modifier.IndexOf(':');
             string name = modifier.Substring(0, split_index).Trim();
@@ -503,7 +504,7 @@ namespace OurFoodChain.Taxa {
 
                         case "gen":
                         case "generation":
-                            if (Bot.OurFoodChainBot.Instance.Config.GenerationsEnabled)
+                            if (botConfiguration.GenerationsEnabled)
                                 await result.GroupByAsync(async (x) => {
                                     return new string[] { (await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp)).Name };
                                 });
@@ -626,7 +627,7 @@ namespace OurFoodChain.Taxa {
 
                 case "owner":
 
-                    Discord.IUser user = await Bot.DiscordUtils.GetUserFromUsernameOrMentionAsync(context, value);
+                    IUser user = await Bot.DiscordUtils.GetUserFromUsernameOrMentionAsync(context, value);
 
                     await result.FilterByAsync(async (x) => {
                         return (user is null) ? ((await SpeciesUtils.GetOwnerOrDefaultAsync(x, context)).ToLower() != value.ToLower()) : (ulong)x.OwnerUserId != user.Id;
@@ -956,7 +957,7 @@ namespace OurFoodChain.Taxa {
 
                 case "gen":
                 case "generation":
-                    if (Bot.OurFoodChainBot.Instance.Config.GenerationsEnabled)
+                    if (botConfiguration.GenerationsEnabled)
                         await result.FilterByAsync(async (x) => {
 
                             Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp);

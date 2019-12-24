@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot", "OurFoodChain.Bot\OurFoodChain.Bot.csproj", "{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Wiki", "OurFoodChain.Wiki\OurFoodChain.Wiki.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot.Test", "OurFoodChain.Bot.Test\OurFoodChain.Bot.Test.csproj", "{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain", "OurFoodChain\OurFoodChain.csproj", "{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Discord", "OurFoodChain.Discord\OurFoodChain.Discord.csproj", "{21E5D854-183F-4C24-94E4-6C3B0B31FE85}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{721AB7CC-0FF9-4E5E-9625-378D3046AE76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bot", "Bot", "{80E36021-690B-44B2-9F55-FAD6D8B97705}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{DCA900D3-E9A9-4A39-9064-EC28A78537BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBFC575F-C02A-485E-AB50-487805FDBC54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21E5D854-183F-4C24-94E4-6C3B0B31FE85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21E5D854-183F-4C24-94E4-6C3B0B31FE85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21E5D854-183F-4C24-94E4-6C3B0B31FE85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21E5D854-183F-4C24-94E4-6C3B0B31FE85}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8EA1FE67-F170-45B4-ABB0-A1DD6142C389} = {80E36021-690B-44B2-9F55-FAD6D8B97705}
+		{FBFC575F-C02A-485E-AB50-487805FDBC54} = {80E36021-690B-44B2-9F55-FAD6D8B97705}
+		{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE} = {DCA900D3-E9A9-4A39-9064-EC28A78537BE}
+		{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
+		{21E5D854-183F-4C24-94E4-6C3B0B31FE85} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C34FBF8-4A80-4981-9067-5148B43D4D55}
+	EndGlobalSection
+EndGlobal

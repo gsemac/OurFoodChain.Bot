@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using MoonSharp.Interpreter;
+using OurFoodChain.Bot;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,6 +41,13 @@ namespace OurFoodChain.Gotchis {
         public bool accepted = false;
         public int turnCount = 0;
         public string battleText = "";
+
+        public GotchiBattleState(IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient discordClient) {
+
+            _botConfiguration = botConfiguration;
+            _discordClient = discordClient;
+
+        }
 
         public async Task<IUser> GetPlayer1UserAsync(ICommandContext context) {
 
@@ -239,11 +248,11 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public static async Task RegisterBattleAsync(ICommandContext context, Gotchi gotchi1, Gotchi gotchi2) {
+        public static async Task RegisterBattleAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient discordClient, Gotchi gotchi1, Gotchi gotchi2) {
 
             // Initialize the battle state.
 
-            GotchiBattleState state = new GotchiBattleState {
+            GotchiBattleState state = new GotchiBattleState(botConfiguration, discordClient) {
 
                 // Initialize Player 1 (which must be a human player).
 
@@ -308,7 +317,7 @@ namespace OurFoodChain.Gotchis {
             sb.AppendLine("The battle has begun!");
             sb.AppendLine();
             sb.AppendLine(string.Format("Pick a move with `{0}gotchi move`.\nSee your gotchi's moveset with `{0}gotchi moveset`.",
-                Bot.OurFoodChainBot.Instance.Config.Prefix));
+                botConfiguration.Prefix));
 
             state.battleText = sb.ToString();
 
@@ -356,7 +365,7 @@ namespace OurFoodChain.Gotchis {
                 auto = false
             };
 
-            gif_url = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(context, new GotchiGifCreatorParams[] { p1, p2 }, new GotchiGifCreatorExtraParams {
+            gif_url = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(context, state._botConfiguration, state._discordClient, new GotchiGifCreatorParams[] { p1, p2 }, new GotchiGifCreatorExtraParams {
                 backgroundFileName = await GotchiUtils.GetGotchiBackgroundFileNameAsync(state.player2.Gotchi.Gotchi, "home_battle.png"),
                 overlay = (Graphics gfx) => {
 
@@ -387,6 +396,9 @@ namespace OurFoodChain.Gotchis {
             await context.Channel.SendMessageAsync("", false, embed.Build());
 
         }
+
+        private readonly IOurFoodChainBotConfiguration _botConfiguration;
+        private readonly DiscordSocketClient _discordClient;
 
         private async Task _useMoveOnAsync(ICommandContext context, PlayerState user, PlayerState target) {
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Gotchis {
 
     public class GotchiConfig :
-        ConfigBase<GotchiConfig> {
+        Discord.ConfigurationBase {
 
         [JsonProperty("sleep_hours")]
         public int SleepHours { get; set; } = 8;

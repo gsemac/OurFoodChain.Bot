@@ -1,4 +1,5 @@
-﻿using MoonSharp.Interpreter;
+﻿using Discord;
+using MoonSharp.Interpreter;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -121,11 +122,7 @@ namespace OurFoodChain.Gotchis {
         }
         private async Task _logAsync(LogSeverity severity, string message) {
 
-            await LogAsync?.Invoke(new LogMessage {
-                Source = "Gotchi",
-                Severity = severity,
-                Message = message
-            });
+            await LogAsync?.Invoke(new LogMessage(severity, "Gotchi", message));
 
         }
 

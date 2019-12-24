@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,11 +29,7 @@ namespace OurFoodChain.Gotchis {
 
         private async Task _logAsync(LogSeverity severity, string message) {
 
-            await LogAsync?.Invoke(new LogMessage {
-                Source = "Gotchi",
-                Severity = severity,
-                Message = message
-            });
+            await LogAsync?.Invoke(new LogMessage(severity, "Gotchi", message));
 
         }
 

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Discord;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -97,21 +98,22 @@ namespace OurFoodChain {
             if (versionNumber <= 0)
                 return;
 
-            await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Database", string.Format("Updating database to version {0}", versionNumber));
+            Console.WriteLine(new LogMessage(LogSeverity.Info, "Database", string.Format("Updating database to version {0}", versionNumber)).ToString());
 
-            string update_fname = System.IO.Path.Combine(Config.UpdatesDirectory, string.Format(Config.FileNameFormat, versionNumber));
+            string sqlUpdateFilePath = System.IO.Path.Combine(Config.UpdatesDirectory, string.Format(Config.FileNameFormat, versionNumber));
 
-            if (!System.IO.File.Exists(update_fname))
-                throw new Exception(string.Format("Update file {0} does not exist.", System.IO.Path.GetFileName(update_fname)));
+            if (!System.IO.File.Exists(sqlUpdateFilePath))
+                throw new Exception(string.Format("Update file {0} does not exist.", System.IO.Path.GetFileName(sqlUpdateFilePath)));
 
-            using (SQLiteCommand cmd = new SQLiteCommand(System.IO.File.ReadAllText(update_fname), Connection))
+            using (SQLiteCommand cmd = new SQLiteCommand(System.IO.File.ReadAllText(sqlUpdateFilePath), Connection))
                 await cmd.ExecuteNonQueryAsync();
 
             // Update the database version.
 
             await _setDatabaseVersionAsync(versionNumber);
 
-            await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Info, "Database", string.Format("Updated database to version {0}", versionNumber));
+            Console.WriteLine(new LogMessage(LogSeverity.Info, "Database", string.Format("Updated database to version {0}", versionNumber)).ToString());
+
 
         }
 

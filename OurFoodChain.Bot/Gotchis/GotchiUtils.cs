@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Newtonsoft.Json;
+using OurFoodChain.Bot;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -533,7 +535,8 @@ namespace OurFoodChain.Gotchis {
                 catch (Exception ex) {
 
                     // We'll just keep using the default picture if this happens.
-                    await Bot.OurFoodChainBot.Instance.LogAsync(Discord.LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.Picture, ex.ToString()));
+
+                    Console.WriteLine(new LogMessage(LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.Picture, ex.ToString())).ToString());
 
                 }
 
@@ -598,22 +601,23 @@ namespace OurFoodChain.Gotchis {
             return outputPath;
 
         }
-        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, Gotchi gotchi) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient client, Gotchi gotchi) {
 
             GotchiGifCreatorParams p = new GotchiGifCreatorParams {
                 gotchi = gotchi,
                 auto = true
             };
 
-            return await GenerateAndUploadGotchiGifAndReplyAsync(context, new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
+            return await GenerateAndUploadGotchiGifAndReplyAsync(context, botConfiguration, client,
+                new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
 
         }
-        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient client, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
             string file_path = await GenerateGotchiGifAsync(gifParams, extraParams);
 
             if (!string.IsNullOrEmpty(file_path))
-                return await BotUtils.Reply_UploadFileToScratchServerAsync(context, file_path, deleteAfterUpload: true);
+                return await BotUtils.Reply_UploadFileToScratchServerAsync(context, botConfiguration, client, file_path, deleteAfterUpload: true);
 
             await BotUtils.ReplyAsync_Error(context, "Failed to generate gotchi image.");
 

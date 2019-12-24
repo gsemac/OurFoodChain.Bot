@@ -13,14 +13,28 @@ namespace OurFoodChain {
 
         public async Task MainAsync(string[] args) {
 
-            Bot.OurFoodChainBot bot = new Bot.OurFoodChainBot();
+            string configFilePath = "config.json";
 
-            await bot.LoadConfigAsync("config.json");
+            if (!System.IO.File.Exists(configFilePath)) {
 
-            await bot.StartAsync();
+                new Bot.OurFoodChainBotConfiguration().Save(configFilePath);
 
-            // Block this task until the program is closed.
-            await Task.Delay(-1);
+                Console.WriteLine("Configuration file \"config.json\" has been generated. Fill out the configuration file, and then run this program again.");
+
+            }
+            else {
+
+                Bot.OurFoodChainBotConfiguration configuration =
+                    Discord.ConfigurationBase.Open<Bot.OurFoodChainBotConfiguration>(configFilePath);
+
+                Bot.OurFoodChainBot bot = new Bot.OurFoodChainBot(configuration);
+
+                await bot.StartAsync();
+
+                // Block this task until the program is closed.
+                await Task.Delay(-1);
+
+            }
 
         }
 

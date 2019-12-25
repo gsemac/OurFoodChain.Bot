@@ -24,10 +24,10 @@ namespace OurFoodChain.Bot.Services {
         public override async Task InstallCommandsAsync() {
 
             await base.InstallCommandsAsync();
-            
+
             if (!_configuration.TrophiesEnabled)
                 await CommandService.RemoveModuleAsync<Modules.TrophiesModule>();
-            Console.WriteLine(_configuration.GotchisEnabled);
+
             if (!_configuration.GotchisEnabled)
                 await CommandService.RemoveModuleAsync<Modules.GotchiModule>();
 

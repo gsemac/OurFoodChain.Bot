@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Discord.Services {
 
     public class LoggingService :
-        ILoggingService {
+        LoggingServiceBase {
 
         // Public members
 
@@ -22,19 +22,9 @@ namespace OurFoodChain.Discord.Services {
             commands.Log += LogCommandAsync;
         }
 
-        public async Task LogAsync(LogMessage logMessage) {
+        public override async Task LogAsync(LogMessage logMessage) {
 
             await LogAsync(logMessage.Source, logMessage);
-
-        }
-        public async Task LogAsync(string source, string message) {
-
-            await LogAsync(LogSeverity.Info, source, message);
-
-        }
-        public async Task LogAsync(LogSeverity severity, string source, string message) {
-
-            await LogAsync(new LogMessage(severity, source, message));
 
         }
 

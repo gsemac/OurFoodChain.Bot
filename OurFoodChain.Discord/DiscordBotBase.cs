@@ -79,7 +79,7 @@ namespace OurFoodChain.Discord {
 
             services.AddLogging(opts => opts.AddConsole());
 
-            services.TryAddSingleton<ILoggingService, LoggingService>();
+            services.TryAddSingleton<ILoggingService, ConsoleLoggingService>();
 
             services.AddSingleton(Configuration);
 

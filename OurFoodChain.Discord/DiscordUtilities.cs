@@ -77,7 +77,7 @@ namespace OurFoodChain.Discord {
                 if (helpInfo.Examples != null && helpInfo.Examples.Count() > 0) {
 
                     builder.AddField("Example(s)", string.Join(Environment.NewLine, helpInfo.Examples
-                        .Select(i => string.Format("`{0}{1}`", botConfiguration.Prefix, i))));
+                        .Select(i => string.Format("`{0}{1}{2}`", botConfiguration.Prefix, helpInfo.Group + (helpInfo.Group.Length > 0 ? " " : string.Empty), i))));
 
                 }
 

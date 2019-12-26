@@ -73,15 +73,19 @@ namespace OurFoodChain.Discord {
 
             services
                 .AddSingleton(Client)
-                .AddSingleton<CommandService>();
+                .AddSingleton<CommandService>()
+                .AddSingleton(Configuration);
+
+            // Commands
 
             services.TryAddSingleton<ICommandHandlingService, CommandHandlingService>();
+            services.TryAddSingleton<IHelpService, HelpService>();
 
-            services.AddLogging(opts => opts.AddConsole());
+            // Logging
 
-            services.TryAddSingleton<ILoggingService, ConsoleLoggingService>();
-
-            services.AddSingleton(Configuration);
+            services
+                .AddLogging(opts => opts.AddConsole())
+                .TryAddSingleton<ILoggingService, ConsoleLoggingService>();
 
             return await Task.FromResult(services);
 

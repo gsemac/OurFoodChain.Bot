@@ -15,7 +15,12 @@ namespace OurFoodChain.Discord.Services {
 
         // Public members
 
-        public CommandHandlingService(IServiceProvider serviceProvider, DiscordSocketClient discordClient, CommandService commandService, IBotConfiguration configuration) {
+        public CommandHandlingService(
+            IBotConfiguration configuration,
+            IServiceProvider serviceProvider,
+            DiscordSocketClient discordClient,
+            CommandService commandService
+            ) {
 
             _discordClient = discordClient;
             _configuration = configuration;

@@ -14,8 +14,13 @@ namespace OurFoodChain.Bot.Services {
 
         // Public members
 
-        public OurFoodChainBotCommandHandlingService(IServiceProvider serviceProvider, DiscordSocketClient discordClient, CommandService commandService, IOurFoodChainBotConfiguration configuration) :
-            base(serviceProvider, discordClient, commandService, configuration) {
+        public OurFoodChainBotCommandHandlingService(
+            IOurFoodChainBotConfiguration configuration,
+            IServiceProvider serviceProvider,
+            DiscordSocketClient discordClient,
+            CommandService commandService
+            ) :
+            base(configuration, serviceProvider, discordClient, commandService) {
 
             _configuration = configuration;
 

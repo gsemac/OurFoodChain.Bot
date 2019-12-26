@@ -20,6 +20,7 @@ namespace OurFoodChain.Bot.Modules {
         public Discord.Services.ICommandHandlingService CommandHandlingService { get; set; }
         public IServiceProvider ServiceProvider { get; set; }
         public DiscordSocketClient DiscordClient { get; set; }
+        public Discord.Services.IHelpService HelpService { get; set; }
 
         [Command]
         public async Task Gotchi() {
@@ -622,13 +623,17 @@ namespace OurFoodChain.Bot.Modules {
         [Command("help"), Alias("h")]
         public async Task Help() {
 
-            await HelpModule.ShowHelpCategory(Context, CommandHandlingService, ServiceProvider, BotConfiguration, HelpUtils.HELP_DIRECTORY + "/gotchi", "gotchi");
+            IEnumerable<Discord.ICommandHelpInfo> helpInfos = await HelpService.GetCommandHelpInfoAsync(Context);
+
+            await ReplyAsync(embed: Discord.DiscordUtilities.BuildCommandHelpInfoEmbed(helpInfos, BotConfiguration, "gotchi").Build());
 
         }
         [Command("help"), Alias("h")]
-        public async Task Help(string command) {
+        public async Task Help(string commandName) {
 
-            await HelpModule.ShowHelp(Context, CommandHandlingService, ServiceProvider, BotConfiguration, "gotchi", command);
+            Discord.ICommandHelpInfo helpInfo = await HelpService.GetCommandHelpInfoAsync("gotchi " + commandName.Trim());
+
+            await ReplyAsync(embed: Discord.DiscordUtilities.BuildCommandHelpInfoEmbed(helpInfo, BotConfiguration).Build());
 
         }
 

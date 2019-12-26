@@ -12,6 +12,9 @@ namespace OurFoodChain.Discord {
         string Playing { get; set; }
         string Prefix { get; set; }
 
+        string DataDirectory { get; set; }
+        string HelpDirectory { get; }
+
     }
 
 }

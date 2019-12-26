@@ -17,10 +17,11 @@ namespace OurFoodChain.Bot.Services {
         public OurFoodChainBotCommandHandlingService(
             IOurFoodChainBotConfiguration configuration,
             IServiceProvider serviceProvider,
+            Discord.Services.IHelpService helpService,
             DiscordSocketClient discordClient,
             CommandService commandService
             ) :
-            base(configuration, serviceProvider, discordClient, commandService) {
+            base(configuration, serviceProvider, helpService, discordClient, commandService) {
 
             _configuration = configuration;
 
@@ -45,50 +46,7 @@ namespace OurFoodChain.Bot.Services {
             if (await DiscordUtils.HandleMultiPartMessageResponseAsync(rawMessage))
                 return;
 
-            if (rawMessage.Content == _configuration.Prefix)
-                return;
-
-            if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage)) {
-
-                IResult commandResult = await HandleCommandAsync(rawMessage);
-
-                if (!commandResult.IsSuccess) {
-
-                    bool showErrorMessage = true;
-
-                    if (commandResult.Error == CommandError.BadArgCount) {
-
-                        // Get the name of the command that the user attempted to use.
-
-                        string commandName = GetCommandName(rawMessage);
-
-                        // If help documentation exists for this command, display it.
-
-                        CommandHelpInfo commandHelpInfo = HelpUtils.GetCommandInfo(commandName);
-
-                        if (commandHelpInfo != null) {
-
-                            EmbedBuilder embed = new EmbedBuilder();
-
-                            embed.WithColor(Color.Red);
-                            embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", commandName));
-                            embed.WithDescription("❌ " + commandResult.ErrorReason);
-                            embed.AddField("Example(s) of correct usage:", commandHelpInfo.ExamplesToString(_configuration.Prefix));
-
-                            await rawMessage.Channel.SendMessageAsync("", false, embed.Build());
-
-                            showErrorMessage = false;
-
-                        }
-
-                    }
-
-                    if (showErrorMessage)
-                        await Discord.DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, commandResult.ErrorReason);
-
-                }
-
-            }
+            await base.MessageReceivedAsync(rawMessage);
 
         }
 

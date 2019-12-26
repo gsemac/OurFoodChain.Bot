@@ -17,13 +17,11 @@ namespace OurFoodChain.Discord.Services {
         public HelpService(
             IBotConfiguration botConfiguration,
             IServiceProvider serviceProvider,
-            ICommandHandlingService commandHandlingService,
             CommandService commandService
             ) {
 
             _botConfiguration = botConfiguration;
             _serviceProvider = serviceProvider;
-            _commandHandlingService = commandHandlingService;
             _commandService = commandService;
 
         }
@@ -114,7 +112,9 @@ namespace OurFoodChain.Discord.Services {
         }
         public async Task<bool> IsCommandAvailableAsync(ICommandContext context, string commandName) {
 
-            CommandInfo commandInfo = _commandHandlingService.GetCommandInfo(commandName);
+            CommandInfo commandInfo = _commandService.Commands
+                .Where(i => i.Name.Equals(commandName, StringComparison.OrdinalIgnoreCase) || i.Aliases.Any(a => a.Equals(commandName, StringComparison.OrdinalIgnoreCase)))
+                .FirstOrDefault();
 
             if (commandInfo is null)
                 return false;
@@ -130,7 +130,6 @@ namespace OurFoodChain.Discord.Services {
 
         private readonly IBotConfiguration _botConfiguration;
         private readonly IServiceProvider _serviceProvider;
-        private readonly ICommandHandlingService _commandHandlingService;
         private readonly CommandService _commandService;
 
         private string GetFullCommandName(CommandInfo commandInfo) {

@@ -18,14 +18,16 @@ namespace OurFoodChain.Discord.Services {
         public CommandHandlingService(
             IBotConfiguration configuration,
             IServiceProvider serviceProvider,
+            IHelpService helpService,
             DiscordSocketClient discordClient,
             CommandService commandService
             ) {
 
-            _discordClient = discordClient;
             _configuration = configuration;
-            CommandService = commandService;
             _serviceProvider = serviceProvider;
+            _helpService = helpService;
+            _discordClient = discordClient;
+            CommandService = commandService;
 
             _discordClient.MessageReceived += MessageReceivedAsync;
 
@@ -68,8 +70,51 @@ namespace OurFoodChain.Discord.Services {
 
         protected virtual async Task MessageReceivedAsync(SocketMessage rawMessage) {
 
-            if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage))
-                await HandleCommandAsync(rawMessage);
+            if (rawMessage.Content == _configuration.Prefix)
+                return;
+
+            if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage)) {
+
+                IResult commandResult = await HandleCommandAsync(rawMessage);
+
+                if (!commandResult.IsSuccess) {
+
+                    bool showErrorMessage = true;
+
+                    if (commandResult.Error == CommandError.BadArgCount) {
+
+                        // Get the name of the command that the user attempted to use.
+
+                        string commandName = GetCommandName(rawMessage);
+
+                        // If help documentation exists for this command, display it.
+
+                        ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(commandName);
+
+                        if (commandHelpInfo != null) {
+
+                            EmbedBuilder embed = new EmbedBuilder();
+
+                            embed.WithColor(Color.Red);
+                            embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", commandName.ToLower()));
+                            embed.WithDescription("❌ " + commandResult.ErrorReason);
+                            embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
+                                .Select(e => string.Format("`{0}{1}`", _configuration.Prefix, e))));
+
+                            await rawMessage.Channel.SendMessageAsync("", false, embed.Build());
+
+                            showErrorMessage = false;
+
+                        }
+
+                    }
+
+                    if (showErrorMessage)
+                        await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, commandResult.ErrorReason);
+
+                }
+
+            }
 
         }
 
@@ -130,9 +175,10 @@ namespace OurFoodChain.Discord.Services {
 
         // Private members
 
-        private readonly DiscordSocketClient _discordClient;
-        private readonly IBotConfiguration _configuration;
         private IServiceProvider _serviceProvider;
+        private readonly IBotConfiguration _configuration;
+        private readonly IHelpService _helpService;
+        private readonly DiscordSocketClient _discordClient;
 
     }
 

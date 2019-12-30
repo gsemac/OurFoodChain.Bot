@@ -30,7 +30,7 @@ namespace OurFoodChain.Gotchis {
         public long SpeciesId { get; set; } = Species.NullId;
         public string Name {
             get {
-                return StringUtilities.ToTitleCase(_name);
+                return StringUtilities.ToTitleCase(_name, TitleOptions.CapitalizeRomanNumerals);
             }
             set {
                 _name = value;

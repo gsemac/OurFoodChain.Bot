@@ -8,22 +8,37 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Utilities {
 
+    public enum TitleOptions {
+        None = 0,
+        CapitalizeRomanNumerals = 1
+    }
+
+    public enum SentenceOptions {
+        None = 0,
+        BreakOnInitials = 1
+    }
+
     public static class StringUtilities {
 
-        public static string ToTitleCase(string input) {
+        public static string ToTitleCase(string input, TitleOptions options = TitleOptions.None) {
 
             if (string.IsNullOrEmpty(input))
                 return string.Empty;
 
-            string output = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+            string output = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(input.ToLowerInvariant());
 
             // Fix possessive "'s" so it's not capitalized (since "ToTitleCase" capitalizes it).
             // E.g. Widow'S Peak -> Widow's Peak
             output = Regex.Replace(output, @"\b(['’])S\b", "$1s");
 
-            // Fix Roman numerals so that they are completely capitalized (e.g. III, IV).
-            // Regex adapted from: https://www.oreilly.com/library/view/regular-expressions-cookbook/9780596802837/ch06s09.html
-            output = Regex.Replace(output, @"\b(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\b", x => x.Value.ToUpper(), RegexOptions.IgnoreCase);
+            if (options.HasFlag(TitleOptions.CapitalizeRomanNumerals)) {
+
+                // Fix Roman numerals so that they are completely capitalized (e.g. III, IV).
+                // Regex adapted from: https://www.oreilly.com/library/view/regular-expressions-cookbook/9780596802837/ch06s09.html
+
+                output = Regex.Replace(output, @"\b(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\b", x => x.Value.ToUpper(), RegexOptions.IgnoreCase);
+
+            }
 
             return output;
 
@@ -62,10 +77,18 @@ namespace OurFoodChain.Utilities {
         public static string ConjunctiveJoin(string separator, IEnumerable<string> values) {
             return _joinWithUniqueEndSeparator(separator, separator.EndsWith(" ") && values.Count() > 2 ? "and " : " and ", values);
         }
-        public static string GetFirstSentence(string value) {
+        public static string GetFirstSentence(string value, SentenceOptions options = SentenceOptions.None) {
 
+            string pattern = @"^.+?(?:\s\w{2,}\.+|[;!\?]+)";
             string result = value;
-            Match match = Regex.Match(value, @"^.+?[\.;!\?]+", RegexOptions.Multiline);
+
+            // By default, we don't break on initializations (e.g. the period in "C. aspersum").
+            // The user can optionally enable this behavior.
+
+            if (options.HasFlag(SentenceOptions.BreakOnInitials))
+                pattern = @"^.+?[\.;!\?]+";
+
+            Match match = Regex.Match(value, pattern, RegexOptions.Multiline);
 
             if (match.Success && match.Length > 0)
                 result = match.Value;

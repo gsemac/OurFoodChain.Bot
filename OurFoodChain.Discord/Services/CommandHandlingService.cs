@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,21 +50,6 @@ namespace OurFoodChain.Discord.Services {
 
         }
 
-        public bool CommandIsRegistered(string commandName) {
-
-            return GetCommandInfo(commandName) != null;
-
-        }
-        public CommandInfo GetCommandInfo(string commandName) {
-
-            foreach (CommandInfo info in CommandService.Commands)
-                if (info.Name.ToLower() == commandName.ToLower() || info.Aliases.Any(y => y.ToLower() == commandName.ToLower()))
-                    return info;
-
-            return null;
-
-        }
-
         // Protected members
 
         protected CommandService CommandService { get; private set; }
@@ -77,42 +63,8 @@ namespace OurFoodChain.Discord.Services {
 
                 IResult commandResult = await HandleCommandAsync(rawMessage);
 
-                if (!commandResult.IsSuccess) {
-
-                    bool showErrorMessage = true;
-
-                    if (commandResult.Error == CommandError.BadArgCount) {
-
-                        // Get the name of the command that the user attempted to use.
-
-                        string commandName = GetCommandName(rawMessage);
-
-                        // If help documentation exists for this command, display it.
-
-                        ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(commandName);
-
-                        if (commandHelpInfo != null) {
-
-                            EmbedBuilder embed = new EmbedBuilder();
-
-                            embed.WithColor(Color.Red);
-                            embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", commandName.ToLower()));
-                            embed.WithDescription("❌ " + commandResult.ErrorReason);
-                            embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
-                                .Select(e => string.Format("`{0}{1}`", _configuration.Prefix, e))));
-
-                            await rawMessage.Channel.SendMessageAsync("", false, embed.Build());
-
-                            showErrorMessage = false;
-
-                        }
-
-                    }
-
-                    if (showErrorMessage)
-                        await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, commandResult.ErrorReason);
-
-                }
+                if (!commandResult.IsSuccess)
+                    await ShowCommandErrorAsync(rawMessage, commandResult);
 
             }
 
@@ -130,19 +82,79 @@ namespace OurFoodChain.Discord.Services {
             return result;
 
         }
+        protected async Task ShowCommandErrorAsync(IMessage rawMessage, IResult result) {
+
+            bool showDefaultErrorMessage = true;
+
+            if (result.Error == CommandError.BadArgCount) {
+
+                // Get the name of the command that the user attempted to use.
+
+                string commandName = GetCommandName(rawMessage);
+
+                // If help documentation exists for this command, display it.
+
+                ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(commandName);
+
+                if (commandHelpInfo != null) {
+
+                    EmbedBuilder embed = new EmbedBuilder();
+
+                    embed.WithColor(Color.Red);
+                    embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", commandName.ToLower()));
+                    embed.WithDescription("❌ " + result.ErrorReason);
+                    embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
+                        .Select(e => string.Format("`{0}{1}{2}`", _configuration.Prefix, commandName, e.SkipWords(1)))));
+
+                    await rawMessage.Channel.SendMessageAsync("", false, embed.Build());
+
+                    showDefaultErrorMessage = false;
+
+                }
+
+            }
+            else if (result.Error == CommandError.UnknownCommand) {
+
+                // Suggest the most-similar command as a possible misspelling.
+
+                string messageContent = rawMessage.Content.Substring(GetCommmandArgumentsStartIndex(rawMessage));
+                string commandName = messageContent.FirstWord();
+
+                if (!string.IsNullOrEmpty(commandName)) {
+
+                    string suggestedCommandName = Utilities.StringUtilities.GetBestMatch(commandName, GetCommandNames());
+                    ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(suggestedCommandName);
+
+                    await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, string.Format("Unknown command. Did you mean **{0}**?",
+                        commandHelpInfo.Name));
+
+                    showDefaultErrorMessage = false;
+
+                }
+
+            }
+
+            if (showDefaultErrorMessage)
+                await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, result.ErrorReason);
+
+        }
 
         protected string GetCommandName(IMessage rawMessage) {
 
             string content = rawMessage.Content.Substring(GetCommmandArgumentsStartIndex(rawMessage));
-            string pattern = @"^[^\s]+";
 
-            System.Text.RegularExpressions.Match match =
-                System.Text.RegularExpressions.Regex.Match(content, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            string commandName = GetCommandNames()
+                .OrderByDescending(c => c.Length)
+                .Where(c => content.StartsWith(c, StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
 
-            if (match.Success)
-                return match.Value;
-            else
-                return string.Empty;
+            return string.IsNullOrEmpty(commandName) ? commandName : commandName.ToLowerInvariant();
+
+        }
+        protected IEnumerable<string> GetCommandNames() {
+
+            return CommandService.Commands
+               .SelectMany(c => new string[] { c.Name }.Union(c.Aliases));
 
         }
         protected int GetCommmandArgumentsStartIndex(IMessage rawMessage) {

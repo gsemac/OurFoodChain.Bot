@@ -11,9 +11,6 @@ namespace OurFoodChain.Discord.Services {
         Task InitializeAsync(IServiceProvider provider);
         Task InstallCommandsAsync();
 
-        bool CommandIsRegistered(string commandName);
-        CommandInfo GetCommandInfo(string commandName);
-
     }
 
 }

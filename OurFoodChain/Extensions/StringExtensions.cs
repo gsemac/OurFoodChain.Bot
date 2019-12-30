@@ -19,6 +19,17 @@ namespace OurFoodChain.Extensions {
 
         }
 
+        public static string FirstWord(this string input) {
+
+            return StringUtilities.FirstWord(input);
+
+        }
+        public static string SkipWords(this string input, int numWords) {
+
+            return StringUtilities.SkipWords(input, numWords);
+
+        }
+
     }
 
 }

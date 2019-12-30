@@ -382,6 +382,43 @@ namespace OurFoodChain.Utilities {
 
         }
 
+        public static IEnumerable<string> ParseArguments(string input) {
+
+            if (!string.IsNullOrEmpty(input))
+                input = input.Trim();
+
+            List<string> arguments = new List<string>();
+
+            string argument = "";
+            bool insideQuotes = false;
+
+            for (int i = 0; i < input.Length; ++i) {
+
+                if (input[i] == '\"') {
+
+                    insideQuotes = !insideQuotes;
+
+                    argument += input[i];
+
+                }
+                else if (!insideQuotes && char.IsWhiteSpace(input[i])) {
+
+                    arguments.Add(argument);
+                    argument = "";
+
+                }
+                else
+                    argument += input[i];
+
+            }
+
+            if (argument.Length > 0)
+                arguments.Add(argument);
+
+            return arguments;
+
+        }
+
         // Private members
 
         private static string JoinWithUniqueEndSeparator(string separator, string endSeparator, IEnumerable<string> values) {

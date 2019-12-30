@@ -16,12 +16,13 @@ namespace OurFoodChain.Taxa {
 
         // Public members
 
+        public string QueryString { get; }
         public IEnumerable<string> Keywords { get; }
         public IEnumerable<ISearchModifier> Modifiers { get; }
 
         public SearchQuery(string queryString) {
 
-            IEnumerable<string> searchTerms = GetSearchTerms(queryString);
+            IEnumerable<string> searchTerms = StringUtilities.ParseArguments(queryString);
             List<string> keywords = new List<string>();
             List<ISearchModifier> modifiers = new List<ISearchModifier>();
 
@@ -36,6 +37,7 @@ namespace OurFoodChain.Taxa {
 
             }
 
+            QueryString = queryString;
             Keywords = keywords;
             Modifiers = modifiers;
 
@@ -46,39 +48,6 @@ namespace OurFoodChain.Taxa {
         private static bool IsSearchModifier(string input) {
 
             return input.Contains(":");
-
-        }
-        private static IEnumerable<string> GetSearchTerms(string queryString) {
-
-            List<string> keywords = new List<string>();
-
-            string keyword = "";
-            bool insideQuotes = false;
-
-            for (int i = 0; i < queryString.Length; ++i) {
-
-                if (queryString[i] == '\"') {
-
-                    insideQuotes = !insideQuotes;
-
-                    keyword += queryString[i];
-
-                }
-                else if (!insideQuotes && char.IsWhiteSpace(queryString[i])) {
-
-                    keywords.Add(keyword);
-                    keyword = "";
-
-                }
-                else
-                    keyword += queryString[i];
-
-            }
-
-            if (keyword.Length > 0)
-                keywords.Add(keyword);
-
-            return keywords.ToArray();
 
         }
 

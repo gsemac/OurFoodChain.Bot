@@ -1255,12 +1255,12 @@ namespace OurFoodChain.Bot.Modules {
 
             if (gotchi != null) {
 
-                Bot.PaginatedMessageBuilder message = new Bot.PaginatedMessageBuilder {
+                PaginatedMessageBuilder message = new PaginatedMessageBuilder {
                     Message = string.Format("Are you sure you want to release **{0}**?", gotchi.Name),
                     Restricted = true,
                     Callback = async args => {
 
-                        if (args.ReactionAdded && args.ReactionType == Bot.PaginatedMessageReaction.Yes) {
+                        if (args.ReactionAdded && args.ReactionType == PaginatedMessageReaction.Yes) {
 
                             // Delete the Gotchi from the database.
                             await GotchiUtils.DeleteGotchiAsync(gotchi.Id);

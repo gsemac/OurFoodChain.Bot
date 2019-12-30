@@ -133,7 +133,7 @@ namespace OurFoodChain.Discord.Services {
                 }
 
             }
-
+    
             if (showDefaultErrorMessage)
                 await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, result.ErrorReason);
 

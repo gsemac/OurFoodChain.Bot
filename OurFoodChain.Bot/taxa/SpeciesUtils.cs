@@ -409,7 +409,7 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task RemoveZonesAsync(Species species, Zone[] zones) {
+        public static async Task RemoveZonesAsync(Species species, IEnumerable<Zone> zones) {
 
             foreach (Zone zone in zones) {
 

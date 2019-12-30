@@ -264,6 +264,7 @@
   <ItemGroup>
     <Compile Include="IOurFoodChainBotConfiguration.cs" />
     <Compile Include="Modules\AdminCommands.cs" />
+    <Compile Include="Modules\BulkModule.cs" />
     <Compile Include="Modules\ConfigurationModule.cs" />
     <Compile Include="Modules\GalleryCommands.cs" />
     <Compile Include="Modules\GenerationCommands.cs" />
@@ -308,6 +309,8 @@
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
     <Compile Include="Services\ISearchService.cs" />
     <Compile Include="Services\SearchService.cs" />
+    <Compile Include="Taxa\BulkOperation.cs" />
+    <Compile Include="Taxa\IBulkOperation.cs" />
     <Compile Include="Taxa\ISearchModifier.cs" />
     <Compile Include="Taxa\ISearchResult.cs" />
     <Compile Include="Taxa\SearchModifier.cs" />

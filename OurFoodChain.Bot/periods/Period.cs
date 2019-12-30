@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace OurFoodChain {
 
         public string GetName() {
 
-            return StringUtils.ToTitleCase(name);
+            return StringUtilities.ToTitleCase(name);
 
         }
         public string GetDescriptionOrDefault() {

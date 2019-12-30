@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -341,7 +342,7 @@ namespace OurFoodChain.Bot.Modules {
                     result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts, BotConfiguration, TimestampToDateStringFormat.Short)));
                     result.Append(i == 0 ? "Started in " : "Spread to ");
                     result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
-                    result.Append(StringUtils.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
+                    result.Append(StringUtilities.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
 
                     result.AppendLine();
 
@@ -506,7 +507,7 @@ namespace OurFoodChain.Bot.Modules {
             embed.AddField("Order", order_name, inline: true);
             embed.AddField("Family", family_name, inline: true);
             embed.AddField("Genus", genus_name, inline: true);
-            embed.AddField("Species", StringUtils.ToTitleCase(sp.Name), inline: true);
+            embed.AddField("Species", StringUtilities.ToTitleCase(sp.Name), inline: true);
 
             await ReplyAsync("", false, embed.Build());
 
@@ -599,7 +600,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 embed.AddField("Species", string.Format("{0} (Rank **#{1}**)", userSpeciesCount, userRank.Rank), inline: true);
 
-                embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtils.ToTitleCase(favoriteGenus), favoriteGenusCount), inline: true);
+                embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtilities.ToTitleCase(favoriteGenus), favoriteGenusCount), inline: true);
 
                 if (BotConfiguration.TrophiesEnabled) {
 

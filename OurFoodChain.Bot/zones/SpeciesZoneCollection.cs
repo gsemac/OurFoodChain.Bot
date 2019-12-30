@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +57,7 @@ namespace OurFoodChain {
                         string zonesString = string.Join(", ", zonesArray);
 
                         if (options.HasFlag(SpeciesZoneCollectionToStringOptions.CollapseRanges))
-                            zonesString = StringUtils.CollapseAlphanumericList(zonesString);
+                            zonesString = StringUtilities.CollapseAlphanumericList(zonesString);
 
                         if (string.IsNullOrEmpty(keyValuePair.Key))
                             sb.Add(zonesString);
@@ -81,7 +82,7 @@ namespace OurFoodChain {
                 string zonesString = string.Join(", ", zonesList);
 
                 if (options.HasFlag(SpeciesZoneCollectionToStringOptions.CollapseRanges))
-                    zonesString = StringUtils.CollapseAlphanumericList(zonesString);
+                    zonesString = StringUtilities.CollapseAlphanumericList(zonesString);
 
                 resultString = zonesString;
 

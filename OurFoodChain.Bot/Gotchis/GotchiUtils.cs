@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using OurFoodChain.Bot;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -413,7 +414,7 @@ namespace OurFoodChain.Gotchis {
             GotchiItem[] items = await GetGotchiItemsAsync();
             long id = -1;
 
-            if (StringUtils.IsNumeric(identifier))
+            if (StringUtilities.IsNumeric(identifier))
                 id = long.Parse(identifier);
 
             foreach (GotchiItem item in items)
@@ -520,7 +521,7 @@ namespace OurFoodChain.Gotchis {
 
                 string downloads_dir = Global.TempDirectory + "downloads";
                 string ext = Regex.Match(sp.Picture, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
-                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtils.CreateMD5(sp.Picture) + ext);
+                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.CreateMD5(sp.Picture) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -573,7 +574,7 @@ namespace OurFoodChain.Gotchis {
 
             // Create the gotchi GIF.
 
-            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtils.CreateMD5(string.Join("", gotchiImagePaths))));
+            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtilities.CreateMD5(string.Join("", gotchiImagePaths))));
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 
@@ -638,7 +639,7 @@ namespace OurFoodChain.Gotchis {
 
                 foreach (Zone zone in zones) {
 
-                    string candidate_filename = string.Format("home_{0}.png", StringUtils.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
+                    string candidate_filename = string.Format("home_{0}.png", StringUtilities.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
 
                     if (System.IO.File.Exists(Global.GotchiImagesDirectory + candidate_filename))
                         return candidate_filename;
@@ -817,7 +818,7 @@ namespace OurFoodChain.Gotchis {
 
             }
 
-            return name_options.Select(x => StringUtils.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
+            return name_options.Select(x => StringUtilities.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
 
         }
 

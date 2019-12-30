@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -97,7 +98,7 @@ namespace OurFoodChain.Taxa {
                     case DisplayFormat.CommonName:
 
                         if (!string.IsNullOrEmpty(species.CommonName))
-                            str = StringUtils.ToTitleCase(species.CommonName);
+                            str = StringUtilities.ToTitleCase(species.CommonName);
 
                         break;
 

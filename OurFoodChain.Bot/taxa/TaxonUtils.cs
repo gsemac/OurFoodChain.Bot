@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using OurFoodChain.Utilities;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Threading.Tasks;
@@ -148,7 +149,7 @@ namespace OurFoodChain {
 
         private static string _getRankTableName(TaxonRank rank) {
 
-            string table_name = StringUtils.ToTitleCase(Taxon.GetRankName(rank));
+            string table_name = StringUtilities.ToTitleCase(Taxon.GetRankName(rank));
 
             if (table_name == "Order")
                 table_name = "Ord";

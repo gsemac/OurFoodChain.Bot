@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace OurFoodChain {
         public string notes;
 
         public string Name {
-            get { return StringUtils.ToSentenceCase(name); }
+            get { return StringUtilities.ToSentenceCase(name); }
         }
 
         public string GetDescriptionOrDefault() {
@@ -28,7 +29,7 @@ namespace OurFoodChain {
 
         }
         public string GetShortDescription() {
-            return StringUtils.GetFirstSentence(GetDescriptionOrDefault());
+            return StringUtilities.GetFirstSentence(GetDescriptionOrDefault());
         }
 
         public static Role FromDataRow(DataRow row) {

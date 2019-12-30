@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -684,15 +685,15 @@ namespace OurFoodChain {
                 return speciesName.ToLower();
             else if (words.Count() > 2)
                 // If the name contains more than two words, treat it as a common name.
-                return StringUtils.ToTitleCase(string.Join(" ", words));
+                return StringUtilities.ToTitleCase(string.Join(" ", words));
 
             switch (format) {
 
                 case SpeciesNameFormat.Full:
-                    return string.Format("{0} {1}", StringUtils.ToTitleCase(words[0]), words[1].ToLower());
+                    return string.Format("{0} {1}", StringUtilities.ToTitleCase(words[0]), words[1].ToLower());
 
                 case SpeciesNameFormat.Abbreviated:
-                    return string.Format("{0}. {1}", StringUtils.ToTitleCase(words[0]).First(), words[1].ToLower());
+                    return string.Format("{0}. {1}", StringUtilities.ToTitleCase(words[0]).First(), words[1].ToLower());
 
             }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,7 +32,7 @@ namespace OurFoodChain.Trophies {
         }
 
         public string GetName() {
-            return StringUtils.ToTitleCase(name);
+            return StringUtilities.ToTitleCase(name);
         }
         public string GetIdentifier() {
             return name.ToLower().Replace(' ', '_');

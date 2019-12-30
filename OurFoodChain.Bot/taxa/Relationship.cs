@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace OurFoodChain {
         public string description = "";
 
         public string GetName() {
-            return StringUtils.ToTitleCase(name);
+            return StringUtilities.ToTitleCase(name);
         }
         public string GetDescriptionOrDefault() {
             return string.IsNullOrEmpty(description) ? BotUtils.DEFAULT_DESCRIPTION : description;

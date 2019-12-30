@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -59,7 +60,7 @@ namespace OurFoodChain.Bot {
 
                 await Database.ExecuteNonQuery(cmd);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.ShortName, StringUtils.ToTitleCase(role_info.name)));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.ShortName, StringUtilities.ToTitleCase(role_info.name)));
 
             }
 
@@ -95,7 +96,7 @@ namespace OurFoodChain.Bot {
 
                 await Database.ExecuteNonQuery(cmd);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtils.ToTitleCase(role_info.name), sp.ShortName));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtilities.ToTitleCase(role_info.name), sp.ShortName));
 
             }
 
@@ -123,7 +124,7 @@ namespace OurFoodChain.Bot {
                 }
 
                 string title = string.Format("{0} ({1})",
-                    StringUtils.ToTitleCase(role.name),
+                    StringUtilities.ToTitleCase(role.name),
                     count);
 
                 embed.AddField(title, role.GetShortDescription());
@@ -178,7 +179,7 @@ namespace OurFoodChain.Bot {
             Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
                 fieldName: string.Format("Extant species with this role ({0}):", species_list.Count())));
 
-            embed.SetTitle(string.Format("Role: {0}", StringUtils.ToTitleCase(role.name)));
+            embed.SetTitle(string.Format("Role: {0}", StringUtilities.ToTitleCase(role.name)));
             embed.SetDescription(role.GetDescriptionOrDefault());
 
             await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
@@ -210,7 +211,7 @@ namespace OurFoodChain.Bot {
 
             foreach (Role i in roles) {
 
-                lines.Append(StringUtils.ToTitleCase(i.name));
+                lines.Append(StringUtilities.ToTitleCase(i.name));
 
                 if (!string.IsNullOrEmpty(i.notes))
                     lines.Append(string.Format(" ({0})", i.notes));
@@ -245,7 +246,7 @@ namespace OurFoodChain.Bot {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for role **{0}**.", StringUtils.ToTitleCase(role.name)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated description for role **{0}**.", StringUtilities.ToTitleCase(role.name)));
 
         }
 

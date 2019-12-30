@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Data;
 
 namespace OurFoodChain {
@@ -93,7 +94,7 @@ namespace OurFoodChain {
                 if (string.IsNullOrEmpty(_common_name))
                     return "";
 
-                return StringUtils.ToTitleCase(_common_name);
+                return StringUtilities.ToTitleCase(_common_name);
 
             }
             set {
@@ -106,7 +107,7 @@ namespace OurFoodChain {
 
         public string GetName() {
 
-            return StringUtils.ToTitleCase(name);
+            return StringUtilities.ToTitleCase(name);
 
         }
         public string GetCommonName() {
@@ -222,7 +223,7 @@ namespace OurFoodChain {
         }
         public static string TypeToDatabaseTableName(TaxonRank type) {
 
-            string table_name = StringUtils.ToTitleCase(GetRankName(type));
+            string table_name = StringUtilities.ToTitleCase(GetRankName(type));
 
             if (table_name == "Order")
                 table_name = "Ord";

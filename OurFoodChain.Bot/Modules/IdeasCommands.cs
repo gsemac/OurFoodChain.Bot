@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -109,7 +110,7 @@ namespace OurFoodChain.Bot {
 
                     ideas.Add(string.Format("**{0}** does not have any **{1}s**. Why not fill this role?",
                         ZoneUtils.FormatZoneName(zone_name),
-                        StringUtils.ToTitleCase(role_name)));
+                        StringUtilities.ToTitleCase(role_name)));
 
                 }
 

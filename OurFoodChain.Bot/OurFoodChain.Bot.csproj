@@ -371,7 +371,7 @@
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
-    <Compile Include="Utilities\StringUtils.cs" />
+    <Compile Include="Utilities\StringUtilities.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
     <Compile Include="Utilities\Tree.cs" />

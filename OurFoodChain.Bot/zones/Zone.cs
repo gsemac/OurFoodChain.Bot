@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace OurFoodChain {
         }
 
         public string GetShortDescription() {
-            return StringUtils.GetFirstSentence(GetDescriptionOrDefault());
+            return StringUtilities.GetFirstSentence(GetDescriptionOrDefault());
         }
         public string GetDescriptionOrDefault() {
 

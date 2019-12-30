@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Utilities {
 
-    public class StringUtils {
+    public static class StringUtilities {
 
         public static string ToTitleCase(string input) {
 
@@ -97,7 +97,7 @@ namespace OurFoodChain {
 
             // Use input string to calculate MD5 hash
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create()) {
-                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] inputBytes = Encoding.ASCII.GetBytes(input);
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
 
                 // Convert the byte array to hexadecimal string
@@ -182,8 +182,8 @@ namespace OurFoodChain {
 
                     string last_part = ranges.Last().Last();
 
-                    if ((int.TryParse(value, out int intValue) && int.TryParse(last_part, out int intPrev) && intValue == intPrev + 1) ||
-                        (value.Length == 1 && last_part.Length == 1 && value[0] == last_part[0] + 1)) {
+                    if (int.TryParse(value, out int intValue) && int.TryParse(last_part, out int intPrev) && intValue == intPrev + 1 ||
+                        value.Length == 1 && last_part.Length == 1 && value[0] == last_part[0] + 1) {
 
                         // Merge values that are numerically sequential.
 

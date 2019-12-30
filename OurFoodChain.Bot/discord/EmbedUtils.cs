@@ -1,4 +1,5 @@
 ﻿using Discord;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -113,7 +114,7 @@ namespace OurFoodChain {
                     string title = group.Name.Length > 25 ? group.Name.Substring(0, 22) + "..." : group.Name;
 
                     EmbedFieldBuilder field = new EmbedFieldBuilder {
-                        Name = column_index == 1 ? string.Format("{0} ({1})", StringUtils.ToTitleCase(title), items.Count()) : string.Format("...", StringUtils.ToTitleCase(title)),
+                        Name = column_index == 1 ? string.Format("{0} ({1})", StringUtilities.ToTitleCase(title), items.Count()) : string.Format("...", StringUtilities.ToTitleCase(title)),
                         Value = string.Join(Environment.NewLine, column),
                         IsInline = true
                     };

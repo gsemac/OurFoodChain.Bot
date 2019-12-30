@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -11,7 +12,7 @@ namespace OurFoodChain {
     public static class GalleryUtils {
 
         public static bool IsImageUrl(string imageUrl) {
-            return StringUtils.IsUrl(imageUrl);
+            return StringUtilities.IsUrl(imageUrl);
         }
         public static string SpeciesToGalleryName(Species species) {
 

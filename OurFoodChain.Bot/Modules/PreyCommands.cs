@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -294,7 +295,7 @@ namespace OurFoodChain.Bot {
 
                 if (failed_prey.Count() > 0)
                     await BotUtils.ReplyAsync_Warning(Context, string.Format("The following species could not be determined: {0}.",
-                       StringUtils.ConjunctiveJoin(", ", failed_prey.Select(x => string.Format("**{0}**", StringUtils.ToTitleCase(x))).ToArray())));
+                       StringUtilities.ConjunctiveJoin(", ", failed_prey.Select(x => string.Format("**{0}**", StringUtilities.ToTitleCase(x))).ToArray())));
 
                 if (prey_list.Count() > 0)
                     await _addPrey(predator, prey_list.ToArray(), notes);
@@ -324,7 +325,7 @@ namespace OurFoodChain.Bot {
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now preys upon {1}.",
                 species.ShortName,
-                StringUtils.ConjunctiveJoin(", ", preySpecies.Select(x => string.Format("**{0}**", x.ShortName)).ToArray())
+                StringUtilities.ConjunctiveJoin(", ", preySpecies.Select(x => string.Format("**{0}**", x.ShortName)).ToArray())
                 ));
 
         }

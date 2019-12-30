@@ -4,6 +4,7 @@
 	move.SetDescription("Bites the opponent with crushing mandibles. Has a chance to damage the opponent's carapace, descreasing their DEF.")
 	move.SetType("predator")
 
+	move.SetPower(60)
 	move.SetPP(15)
 
 	move.Requires.DescriptionMatch("mandible")

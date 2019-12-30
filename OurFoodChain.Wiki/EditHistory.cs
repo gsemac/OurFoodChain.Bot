@@ -82,7 +82,7 @@ namespace OurFoodChain.Wiki {
 
                 cmd.Parameters.AddWithValue("$timestamp", _getTimestamp());
                 cmd.Parameters.AddWithValue("$title", title);
-                cmd.Parameters.AddWithValue("$content_hash", StringUtilities.CreateMD5(content).ToLower());
+                cmd.Parameters.AddWithValue("$content_hash", StringUtilities.GetMD5(content).ToLower());
 
                 await cmd.ExecuteNonQueryAsync();
 
@@ -107,7 +107,7 @@ namespace OurFoodChain.Wiki {
 
             // Returns the latest upload record for a page, but only if the content hash matches.
 
-            string content_hash = StringUtilities.CreateMD5(content).ToLower();
+            string content_hash = StringUtilities.GetMD5(content).ToLower();
 
             using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM PageEditHistory WHERE title = $title ORDER BY timestamp DESC LIMIT 1")) {

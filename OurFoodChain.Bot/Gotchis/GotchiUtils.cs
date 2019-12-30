@@ -521,7 +521,7 @@ namespace OurFoodChain.Gotchis {
 
                 string downloads_dir = Global.TempDirectory + "downloads";
                 string ext = Regex.Match(sp.Picture, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
-                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.CreateMD5(sp.Picture) + ext);
+                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.GetMD5(sp.Picture) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -574,7 +574,7 @@ namespace OurFoodChain.Gotchis {
 
             // Create the gotchi GIF.
 
-            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtilities.CreateMD5(string.Join("", gotchiImagePaths))));
+            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtilities.GetMD5(string.Join("", gotchiImagePaths))));
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 

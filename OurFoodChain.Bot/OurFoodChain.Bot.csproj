@@ -361,7 +361,6 @@
     <Compile Include="reviews\ReviewInfo.cs" />
     <Compile Include="Taxa\SpeciesSizeMatch.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
-    <Compile Include="Utilities\LevenshteinDistance.cs" />
     <Compile Include="PaginatedMessageBuilder.cs" />
     <Compile Include="Taxa\SearchQuery.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
@@ -371,7 +370,6 @@
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
-    <Compile Include="Utilities\StringUtilities.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
     <Compile Include="Utilities\Tree.cs" />

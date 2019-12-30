@@ -9,7 +9,6 @@ using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -766,7 +765,7 @@ namespace OurFoodChain {
 
             foreach (Species sp in sp_list) {
 
-                int dist = LevenshteinDistance.Compute(species, sp.Name);
+                int dist = StringUtilities.GetLevenshteinDistance(species, sp.Name);
 
                 if (dist < min_dist) {
                     min_dist = dist;
@@ -1464,7 +1463,7 @@ namespace OurFoodChain {
 
             foreach (Taxon t in taxa) {
 
-                int dist = LevenshteinDistance.Compute(t.name.ToLower(), name.ToLower());
+                int dist = StringUtilities.GetLevenshteinDistance(t.name.ToLower(), name.ToLower());
 
                 if (dist < min_dist) {
 

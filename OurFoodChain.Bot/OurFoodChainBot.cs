@@ -63,6 +63,7 @@ namespace OurFoodChain.Bot {
             return (await base.ConfigureServicesAsync())
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
+                .AddSingleton<Services.ISearchService, Services.SearchService>()
                 .AddSingleton<IOurFoodChainBotConfiguration>(Configuration);
 
         }

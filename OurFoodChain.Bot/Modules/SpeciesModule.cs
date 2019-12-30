@@ -18,6 +18,7 @@ namespace OurFoodChain.Bot.Modules {
         // Public members
 
         public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public Services.ISearchService SearchService { get; set; }
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
@@ -558,8 +559,8 @@ namespace OurFoodChain.Bot.Modules {
 
             // Create and execute the search query.
 
-            Taxa.SearchQuery query = new Taxa.SearchQuery(Context, queryString);
-            Taxa.SearchQueryResult result = await query.GetResultAsync(BotConfiguration);
+            Taxa.SearchQuery query = new Taxa.SearchQuery(queryString);
+            Taxa.SearchResult result = await SearchService.GetQueryResultAsync(Context, query);
 
             // Build the embed.
 
@@ -570,7 +571,7 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                if (result.DisplayFormat == Taxa.DisplayFormat.Gallery) {
+                if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Gallery) {
 
                     List<Picture> pictures = new List<Picture>();
 
@@ -580,16 +581,16 @@ namespace OurFoodChain.Bot.Modules {
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 
                 }
-                else if (result.DisplayFormat == Taxa.DisplayFormat.Leaderboard) {
+                else if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Leaderboard) {
 
                     // Match each group to a rank depending on how many results it contains.
 
-                    Dictionary<Taxa.SearchQueryResult.Group, long> groupRanks = new Dictionary<Taxa.SearchQueryResult.Group, long>();
+                    Dictionary<Taxa.SearchResult.Group, long> groupRanks = new Dictionary<Taxa.SearchResult.Group, long>();
 
                     long rank = 0;
                     int lastCount = -1;
 
-                    foreach (Taxa.SearchQueryResult.Group group in result.Groups.OrderByDescending(x => x.Count())) {
+                    foreach (Taxa.SearchResult.Group group in result.Groups.OrderByDescending(x => x.Count())) {
 
                         groupRanks[group] = (lastCount >= 0 && group.Count() == lastCount) ? rank : ++rank;
 
@@ -601,7 +602,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     List<string> lines = new List<string>();
 
-                    foreach (Taxa.SearchQueryResult.Group group in result.Groups) {
+                    foreach (Taxa.SearchResult.Group group in result.Groups) {
 
                         lines.Add(string.Format("**`{0}.`**{1}`{2}` {3}",
                             groupRanks[group].ToString("000"),
@@ -634,7 +635,7 @@ namespace OurFoodChain.Bot.Modules {
 
                         Bot.PaginatedMessageBuilder embed;
 
-                        if (result.HasGroup(Taxa.SearchQuery.DefaultGroupName)) {
+                        if (result.HasGroup(Taxa.SearchResult.DefaultGroupName)) {
 
                             // If there's only one group, just list the species without creating separate fields.
                             embed = new PaginatedMessageBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToStringArray().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));

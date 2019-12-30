@@ -95,12 +95,12 @@ namespace OurFoodChain {
             return pages;
 
         }
-        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(Taxa.SearchQueryResult result, int itemsPerField = 10) {
+        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(Taxa.SearchResult result, int itemsPerField = 10) {
 
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
             int fields_per_page = 6;
 
-            foreach (Taxa.SearchQueryResult.Group group in result.Groups) {
+            foreach (Taxa.SearchResult.Group group in result.Groups) {
 
                 List<string> items = group.ToStringArray().ToList();
 

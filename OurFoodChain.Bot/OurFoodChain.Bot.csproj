@@ -306,6 +306,12 @@
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
     <Compile Include="database\DatabaseUtils.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
+    <Compile Include="Services\ISearchService.cs" />
+    <Compile Include="Services\SearchService.cs" />
+    <Compile Include="Taxa\ISearchModifier.cs" />
+    <Compile Include="Taxa\ISearchResult.cs" />
+    <Compile Include="Taxa\SearchModifier.cs" />
+    <Compile Include="Taxa\SearchResult.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />
     <Compile Include="Gotchis\GotchiType.cs" />
     <Compile Include="Gotchis\GotchiTypeRegistry.cs" />

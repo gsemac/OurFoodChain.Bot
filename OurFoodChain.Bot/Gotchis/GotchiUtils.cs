@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using OurFoodChain.Bot;
+using OurFoodChain.Extensions;
 using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,6 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -812,7 +812,7 @@ namespace OurFoodChain.Gotchis {
                     name += "y";
 
                 if (BotUtils.RandomInteger(2) == 0)
-                    name = "Mr. " + name;
+                    name = (new string[] { "Mr.", "Sir" }).Random() + " " + name;
 
                 name_options.Add(name);
 

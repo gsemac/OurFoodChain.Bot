@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Extensions;
 using OurFoodChain.Gotchis;
 using OurFoodChain.Utilities;
 using System;
@@ -101,14 +102,14 @@ namespace OurFoodChain.Bot.Modules {
         [Command("get")]
         public async Task Get() {
 
-            // This overload can only be used for cases where there is only a single common ancestor, which will be automatically selected.
+            // Select a random base species (no ancestor) for the user to start with.
 
-            Species[] base_species = await SpeciesUtils.GetBaseSpeciesAsync();
+            Species[] baseSpecies = await SpeciesUtils.GetBaseSpeciesAsync();
 
-            if (base_species.Length == 1)
-                await _getGotchiAsync(Context, base_species[0]);
+            if (baseSpecies.Length > 0)
+                await _getGotchiAsync(Context, baseSpecies.Random());
             else
-                await BotUtils.ReplyAsync_Error(Context, "You must specify the species you want to start with.");
+                await BotUtils.ReplyAsync_Error(Context, "There are currently no species available.");
 
         }
         [Command("get")]
@@ -1269,7 +1270,7 @@ namespace OurFoodChain.Bot.Modules {
                             if (!gotchi.IsAlive)
                                 await BotUtils.ReplyAsync_Success(context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
                             else
-                                await BotUtils.ReplyAsync_Success(context, string.Format("Gotchi **{0}** was successfully released. Take care, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
+                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}** was successfully released. Take care, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
 
 
                         }

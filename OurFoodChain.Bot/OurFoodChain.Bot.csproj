@@ -635,6 +635,10 @@
       <Project>{21e5d854-183f-4c24-94e4-6c3b0b31fe85}</Project>
       <Name>OurFoodChain.Discord</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain\OurFoodChain.csproj">
+      <Project>{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}</Project>
+      <Name>OurFoodChain</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

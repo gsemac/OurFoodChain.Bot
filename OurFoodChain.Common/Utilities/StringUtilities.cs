@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace OurFoodChain.Utilities {
+namespace OurFoodChain.Common.Utilities {
 
     public static class StringUtilities {
 

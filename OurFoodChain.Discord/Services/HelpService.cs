@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Linq;
-using Discord.Commands;
+﻿using Discord.Commands;
 using Newtonsoft.Json;
-using OurFoodChain.Extensions;
+using OurFoodChain.Common.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
 

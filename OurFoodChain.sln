@@ -7,11 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot", "OurFood
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Wiki", "OurFoodChain.Wiki\OurFoodChain.Wiki.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot.Test", "OurFoodChain.Bot.Test\OurFoodChain.Bot.Test.csproj", "{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot.Tests", "OurFoodChain.Bot.Tests\OurFoodChain.Bot.Tests.csproj", "{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain", "OurFoodChain\OurFoodChain.csproj", "{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Common", "OurFoodChain.Common\OurFoodChain.Common.csproj", "{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Discord", "OurFoodChain.Discord\OurFoodChain.Discord.csproj", "{21E5D854-183F-4C24-94E4-6C3B0B31FE85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Discord", "OurFoodChain.Discord\OurFoodChain.Discord.csproj", "{21E5D854-183F-4C24-94E4-6C3B0B31FE85}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{721AB7CC-0FF9-4E5E-9625-378D3046AE76}"
 EndProject

@@ -1,9 +1,9 @@
-﻿using OurFoodChain.Utilities;
+﻿using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OurFoodChain.Extensions {
+namespace OurFoodChain.Common.Extensions {
 
     public static class StringExtensions {
 

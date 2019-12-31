@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace OurFoodChain.Extensions {
+namespace OurFoodChain.Common.Extensions {
 
     public static class LinqExtensions {
 

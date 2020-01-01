@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -86,7 +87,7 @@ namespace OurFoodChain.Bot.Modules {
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
                     Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
-                        Title = StringUtils.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
+                        Title = StringUtilities.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
                         Description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
                             BotConfiguration.Prefix,
                             zones[0].ShortName.Contains(" ") ? string.Format("\"{0}\"", zones[0].ShortName.ToLower()) : zones[0].ShortName.ToLower())
@@ -204,7 +205,7 @@ namespace OurFoodChain.Bot.Modules {
                             foreach (Species j in roles_map[i])
                                 lines.AppendLine(j.ShortName);
 
-                            role_page.AddField(string.Format("{0}s ({1})", StringUtils.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
+                            role_page.AddField(string.Format("{0}s ({1})", StringUtilities.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
 
                         }
 
@@ -362,7 +363,7 @@ namespace OurFoodChain.Bot.Modules {
 
                         if (Bot.DiscordUtils.IsEmoji(args[i]))
                             icon = args[i];
-                        else if (StringUtils.TryParseColor(args[i], out System.Drawing.Color result))
+                        else if (StringUtilities.TryParseColor(args[i], out System.Drawing.Color result))
                             color = result;
                         else if (string.IsNullOrEmpty(description))
                             description = args[i];

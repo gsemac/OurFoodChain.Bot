@@ -3,6 +3,8 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using OurFoodChain.Bot;
+using OurFoodChain.Extensions;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,7 +12,6 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -288,19 +289,22 @@ namespace OurFoodChain.Gotchis {
 
             // Update the gotchi in the database.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts WHERE id=$id;")) {
+            if (evolved) {
 
-                cmd.Parameters.AddWithValue("$species_id", gotchi.SpeciesId);
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET species_id=$species_id, evolved_ts=$evolved_ts WHERE id=$id;")) {
 
-                // The "last evolved" timestamp is now only updated in the event the gotchi evolves (in order to make the "IsEvolved" check work correctly).
-                // Note that this means that the background service will attempt to evolve the gotchi at every iteration (unless it evolves by leveling).
+                    cmd.Parameters.AddWithValue("$species_id", gotchi.SpeciesId);
 
-                if (evolved)
+                    // The "last evolved" timestamp is now only updated in the event the gotchi evolves (in order to make the "IsEvolved" check work correctly).
+                    // Note that this means that the background service will attempt to evolve the gotchi at every iteration (unless it evolves by leveling).
+
                     cmd.Parameters.AddWithValue("$evolved_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
-                cmd.Parameters.AddWithValue("$id", gotchi.Id);
+                    cmd.Parameters.AddWithValue("$id", gotchi.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                    await Database.ExecuteNonQuery(cmd);
+
+                }
 
             }
 
@@ -410,7 +414,7 @@ namespace OurFoodChain.Gotchis {
             GotchiItem[] items = await GetGotchiItemsAsync();
             long id = -1;
 
-            if (StringUtils.IsNumeric(identifier))
+            if (StringUtilities.IsNumeric(identifier))
                 id = long.Parse(identifier);
 
             foreach (GotchiItem item in items)
@@ -517,7 +521,7 @@ namespace OurFoodChain.Gotchis {
 
                 string downloads_dir = Global.TempDirectory + "downloads";
                 string ext = Regex.Match(sp.Picture, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
-                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtils.CreateMD5(sp.Picture) + ext);
+                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.GetMD5(sp.Picture) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -570,7 +574,7 @@ namespace OurFoodChain.Gotchis {
 
             // Create the gotchi GIF.
 
-            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtils.CreateMD5(string.Join("", gotchiImagePaths))));
+            string outputPath = System.IO.Path.Combine(tempDirectory, string.Format("{0}.gif", StringUtilities.GetMD5(string.Join("", gotchiImagePaths))));
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 
@@ -635,7 +639,7 @@ namespace OurFoodChain.Gotchis {
 
                 foreach (Zone zone in zones) {
 
-                    string candidate_filename = string.Format("home_{0}.png", StringUtils.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
+                    string candidate_filename = string.Format("home_{0}.png", StringUtilities.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
 
                     if (System.IO.File.Exists(Global.GotchiImagesDirectory + candidate_filename))
                         return candidate_filename;
@@ -808,13 +812,13 @@ namespace OurFoodChain.Gotchis {
                     name += "y";
 
                 if (BotUtils.RandomInteger(2) == 0)
-                    name = "Mr. " + name;
+                    name = (new string[] { "Mr.", "Sir" }).Random() + " " + name;
 
                 name_options.Add(name);
 
             }
 
-            return name_options.Select(x => StringUtils.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
+            return name_options.Select(x => StringUtilities.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
 
         }
 

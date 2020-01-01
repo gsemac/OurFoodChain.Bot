@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -31,7 +32,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (!(await BotUtils.GetGenusFromDb(genus) is null)) {
 
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("The genus **{0}** already exists.", StringUtils.ToTitleCase(genus)));
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("The genus **{0}** already exists.", StringUtilities.ToTitleCase(genus)));
 
                 return;
 
@@ -44,7 +45,7 @@ namespace OurFoodChain.Bot.Modules {
 
             await BotUtils.AddGenusToDb(genus_info);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new genus, **{0}**.", StringUtils.ToTitleCase(genus)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new genus, **{0}**.", StringUtilities.ToTitleCase(genus)));
 
         }
         [Command("setgenus"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -84,7 +85,7 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.ShortName, StringUtils.ToTitleCase(genus_info.name)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned to the genus **{1}**.", sp.ShortName, StringUtilities.ToTitleCase(genus_info.name)));
 
         }
         [Command("setgenusdescription"), Alias("setgenusdesc", "setgdesc"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -401,7 +402,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
                     species_info.ShortName,
-                    StringUtils.ToTitleCase(commonName)));
+                    StringUtilities.ToTitleCase(commonName)));
 
             }
 
@@ -434,7 +435,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now commonly known as the **{1}**.",
                     species_info.ShortName,
-                    StringUtils.ToTitleCase(commonName)));
+                    StringUtilities.ToTitleCase(commonName)));
 
             }
 
@@ -463,7 +464,7 @@ namespace OurFoodChain.Bot.Modules {
                 // Check if the species actually has this common name before attempting to remove it (for the sake of clarity to the user).
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("The common name **{0}** has already been removed.",
-                      StringUtils.ToTitleCase(commonName)));
+                      StringUtilities.ToTitleCase(commonName)));
 
             }
             else {
@@ -472,7 +473,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is no longer known as the **{1}**.",
                     species_info.ShortName,
-                    StringUtils.ToTitleCase(commonName)));
+                    StringUtilities.ToTitleCase(commonName)));
 
             }
 
@@ -807,7 +808,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     await TaxonUtils.DeleteTaxonAsync(taxa[0]);
 
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("{0} **{1}** was successfully deleted.", StringUtils.ToTitleCase(taxa[0].GetTypeName()), taxa[0].GetName()));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("{0} **{1}** was successfully deleted.", StringUtilities.ToTitleCase(taxa[0].GetTypeName()), taxa[0].GetName()));
 
                 }
 

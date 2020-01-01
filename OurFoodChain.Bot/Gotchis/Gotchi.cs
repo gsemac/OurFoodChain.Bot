@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace OurFoodChain.Gotchis {
         public long SpeciesId { get; set; } = Species.NullId;
         public string Name {
             get {
-                return StringUtils.ToTitleCase(_name);
+                return StringUtilities.ToTitleCase(_name, TitleOptions.CapitalizeRomanNumerals);
             }
             set {
                 _name = value;

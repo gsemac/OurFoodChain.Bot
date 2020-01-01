@@ -264,6 +264,7 @@
   <ItemGroup>
     <Compile Include="IOurFoodChainBotConfiguration.cs" />
     <Compile Include="Modules\AdminCommands.cs" />
+    <Compile Include="Modules\BulkModule.cs" />
     <Compile Include="Modules\ConfigurationModule.cs" />
     <Compile Include="Modules\GalleryCommands.cs" />
     <Compile Include="Modules\GenerationCommands.cs" />
@@ -306,6 +307,14 @@
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
     <Compile Include="database\DatabaseUtils.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
+    <Compile Include="Services\ISearchService.cs" />
+    <Compile Include="Services\SearchService.cs" />
+    <Compile Include="Taxa\BulkOperation.cs" />
+    <Compile Include="Taxa\IBulkOperation.cs" />
+    <Compile Include="Taxa\ISearchModifier.cs" />
+    <Compile Include="Taxa\ISearchResult.cs" />
+    <Compile Include="Taxa\SearchModifier.cs" />
+    <Compile Include="Taxa\SearchResult.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />
     <Compile Include="Gotchis\GotchiType.cs" />
     <Compile Include="Gotchis\GotchiTypeRegistry.cs" />
@@ -361,7 +370,6 @@
     <Compile Include="reviews\ReviewInfo.cs" />
     <Compile Include="Taxa\SpeciesSizeMatch.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
-    <Compile Include="Utilities\LevenshteinDistance.cs" />
     <Compile Include="PaginatedMessageBuilder.cs" />
     <Compile Include="Taxa\SearchQuery.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
@@ -371,7 +379,6 @@
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
-    <Compile Include="Utilities\StringUtils.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
     <Compile Include="Utilities\Tree.cs" />
@@ -634,6 +641,10 @@
     <ProjectReference Include="..\OurFoodChain.Discord\OurFoodChain.Discord.csproj">
       <Project>{21e5d854-183f-4c24-94e4-6c3b0b31fe85}</Project>
       <Name>OurFoodChain.Discord</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain\OurFoodChain.csproj">
+      <Project>{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}</Project>
+      <Name>OurFoodChain</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

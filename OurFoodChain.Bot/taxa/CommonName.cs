@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace OurFoodChain {
                 if (string.IsNullOrEmpty(_value))
                     return "";
 
-                return StringUtils.ToTitleCase(_value.Trim());
+                return StringUtilities.ToTitleCase(_value.Trim());
 
             }
             set {

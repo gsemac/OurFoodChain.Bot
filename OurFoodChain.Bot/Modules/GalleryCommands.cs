@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -62,7 +63,7 @@ namespace OurFoodChain.Bot {
             string url = "";
             string description = "";
 
-            if (StringUtils.IsUrl(arg1)) {
+            if (StringUtilities.IsUrl(arg1)) {
 
                 // <species> <url> <description>
 
@@ -202,7 +203,7 @@ namespace OurFoodChain.Bot {
                 await SpeciesUtils.AddPictureAsync(species, picture);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist for {0} [picture]({1}) to **{2}**.",
-                    StringUtils.ToPossessive(species.ShortName),
+                    StringUtilities.ToPossessive(species.ShortName),
                     picture.url,
                     artist));
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace OurFoodChain {
         public long Id { get; set; } = NullZoneTypeId;
         public string Name {
             get {
-                return StringUtils.ToTitleCase(_name);
+                return StringUtilities.ToTitleCase(_name);
             }
             set {
                 _name = value;
@@ -29,7 +30,7 @@ namespace OurFoodChain {
 
         public bool SetColor(string colorHex) {
 
-            if (StringUtils.TryParseColor(colorHex, out Color result)) {
+            if (StringUtilities.TryParseColor(colorHex, out Color result)) {
 
                 Color = result;
 

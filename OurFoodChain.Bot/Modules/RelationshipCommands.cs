@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -181,7 +182,7 @@ namespace OurFoodChain.Bot {
 
                 items[key].Sort((lhs, rhs) => lhs.CompareTo(rhs));
 
-                embed.AddField(string.Format("{0} ({1})", StringUtils.ToTitleCase(key), items[key].Count()), string.Join(Environment.NewLine, items[key]), inline: true);
+                embed.AddField(string.Format("{0} ({1})", StringUtilities.ToTitleCase(key), items[key].Count()), string.Join(Environment.NewLine, items[key]), inline: true);
 
                 relationship_count += items[key].Count();
 
@@ -206,7 +207,7 @@ namespace OurFoodChain.Bot {
 
             if (!(await GetRelationshipFromDbAsync(name) is null)) {
 
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("The relationship **{0}** already exists.", StringUtils.ToTitleCase(name)));
+                await BotUtils.ReplyAsync_Warning(Context, string.Format("The relationship **{0}** already exists.", StringUtilities.ToTitleCase(name)));
 
                 return;
 
@@ -223,7 +224,7 @@ namespace OurFoodChain.Bot {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new relationship, **{0}**.", StringUtils.ToTitleCase(name)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new relationship, **{0}**.", StringUtilities.ToTitleCase(name)));
 
         }
 

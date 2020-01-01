@@ -13,6 +13,14 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static T Random<T>(this IEnumerable<T> input) {
+
+            return input.ElementAt(_random.Next(input.Count()));
+
+        }
+
+        private static Random _random = new Random();
+
     }
 
 }

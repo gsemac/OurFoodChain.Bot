@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -47,7 +48,7 @@ namespace OurFoodChain.Bot.Modules {
             // Build the embed.
 
             string worldName = BotConfiguration.WorldName;
-            string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", StringUtils.ToTitleCase(worldName));
+            string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", StringUtilities.ToTitleCase(worldName));
             string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
 
             Bot.PaginatedMessage paginatedMessage = new Bot.PaginatedMessage();

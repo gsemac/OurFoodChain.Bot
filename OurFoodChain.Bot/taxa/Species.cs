@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -44,7 +45,7 @@ namespace OurFoodChain {
         public bool IsExtinct { get; set; }
         public string GenusName {
             get {
-                return StringUtils.ToTitleCase(genusName);
+                return StringUtilities.ToTitleCase(genusName);
             }
             set {
                 genusName = value;
@@ -61,7 +62,7 @@ namespace OurFoodChain {
         }
         public string FullName {
             get {
-                return string.Format("{0} {1}", StringUtils.ToTitleCase(genusName), Name.ToLower());
+                return string.Format("{0} {1}", StringUtilities.ToTitleCase(genusName), Name.ToLower());
             }
         }
         public string ShortName {

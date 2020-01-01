@@ -2,13 +2,13 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Bot;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -765,7 +765,7 @@ namespace OurFoodChain {
 
             foreach (Species sp in sp_list) {
 
-                int dist = LevenshteinDistance.Compute(species, sp.Name);
+                int dist = StringUtilities.GetLevenshteinDistance(species, sp.Name);
 
                 if (dist < min_dist) {
                     min_dist = dist;
@@ -992,7 +992,7 @@ namespace OurFoodChain {
 
                     embed.AddField(string.Format("{0}{1} ({2})",
                         taxa_dict.Keys.Count() == 1 ? "Matching " : "",
-                        taxa_dict.Keys.Count() == 1 ? Taxon.GetRankName(type, true).ToLower() : StringUtils.ToTitleCase(Taxon.GetRankName(type, true)), taxa_dict[type].Count()),
+                        taxa_dict.Keys.Count() == 1 ? Taxon.GetRankName(type, true).ToLower() : StringUtilities.ToTitleCase(Taxon.GetRankName(type, true)), taxa_dict[type].Count()),
                         field_content.ToString());
 
                 }
@@ -1130,7 +1130,7 @@ namespace OurFoodChain {
                 if (sub_taxa_count <= 0)
                     continue;
 
-                items.Add(string.Format("{0} ({1})", StringUtils.ToTitleCase(taxon.name), sub_taxa_count));
+                items.Add(string.Format("{0} ({1})", StringUtilities.ToTitleCase(taxon.name), sub_taxa_count));
 
                 ++taxon_count;
 
@@ -1246,7 +1246,7 @@ namespace OurFoodChain {
                 // Generate embed pages.
 
                 string title = string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
-                string field_title = string.Format("{0} in this {1} ({2}):", StringUtils.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type), plural: true)), Taxon.GetRankName(type), items.Count());
+                string field_title = string.Format("{0} in this {1} ({2}):", StringUtilities.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type), plural: true)), Taxon.GetRankName(type), items.Count());
                 string thumbnail_url = taxon.pics;
 
                 StringBuilder description = new StringBuilder();
@@ -1331,7 +1331,7 @@ namespace OurFoodChain {
             await UpdateTaxonInDb(child, Taxon.TypeToChildType(type));
 
             await ReplyAsync_Success(context, string.Format("{0} **{1}** has sucessfully been placed under the {2} **{3}**.",
-                    StringUtils.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type))),
+                    StringUtilities.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type))),
                     child.GetName(),
                     Taxon.GetRankName(type),
                     parent.GetName()
@@ -1463,7 +1463,7 @@ namespace OurFoodChain {
 
             foreach (Taxon t in taxa) {
 
-                int dist = LevenshteinDistance.Compute(t.name.ToLower(), name.ToLower());
+                int dist = StringUtilities.GetLevenshteinDistance(t.name.ToLower(), name.ToLower());
 
                 if (dist < min_dist) {
 
@@ -1662,7 +1662,7 @@ namespace OurFoodChain {
 
                 ZoneType type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId);
 
-                string line = string.Format("{1} **{0}**\t-\t{2}", StringUtils.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.GetShortDescription());
+                string line = string.Format("{1} **{0}**\t-\t{2}", StringUtilities.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.GetShortDescription());
 
                 if (line.Length > max_line_length)
                     line = line.Substring(0, max_line_length - 3) + "...";

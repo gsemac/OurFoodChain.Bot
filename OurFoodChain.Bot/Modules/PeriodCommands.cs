@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -173,7 +174,7 @@ namespace OurFoodChain.Bot {
 
                     }
 
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new period **{0}**.", StringUtils.ToTitleCase(name)));
+                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new period **{0}**.", StringUtilities.ToTitleCase(name)));
 
                 }
                 else

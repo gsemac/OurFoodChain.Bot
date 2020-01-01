@@ -91,6 +91,10 @@
       <Project>{8ea1fe67-f170-45b4-abb0-a1dd6142c389}</Project>
       <Name>OurFoodChain.Bot</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain\OurFoodChain.csproj">
+      <Project>{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}</Project>
+      <Name>OurFoodChain</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\templates\species_template.txt" />

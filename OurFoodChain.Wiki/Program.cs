@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -191,7 +192,7 @@ namespace OurFoodChain.Wiki {
 
             string pictureFilename = GetPictureFilenameFromPictureUrl(pictureUrl);
 
-            return string.Format("{0}-{1}{2}", species.FullName.ToLower().Replace(' ', '_'), StringUtils.CreateMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
+            return string.Format("{0}-{1}{2}", species.FullName.ToLower().Replace(' ', '_'), StringUtilities.CreateMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
 
         }
         private static string GetPictureFilenameFromPictureUrl(string pictureUrl) {

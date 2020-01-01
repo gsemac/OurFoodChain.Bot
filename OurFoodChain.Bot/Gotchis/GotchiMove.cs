@@ -1,4 +1,5 @@
 ﻿using MoonSharp.Interpreter;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace OurFoodChain.Gotchis {
 
         public string Name {
             get {
-                return StringUtils.ToTitleCase(_name);
+                return StringUtilities.ToTitleCase(_name);
             }
             set {
                 _name = value;

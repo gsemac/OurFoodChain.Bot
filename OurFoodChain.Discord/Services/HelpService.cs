@@ -40,8 +40,8 @@ namespace OurFoodChain.Discord.Services {
 
                 commandHelpInfos.Add(new CommandHelpInfo {
                     Name = GetFullCommandName(commandInfo),
-                    Aliases = commandInfo.Aliases,
-                    Summary = commandInfo.Summary
+                    Aliases = commandInfo.Aliases.Where(a => !a.Equals(commandInfo.Name, StringComparison.OrdinalIgnoreCase)),
+                    Summary = commandInfo.Summary ?? "No documentation available."
                 });
 
             }

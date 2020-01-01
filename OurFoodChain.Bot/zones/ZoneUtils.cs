@@ -1,4 +1,5 @@
 ﻿using Discord;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -212,10 +213,10 @@ namespace OurFoodChain {
 
         public static string FormatZoneName(string name) {
 
-            if (StringUtils.IsNumeric(name) || name.Length == 1)
+            if (StringUtilities.IsNumeric(name) || name.Length == 1)
                 name = "zone " + name;
 
-            name = StringUtils.ToTitleCase(name);
+            name = StringUtilities.ToTitleCase(name);
 
             return name;
 
@@ -226,7 +227,7 @@ namespace OurFoodChain {
             Zone zone = new Zone {
                 Id = row.Field<long>("id"),
                 ParentId = row.IsNull("parent_id") ? -1 : row.Field<long>("parent_id"),
-                Name = StringUtils.ToTitleCase(row.Field<string>("name")),
+                Name = StringUtilities.ToTitleCase(row.Field<string>("name")),
                 Description = row.Field<string>("description"),
                 Pics = row.Field<string>("pics"),
                 ZoneTypeId = row.IsNull("type_id") ? ZoneType.NullZoneTypeId : row.Field<long>("type_id")

@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Extensions;
 using OurFoodChain.Gotchis;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -88,10 +90,10 @@ namespace OurFoodChain.Bot.Modules {
 
             EmbedBuilder embed = new EmbedBuilder();
 
-            embed.WithTitle(string.Format("{0}'s \"{1}\"", Context.User.Username, StringUtils.ToTitleCase(gotchi.Name)));
+            embed.WithTitle(string.Format("{0}'s \"{1}\"", Context.User.Username, StringUtilities.ToTitleCase(gotchi.Name)));
             embed.WithDescription(string.Format("{0}, age {1}", species.ShortName, gotchi.Age));
             embed.WithImageUrl(gifUrl);
-            embed.WithFooter(string.Format(status, StringUtils.ToTitleCase(gotchi.Name)));
+            embed.WithFooter(string.Format(status, StringUtilities.ToTitleCase(gotchi.Name)));
 
             await ReplyAsync("", false, embed.Build());
 
@@ -100,14 +102,14 @@ namespace OurFoodChain.Bot.Modules {
         [Command("get")]
         public async Task Get() {
 
-            // This overload can only be used for cases where there is only a single common ancestor, which will be automatically selected.
+            // Select a random base species (no ancestor) for the user to start with.
 
-            Species[] base_species = await SpeciesUtils.GetBaseSpeciesAsync();
+            Species[] baseSpecies = await SpeciesUtils.GetBaseSpeciesAsync();
 
-            if (base_species.Length == 1)
-                await _getGotchiAsync(Context, base_species[0]);
+            if (baseSpecies.Length > 0)
+                await _getGotchiAsync(Context, baseSpecies.Random());
             else
-                await BotUtils.ReplyAsync_Error(Context, "You must specify the species you want to start with.");
+                await BotUtils.ReplyAsync_Error(Context, "There are currently no species available.");
 
         }
         [Command("get")]
@@ -171,7 +173,7 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Sucessfully set {0}'s name to **{1}**.", StringUtils.ToTitleCase(gotchi.Name), StringUtils.ToTitleCase(name)));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Sucessfully set {0}'s name to **{1}**.", StringUtilities.ToTitleCase(gotchi.Name), StringUtilities.ToTitleCase(name)));
 
         }
 
@@ -185,14 +187,14 @@ namespace OurFoodChain.Bot.Modules {
 
             if (!gotchi.IsAlive) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("You went to feed **{0}**, but it looks like it's too late...", StringUtils.ToTitleCase(gotchi.Name)));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("You went to feed **{0}**, but it looks like it's too late...", StringUtilities.ToTitleCase(gotchi.Name)));
 
                 return;
 
             }
             else if (gotchi.IsSleeping) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("Shhh, do not disturb! **{0}** is currently asleep. Try feeding them again later.", StringUtils.ToTitleCase(gotchi.Name)));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("Shhh, do not disturb! **{0}** is currently asleep. Try feeding them again later.", StringUtilities.ToTitleCase(gotchi.Name)));
 
                 return;
 
@@ -214,7 +216,7 @@ namespace OurFoodChain.Bot.Modules {
             if (await GotchiUtils.GetGotchiCountAsync(Context.User) > 1)
                 await BotUtils.ReplyAsync_Success(Context, "Fed everyone some delicious Suka-Flakes™!");
             else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtils.ToTitleCase(gotchi.Name)));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtilities.ToTitleCase(gotchi.Name)));
 
         }
 
@@ -422,7 +424,7 @@ namespace OurFoodChain.Bot.Modules {
                     long minutes_left = Global.GotchiContext.Config.TrainingCooldown - minutes_elapsed;
 
                     await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
-                        StringUtils.ToTitleCase(gotchi.Name),
+                        StringUtilities.ToTitleCase(gotchi.Name),
                         minutes_left <= 1 ? "a" : minutes_left.ToString(),
                         minutes_left > 1 ? "s" : ""));
 
@@ -902,7 +904,7 @@ namespace OurFoodChain.Bot.Modules {
                                 await GotchiUtils.AddItemToInventoryAsync(user.Id, item.Item, -1);
 
                                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** woke up! Its sleep schedule has been reset.",
-                                    StringUtils.ToTitleCase(gotchi.Name)));
+                                    StringUtilities.ToTitleCase(gotchi.Name)));
 
                             }
                             else
@@ -943,7 +945,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     gotchi_list.Add(string.Format("{0}. **{1}** ({2}), Lv. {3}",
                         index,
-                        StringUtils.ToTitleCase(i.Name),
+                        StringUtilities.ToTitleCase(i.Name),
                         (await BotUtils.GetSpeciesFromDb(i.SpeciesId)).ShortName,
                         GotchiExperienceCalculator.GetLevel(ExperienceGroup.Default, i)));
 
@@ -981,7 +983,7 @@ namespace OurFoodChain.Bot.Modules {
             long gotchi_id = OurFoodChain.Gotchis.Gotchi.NullGotchiId;
             string name = "";
 
-            if (StringUtils.IsNumeric(nameOrIndex)) {
+            if (StringUtilities.IsNumeric(nameOrIndex)) {
 
                 Gotchi[] gotchis = await GotchiUtils.GetGotchisAsync(Context.User.Id);
                 long index = long.Parse(nameOrIndex) - 1;
@@ -1021,7 +1023,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await GotchiUtils.UpdateUserInfoAsync(user_data);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set primary Gotchi to **{0}**.", StringUtils.ToTitleCase(name)));
+                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set primary Gotchi to **{0}**.", StringUtilities.ToTitleCase(name)));
 
             }
 
@@ -1054,7 +1056,7 @@ namespace OurFoodChain.Bot.Modules {
                 StringBuilder descriptionBuilder = new StringBuilder();
                 descriptionBuilder.AppendLine(string.IsNullOrEmpty(typesString) ? "None" : typesString);
                 descriptionBuilder.AppendLine();
-                descriptionBuilder.AppendLine(string.Format("*{0}*", StringUtils.GetFirstSentence(species.Description)));
+                descriptionBuilder.AppendLine(string.Format("*{0}*", StringUtilities.GetFirstSentence(species.Description)));
                 descriptionBuilder.AppendLine("\u200B");
 
                 EmbedBuilder statsPageBuilder = new EmbedBuilder {
@@ -1253,12 +1255,12 @@ namespace OurFoodChain.Bot.Modules {
 
             if (gotchi != null) {
 
-                Bot.PaginatedMessageBuilder message = new Bot.PaginatedMessageBuilder {
+                PaginatedMessageBuilder message = new PaginatedMessageBuilder {
                     Message = string.Format("Are you sure you want to release **{0}**?", gotchi.Name),
                     Restricted = true,
                     Callback = async args => {
 
-                        if (args.ReactionAdded && args.ReactionType == Bot.PaginatedMessageReaction.Yes) {
+                        if (args.ReactionAdded && args.ReactionType == PaginatedMessageReaction.Yes) {
 
                             // Delete the Gotchi from the database.
                             await GotchiUtils.DeleteGotchiAsync(gotchi.Id);
@@ -1266,9 +1268,9 @@ namespace OurFoodChain.Bot.Modules {
                             // Show confirmation message.
 
                             if (!gotchi.IsAlive)
-                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtils.ToTitleCase(gotchi.Name)));
+                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
                             else
-                                await BotUtils.ReplyAsync_Success(context, string.Format("Gotchi **{0}** was successfully released. Take care, **{0}**!", StringUtils.ToTitleCase(gotchi.Name)));
+                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}** was successfully released. Take care, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
 
 
                         }

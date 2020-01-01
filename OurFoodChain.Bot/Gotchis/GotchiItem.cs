@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace OurFoodChain.Gotchis {
         [JsonProperty("name")]
         public string Name {
             get {
-                return StringUtils.ToTitleCase(name);
+                return StringUtilities.ToTitleCase(name);
             }
             set {
                 name = value;

@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,6 +18,7 @@ namespace OurFoodChain.Bot.Modules {
         // Public members
 
         public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public Services.ISearchService SearchService { get; set; }
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
@@ -365,7 +367,7 @@ namespace OurFoodChain.Bot.Modules {
                 // Show a warning if the user provided any invalid zones.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtils.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
+                    StringUtilities.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
                     zones.InvalidZones.Count() == 1 ? "does" : "do"));
 
             }
@@ -376,7 +378,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.",
                     sp.ShortName,
-                    StringUtils.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtilities.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 
@@ -386,7 +388,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.",
                     sp.ShortName,
-                    StringUtils.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtilities.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 
@@ -546,7 +548,7 @@ namespace OurFoodChain.Bot.Modules {
             species.RemoveAll(x => x.IsExtinct);
 
             if (species.Count() <= 0)
-                await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtils.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtilities.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
             else
                 await ShowSpeciesInfoAsync(Context, species[BotUtils.RandomInteger(species.Count())]);
 
@@ -557,8 +559,8 @@ namespace OurFoodChain.Bot.Modules {
 
             // Create and execute the search query.
 
-            Taxa.SearchQuery query = new Taxa.SearchQuery(Context, queryString);
-            Taxa.SearchQueryResult result = await query.GetResultAsync(BotConfiguration);
+            Taxa.SearchQuery query = new Taxa.SearchQuery(queryString);
+            Taxa.SearchResult result = await SearchService.GetQueryResultAsync(Context, query);
 
             // Build the embed.
 
@@ -569,7 +571,7 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                if (result.DisplayFormat == Taxa.DisplayFormat.Gallery) {
+                if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Gallery) {
 
                     List<Picture> pictures = new List<Picture>();
 
@@ -579,16 +581,16 @@ namespace OurFoodChain.Bot.Modules {
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 
                 }
-                else if (result.DisplayFormat == Taxa.DisplayFormat.Leaderboard) {
+                else if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Leaderboard) {
 
                     // Match each group to a rank depending on how many results it contains.
 
-                    Dictionary<Taxa.SearchQueryResult.Group, long> groupRanks = new Dictionary<Taxa.SearchQueryResult.Group, long>();
+                    Dictionary<Taxa.SearchResult.Group, long> groupRanks = new Dictionary<Taxa.SearchResult.Group, long>();
 
                     long rank = 0;
                     int lastCount = -1;
 
-                    foreach (Taxa.SearchQueryResult.Group group in result.Groups.OrderByDescending(x => x.Count())) {
+                    foreach (Taxa.SearchResult.Group group in result.Groups.OrderByDescending(x => x.Count())) {
 
                         groupRanks[group] = (lastCount >= 0 && group.Count() == lastCount) ? rank : ++rank;
 
@@ -600,13 +602,13 @@ namespace OurFoodChain.Bot.Modules {
 
                     List<string> lines = new List<string>();
 
-                    foreach (Taxa.SearchQueryResult.Group group in result.Groups) {
+                    foreach (Taxa.SearchResult.Group group in result.Groups) {
 
                         lines.Add(string.Format("**`{0}.`**{1}`{2}` {3}",
                             groupRanks[group].ToString("000"),
                             UserRank.GetRankIcon(groupRanks[group]),
                             group.Count().ToString("000"),
-                            string.Format(groupRanks[group] <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(group.Name) ? "Results" : StringUtils.ToTitleCase(group.Name))
+                            string.Format(groupRanks[group] <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(group.Name) ? "Results" : StringUtilities.ToTitleCase(group.Name))
                         ));
 
                     }
@@ -633,7 +635,7 @@ namespace OurFoodChain.Bot.Modules {
 
                         Bot.PaginatedMessageBuilder embed;
 
-                        if (result.HasGroup(Taxa.SearchQuery.DefaultGroupName)) {
+                        if (result.HasGroup(Taxa.SearchResult.DefaultGroupName)) {
 
                             // If there's only one group, just list the species without creating separate fields.
                             embed = new PaginatedMessageBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToStringArray().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
@@ -816,7 +818,7 @@ namespace OurFoodChain.Bot.Modules {
                 // Show a warning if the user provided any invalid zones.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtils.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
+                    StringUtilities.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
                     zones.InvalidZones.Count() == 1 ? "does" : "do"));
 
             }
@@ -827,7 +829,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now inhabits {1}.",
                       species.ShortName,
-                      StringUtils.ConjunctiveJoin(", ", zones.Zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                      StringUtilities.ConjunctiveJoin(", ", zones.Zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 

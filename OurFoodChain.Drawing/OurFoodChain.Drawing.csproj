@@ -9,4 +9,9 @@
     <PackageReference Include="SkiaSharp" Version="1.68.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj" />
+    <ProjectReference Include="..\OurFoodChain.Taxa\OurFoodChain.Taxa.csproj" />
+  </ItemGroup>
+
 </Project>

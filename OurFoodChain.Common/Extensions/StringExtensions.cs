@@ -18,6 +18,11 @@ namespace OurFoodChain.Common.Extensions {
             return StringUtilities.AfterSubstring(input, substring);
 
         }
+        public static string ReplaceLastSubstring(this string input, string substring, string replacement) {
+
+            return StringUtilities.ReplaceLastSubstring(input, substring, replacement);
+
+        }
 
         public static string FirstWord(this string input) {
 

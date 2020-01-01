@@ -65,6 +65,16 @@ namespace OurFoodChain.Common.Utilities {
                 return input;
 
         }
+        public static string ReplaceLastSubstring(string input, string substring, string replacement) {
+
+            int index = input.LastIndexOf(substring);
+
+            if (index < 0)
+                return input;
+
+            return input.Remove(index, substring.Length).Insert(index, replacement);
+
+        }
         public static string ReplaceWhitespaceCharacters(string value, string with = "_") {
 
             if (string.IsNullOrEmpty(value))

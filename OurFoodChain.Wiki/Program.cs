@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using OurFoodChain.Utilities;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,7 +90,7 @@ namespace OurFoodChain.Wiki {
                     }
 
                     _log(string.Format("finished synchronizing species {0}", species.ShortName));
-            
+
                 }
 
             }
@@ -192,7 +192,7 @@ namespace OurFoodChain.Wiki {
 
             string pictureFilename = GetPictureFilenameFromPictureUrl(pictureUrl);
 
-            return string.Format("{0}-{1}{2}", species.FullName.ToLower().Replace(' ', '_'), StringUtilities.CreateMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
+            return string.Format("{0}-{1}{2}", species.FullName.ToLower().Replace(' ', '_'), StringUtilities.GetMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
 
         }
         private static string GetPictureFilenameFromPictureUrl(string pictureUrl) {

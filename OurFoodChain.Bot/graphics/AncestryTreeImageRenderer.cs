@@ -1,8 +1,9 @@
-﻿using System;
+﻿using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -16,10 +17,10 @@ namespace OurFoodChain {
             // Generate the ancestry tree.
 
             TreeNode<AncestryTree.NodeData> ancestry_tree_root = await AncestryTree.GenerateTreeAsync(species, flags);
-            TreeNode<AncestryTreeRendererNodeData> root = TreeUtils.CopyAs(ancestry_tree_root, x => {
+            TreeNode<AncestryTreeRendererNodeData> root = ancestry_tree_root.Copy(x => {
                 return new AncestryTreeRendererNodeData {
-                    Species = x.Value.Species,
-                    IsAncestor = x.Value.IsAncestor,
+                    Species = x.Species,
+                    IsAncestor = x.IsAncestor,
                     Bounds = new RectangleF()
                 };
             });
@@ -32,7 +33,7 @@ namespace OurFoodChain {
 
                 float horizontal_padding = 5.0f;
 
-                TreeUtils.PostOrderTraverse(root, (node) => {
+                root.PostOrderTraverse(node => {
 
                     SizeF size = GraphicsUtils.MeasureString(node.Value.Species.ShortName, font);
 
@@ -53,7 +54,7 @@ namespace OurFoodChain {
 
                 float min_x = 0.0f;
 
-                TreeUtils.PostOrderTraverse(root, (node) => {
+                root.PostOrderTraverse(node => {
 
                     if (node.Value.Bounds.X < min_x)
                         min_x = bounds.X;
@@ -214,7 +215,7 @@ namespace OurFoodChain {
         }
         private static void _fixSubTreeOverlap(TreeNode<AncestryTreeRendererNodeData> node) {
 
-            TreeUtils.PostOrderTraverse(node, (n) => {
+            node.PostOrderTraverse(n => {
 
                 // Check if this node has overlapping subtrees.
 
@@ -309,7 +310,7 @@ namespace OurFoodChain {
 
         private static void _shiftTree(TreeNode<AncestryTreeRendererNodeData> root, float deltaX, float deltaY) {
 
-            TreeUtils.PostOrderTraverse(root, (node) => {
+            root.PostOrderTraverse(node => {
 
                 node.Value.Bounds.X += deltaX;
                 node.Value.Bounds.Y += deltaY;

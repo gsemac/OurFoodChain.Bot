@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Common.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,7 +61,7 @@ namespace OurFoodChain {
 
                     if (!flags.HasFlag(AncestryTreeGenerationFlags.AncestorsOnly) || node.Value.IsAncestor) {
 
-                        queue.First().AddChild(node);
+                        queue.First().Children.Add(node);
                         queue.Enqueue(node);
 
                     }

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
@@ -39,7 +40,7 @@ namespace OurFoodChain {
 
             int maxTimestampLength = 0;
 
-            TreeUtils.PreOrderTraverse(Tree, x => {
+            Tree.PreOrderTraverse(x => {
 
                 int length = _timestampToString(x.Value.Species.Timestamp).Length;
 
@@ -53,7 +54,7 @@ namespace OurFoodChain {
             List<string> lines = new List<string>();
             Stack<Tuple<int, int>> sibling_line_positions = new Stack<Tuple<int, int>>();
 
-            TreeUtils.PreOrderTraverse(Tree, x => {
+            Tree.PreOrderTraverse(x => {
 
                 string line = "";
 

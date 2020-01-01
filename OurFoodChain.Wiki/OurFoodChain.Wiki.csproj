@@ -91,9 +91,9 @@
       <Project>{8ea1fe67-f170-45b4-abb0-a1dd6142c389}</Project>
       <Name>OurFoodChain.Bot</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OurFoodChain\OurFoodChain.csproj">
-      <Project>{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}</Project>
-      <Name>OurFoodChain</Name>
+    <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj">
+      <Project>{a24672f7-2d13-4e4c-87eb-9f990beebdb4}</Project>
+      <Name>OurFoodChain.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

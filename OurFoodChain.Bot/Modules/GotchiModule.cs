@@ -1,9 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using OurFoodChain.Extensions;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Gotchis;
-using OurFoodChain.Utilities;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;

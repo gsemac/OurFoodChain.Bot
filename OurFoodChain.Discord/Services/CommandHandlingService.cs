@@ -1,7 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using OurFoodChain.Extensions;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,7 +123,7 @@ namespace OurFoodChain.Discord.Services {
 
                 if (!string.IsNullOrEmpty(commandName)) {
 
-                    string suggestedCommandName = Utilities.StringUtilities.GetBestMatch(commandName, GetCommandNames());
+                    string suggestedCommandName = StringUtilities.GetBestMatch(commandName, GetCommandNames());
                     ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(suggestedCommandName);
 
                     await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, string.Format("Unknown command. Did you mean **{0}**?",
@@ -133,7 +134,7 @@ namespace OurFoodChain.Discord.Services {
                 }
 
             }
-    
+
             if (showDefaultErrorMessage)
                 await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, result.ErrorReason);
 

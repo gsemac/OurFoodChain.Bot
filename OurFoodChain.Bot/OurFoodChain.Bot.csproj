@@ -375,13 +375,11 @@
     <Compile Include="Taxa\SpeciesUtils.cs" />
     <Compile Include="Utilities\LogMessage.cs" />
     <Compile Include="Utilities\StringPaginator.cs" />
-    <Compile Include="Utilities\TreeUtils.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
-    <Compile Include="Utilities\Tree.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="zones\SpeciesZoneCollection.cs" />
     <Compile Include="zones\Zone.cs" />
@@ -638,11 +636,15 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj">
+      <Project>{a24672f7-2d13-4e4c-87eb-9f990beebdb4}</Project>
+      <Name>OurFoodChain.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OurFoodChain.Discord\OurFoodChain.Discord.csproj">
       <Project>{21e5d854-183f-4c24-94e4-6c3b0b31fe85}</Project>
       <Name>OurFoodChain.Discord</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OurFoodChain\OurFoodChain.csproj">
+    <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj">
       <Project>{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}</Project>
       <Name>OurFoodChain</Name>
     </ProjectReference>

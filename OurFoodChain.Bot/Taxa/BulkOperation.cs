@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OurFoodChain.Extensions;
-using OurFoodChain.Utilities;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Utilities;
 
 namespace OurFoodChain.Taxa {
 

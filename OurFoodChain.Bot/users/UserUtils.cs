@@ -95,8 +95,8 @@ namespace OurFoodChain {
 
             // Get the users and their species counts, ordered by species count.
 
-            using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT owner, user_id, COUNT(id) AS count FROM Species WHERE user_id IS NOT NULL GROUP BY user_id UNION 
-                SELECT owner, user_id, COUNT(id) AS count FROM Species WHERE user_id IS NULL GROUP BY owner ORDER BY count DESC")) {
+            using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT owner, user_id, COUNT(id) AS count FROM Species WHERE user_id IS NOT NULL AND user_id != 0 GROUP BY user_id UNION 
+                SELECT owner, user_id, COUNT(id) AS count FROM Species WHERE user_id IS NULL OR user_id = 0 GROUP BY owner ORDER BY count DESC")) {
 
                 using (DataTable table = await Database.GetRowsAsync(cmd))
                     foreach (DataRow row in table.Rows) {

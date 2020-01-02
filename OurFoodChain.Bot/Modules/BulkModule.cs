@@ -13,7 +13,7 @@ namespace OurFoodChain.Bot.Modules {
 
         public Services.ISearchService SearchService { get; set; }
 
-        [Command("bulk"), DifficultyLevel(DifficultyLevel.Advanced)]
+        [Command("bulk"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task Bulk([Remainder]string operationString) {
 
             // Instantiate the bulk operation and get the query results.

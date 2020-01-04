@@ -11,24 +11,33 @@ namespace OurFoodChain.Common.Collections {
         // Public members
 
         public T Value { get; set; }
-        public int Depth { get; private set; } = 0;
-        public TreeNode<T> Parent { get; private set; }
-        public ICollection<TreeNode<T>> Children => _children;
+        public int Depth => Parent is null ? 0 : Parent.Depth + 1;
+        public TreeNode<T> Parent { get; set; }
+        public ICollection<TreeNode<T>> Children {
+            get {
+
+                if (_children is null)
+                    _children = new TreeNodeCollection<T>(this);
+
+                return _children;
+
+            }
+        }
 
         public IEnumerator<TreeNode<T>> GetEnumerator() {
 
-            return _children.GetEnumerator();
+            return Children.GetEnumerator();
 
         }
         IEnumerator IEnumerable.GetEnumerator() {
 
-            return _children.GetEnumerator();
+            return Children.GetEnumerator();
 
         }
 
         // Private members
 
-        private readonly List<TreeNode<T>> _children = new List<TreeNode<T>>();
+        private TreeNodeCollection<T> _children = null;
 
     }
 

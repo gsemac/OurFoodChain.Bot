@@ -35,6 +35,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static string SafeTrim(this string input) {
+
+            return StringUtilities.SafeTrim(input);
+
+        }
+
     }
 
 }

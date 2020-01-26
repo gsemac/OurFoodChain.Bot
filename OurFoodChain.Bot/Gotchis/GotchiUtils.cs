@@ -264,7 +264,7 @@ namespace OurFoodChain.Gotchis {
             else {
 
                 // Get the desired evo.
-                Species[] sp = await BotUtils.GetSpeciesFromDb("", desiredEvo);
+                Species[] sp = await SpeciesUtils.GetSpeciesAsync(desiredEvo);
 
                 if (sp is null || sp.Length != 1)
                     return false;

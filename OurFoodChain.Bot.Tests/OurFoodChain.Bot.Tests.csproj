@@ -50,7 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="GenusSpeciesPairTests.cs" />
+    <Compile Include="BinomialNameTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -60,6 +60,10 @@
     <ProjectReference Include="..\OurFoodChain.Bot\OurFoodChain.Bot.csproj">
       <Project>{8ea1fe67-f170-45b4-abb0-a1dd6142c389}</Project>
       <Name>OurFoodChain.Bot</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj">
+      <Project>{a24672f7-2d13-4e4c-87eb-9f990beebdb4}</Project>
+      <Name>OurFoodChain.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

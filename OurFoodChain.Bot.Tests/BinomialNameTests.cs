@@ -6,8 +6,8 @@ using System.Text;
 namespace OurFoodChainBotTests {
 
     [TestClass]
-    public class GenusSpeciesPairTests {
-        public GenusSpeciesPairTests() {
+    public class BinomialNameTests {
+        public BinomialNameTests() {
             //
             // TODO: Add constructor logic here
             //
@@ -16,7 +16,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestSpeciesOnly() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse(string.Empty, "aspersum");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse(string.Empty, "aspersum");
 
             Assert.AreEqual(pair.ToString(), "aspersum");
 
@@ -24,7 +24,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestFullGenusAndSpecies() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse("cornu", "aspersum");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse("cornu", "aspersum");
 
             Assert.AreEqual(pair.ToString(), "Cornu aspersum");
 
@@ -32,7 +32,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestAbbrieviatedGenusAndSpecies() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse("c.", "aspersum");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse("c.", "aspersum");
 
             Assert.AreEqual(pair.ToString(), "C. aspersum");
 
@@ -40,7 +40,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestAbbrieviatedGenusWithoutPeriodAndSpecies() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse("c", "aspersum");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse("c", "aspersum");
 
             Assert.AreEqual(pair.ToString(), "C. aspersum");
 
@@ -48,7 +48,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestAbbrieviatedGenusCombinedWithSpecies() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse(string.Empty, "c.aspersum");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse(string.Empty, "c.aspersum");
 
             Assert.AreEqual(pair.ToString(), "C. aspersum");
 
@@ -56,7 +56,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestAbbrieviatedGenusCombinedWithSpeciesWithBeginningPeriod() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse(string.Empty, "c.aspersum.");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse(string.Empty, "c.aspersum.");
 
             Assert.AreEqual(pair.ToString(), "C. aspersum.");
 
@@ -64,7 +64,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestSpeciesOnlyWithBeginningPeriod() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse(string.Empty, ".aspersum");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse(string.Empty, ".aspersum");
 
             Assert.AreEqual(pair.ToString(), ".aspersum");
 
@@ -72,7 +72,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestSpeciesOnlyWithTrailingPeriod() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse(string.Empty, "aspersum.");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse(string.Empty, "aspersum.");
 
             Assert.AreEqual(pair.ToString(), "aspersum.");
 
@@ -80,7 +80,7 @@ namespace OurFoodChainBotTests {
         [TestMethod]
         public void TestSpeciesOnlyWithBeginningAndTrailingPeriod() {
 
-            OurFoodChain.GenusSpeciesPair pair = OurFoodChain.GenusSpeciesPair.Parse(string.Empty, ".aspersum.");
+            OurFoodChain.BinomialName pair = OurFoodChain.BinomialName.Parse(string.Empty, ".aspersum.");
 
             Assert.AreEqual(pair.ToString(), ".aspersum.");
 

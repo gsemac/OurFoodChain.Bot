@@ -11,11 +11,6 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public enum SpeciesNameFormat {
-        Full,
-        Abbreviated
-    }
-
     public static class SpeciesUtils {
 
         // Ideally, all utility functions related to species should be located here.
@@ -58,52 +53,55 @@ namespace OurFoodChain {
         }
         public static async Task<Species[]> GetSpeciesAsync(string name) {
 
-            GenusSpeciesPair input = _parseGenusAndSpeciesFromUserInput(string.Empty, name);
+            // We don't know for sure if the user passed in a binomial name or a common name/species name.
+            // If the input is a valid binomial name, we'll use it to find the requested species.
+            // Otherwise, or if the first attempt doesn't return a match, we'll treat it as a common name/species name.
 
-            if (string.IsNullOrEmpty(input.GenusName)) {
+            BinomialName input = BinomialName.Parse(name);
 
-                // Returns species by name and/or common name.
+            List<Species> result = new List<Species>();
 
-                List<Species> species = new List<Species>();
+            if (!string.IsNullOrEmpty(input.Genus)) {
 
-                if (!string.IsNullOrEmpty(name)) {
+                // Attempt to get the species using name/genus.
 
-                    using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
+                result.AddRange(await GetSpeciesAsync(input.Genus, input.Species));
 
-                        cmd.Parameters.AddWithValue("$name", input.SpeciesName.ToLower());
+            }
 
-                        using (DataTable table = await Database.GetRowsAsync(cmd))
-                            foreach (DataRow row in table.Rows)
-                                species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
+            if (result.Count() <= 0) {
 
-                    }
+                // Attempt to get the species by common name/species name.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
+
+                    cmd.Parameters.AddWithValue("$name", input.Species.ToLower());
+
+                    using (DataTable table = await Database.GetRowsAsync(cmd))
+                        foreach (DataRow row in table.Rows)
+                            result.Add(await SpeciesFromDataRow(row));
 
                 }
 
-                return species.ToArray();
-
             }
-            else {
 
-                return await GetSpeciesAsync(input.GenusName, input.SpeciesName);
-
-            }
+            return result.ToArray();
 
         }
         public static async Task<Species[]> GetSpeciesAsync(string genus, string species) {
 
-            GenusSpeciesPair input = _parseGenusAndSpeciesFromUserInput(genus, species);
+            BinomialName input = BinomialName.Parse(genus, species);
 
             // If the species is the empty string, don't bother trying to find any matches.
             // This prevents species with an empty, but non-null common name (set to "") from being returned.
 
-            if (string.IsNullOrEmpty(input.SpeciesName))
-                return new Species[] { };
+            if (string.IsNullOrEmpty(input.Species))
+                return Array.Empty<Species>();
 
-            if (string.IsNullOrEmpty(input.GenusName)) {
+            if (string.IsNullOrEmpty(input.Genus)) {
 
                 // If the user didn't pass in a genus, we'll look up the species by name (name or common name).
-                return await GetSpeciesAsync(input.SpeciesName);
+                return await GetSpeciesAsync(input.Species);
 
             }
             else if (input.IsAbbreviated) {
@@ -111,9 +109,9 @@ namespace OurFoodChain {
                 // If the genus is abbreviated (e.g. "Cornu" -> "C.") but not null, we'll look for matching species and determine the genus afterwards.
                 // Notice that this case does not allow for looking up the species by common name, which should not occur when the genus is included.
 
-                Species[] result = await GetSpeciesAsync(input.SpeciesName);
+                Species[] result = await GetSpeciesAsync(input.Species);
 
-                return result.Where(x => !string.IsNullOrEmpty(x.GenusName) && x.GenusName.ToLower().StartsWith(input.GenusName.ToLower())).ToArray();
+                return result.Where(x => !string.IsNullOrEmpty(x.GenusName) && x.GenusName.ToLower().StartsWith(input.Genus.ToLower())).ToArray();
 
             }
             else {
@@ -121,9 +119,9 @@ namespace OurFoodChain {
                 // If we've been given full genus and species names, we can attempt to get the species directly.
                 // Although genera can have common names, only allow the genus to be looked up by its scientific name. Generally users wouldn't use the common name in this context.
 
-                Species species_result = await _getSpeciesByGenusAndSpeciesNameAsync(input.GenusName, input.SpeciesName);
+                Species species_result = await _getSpeciesByGenusAndSpeciesNameAsync(input.Genus, input.Species);
 
-                return (species_result is null) ? new Species[] { } : new Species[] { species_result };
+                return (species_result is null) ? Array.Empty<Species>() : new Species[] { species_result };
 
             }
 
@@ -673,7 +671,7 @@ namespace OurFoodChain {
 
         }
 
-        public static string FormatSpeciesName(string speciesName, SpeciesNameFormat format) {
+        public static string FormatSpeciesName(string speciesName, BinomialNameFormat format) {
 
             string[] words = speciesName.Split(' ')
                 .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -689,10 +687,10 @@ namespace OurFoodChain {
 
             switch (format) {
 
-                case SpeciesNameFormat.Full:
+                case BinomialNameFormat.Full:
                     return string.Format("{0} {1}", StringUtilities.ToTitleCase(words[0]), words[1].ToLower());
 
-                case SpeciesNameFormat.Abbreviated:
+                case BinomialNameFormat.Abbreviated:
                     return string.Format("{0}. {1}", StringUtilities.ToTitleCase(words[0]).First(), words[1].ToLower());
 
             }
@@ -761,11 +759,6 @@ namespace OurFoodChain {
 
         }
 
-        private static GenusSpeciesPair _parseGenusAndSpeciesFromUserInput(string inputGenus, string inputSpecies) {
-
-            return GenusSpeciesPair.Parse(inputGenus, inputSpecies);
-
-        }
         private static async Task<Species> _getSpeciesByGenusAndSpeciesNameAsync(string genus, string species) {
 
             Taxon genus_info = await BotUtils.GetGenusFromDb(genus);

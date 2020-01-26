@@ -429,6 +429,12 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
+        public static string SafeTrim(string input) {
+
+            return input?.Trim() ?? "";
+
+        }
+
         // Private members
 
         private static string JoinWithUniqueEndSeparator(string separator, string endSeparator, IEnumerable<string> values) {

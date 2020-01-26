@@ -702,8 +702,8 @@ namespace OurFoodChain.Bot.Modules {
 
                 // (Tank expansions cost extra the more the user has already.)
 
-                if (item.Id == 1)
-                    item.Price *= user_data.GotchiLimit;
+                //if (item.Id == 1)
+                //    item.Price *= user_data.GotchiLimit;
 
                 // Build the field.
 
@@ -738,21 +738,9 @@ namespace OurFoodChain.Bot.Modules {
 
             // Calculate the price of the item.
 
-            long totalPrice = 0;
+            long totalPrice = item.Price * count;
 
-            if (item != null && userInfo != null && count >= 1) {
-
-                // Tank expansions cost extra the more the user has already.
-
-                if (item.Id == (int)GotchiItemId.TankExpansion)
-                    for (long i = userInfo.GotchiLimit; i < count + userInfo.GotchiLimit; ++i)
-                        totalPrice += item.Price * i;
-                else
-                    totalPrice = item.Price * count;
-
-            }
-
-            if (item != null && item.Id != GotchiItem.NullId && count >= 1) {
+            if (item != null && userInfo != null && item.Id != GotchiItem.NullId && count >= 1) {
 
                 if (totalPrice <= userInfo.G) {
 

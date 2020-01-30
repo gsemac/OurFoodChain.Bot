@@ -75,7 +75,7 @@ namespace OurFoodChain {
 
                 using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
 
-                    cmd.Parameters.AddWithValue("$name", input.Species.ToLower());
+                    cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
 
                     using (DataTable table = await Database.GetRowsAsync(cmd))
                         foreach (DataRow row in table.Rows)

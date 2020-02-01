@@ -19,7 +19,7 @@ namespace OurFoodChain.Bot.Attributes {
 
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services) {
 
-            if (services.GetService<IOurFoodChainBotConfiguration>().GetProperty(SettingName, false))
+            if (services.GetService<IOfcBotConfiguration>().GetProperty(SettingName, false))
                 return Task.FromResult(PreconditionResult.FromSuccess());
             else
                 return Task.FromResult(PreconditionResult.FromError(string.Format("You must enable the `{0}` setting to use this command.", SettingName)));

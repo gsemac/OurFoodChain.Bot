@@ -15,7 +15,7 @@ namespace OurFoodChain.Bot.Services {
         // Public members
 
         public OurFoodChainBotCommandHandlingService(
-            IOurFoodChainBotConfiguration configuration,
+            IOfcBotConfiguration configuration,
             IServiceProvider serviceProvider,
             Discord.Services.IHelpService helpService,
             DiscordSocketClient discordClient,
@@ -52,7 +52,7 @@ namespace OurFoodChain.Bot.Services {
 
         // Private members
 
-        private readonly IOurFoodChainBotConfiguration _configuration;
+        private readonly IOfcBotConfiguration _configuration;
 
     }
 

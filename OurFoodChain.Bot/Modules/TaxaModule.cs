@@ -17,7 +17,7 @@ namespace OurFoodChain.Bot.Modules {
 
         // Public members
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         // Genus
 

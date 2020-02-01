@@ -17,17 +17,17 @@ namespace OurFoodChain {
 
             if (!System.IO.File.Exists(configFilePath)) {
 
-                new Bot.OurFoodChainBotConfiguration().Save(configFilePath);
+                new Bot.OfcBotConfiguration().Save(configFilePath);
 
                 Console.WriteLine("Configuration file \"config.json\" has been generated. Fill out the configuration file, and then run this program again.");
 
             }
             else {
 
-                Bot.OurFoodChainBotConfiguration configuration =
-                    Discord.ConfigurationBase.Open<Bot.OurFoodChainBotConfiguration>(configFilePath);
+                Bot.OfcBotConfiguration configuration =
+                    Discord.ConfigurationBase.Open<Bot.OfcBotConfiguration>(configFilePath);
 
-                Bot.OurFoodChainBot bot = new Bot.OurFoodChainBot(configuration);
+                Bot.OfcBot bot = new Bot.OfcBot(configuration);
 
                 await bot.StartAsync();
 

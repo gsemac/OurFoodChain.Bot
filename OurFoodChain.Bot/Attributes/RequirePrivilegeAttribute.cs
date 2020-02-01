@@ -31,12 +31,12 @@ namespace OurFoodChain.Bot.Attributes {
 
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services) {
 
-            IOurFoodChainBotConfiguration botConfiguration = services.GetRequiredService<IOurFoodChainBotConfiguration>();
+            IOfcBotConfiguration botConfiguration = services.GetRequiredService<IOfcBotConfiguration>();
 
             if (botConfiguration.HasPrivilegeLevel(context.User, PrivilegeLevel))
                 return Task.FromResult(PreconditionResult.FromSuccess());
             else
-                return Task.FromResult(PreconditionResult.FromError(string.Format("You must have **{0}** privileges to use this command.", OurFoodChainBotConfiguration.PrivilegeLevelToString(PrivilegeLevel))));
+                return Task.FromResult(PreconditionResult.FromError(string.Format("You must have **{0}** privileges to use this command.", OfcBotConfiguration.PrivilegeLevelToString(PrivilegeLevel))));
 
         }
 

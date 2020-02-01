@@ -14,7 +14,7 @@ namespace OurFoodChain.Bot.Services {
 
         public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
 
-        public GotchiBackgroundService(IOurFoodChainBotConfiguration botConfiguration) {
+        public GotchiBackgroundService(IOfcBotConfiguration botConfiguration) {
 
             this.botConfiguration = botConfiguration;
 
@@ -52,7 +52,7 @@ namespace OurFoodChain.Bot.Services {
         // Private members
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private readonly IOurFoodChainBotConfiguration botConfiguration;
+        private readonly IOfcBotConfiguration botConfiguration;
 
         private async Task DoBackgroundLoopAsync() {
 

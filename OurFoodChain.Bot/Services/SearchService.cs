@@ -16,7 +16,7 @@ namespace OurFoodChain.Bot.Services {
 
         // Public members
 
-        public SearchService(IOurFoodChainBotConfiguration botConfiguration) {
+        public SearchService(IOfcBotConfiguration botConfiguration) {
 
             _botConfiguration = botConfiguration;
 
@@ -75,7 +75,7 @@ namespace OurFoodChain.Bot.Services {
 
         // Private members
 
-        private readonly IOurFoodChainBotConfiguration _botConfiguration;
+        private readonly IOfcBotConfiguration _botConfiguration;
 
         private async Task<Taxa.SearchResult> ApplyPostMatchModifiersAsync(List<Species> matches, ICommandContext context, SearchQuery searchQuery) {
 

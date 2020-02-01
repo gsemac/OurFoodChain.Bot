@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public interface IOurFoodChainBotConfiguration :
+    public interface IOfcBotConfiguration :
         Discord.IBotConfiguration {
 
         ulong[] BotAdminUserIds { get; set; }

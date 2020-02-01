@@ -11,7 +11,7 @@ namespace OurFoodChain.Bot.Modules {
     public class ReviewsModule :
         ModuleBase {
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("reviews"), Alias("review")]
         public async Task Reviews() {

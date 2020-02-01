@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class OurFoodChainBot :
+    public class OfcBot :
         Discord.DiscordBotBase {
 
         // Public members
 
-        public OurFoodChainBot(OurFoodChainBotConfiguration configuration) :
+        public OfcBot(OfcBotConfiguration configuration) :
             base(configuration) {
 
             Configuration = configuration;
@@ -55,8 +55,7 @@ namespace OurFoodChain.Bot {
 
         // Protected members
 
-        protected new OurFoodChainBotConfiguration Configuration { get; private set; }
-        public static object Instance { get; internal set; }
+        protected new OfcBotConfiguration Configuration { get; private set; }
 
         protected override async Task<IServiceCollection> ConfigureServicesAsync() {
 
@@ -64,7 +63,7 @@ namespace OurFoodChain.Bot {
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Services.ISearchService, Services.SearchService>()
-                .AddSingleton<IOurFoodChainBotConfiguration>(Configuration);
+                .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }
         protected override async Task InitializeServicesAsync(IServiceProvider serviceProvider) {

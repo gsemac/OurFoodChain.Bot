@@ -15,7 +15,7 @@ namespace OurFoodChain.Bot.Modules {
 
         // Public members
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
         public Discord.Services.ICommandHandlingService CommandHandlingService { get; set; }
         public IServiceProvider ServiceProvider { get; set; }
         public Discord.Services.IHelpService HelpService { get; set; }

@@ -16,7 +16,7 @@ namespace OurFoodChain.Bot.Modules {
 
         private const string MAP_GALLERY_NAME = "map";
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("map")]
         public async Task Map() {

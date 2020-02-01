@@ -17,7 +17,7 @@ namespace OurFoodChain.Bot.Modules {
 
         // Public members
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
         public Services.ISearchService SearchService { get; set; }
 
         [Command("info"), Alias("i")]
@@ -682,7 +682,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, Species species) {
+        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, Species species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 

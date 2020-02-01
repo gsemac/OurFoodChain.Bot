@@ -14,7 +14,7 @@ namespace OurFoodChain.Bot.Modules {
     public class ZonesModule :
         ModuleBase {
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("addzone"), Alias("addz"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddZone(string name, string type = "", string description = "") {

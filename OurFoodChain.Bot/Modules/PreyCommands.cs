@@ -15,7 +15,7 @@ namespace OurFoodChain.Bot {
 
         // Public members
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
         public async Task AddPrey(string speciesName, string preySpeciesName) {

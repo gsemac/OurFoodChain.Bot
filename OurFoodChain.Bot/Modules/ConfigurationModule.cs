@@ -14,7 +14,7 @@ namespace OurFoodChain.Bot.Modules {
     public class ConfigurationModule :
         ModuleBase {
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
         public Discord.Services.ICommandHandlingService CommandHandlingService { get; set; }
         public DiscordSocketClient DiscordClient { get; set; }
 

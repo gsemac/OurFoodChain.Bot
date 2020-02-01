@@ -42,7 +42,7 @@ namespace OurFoodChain.Gotchis {
         public int turnCount = 0;
         public string battleText = "";
 
-        public GotchiBattleState(IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient discordClient) {
+        public GotchiBattleState(IOfcBotConfiguration botConfiguration, DiscordSocketClient discordClient) {
 
             _botConfiguration = botConfiguration;
             _discordClient = discordClient;
@@ -248,7 +248,7 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public static async Task RegisterBattleAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient discordClient, Gotchi gotchi1, Gotchi gotchi2) {
+        public static async Task RegisterBattleAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient discordClient, Gotchi gotchi1, Gotchi gotchi2) {
 
             // Initialize the battle state.
 
@@ -397,7 +397,7 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        private readonly IOurFoodChainBotConfiguration _botConfiguration;
+        private readonly IOfcBotConfiguration _botConfiguration;
         private readonly DiscordSocketClient _discordClient;
 
         private async Task _useMoveOnAsync(ICommandContext context, PlayerState user, PlayerState target) {

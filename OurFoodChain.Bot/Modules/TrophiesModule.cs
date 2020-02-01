@@ -13,7 +13,7 @@ namespace OurFoodChain.Bot.Modules {
     public class TrophiesModule :
         ModuleBase {
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("trophies"), Alias("achievements")]
         public async Task Trophies(IUser user = null) {

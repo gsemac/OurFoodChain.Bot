@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class OurFoodChainBotConfiguration :
+    public class OfcBotConfiguration :
         Discord.BotConfiguration,
-        IOurFoodChainBotConfiguration {
+        IOfcBotConfiguration {
 
         [JsonProperty("bot_admin_user_ids")]
         public ulong[] BotAdminUserIds { get; set; }

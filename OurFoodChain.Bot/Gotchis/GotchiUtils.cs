@@ -605,7 +605,7 @@ namespace OurFoodChain.Gotchis {
             return outputPath;
 
         }
-        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient client, Gotchi gotchi) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient client, Gotchi gotchi) {
 
             GotchiGifCreatorParams p = new GotchiGifCreatorParams {
                 gotchi = gotchi,
@@ -616,7 +616,7 @@ namespace OurFoodChain.Gotchis {
                 new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
 
         }
-        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient client, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient client, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
             string file_path = await GenerateGotchiGifAsync(gifParams, extraParams);
 

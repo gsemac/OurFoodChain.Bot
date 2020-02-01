@@ -17,7 +17,7 @@ namespace OurFoodChain.Bot.Modules {
     public class CommandsModule :
         ModuleBase {
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("+extinct"), Alias("setextinct")]
         public async Task SetExtinct(string species) {

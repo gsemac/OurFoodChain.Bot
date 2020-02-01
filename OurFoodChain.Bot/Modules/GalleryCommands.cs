@@ -14,7 +14,7 @@ namespace OurFoodChain.Bot {
     public class GalleryCommands :
         ModuleBase {
 
-        public IOurFoodChainBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration BotConfiguration { get; set; }
 
         [Command("setpic"), Alias("setspeciespic", "setspic")]
         public async Task SetPic(string species, string imageUrl) {

@@ -11,25 +11,64 @@ using System.Linq;
 
 namespace OurFoodChain.Drawing {
 
-    public class EvolutionaryTreeRenderer :
-        IEvolutionaryTreeRenderer {
+    public sealed class HierarchicalSpeciesTreeRenderer :
+        ISpeciesTreeRenderer {
 
         // Public members
 
+        public Color BackgroundColor { get; set; } = Color.FromArgb(54, 57, 63);
+        public Color TextColor { get; set; } = Color.White;
+        public Color LineColor { get; set; } = Color.White;
+        public Color HighlightColor { get; set; } = Color.Yellow;
+        public SizeF Size => CalculateTreeBounds(tree).Size;
+
         public ISpecies HighlightedSpecies { get; set; }
 
-        public void SaveTo(TreeNode<ISpecies> inputTree, Stream stream) {
+        public HierarchicalSpeciesTreeRenderer(TreeNode<ISpecies> tree) {
 
-            // Copy the evolutionary tree.
+            this.tree = BuildTree(tree);
 
-            TreeNode<NodeData> root = inputTree.Copy(n => new NodeData {
+        }
+
+        public void DrawTo(ICanvas canvas) {
+
+            DrawNode(canvas, tree);
+
+        }
+
+        public void Dispose() {
+
+            if (font != null)
+                font.Dispose();
+
+        }
+
+        // Private members
+
+        private class NodeData {
+
+            public ISpecies Species { get; set; }
+            public RectangleF Bounds { get; set; } = new RectangleF();
+
+        }
+
+        private class NodeBoundsPair {
+
+            public TreeNode<NodeData> Node { get; set; }
+            public RectangleF Bounds { get; set; } = new RectangleF();
+
+        }
+
+        private readonly TreeNode<NodeData> tree;
+        private readonly Font font = new Font("Calibri", 12);
+
+        private static TreeNode<NodeData> BuildTree(TreeNode<ISpecies> tree) {
+
+            TreeNode<NodeData> root = tree.Copy(n => new NodeData {
                 Species = n
             });
 
-            using (SKPaint paint = new SKPaint {
-                Typeface = SKTypeface.FromFamilyName("Calibri"),
-                TextSize = 12.0f
-            }) {
+            using (Font font = new Font("Calibri", 12)) {
 
                 // Measure the size of each node.
 
@@ -37,10 +76,9 @@ namespace OurFoodChain.Drawing {
 
                 root.PostOrderTraverse(node => {
 
-                    float textHeight = paint.FontMetrics.XHeight;
-                    float textWidth = paint.MeasureText(node.Value.Species.BinomialName.ToString(BinomialNameFormat.Abbreviated));
+                    SizeF textSize = DrawingUtilities.MeasureText(node.Value.Species.BinomialName.ToString(BinomialNameFormat.Abbreviated), font);
 
-                    node.Value.Bounds = new RectangleF(node.Value.Bounds.X, node.Value.Bounds.Y, textWidth + nodePaddingX, textHeight);
+                    node.Value.Bounds = new RectangleF(node.Value.Bounds.X, node.Value.Bounds.Y, textSize.Width + nodePaddingX, textSize.Height);
 
                 });
 
@@ -65,48 +103,11 @@ namespace OurFoodChain.Drawing {
 
                 ShiftTree(root, -minX, 0.0f);
 
-                // Create the image.
-
-                SKImageInfo imageInfo = new SKImageInfo((int)bounds.Width, (int)bounds.Height);
-
-                using (SKSurface surface = SKSurface.Create(imageInfo)) {
-
-                    SKCanvas canvas = surface.Canvas;
-
-                    canvas.Clear(new SKColor(54, 57, 63));
-
-                    paint.IsAntialias = true;
-
-                    DrawNode(canvas, root, paint, HighlightedSpecies);
-
-                    // Write the result to the stream.
-
-                    using (SKImage image = surface.Snapshot())
-                    using (SKData data = image.Encode(SKEncodedImageFormat.Png, 100))
-                        data.SaveTo(stream);
-
-                }
+                return root;
 
             }
 
         }
-
-        // Private members
-
-        private class NodeData {
-
-            public ISpecies Species { get; set; }
-            public RectangleF Bounds { get; set; } = new RectangleF();
-
-        }
-
-        private class NodeBoundsPair {
-
-            public TreeNode<NodeData> Node { get; set; }
-            public RectangleF Bounds { get; set; } = new RectangleF();
-
-        }
-
         private static void CalculateNodePositions(TreeNode<NodeData> node) {
 
             InitializeNodePositions(node);
@@ -289,43 +290,46 @@ namespace OurFoodChain.Drawing {
 
         }
 
-        private static void DrawNode(SKCanvas canvas, TreeNode<NodeData> node, SKPaint paint, ISpecies highlightedSpecies) {
+        private void DrawNode(ICanvas canvas, TreeNode<NodeData> node) {
 
             // Cross-out the species if it's extinct.
 
             if (node.Value.Species.Status.IsExinct) {
 
-                paint.Color = SKColors.White;
-                paint.StrokeWidth = 1.0f;
+                using (Brush brush = new SolidBrush(TextColor))
+                using (Pen pen = new Pen(brush, 1.0f)) {
 
-                canvas.DrawLine(
-                    new SKPoint(node.Value.Bounds.X, node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f),
-                    new SKPoint(node.Value.Bounds.X + node.Value.Bounds.Width - 5.0f, node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f),
-                    paint
-                    );
+                    canvas.DrawLine(pen,
+                        new PointF(node.Value.Bounds.X, node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f),
+                        new PointF(node.Value.Bounds.X + node.Value.Bounds.Width - 5.0f, node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f));
+
+                }
 
             }
 
             // Draw the name of the species.
 
-            paint.Color = (highlightedSpecies != null && node.Value.Species.Id == highlightedSpecies.Id) ? SKColors.Yellow : SKColors.White;
-
-            canvas.DrawText(node.Value.Species.ShortName, node.Value.Bounds.X, node.Value.Bounds.Y, paint);
+            canvas.DrawText(node.Value.Species.ShortName,
+                new PointF(node.Value.Bounds.X, node.Value.Bounds.Y),
+                font,
+                node.Value.Species.Id == HighlightedSpecies.Id ? HighlightColor : TextColor);
 
             // Draw child nodes.
 
             foreach (TreeNode<NodeData> child in node.Children) {
 
-                paint.StrokeCap = SKStrokeCap.Round;
-                paint.StrokeWidth = 2.0f;
+                using (Brush brush = new SolidBrush(false ? HighlightColor : TextColor)) // child.Value.IsAncestor
+                using (Pen pen = new Pen(brush, 2.0f)) {
 
-                canvas.DrawLine(
-                        new SKPoint(node.Value.Bounds.X + (node.Value.Bounds.Width / 2.0f), node.Value.Bounds.Y + node.Value.Bounds.Height),
-                        new SKPoint(child.Value.Bounds.X + (child.Value.Bounds.Width / 2.0f), child.Value.Bounds.Y),
-                        paint
-                        );
+                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
 
-                DrawNode(canvas, child, paint, highlightedSpecies);
+                    canvas.DrawLine(pen,
+                        new PointF(node.Value.Bounds.X + (node.Value.Bounds.Width / 2.0f), node.Value.Bounds.Y + node.Value.Bounds.Height),
+                        new PointF(child.Value.Bounds.X + (child.Value.Bounds.Width / 2.0f), child.Value.Bounds.Y));
+
+                }
+
+                DrawNode(canvas, child);
 
             }
 

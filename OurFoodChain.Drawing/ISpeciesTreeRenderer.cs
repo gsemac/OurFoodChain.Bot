@@ -7,11 +7,10 @@ using System.Text;
 
 namespace OurFoodChain.Drawing {
 
-    public interface IEvolutionaryTreeRenderer {
+    public interface ISpeciesTreeRenderer :
+        ITreeRenderer<ISpecies> {
 
         ISpecies HighlightedSpecies { get; set; }
-
-        void SaveTo(TreeNode<ISpecies> inputTree, Stream stream);
 
     }
 

@@ -19,7 +19,8 @@ namespace OurFoodChain {
 
                 new Bot.OfcBotConfiguration().Save(configFilePath);
 
-                Console.WriteLine("Configuration file \"config.json\" has been generated. Fill out the configuration file, and then run this program again.");
+                Console.WriteLine(string.Format("Configuration file \"{0}\" has been created. Fill out the configuration file, and then run this program again.",
+                    configFilePath));
 
             }
             else {

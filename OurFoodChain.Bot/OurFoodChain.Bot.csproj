@@ -354,7 +354,7 @@
     <Compile Include="users\UserRank.cs" />
     <Compile Include="Utilities\ArrayUtils.cs" />
     <Compile Include="Modules\CommandsModule.cs" />
-    <Compile Include="Services\Database.cs" />
+    <Compile Include="database\Database.cs" />
     <Compile Include="OfcBot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -639,6 +639,14 @@
     <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj">
       <Project>{a24672f7-2d13-4e4c-87eb-9f990beebdb4}</Project>
       <Name>OurFoodChain.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Data\OurFoodChain.Data.csproj">
+      <Project>{3a9ffd0b-954c-4d9b-8784-d595ce65e236}</Project>
+      <Name>OurFoodChain.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Debug\OurFoodChain.Debug.csproj">
+      <Project>{57aad8be-e84f-4a99-8bb3-f6131f7fe64b}</Project>
+      <Name>OurFoodChain.Debug</Name>
     </ProjectReference>
     <ProjectReference Include="..\OurFoodChain.Discord\OurFoodChain.Discord.csproj">
       <Project>{21e5d854-183f-4c24-94e4-6c3b0b31fe85}</Project>

@@ -219,7 +219,7 @@ namespace OurFoodChain.Gotchis {
 
                 long count = await Database.GetScalar<long>(cmd);
 
-                Debug.Assert(count >= 0);
+                System.Diagnostics.Debug.Assert(count >= 0);
 
                 return count;
 

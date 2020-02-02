@@ -41,6 +41,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static string Truncate(this string input, int maxLength) {
+
+            return StringUtilities.Truncate(input, maxLength);
+
+        }
+
     }
 
 }

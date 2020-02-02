@@ -435,6 +435,12 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
+        public static string Truncate(string input, int maxLength) {
+
+            return input.Substring(0, Math.Min(input.Length, maxLength));
+
+        }
+
         // Private members
 
         private static string JoinWithUniqueEndSeparator(string separator, string endSeparator, IEnumerable<string> values) {

@@ -40,25 +40,6 @@ namespace OurFoodChain.Bot.Attributes {
 
         }
 
-        // Private members
-
-        private static PrivilegeLevel GetPrivilegeLevel(CommandInfo commandInfo) {
-
-            if (commandInfo != null) {
-
-                foreach (Attribute attribute in commandInfo.Preconditions) {
-
-                    if (attribute is RequirePrivilegeAttribute privilege_attribute)
-                        return privilege_attribute.PrivilegeLevel;
-
-                }
-
-            }
-
-            return PrivilegeLevel.ServerMember;
-
-        }
-
     }
 
 }

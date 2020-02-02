@@ -393,7 +393,7 @@ namespace OurFoodChain.Gotchis {
         public static async Task<GotchiItem[]> GetGotchiItemsAsync() {
 
             List<GotchiItem> items = new List<GotchiItem>();
-            string[] files = System.IO.Directory.GetFiles(Global.GotchiItemsDirectory, "*.json");
+            string[] files = System.IO.Directory.GetFiles(Constants.GotchiItemsDirectory, "*.json");
 
             foreach (string file in files) {
 
@@ -515,11 +515,11 @@ namespace OurFoodChain.Gotchis {
 
             // Download the gotchi image if possible.
 
-            string gotchi_pic = Global.GotchiImagesDirectory + "default.png";
+            string gotchi_pic = Constants.GotchiImagesDirectory + "default.png";
 
             if (!string.IsNullOrEmpty(sp.Picture) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.Picture, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
 
-                string downloads_dir = Global.TempDirectory + "downloads";
+                string downloads_dir = Constants.TempDirectory + "downloads";
                 string ext = Regex.Match(sp.Picture, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
                 string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.GetMD5(sp.Picture) + ext);
 
@@ -553,7 +553,7 @@ namespace OurFoodChain.Gotchis {
 
             // Create the temporary directory where the GIF will be saved.
 
-            string tempDirectory = Global.TempDirectory + "gotchi";
+            string tempDirectory = Constants.TempDirectory + "gotchi";
 
             if (!System.IO.Directory.Exists(tempDirectory))
                 System.IO.Directory.CreateDirectory(tempDirectory);
@@ -578,7 +578,7 @@ namespace OurFoodChain.Gotchis {
 
             using (GotchiGifCreator gif = new GotchiGifCreator()) {
 
-                string backgroundFilename = System.IO.Path.Combine(Global.GotchiImagesDirectory, extraParams.backgroundFileName);
+                string backgroundFilename = System.IO.Path.Combine(Constants.GotchiImagesDirectory, extraParams.backgroundFileName);
 
                 if (System.IO.File.Exists(backgroundFilename))
                     gif.SetBackground(backgroundFilename);
@@ -641,7 +641,7 @@ namespace OurFoodChain.Gotchis {
 
                     string candidate_filename = string.Format("home_{0}.png", StringUtilities.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
 
-                    if (System.IO.File.Exists(Global.GotchiImagesDirectory + candidate_filename))
+                    if (System.IO.File.Exists(Constants.GotchiImagesDirectory + candidate_filename))
                         return candidate_filename;
 
                 }

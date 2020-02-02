@@ -88,7 +88,7 @@ namespace OurFoodChain {
 
     public class HelpUtils {
 
-        public static readonly string HELP_DIRECTORY = Global.DataDirectory + "help/";
+        public static readonly string HELP_DIRECTORY = Constants.DataDirectory + "help/";
         public static readonly string DEFAULT_COMMAND_CATEGORY = "uncategorized";
 
         public static CommandHelpInfo GetCommandInfo(string commandName) {

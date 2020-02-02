@@ -15,7 +15,7 @@ namespace OurFoodChain {
 
         // Public members
 
-        public static string FilePath { get; } = Global.DatabaseFilePath;
+        public static string FilePath { get; } = Constants.DatabaseFilePath;
 
         public static async Task InitializeAsync() {
 
@@ -156,7 +156,7 @@ namespace OurFoodChain {
 
                 // Load database updater config.
 
-                string config_fname = System.IO.Path.Combine(Global.DatabaseUpdatesDirectory, "config.json");
+                string config_fname = System.IO.Path.Combine(Constants.DatabaseUpdatesDirectory, "config.json");
                 DatabaseUpdaterConfig config = new DatabaseUpdaterConfig();
 
                 if (System.IO.File.Exists(config_fname))
@@ -164,7 +164,7 @@ namespace OurFoodChain {
                 else
                     Console.WriteLine(new LogMessage(LogSeverity.Warning, "Database", "Database updates config not found").ToString());
 
-                config.UpdatesDirectory = Global.DatabaseUpdatesDirectory;
+                config.UpdatesDirectory = Constants.DatabaseUpdatesDirectory;
 
                 await new DatabaseUpdater(conn, config).UpdateToLatestVersionAsync();
 

@@ -133,7 +133,7 @@ namespace OurFoodChain.Gotchis {
 
             Script script = CreateAndInitializeScript();
 
-            foreach (string file in System.IO.Directory.GetFiles(Global.GotchiMovesDirectory, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
+            foreach (string file in System.IO.Directory.GetFiles(Constants.GotchiMovesDirectory, "*.lua", System.IO.SearchOption.TopDirectoryOnly)) {
 
                 script.DoFile(file);
 

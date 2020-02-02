@@ -111,19 +111,19 @@ namespace OurFoodChain.Bot {
 
             await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi types");
 
-            await gotchiContext.TypeRegistry.RegisterAllAsync(Global.GotchiDataDirectory + "types/");
+            await gotchiContext.TypeRegistry.RegisterAllAsync(Constants.GotchiDataDirectory + "types/");
 
             await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi types");
 
             await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi statuses");
 
-            await gotchiContext.StatusRegistry.RegisterAllAsync(Global.GotchiDataDirectory + "statuses/");
+            await gotchiContext.StatusRegistry.RegisterAllAsync(Constants.GotchiDataDirectory + "statuses/");
 
             await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi statuses");
 
             await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi moves");
 
-            await gotchiContext.MoveRegistry.RegisterAllAsync(Global.GotchiDataDirectory + "moves/");
+            await gotchiContext.MoveRegistry.RegisterAllAsync(Constants.GotchiDataDirectory + "moves/");
 
             await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi moves");
 
@@ -132,10 +132,10 @@ namespace OurFoodChain.Bot {
         }
         private async Task CopyCustomDataFilesAsync() {
 
-            if (System.IO.Directory.Exists(Global.CustomDataDirectory)) {
+            if (System.IO.Directory.Exists(Constants.CustomDataDirectory)) {
 
-                IEnumerable<string> customFiles = System.IO.Directory.EnumerateFiles(Global.CustomDataDirectory, "*", System.IO.SearchOption.AllDirectories)
-                    .Where(f => f != System.IO.Path.Combine(Global.CustomDataDirectory, "README.txt"));
+                IEnumerable<string> customFiles = System.IO.Directory.EnumerateFiles(Constants.CustomDataDirectory, "*", System.IO.SearchOption.AllDirectories)
+                    .Where(f => f != System.IO.Path.Combine(Constants.CustomDataDirectory, "README.txt"));
 
                 if (customFiles.Count() > 0) {
 
@@ -143,14 +143,14 @@ namespace OurFoodChain.Bot {
 
                     foreach (string inputFilePath in customFiles) {
 
-                        string relativeInputFilePath = inputFilePath.Replace(Global.CustomDataDirectory, string.Empty);
+                        string relativeInputFilePath = inputFilePath.Replace(Constants.CustomDataDirectory, string.Empty);
 
                         string relativeOutputDirectoryPath = System.IO.Path.GetDirectoryName(relativeInputFilePath);
 
                         if (!string.IsNullOrEmpty(relativeOutputDirectoryPath))
-                            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(Global.DataDirectory, relativeOutputDirectoryPath));
+                            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(Constants.DataDirectory, relativeOutputDirectoryPath));
 
-                        string outputFilePath = System.IO.Path.Combine(Global.DataDirectory, relativeInputFilePath);
+                        string outputFilePath = System.IO.Path.Combine(Constants.DataDirectory, relativeInputFilePath);
 
                         System.IO.File.Copy(inputFilePath, outputFilePath, true);
 

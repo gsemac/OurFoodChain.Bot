@@ -262,6 +262,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
     <Compile Include="IOfcBotConfiguration.cs" />
     <Compile Include="Modules\AdminCommands.cs" />
     <Compile Include="Modules\BulkModule.cs" />

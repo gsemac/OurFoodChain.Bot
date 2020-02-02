@@ -76,7 +76,7 @@ namespace OurFoodChain {
 
                     // Save the result.
 
-                    string out_dir = Global.TempDirectory + "anc";
+                    string out_dir = Constants.TempDirectory + "anc";
 
                     if (!System.IO.Directory.Exists(out_dir))
                         System.IO.Directory.CreateDirectory(out_dir);

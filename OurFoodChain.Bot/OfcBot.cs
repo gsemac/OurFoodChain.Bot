@@ -30,9 +30,9 @@ namespace OurFoodChain.Bot {
 
             // Initialize the database (apply updates, etc.).
 
-            await LogAsync(LogSeverity.Info, "Database", "Initializing database");
+            await BackupDatabaseAsync();
 
-            await Database.InitializeAsync();
+            await InitializeDatabaseAsync();
 
             // Copy user's custom data to the main data directory.
 
@@ -159,6 +159,38 @@ namespace OurFoodChain.Bot {
                 }
 
             }
+
+        }
+
+        private async Task BackupDatabaseAsync() {
+
+            if (System.IO.File.Exists(Constants.DatabaseFilePath)) {
+
+                string backupFilename = string.Format("{0}-{1}",
+                    Common.Utilities.DateUtilities.GetCurrentTimestamp(),
+                    System.IO.Path.GetFileName(Constants.DatabaseFilePath));
+
+                await LogAsync(LogSeverity.Info, "Database", "Creating database backup");
+
+                System.IO.Directory.CreateDirectory("backups");
+
+                System.IO.File.Copy(Constants.DatabaseFilePath, System.IO.Path.Combine("backups", backupFilename));
+
+            }
+
+            await Task.CompletedTask;
+
+        }
+        private async Task InitializeDatabaseAsync() {
+
+            await LogAsync(LogSeverity.Info, "Database", "Initializing database");
+
+            Data.SQLiteDatabase database = Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath);
+            Data.SQLiteDatabaseUpdater updater = new Data.SQLiteDatabaseUpdater(Constants.DatabaseUpdatesDirectory);
+
+            updater.Log += async (sender, e) => await LogAsync(new LogMessage((LogSeverity)e.Severity, e.Source, e.Message));
+
+            await updater.ApplyUpdatesAsync(database);
 
         }
 

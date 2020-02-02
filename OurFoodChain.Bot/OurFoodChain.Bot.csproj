@@ -286,7 +286,6 @@
     <Compile Include="Attributes\RequiredConfigSettingEnabledAttribute.cs" />
     <Compile Include="OfcBotConfiguration.cs" />
     <Compile Include="Services\CommandHandlingService.cs" />
-    <Compile Include="database\DatabaseUpdater.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="Gotchis\BattleGotchi.cs" />
     <Compile Include="Services\GotchiBackgroundService.cs" />
@@ -539,7 +538,6 @@
     <None Include="data\help\trophylist.json" />
     <None Include="data\help\zone.json" />
     <None Include="data\help\zonetype.json" />
-    <None Include="data\updates\config.json" />
     <None Include="packages.config" />
     <None Include="data\gotchi\moves\infest.lua" />
     <None Include="data\gotchi\moves\leaf-bite.lua" />

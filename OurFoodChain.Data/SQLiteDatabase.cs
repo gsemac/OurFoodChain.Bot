@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Data {
@@ -51,7 +53,7 @@ namespace OurFoodChain.Data {
             }
 
         }
-        public async Task<DataTable> GetRowsAsync(SQLiteCommand command) {
+        public async Task<IEnumerable<DataRow>> GetRowsAsync(SQLiteCommand command) {
 
             using (SQLiteConnection conn = await GetConnectionAsync()) {
 
@@ -80,14 +82,15 @@ namespace OurFoodChain.Data {
 
         public static async Task<DataRow> GetRowAsync(SQLiteConnection conn, SQLiteCommand command) {
 
-            using (DataTable dt = await GetRowsAsync(conn, command))
-                if (dt.Rows.Count > 0)
-                    return dt.Rows[0];
+            IEnumerable<DataRow> rows = await GetRowsAsync(conn, command);
+
+            if (rows.Count() > 0)
+                return rows.First();
 
             return null;
 
         }
-        public static async Task<DataTable> GetRowsAsync(SQLiteConnection conn, SQLiteCommand command) {
+        public static async Task<IEnumerable<DataRow>> GetRowsAsync(SQLiteConnection conn, SQLiteCommand command) {
 
             command.Connection = conn;
 
@@ -96,7 +99,7 @@ namespace OurFoodChain.Data {
 
                 await Task.Run(() => adapter.Fill(dt));
 
-                return dt;
+                return dt.Rows.Cast<DataRow>();
 
             }
 

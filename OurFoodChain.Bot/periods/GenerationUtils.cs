@@ -16,13 +16,11 @@ namespace OurFoodChain {
             List<Generation> generations = new List<Generation>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Period WHERE name LIKE 'gen %'"))
-                await Database.ForEachRowAsync(cmd, async row => {
+                foreach (DataRow row in (await Database.GetRowsAsync(cmd)).Rows) {
 
                     generations.Add(GenerationFromDataRow(row));
 
-                    await Task.CompletedTask;
-
-                });
+                }
 
             // Make sure that we always have at least one generation.
 

@@ -305,7 +305,6 @@
     <Compile Include="Gotchis\GotchiStatusLuaScript.cs" />
     <Compile Include="Gotchis\GotchiStatusRegistry.cs" />
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
-    <Compile Include="database\DatabaseUtils.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
     <Compile Include="Services\ISearchService.cs" />
     <Compile Include="Services\SearchService.cs" />

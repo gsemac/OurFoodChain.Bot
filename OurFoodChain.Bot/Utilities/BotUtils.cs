@@ -179,7 +179,7 @@ namespace OurFoodChain {
             {
                 // Check if this species is only present in extinct zones
 
-                string query = "SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM SpeciesZones WHERE (select type_id from Zones where id = zone_id) = (SELECT id from ZoneTypes where name = 'extinct')) AND id IN (SELECT species_id from SpeciesZones)";
+                string query = "SELECT COUNT(*) FROM Species WHERE id = $id AND id IN (SELECT species_id FROM SpeciesZones WHERE (select type_id from Zones where id = zone_id) = (SELECT id from ZoneTypes where name = 'extinct')) AND id NOT IN (SELECT species_id FROM SpeciesZones WHERE (select type_id from Zones where id = zone_id) != (SELECT id from ZoneTypes where name = 'extinct'))";
 
                 using (SQLiteCommand cmd = new SQLiteCommand(query))
                 {

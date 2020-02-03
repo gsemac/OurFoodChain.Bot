@@ -133,6 +133,7 @@ namespace OurFoodChain {
             // Consider a species "endangered" if:
             // - All of its prey has gone extinct.
             // - It has a descendant in the same zone that consumes all of the same prey items.
+            // - It is only present in extinct zones
 
             bool isEndangered = false;
 
@@ -172,6 +173,21 @@ namespace OurFoodChain {
                     isEndangered = await Database.GetScalar<long>(cmd) > 0;
 
                 }
+
+            }
+            if (!isEndangered)
+            {
+                // Check if this species is only present in extinct zones
+
+                string query = "SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM SpeciesZones WHERE (select type_id from Zones where id = zone_id) = (SELECT id from ZoneTypes where name = 'extinct')) AND id IN (SELECT species_id from SpeciesZones)";
+
+                using (SQLiteCommand cmd = new SQLiteCommand(query))
+                {
+                    cmd.Parameters.AddWithValue("$id", species.Id);
+
+                    isEndangered = await Database.GetScalar<long>(cmd) > 0;
+                }
+
 
             }
 
@@ -1071,10 +1087,10 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, PrivilegeLevel level) {
+        public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, PrivilegeLevel level) {
             return await ReplyHasPrivilegeAsync(context, botConfiguration, context.User, level);
         }
-        public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, IUser user, PrivilegeLevel level) {
+        public static async Task<bool> ReplyHasPrivilegeAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, IUser user, PrivilegeLevel level) {
 
             if (botConfiguration.HasPrivilegeLevel(user, level))
                 return true;
@@ -1102,10 +1118,10 @@ namespace OurFoodChain {
             return false;
 
         }
-        public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, PrivilegeLevel level, Species species) {
+        public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, PrivilegeLevel level, Species species) {
             return await ReplyHasPrivilegeOrOwnershipAsync(context, botConfiguration, context.User, level, species);
         }
-        public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, IUser user, PrivilegeLevel level, Species species) {
+        public static async Task<bool> ReplyHasPrivilegeOrOwnershipAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, IUser user, PrivilegeLevel level, Species species) {
 
             if (user.Id == (ulong)species.OwnerUserId)
                 return true;
@@ -1154,7 +1170,7 @@ namespace OurFoodChain {
             await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 
         }
-        public static async Task Command_ShowTaxon(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name) {
+        public static async Task Command_ShowTaxon(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string name) {
 
             if (string.IsNullOrEmpty(name))
                 await Command_ShowTaxon(context, type);
@@ -1275,7 +1291,7 @@ namespace OurFoodChain {
             }
 
         }
-        public static async Task Command_AddTaxon(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name, string description) {
+        public static async Task Command_AddTaxon(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1305,7 +1321,7 @@ namespace OurFoodChain {
                 taxon.GetName()));
 
         }
-        public static async Task Command_SetTaxon(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string childTaxonName, string parentTaxonName) {
+        public static async Task Command_SetTaxon(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string childTaxonName, string parentTaxonName) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1339,7 +1355,7 @@ namespace OurFoodChain {
                 ));
 
         }
-        public static async Task Command_SetTaxonDescription(ICommandContext context, IOfcBotConfiguration botConfiguration, Taxon taxon, string description) {
+        public static async Task Command_SetTaxonDescription(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, Taxon taxon, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1355,7 +1371,7 @@ namespace OurFoodChain {
 
 
         }
-        public static async Task Command_SetTaxonDescription(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name) {
+        public static async Task Command_SetTaxonDescription(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string name) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1382,7 +1398,7 @@ namespace OurFoodChain {
 
 
         }
-        public static async Task Command_SetTaxonDescription(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name, string description) {
+        public static async Task Command_SetTaxonDescription(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string name, string description) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1396,7 +1412,7 @@ namespace OurFoodChain {
             await Command_SetTaxonDescription(context, botConfiguration, taxon, description);
 
         }
-        public static async Task Command_SetTaxonPic(ICommandContext context, IOfcBotConfiguration botConfiguration, Taxon taxon, string url) {
+        public static async Task Command_SetTaxonPic(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, Taxon taxon, string url) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1415,7 +1431,7 @@ namespace OurFoodChain {
             await ReplyAsync_Success(context, success_message);
 
         }
-        public static async Task Command_SetTaxonPic(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name, string url) {
+        public static async Task Command_SetTaxonPic(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string name, string url) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1433,7 +1449,7 @@ namespace OurFoodChain {
             await Command_SetTaxonPic(context, botConfiguration, taxon, url);
 
         }
-        public static async Task Command_SetTaxonCommonName(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name, string commonName) {
+        public static async Task Command_SetTaxonCommonName(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, TaxonRank type, string name, string commonName) {
 
             // Ensure that the user has necessary privileges to use this command.
             if (!await ReplyHasPrivilegeAsync(context, botConfiguration, PrivilegeLevel.ServerModerator))
@@ -1479,7 +1495,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<string> Reply_UploadFileToScratchServerAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient client, string filePath, bool deleteAfterUpload = false) {
+        public static async Task<string> Reply_UploadFileToScratchServerAsync(ICommandContext context, IOurFoodChainBotConfiguration botConfiguration, DiscordSocketClient client, string filePath, bool deleteAfterUpload = false) {
 
             ulong serverId = botConfiguration.ScratchServer;
             ulong channelId = botConfiguration.ScratchChannel;
@@ -1676,7 +1692,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<string> TimestampToDateStringAsync(long timestamp, IOfcBotConfiguration botConfiguration, TimestampToDateStringFormat format = TimestampToDateStringFormat.Default) {
+        public static async Task<string> TimestampToDateStringAsync(long timestamp, IOurFoodChainBotConfiguration botConfiguration, TimestampToDateStringFormat format = TimestampToDateStringFormat.Default) {
 
             if (botConfiguration.GenerationsEnabled) {
 

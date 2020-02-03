@@ -874,11 +874,16 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyValidateZoneAsync(ICommandContext context, Zone zone) {
+        public static async Task<bool> ReplyValidateZoneAsync(ICommandContext context, Zone zone, string zoneName = "") {
 
             if (!ZoneUtils.ZoneIsValid(zone)) {
 
-                await context.Channel.SendMessageAsync("No such zone exists.");
+                string message = "No such zone exists.";
+
+                if (!string.IsNullOrEmpty(zoneName))
+                    message = string.Format("Zone \"{0}\" does not exist.", zoneName);
+
+                await Discord.DiscordUtilities.ReplyErrorAsync(context.Channel, message);
 
                 return false;
 

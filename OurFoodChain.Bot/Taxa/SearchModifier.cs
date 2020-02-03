@@ -16,7 +16,7 @@ namespace OurFoodChain.Taxa {
         public bool Subtractive { get; }
         public SearchModifierType Type { get; }
 
-        public static ISearchModifier Create(string modifier) {
+        public static ISearchModifier Parse(string modifier) {
 
             SearchModifier searchModifier = new SearchModifier(modifier);
 
@@ -60,7 +60,7 @@ namespace OurFoodChain.Taxa {
 
             // Trim outer quotes from the value.
 
-            if (value.Length > 0 && value.First() == '"' && value.Last() == '"')
+            if (value.Length > 1 && value.First() == '"' && value.Last() == '"')
                 value = value.Trim('"');
 
             Name = name.ToLowerInvariant();

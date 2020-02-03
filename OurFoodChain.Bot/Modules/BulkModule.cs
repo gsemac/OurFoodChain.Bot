@@ -39,9 +39,10 @@ namespace OurFoodChain.Bot.Modules {
                             if (bulkOperation.Arguments.Count() != 1)
                                 throw new Exception(string.Format("This operation requires {0} argument(s), but was given {1}.", 1, bulkOperation.Arguments.Count()));
 
-                            Zone zone = await ZoneUtils.GetZoneAsync(bulkOperation.Arguments.First());
+                            string zoneName = bulkOperation.Arguments.First();
+                            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
 
-                            if (await BotUtils.ReplyValidateZoneAsync(Context, zone)) {
+                            if (await BotUtils.ReplyValidateZoneAsync(Context, zone, zoneName)) {
 
                                 PaginatedMessageBuilder message = new PaginatedMessageBuilder {
                                     Message = string.Format("**{0}** species will be moved to **{1}**. Is this OK?", queryResult.Count(), zone.FullName),

@@ -31,7 +31,7 @@ namespace OurFoodChain.Taxa {
                 .Where(term => !string.IsNullOrWhiteSpace(term))) {
 
                 if (IsSearchModifier(term))
-                    modifiers.Add(SearchModifier.Create(term));
+                    modifiers.Add(SearchModifier.Parse(term));
                 else
                     keywords.Add(term);
 

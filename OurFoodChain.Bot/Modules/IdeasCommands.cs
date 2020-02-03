@@ -98,8 +98,8 @@ namespace OurFoodChain.Bot {
 
             List<string> ideas = new List<string>();
 
-            string query = @"SELECT Zones.id AS zone_id1, Zones.name AS zone_name, Roles.id AS role_id1, Roles.name AS role_name FROM Zones, Roles WHERE
-	            NOT EXISTS(SELECT * FROM SpeciesRoles WHERE role_id = role_id1 AND species_id IN (SELECT species_id FROM SpeciesZones WHERE zone_id = zone_id1));";
+            string query = @"SELECT Zones.id AS zone_id1, Zones.name AS zone_name, Roles.id AS role_id1, Roles.name AS role_name FROM Zones, Roles WHERE NOT type_id = (SELECT id FROM ZoneTypes WHERE name = 'extinct') AND
+                NOT EXISTS(SELECT * FROM SpeciesRoles WHERE role_id = role_id1 AND species_id IN (SELECT species_id FROM SpeciesZones WHERE zone_id = zone_id1));";
 
             using (SQLiteCommand cmd = new SQLiteCommand(query))
             using (DataTable table = await Database.GetRowsAsync(cmd))

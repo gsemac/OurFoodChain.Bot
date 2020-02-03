@@ -425,7 +425,10 @@ namespace OurFoodChain.Common.Utilities {
             if (argument.Length > 0)
                 arguments.Add(argument);
 
-            return arguments;
+            // For each argument that begins and ends with a quote ("), strip the outer quotes.
+
+            return arguments
+                .Select(arg => (arg.Length > 1 && arg.StartsWith("\"") && arg.EndsWith("\"")) ? arg.Trim('"') : arg);
 
         }
 

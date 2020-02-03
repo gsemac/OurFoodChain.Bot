@@ -32,19 +32,20 @@ namespace OurFoodChain.Bot.Modules {
 
                 switch (bulkOperation.OperationName) {
 
-                    case "moveto": {
+                    case "addto": {
 
                             // Move the species into the given zone.
 
                             if (bulkOperation.Arguments.Count() != 1)
                                 throw new Exception(string.Format("This operation requires {0} argument(s), but was given {1}.", 1, bulkOperation.Arguments.Count()));
 
-                            Zone zone = await ZoneUtils.GetZoneAsync(bulkOperation.Arguments.First());
+                            string zoneName = bulkOperation.Arguments.First();
+                            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
 
-                            if (await BotUtils.ReplyValidateZoneAsync(Context, zone)) {
+                            if (await BotUtils.ReplyValidateZoneAsync(Context, zone, zoneName)) {
 
                                 PaginatedMessageBuilder message = new PaginatedMessageBuilder {
-                                    Message = string.Format("**{0}** species will be moved to **{1}**. Is this OK?", queryResult.Count(), zone.FullName),
+                                    Message = string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.FullName),
                                     Restricted = true,
                                     Callback = async args => {
 
@@ -52,7 +53,7 @@ namespace OurFoodChain.Bot.Modules {
 
                                         foreach (Species species in queryResult.ToArray()) {
 
-                                            await SpeciesUtils.RemoveZonesAsync(species, (await SpeciesUtils.GetZonesAsync(species)).Select(z => z.Zone));
+                                            //await SpeciesUtils.RemoveZonesAsync(species, (await SpeciesUtils.GetZonesAsync(species)).Select(z => z.Zone));
                                             await SpeciesUtils.AddZonesAsync(species, new Zone[] { zone });
 
                                         }

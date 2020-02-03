@@ -117,12 +117,12 @@ namespace OurFoodChain.Data {
 
             try {
 
-                return row is null ? default : (T)row[0];
+                return row is null ? default(T) : (T)row[0];
 
             }
             catch (InvalidCastException) {
 
-                return default;
+                return default(T);
 
             }
 

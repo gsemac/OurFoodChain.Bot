@@ -95,6 +95,14 @@
       <Project>{a24672f7-2d13-4e4c-87eb-9f990beebdb4}</Project>
       <Name>OurFoodChain.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Data\OurFoodChain.Data.csproj">
+      <Project>{3A9FFD0B-954C-4D9B-8784-D595CE65E236}</Project>
+      <Name>OurFoodChain.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Debug\OurFoodChain.Debug.csproj">
+      <Project>{57AAD8BE-E84F-4A99-8BB3-F6131F7FE64B}</Project>
+      <Name>OurFoodChain.Debug</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\templates\species_template.txt" />

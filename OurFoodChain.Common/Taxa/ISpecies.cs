@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OurFoodChain.Taxa {
+namespace OurFoodChain.Common.Taxa {
 
     public interface ISpecies :
         ITaxon {
@@ -16,6 +16,7 @@ namespace OurFoodChain.Taxa {
         DateTimeOffset CreationDate { get; set; }
         string Description { get; set; }
         IConservationStatus Status { get; set; }
+        IPicture Picture { get; set; }
 
     }
 

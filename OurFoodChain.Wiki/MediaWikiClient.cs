@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using OurFoodChain.Debug;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -130,7 +131,7 @@ namespace OurFoodChain.Wiki {
 
     public class MediaWikiClient {
 
-        public event Action<OurFoodChain.LogMessage> Log;
+        public event Action<ILogMessage> Log;
 
         public string Protocol { get; set; } = "https";
         public string Server { get; set; }
@@ -152,7 +153,7 @@ namespace OurFoodChain.Wiki {
 
             // Obtain a login token.
 
-            _logInfo("requesting login token");
+            LogInfo("requesting login token");
 
             string data = _http_get(_get_api_url() + "?action=query&meta=tokens&type=login&format=json");
             string token = JObject.Parse(data)["query"]["tokens"]["logintoken"].Value<string>();
@@ -161,7 +162,7 @@ namespace OurFoodChain.Wiki {
 
                 // POST login credentials.
 
-                _logInfo(string.Format("logging in with username \"{0}\"", username));
+                LogInfo(string.Format("logging in with username \"{0}\"", username));
 
                 NameValueCollection values = new NameValueCollection {
                     ["lgname"] = username,
@@ -176,20 +177,20 @@ namespace OurFoodChain.Wiki {
                 IsLoggedIn = !string.IsNullOrEmpty(success_string) && success_string.ToLower() == "success";
 
                 if (IsLoggedIn)
-                    _logInfo(string.Format("logged in"));
+                    LogInfo(string.Format("logged in"));
                 else
-                    _logError(string.Format("login failed"));
+                    LogError(string.Format("login failed"));
 
             }
             else
-                _logError("failed to obtain login token");
+                LogError("failed to obtain login token");
 
             return new MediaWikiApiRequestResult { Success = IsLoggedIn };
 
         }
         public MediaWikiApiParseRequestResult Parse(string title, ParseParameters parameters) {
 
-            _logInfo(string.Format("parsing page \"{0}\"", title));
+            LogInfo(string.Format("parsing page \"{0}\"", title));
 
             string data = _http_get(_get_api_url() + string.Format("?action=parse&page={0}&prop=wikitext&format=json", title));
             JObject json = JObject.Parse(data);
@@ -212,9 +213,9 @@ namespace OurFoodChain.Wiki {
             if (!string.IsNullOrEmpty(token)) {
 
                 if (!IsLoggedIn)
-                    _logWarn(string.Format("editing page \"{0}\" anonymously", title));
+                    LogWarn(string.Format("editing page \"{0}\" anonymously", title));
                 else
-                    _logInfo(string.Format("editing page \"{0}\"", title));
+                    LogInfo(string.Format("editing page \"{0}\"", title));
 
                 // POST edit.
 
@@ -247,9 +248,9 @@ namespace OurFoodChain.Wiki {
                 bool success = !string.IsNullOrEmpty(success_string) && success_string.ToLower() == "success";
 
                 if (success)
-                    _logInfo(string.Format("edited page \"{0}\"", title));
+                    LogInfo(string.Format("edited page \"{0}\"", title));
                 else
-                    _logError(string.Format("failed to edit page \"{0}\"", title));
+                    LogError(string.Format("failed to edit page \"{0}\"", title));
 
                 return new MediaWikiApiRequestResult { Success = success };
 
@@ -266,9 +267,9 @@ namespace OurFoodChain.Wiki {
             if (!string.IsNullOrEmpty(token)) {
 
                 if (!IsLoggedIn)
-                    _logWarn(string.Format("uploading file \"{0}\" anonymously", parameters.UploadFileName));
+                    LogWarn(string.Format("uploading file \"{0}\" anonymously", parameters.UploadFileName));
                 else
-                    _logInfo(string.Format("uploading file \"{0}\"", parameters.UploadFileName));
+                    LogInfo(string.Format("uploading file \"{0}\"", parameters.UploadFileName));
 
                 if (Regex.IsMatch(parameters.FilePath, @"^https?://")) {
 
@@ -310,9 +311,9 @@ namespace OurFoodChain.Wiki {
             }
 
             if (success)
-                _logInfo(string.Format("uploaded file \"{0}\"", parameters.UploadFileName));
+                LogInfo(string.Format("uploaded file \"{0}\"", parameters.UploadFileName));
             else
-                _logError(string.Format("failed to upload file \"{0}\"", parameters.UploadFileName));
+                LogError(string.Format("failed to upload file \"{0}\"", parameters.UploadFileName));
 
             return new MediaWikiApiRequestResult { Success = success };
 
@@ -324,9 +325,9 @@ namespace OurFoodChain.Wiki {
             if (!string.IsNullOrEmpty(token)) {
 
                 if (!IsLoggedIn)
-                    _logWarn(string.Format("deleting page \"{0}\" anonymously", title));
+                    LogWarn(string.Format("deleting page \"{0}\" anonymously", title));
                 else
-                    _logInfo(string.Format("deleting page \"{0}\"", title));
+                    LogInfo(string.Format("deleting page \"{0}\"", title));
 
                 // POST edit.
 
@@ -343,9 +344,9 @@ namespace OurFoodChain.Wiki {
                 bool success = !JObject.Parse(data).ContainsKey("error");
 
                 if (success)
-                    _logInfo(string.Format("deleted page \"{0}\"", title));
+                    LogInfo(string.Format("deleted page \"{0}\"", title));
                 else
-                    _logError(string.Format("failed to deleted page \"{0}\"", title));
+                    LogError(string.Format("failed to deleted page \"{0}\"", title));
 
                 return new MediaWikiApiRequestResult { Success = success };
 
@@ -378,13 +379,13 @@ namespace OurFoodChain.Wiki {
         }
         private string _get_csrf_token() {
 
-            _logInfo("requesting CSRF token");
+            LogInfo("requesting CSRF token");
 
             string data = _http_get(_get_api_url() + "?action=query&format=json&meta=tokens");
             string token = JObject.Parse(data)["query"]["tokens"]["csrftoken"].Value<string>();
 
             if (string.IsNullOrEmpty(token))
-                _logError("failed to obtain CSRF token");
+                LogError("failed to obtain CSRF token");
 
             return token;
 
@@ -409,7 +410,7 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private void _onLog(OurFoodChain.LogMessage message) {
+        private void OnLog(ILogMessage message) {
 
             if (Log is null)
                 Console.WriteLine(message.ToString());
@@ -417,14 +418,20 @@ namespace OurFoodChain.Wiki {
                 Log(message);
 
         }
-        private void _logInfo(string message) {
-            _onLog(new OurFoodChain.LogMessage { Severity = OurFoodChain.LogSeverity.Info, Message = message, Source = "mwclient" });
+        private void LogInfo(string message) {
+
+            OnLog(new LogMessage(LogSeverity.Info, message, "mwclient"));
+
         }
-        private void _logWarn(string message) {
-            _onLog(new OurFoodChain.LogMessage { Severity = OurFoodChain.LogSeverity.Warning, Message = message, Source = "mwclient" });
+        private void LogWarn(string message) {
+
+            OnLog(new LogMessage(LogSeverity.Warning, message, "mwclient"));
+
         }
-        private void _logError(string message) {
-            _onLog(new OurFoodChain.LogMessage { Severity = OurFoodChain.LogSeverity.Error, Message = message, Source = "mwclient" });
+        private void LogError(string message) {
+
+            OnLog(new LogMessage(LogSeverity.Error, message, "mwclient"));
+
         }
 
     }

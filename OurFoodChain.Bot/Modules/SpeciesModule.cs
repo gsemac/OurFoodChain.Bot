@@ -1,7 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,8 +21,9 @@ namespace OurFoodChain.Bot.Modules {
 
         // Public members
 
-        public IOfcBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration Config { get; set; }
         public Services.ISearchService SearchService { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
@@ -43,7 +48,7 @@ namespace OurFoodChain.Bot.Modules {
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
                     await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name, async (BotUtils.ConfirmSuggestionArgs args) => await GetInfo(args.Suggestion));
                 else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
-                    await BotUtils.Command_ShowTaxon(Context, BotConfiguration, taxa[0].type, name);
+                    await BotUtils.Command_ShowTaxon(Context, Config, taxa[0].type, name);
 
             }
 
@@ -239,7 +244,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Add the user to the trophy scanner queue in case their species earned them any new trophies.
 
-            if (BotConfiguration.TrophiesEnabled)
+            if (Config.TrophiesEnabled)
                 await Global.TrophyScanner.AddToQueueAsync(Context, Context.User.Id);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
@@ -323,7 +328,7 @@ namespace OurFoodChain.Bot.Modules {
         public async Task PlusZone(string genus, string species, string zoneList, string notes) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, Config, PrivilegeLevel.ServerModerator))
                 return;
 
             Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
@@ -341,7 +346,7 @@ namespace OurFoodChain.Bot.Modules {
         public async Task MinusZone(string genus, string species, string zoneList) {
 
             // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator))
+            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, Config, PrivilegeLevel.ServerModerator))
                 return;
 
             // Get the specified species.
@@ -409,7 +414,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
 
-                if (BotConfiguration.TrophiesEnabled)
+                if (Config.TrophiesEnabled)
                     await Global.TrophyScanner.AddToQueueAsync(Context, user.Id);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.ShortName, user.Username));
@@ -573,10 +578,10 @@ namespace OurFoodChain.Bot.Modules {
 
                 if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Gallery) {
 
-                    List<Picture> pictures = new List<Picture>();
+                    List<IPicture> pictures = new List<IPicture>();
 
                     foreach (Species species in result.ToArray())
-                        pictures.AddRange(await SpeciesUtils.GetPicturesAsync(species));
+                        pictures.AddRange(await Db.GetAllPicturesAsync(new SpeciesAdapter(species)));
 
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 
@@ -664,7 +669,7 @@ namespace OurFoodChain.Bot.Modules {
 
         public async Task ShowSpeciesInfoAsync(ICommandContext context, Species species) {
 
-            await ShowSpeciesInfoAsync(context, BotConfiguration, species);
+            await ShowSpeciesInfoAsync(context, Config, species);
 
         }
         public async Task ShowSpeciesInfoAsync(ICommandContext context, string speciesName) {

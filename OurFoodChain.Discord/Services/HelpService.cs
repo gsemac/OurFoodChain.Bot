@@ -58,7 +58,7 @@ namespace OurFoodChain.Discord.Services {
 
                     string group = string.Join(" ",
                           helpInfoFilePath
-                          .AfterSubstring(_botConfiguration.HelpDirectory)
+                          .After(_botConfiguration.HelpDirectory)
                           .Split(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar)
                           .Where(p => !string.IsNullOrWhiteSpace(p))
                           .SkipLast(1));

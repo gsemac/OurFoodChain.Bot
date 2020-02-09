@@ -60,6 +60,7 @@ namespace OurFoodChain.Bot {
         protected override async Task<IServiceCollection> ConfigureServicesAsync() {
 
             return (await base.ConfigureServicesAsync())
+                .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Services.ISearchService, Services.SearchService>()

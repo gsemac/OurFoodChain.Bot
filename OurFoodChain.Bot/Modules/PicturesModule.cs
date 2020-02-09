@@ -1,7 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -14,11 +19,16 @@ namespace OurFoodChain.Bot {
     public class GalleryCommands :
         ModuleBase {
 
-        public IOfcBotConfiguration BotConfiguration { get; set; }
+        // Public members
+
+        public IOfcBotConfiguration Config { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command("setpic"), Alias("setspeciespic", "setspic")]
         public async Task SetPic(string species, string imageUrl) {
-            await SetPic("", species, imageUrl);
+
+            await SetPic(string.Empty, species, imageUrl);
+
         }
         [Command("setpic"), Alias("setspeciespic", "setspic")]
         public async Task SetPic(string genusName, string speciesName, string imageUrl) {
@@ -31,17 +41,17 @@ namespace OurFoodChain.Bot {
             if (species is null)
                 return;
 
-            if (await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator, species) && await BotUtils.ReplyIsImageUrlValidAsync(Context, imageUrl)) {
+            if (await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, Config, PrivilegeLevel.ServerModerator, species) && await BotUtils.ReplyIsImageUrlValidAsync(Context, imageUrl)) {
 
-                Picture[] pictures = await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species));
-                bool first_picture = pictures.Count() <= 0;
+                IPictureGallery gallery = await Db.GetPictureGalleryAsync(new SpeciesAdapter(species)) ?? new PictureGallery();
+                bool isFirstPicture = gallery.Count() <= 0;
 
-                await SpeciesUtils.SetPictureAsync(species, new Picture {
-                    url = imageUrl,
-                    artist = first_picture ? species.OwnerName : Context.User.Username
+                await Db.SetDefaultPictureAsync(new SpeciesAdapter(species), new Picture {
+                    Url = imageUrl,
+                    Artist = new Creator(isFirstPicture ? species.OwnerName : Context.User.Username)
                 });
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the picture for **{0}**.", species.ShortName));
+                await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully set the picture for **{0}**.", species.ShortName));
 
             }
 
@@ -49,7 +59,9 @@ namespace OurFoodChain.Bot {
 
         [Command("+pic")]
         public async Task PlusPic(string species, string imageUrl) {
-            await PlusPic("", species, imageUrl, "");
+
+            await PlusPic(string.Empty, species, imageUrl, string.Empty);
+
         }
         [Command("+pic")]
         public async Task PlusPic(string arg0, string arg1, string arg2) {
@@ -58,9 +70,9 @@ namespace OurFoodChain.Bot {
             // +pic <genus> <species> <url>
             // +pic <species> <url> <description>
 
-            string genus = "";
-            string species = "";
-            string url = "";
+            string genus;
+            string species;
+            string url;
             string description = "";
 
             if (StringUtilities.IsUrl(arg1)) {
@@ -106,39 +118,48 @@ namespace OurFoodChain.Bot {
             // If this is the first picture we've added to the species, set the artist as the species' owner.
             // Otherwise, set the artist to the person submitting the image.
 
-            Picture[] pictures = await GalleryUtils.GetPicturesAsync(await GalleryUtils.GetGalleryAsync(species));
+            IPictureGallery gallery = await Db.GetPictureGalleryAsync(new SpeciesAdapter(species)) ?? new PictureGallery();
 
-            bool firstPicture = pictures.Count() <= 0;
-            bool pictureAlreadyExists = pictures.Any(x => x.url == imageUrl);
+            bool isFirstPicture = gallery.Count() <= 0;
+            bool pictureAlreadyExists = gallery
+                .Any(x => x.Url == imageUrl);
 
-            Picture picture = pictures.Where(x => x.url == imageUrl).FirstOrDefault() ?? new Picture();
+            IPicture picture = gallery
+                .Where(p => p.Url == imageUrl)
+                .FirstOrDefault() ?? new Picture();
 
-            picture.url = imageUrl;
-            picture.description = description;
+            picture.Url = imageUrl;
+            picture.Description = description;
 
-            if (string.IsNullOrEmpty(picture.artist))
-                picture.artist = firstPicture ? species.OwnerName : Context.User.Username;
+            if (string.IsNullOrEmpty(picture.Artist?.Name))
+                picture.Artist = new Creator(isFirstPicture ? species.OwnerName : Context.User.Username);
 
-            await SpeciesUtils.AddPictureAsync(species, picture);
+            await Db.AddPictureAsync(new SpeciesAdapter(species), picture);
 
             if (pictureAlreadyExists)
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.ShortName, imageUrl));
+                await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully updated [picture]({1}) for **{0}**.", species.ShortName, imageUrl));
             else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.ShortName, imageUrl));
+                await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully added new [picture]({1}) for **{0}**.", species.ShortName, imageUrl));
 
         }
 
         [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string speciesName) {
+
             await MinusPic(string.Empty, speciesName);
+
         }
         [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string genusName, string speciesName) {
+
             await MinusPic(genusName, speciesName, 1);
+
         }
         [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string speciesName, int pictureIndex) {
+
             await MinusPic(string.Empty, speciesName, pictureIndex);
+
         }
         [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string genusName, string speciesName, int pictureIndex) {
@@ -146,7 +167,7 @@ namespace OurFoodChain.Bot {
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
             --pictureIndex;
 
-            if (await BotUtils.ReplyHasPrivilegeAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator)) {
+            if (await BotUtils.ReplyHasPrivilegeAsync(Context, Config, PrivilegeLevel.ServerModerator)) {
 
                 // Get the species.
 
@@ -155,16 +176,16 @@ namespace OurFoodChain.Bot {
                 if (species is null)
                     return;
 
-                Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
-                Picture picture = (pictureIndex >= 0 && pictureIndex < pictures.Count()) ? pictures[pictureIndex] : null;
+                IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
+                IPicture picture = (pictureIndex >= 0 && pictureIndex < pictures.Count()) ? pictures.ElementAt(pictureIndex) : null;
 
                 // If the image was removed from anywhere (gallery or default species picture), this is set to "true".
-                bool success = await SpeciesUtils.RemovePictureAsync(species, picture);
+                bool success = await Db.RemovePictureAsync(new SpeciesAdapter(species), picture);
 
                 if (success)
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed [picture]({1}) from **{0}**.", species.ShortName, picture.url));
+                    await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully removed [picture]({1}) from **{0}**.", species.ShortName, picture.Url));
                 else
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has no picture at this index.", species.ShortName));
+                    await DiscordUtilities.ReplyWarningAsync(Context.Channel, string.Format("**{0}** has no picture at this index.", species.ShortName));
 
             }
 
@@ -193,23 +214,23 @@ namespace OurFoodChain.Bot {
             if (species is null)
                 return;
 
-            Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
+            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
 
             if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
 
-                Picture picture = pictures[pictureIndex];
-                picture.artist = artist;
+                IPicture picture = pictures.ElementAt(pictureIndex);
+                picture.Artist = new Creator(artist);
 
-                await SpeciesUtils.AddPictureAsync(species, picture);
+                await Db.AddPictureAsync(new SpeciesAdapter(species), picture);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated artist for {0} [picture]({1}) to **{2}**.",
+                await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully updated artist for {0} [picture]({1}) to **{2}**.",
                     StringUtilities.ToPossessive(species.ShortName),
-                    picture.url,
+                    picture.Url,
                     artist));
 
             }
             else
-                await BotUtils.ReplyAsync_Error(Context, string.Format("**{0}** has no picture at this index.", species.ShortName));
+                await DiscordUtilities.ReplyErrorAsync(Context.Channel, string.Format("**{0}** has no picture at this index.", species.ShortName));
 
         }
         [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -253,15 +274,15 @@ namespace OurFoodChain.Bot {
                     // The taxon does exist, so we'll generate a gallery from this taxon.
                     // First, images for this taxon will be added, followed by the galleries for all species under it.
 
-                    List<Picture> pictures = new List<Picture>();
+                    List<IPicture> pictures = new List<IPicture>();
 
                     if (!string.IsNullOrEmpty(taxon.pics))
                         pictures.Add(new Picture(taxon.pics));
 
                     foreach (Species sp in await BotUtils.GetSpeciesInTaxonFromDb(taxon))
-                        pictures.AddRange(await SpeciesUtils.GetPicturesAsync(sp));
+                        pictures.AddRange(await Db.GetAllPicturesAsync(new SpeciesAdapter(sp)));
 
-                    await ShowGalleryAsync(Context, taxon.GetName(), pictures.ToArray());
+                    await ShowGalleryAsync(Context, taxon.GetName(), pictures);
 
                 }
 
@@ -269,7 +290,7 @@ namespace OurFoodChain.Bot {
             else if (await BotUtils.ReplyValidateSpeciesAsync(Context, species)) {
 
                 // The requested species does exist, so show its gallery.
-                await _showGallery(species[0]);
+                await ShowGalleryAsync(species[0]);
 
             }
 
@@ -282,19 +303,11 @@ namespace OurFoodChain.Bot {
             if (sp is null)
                 return;
 
-            await _showGallery(sp);
+            await ShowGalleryAsync(sp);
 
         }
 
-        private async Task _showGallery(Species species) {
-
-            Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
-
-            await ShowGalleryAsync(Context, species.ShortName, pictures);
-
-        }
-
-        public static async Task ShowGalleryAsync(ICommandContext context, string galleryName, Picture[] pictures) {
+        public static async Task ShowGalleryAsync(ICommandContext context, string galleryName, IEnumerable<IPicture> pictures) {
 
             // If there were no images for this query, show a message and quit.
 
@@ -315,11 +328,11 @@ namespace OurFoodChain.Bot {
                     EmbedBuilder embed = new EmbedBuilder();
 
                     string title = string.Format("Pictures of {0} ({1} of {2})", galleryName, index, pictures.Count());
-                    string footer = string.Format("\"{0}\" by {1} — {2}", p.GetName(), p.GetArtist(), p.footer);
+                    string footer = string.Format("\"{0}\" by {1} — {2}", p.Name, p.Artist, p.Caption);
 
                     embed.WithTitle(title);
-                    embed.WithImageUrl(p.url);
-                    embed.WithDescription(p.description);
+                    embed.WithImageUrl(p.Url);
+                    embed.WithDescription(p.Description);
                     embed.WithFooter(footer);
 
                     message.Pages.Add(embed.Build());
@@ -331,6 +344,16 @@ namespace OurFoodChain.Bot {
                 await Bot.DiscordUtils.SendMessageAsync(context, message);
 
             }
+
+        }
+
+        // Private members
+
+        private async Task ShowGalleryAsync(Species species) {
+
+            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
+
+            await ShowGalleryAsync(Context, species.ShortName, pictures);
 
         }
 

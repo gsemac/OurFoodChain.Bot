@@ -55,7 +55,7 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
-        public static string AfterSubstring(string input, string substring) {
+        public static string After(string input, string substring) {
 
             int index = input.IndexOf(substring);
 
@@ -65,7 +65,17 @@ namespace OurFoodChain.Common.Utilities {
                 return input;
 
         }
-        public static string ReplaceLastSubstring(string input, string substring, string replacement) {
+        public static string Before(string input, string substring) {
+
+            int index = input.IndexOf(substring);
+
+            if (index >= 0)
+                return input.Substring(0, index);
+            else
+                return input;
+
+        }
+        public static string ReplaceLast(string input, string substring, string replacement) {
 
             int index = input.LastIndexOf(substring);
 
@@ -238,14 +248,19 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
-        public static bool IsNumeric(string str) {
+        public static bool IsNumeric(string input) {
 
-            return double.TryParse(str, out _);
+            return double.TryParse(input, out _);
 
         }
         public static bool IsUrl(string input) {
 
             return Regex.Match(input, "^https?:").Success;
+
+        }
+        public static bool IsImageUrl(string input) {
+
+            return IsUrl(input);
 
         }
         public static bool TryParseColor(string input, out Color result) {

@@ -1,13 +1,15 @@
 ﻿using Discord;
+using Discord.Commands;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using OurFoodChain.Taxa;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Discord.Commands;
 
 namespace OurFoodChain.Bot.Services {
 
@@ -16,9 +18,10 @@ namespace OurFoodChain.Bot.Services {
 
         // Public members
 
-        public SearchService(IOfcBotConfiguration botConfiguration) {
+        public SearchService(IOfcBotConfiguration config, SQLiteDatabase database) {
 
-            _botConfiguration = botConfiguration;
+            this.config = config;
+            this.database = database;
 
         }
 
@@ -75,7 +78,8 @@ namespace OurFoodChain.Bot.Services {
 
         // Private members
 
-        private readonly IOfcBotConfiguration _botConfiguration;
+        private readonly IOfcBotConfiguration config;
+        private readonly SQLiteDatabase database;
 
         private async Task<Taxa.SearchResult> ApplyPostMatchModifiersAsync(List<Species> matches, ICommandContext context, SearchQuery searchQuery) {
 
@@ -200,7 +204,7 @@ namespace OurFoodChain.Bot.Services {
 
                         case SearchResultGrouping.Generation:
 
-                            if (_botConfiguration.GenerationsEnabled)
+                            if (config.GenerationsEnabled)
                                 await result.GroupByAsync(async (x) => {
                                     return new string[] { (await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp)).Name };
                                 });
@@ -491,7 +495,7 @@ namespace OurFoodChain.Bot.Services {
                             case "images":
 
                                 await result.FilterByAsync(async (x) => {
-                                    return (await SpeciesUtils.GetPicturesAsync(x)).Count() <= 0;
+                                    return (await database.GetAllPicturesAsync(new SpeciesAdapter(x))).Count() <= 0;
                                 }, modifier.Subtractive);
 
                                 break;
@@ -559,7 +563,7 @@ namespace OurFoodChain.Bot.Services {
                 case SearchModifierType.Artist:
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await SpeciesUtils.GetPicturesAsync(x)).Any(n => n.artist.ToLowerInvariant().Equals(modifier.Value.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase));
+                        return !(await database.GetAllPicturesAsync(new SpeciesAdapter(x))).Any(n => n.Artist.ToString().Equals(modifier.Value, StringComparison.OrdinalIgnoreCase));
                     }, modifier.Subtractive);
 
                     break;
@@ -567,7 +571,7 @@ namespace OurFoodChain.Bot.Services {
                 // The following are only available when generations are enabled.
 
                 case SearchModifierType.Generation:
-                    if (_botConfiguration.GenerationsEnabled)
+                    if (config.GenerationsEnabled)
                         await result.FilterByAsync(async (x) => {
 
                             Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(x.Timestamp);

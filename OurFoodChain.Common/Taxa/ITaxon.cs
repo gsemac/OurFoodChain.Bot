@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OurFoodChain.Taxa {
+namespace OurFoodChain.Common.Taxa {
 
     public interface ITaxon {
 
-        int? Id { get; set; }
-        int? ParentId { get; set; }
+        long? Id { get; set; }
+        long? ParentId { get; set; }
         ITaxonRank Rank { get; }
         string Name { get; set; }
 

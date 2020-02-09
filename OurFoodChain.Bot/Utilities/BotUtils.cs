@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Bot;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
@@ -615,28 +616,6 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<Picture> GetPicFromDb(Gallery gallery, string name) {
-
-            if (!(gallery is null) && gallery.id > 0) {
-
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Picture WHERE gallery_id=$gallery_id AND name=$name;")) {
-
-                    cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
-                    cmd.Parameters.AddWithValue("$name", name);
-
-                    DataRow row = await Database.GetRowAsync(cmd);
-
-                    if (!(row is null))
-                        return Picture.FromDataRow(row);
-
-                }
-
-            }
-
-            return null;
-
-        }
-
         public static async Task<Period> GetPeriodFromDb(string name) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Period WHERE name = $name;")) {
@@ -849,7 +828,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyValidateSpeciesAsync(ICommandContext context, Species[] speciesList) {
 
-            if (speciesList.Count() <= 0) {
+            if (speciesList is null || speciesList.Count() <= 0) {
                 await ReplyAsync_NoSuchSpeciesExists(context);
                 return false;
             }
@@ -1014,7 +993,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyIsImageUrlValidAsync(ICommandContext context, string imageUrl) {
 
-            if (!GalleryUtils.IsImageUrl(imageUrl)) {
+            if (!StringUtilities.IsImageUrl(imageUrl)) {
 
                 await ReplyAsync_Error(context, "The image URL is invalid.");
 

@@ -1,7 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -16,21 +19,22 @@ namespace OurFoodChain.Bot.Modules {
 
         private const string MAP_GALLERY_NAME = "map";
 
-        public IOfcBotConfiguration BotConfiguration { get; set; }
+        public IOfcBotConfiguration Config { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command("map")]
         public async Task Map() {
 
             // Get map images from the database.
 
-            Gallery gallery = await GalleryUtils.GetGalleryAsync(MAP_GALLERY_NAME);
-            Picture primary = null;
-            Picture labeled = null;
+            IPictureGallery gallery = await Db.GetGalleryAsync(MAP_GALLERY_NAME);
+            IPicture primary = null;
+            IPicture labeled = null;
 
-            if (!(gallery is null)) {
+            if (gallery != null) {
 
-                primary = await BotUtils.GetPicFromDb(gallery, "primary");
-                labeled = await BotUtils.GetPicFromDb(gallery, "labeled");
+                primary = gallery.GetPicture("primary");
+                labeled = gallery.GetPicture("labeled");
 
             }
 
@@ -39,7 +43,7 @@ namespace OurFoodChain.Bot.Modules {
             if (primary is null) {
 
                 await BotUtils.ReplyAsync_Error(Context, string.Format("No map images have been set. Use the \"{0}setmap\" command to set map images.",
-                    BotConfiguration.Prefix));
+                    Config.Prefix));
 
                 return;
 
@@ -47,7 +51,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Build the embed.
 
-            string worldName = BotConfiguration.WorldName;
+            string worldName = Config.WorldName;
             string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", StringUtilities.ToTitleCase(worldName));
             string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
 
@@ -57,7 +61,7 @@ namespace OurFoodChain.Bot.Modules {
 
             paginatedMessage.Pages.Add(new EmbedBuilder {
                 Title = title,
-                ImageUrl = primary.url,
+                ImageUrl = primary.Url,
                 Footer = new EmbedFooterBuilder { Text = footer }
             }.Build());
 
@@ -67,8 +71,8 @@ namespace OurFoodChain.Bot.Modules {
 
                 paginatedMessage.Pages.Add(new EmbedBuilder {
                     Title = title,
-                    ImageUrl = labeled.url,
-                    Footer = new EmbedFooterBuilder { Text = footer }
+                    ImageUrl = labeled.Url,
+                    Footer = new EmbedFooterBuilder().WithText(footer)
                 }.Build());
 
             }
@@ -102,13 +106,13 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            Gallery gallery = await GalleryUtils.GetGalleryAsync(MAP_GALLERY_NAME);
+            IPictureGallery gallery = await Db.GetGalleryAsync(MAP_GALLERY_NAME);
 
             // Remove existing images from the gallery.
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Picture WHERE gallery_id = $gallery_id;")) {
 
-                cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+                cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
 
                 await Database.ExecuteNonQuery(cmd);
 
@@ -122,7 +126,7 @@ namespace OurFoodChain.Bot.Modules {
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, name, artist) VALUES($url, $gallery_id, $name, $artist);")) {
 
                 cmd.Parameters.AddWithValue("$url", primaryImageUrl);
-                cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+                cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
                 cmd.Parameters.AddWithValue("$name", "primary");
                 cmd.Parameters.AddWithValue("$artist", Context.User.Username);
 
@@ -140,7 +144,7 @@ namespace OurFoodChain.Bot.Modules {
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, name, artist) VALUES($url, $gallery_id, $name, $artist);")) {
 
                     cmd.Parameters.AddWithValue("$url", labeledImageUrl);
-                    cmd.Parameters.AddWithValue("$gallery_id", gallery.id);
+                    cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
                     cmd.Parameters.AddWithValue("$name", "labeled");
                     cmd.Parameters.AddWithValue("$artist", Context.User.Username);
 

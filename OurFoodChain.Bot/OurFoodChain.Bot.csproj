@@ -267,7 +267,7 @@
     <Compile Include="Modules\AdminCommands.cs" />
     <Compile Include="Modules\BulkModule.cs" />
     <Compile Include="Modules\ConfigurationModule.cs" />
-    <Compile Include="Modules\GalleryCommands.cs" />
+    <Compile Include="Modules\PicturesModule.cs" />
     <Compile Include="Modules\GenerationCommands.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\IdeasCommands.cs" />
@@ -324,7 +324,6 @@
     <Compile Include="periods\GenerationUtils.cs" />
     <Compile Include="Taxa\AncestryTree.cs" />
     <Compile Include="Taxa\ExtinctionInfo.cs" />
-    <Compile Include="galleries\Gallery.cs" />
     <Compile Include="Gotchis\GotchiBattleState.cs" />
     <Compile Include="Gotchis\Gotchi.cs" />
     <Compile Include="Modules\GotchiModule.cs" />
@@ -337,8 +336,6 @@
     <Compile Include="Gotchis\GotchiUserInfo.cs" />
     <Compile Include="Gotchis\GotchiUtils.cs" />
     <Compile Include="periods\Period.cs" />
-    <Compile Include="galleries\GalleryUtils.cs" />
-    <Compile Include="galleries\Picture.cs" />
     <Compile Include="Taxa\Relationship.cs" />
     <Compile Include="roles\Role.cs" />
     <Compile Include="Taxa\Species.cs" />
@@ -373,9 +370,11 @@
     <Compile Include="Taxa\SearchQuery.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
     <Compile Include="Utilities\LogMessage.cs" />
+    <Compile Include="Utilities\SpeciesAdapter.cs" />
     <Compile Include="Utilities\StringPaginator.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
+    <Compile Include="Utilities\TaxonAdapter.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />

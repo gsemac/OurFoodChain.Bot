@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OurFoodChain.Taxa {
+namespace OurFoodChain.Common.Taxa {
 
     // https://en.wikipedia.org/wiki/Taxonomic_rank#All_ranks
 

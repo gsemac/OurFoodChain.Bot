@@ -13,14 +13,19 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
-        public static string AfterSubstring(this string input, string substring) {
+        public static string After(this string input, string substring) {
 
-            return StringUtilities.AfterSubstring(input, substring);
+            return StringUtilities.After(input, substring);
 
         }
-        public static string ReplaceLastSubstring(this string input, string substring, string replacement) {
+        public static string Before(this string input, string substring) {
 
-            return StringUtilities.ReplaceLastSubstring(input, substring, replacement);
+            return StringUtilities.Before(input, substring);
+
+        }
+        public static string ReplaceLast(this string input, string substring, string replacement) {
+
+            return StringUtilities.ReplaceLast(input, substring, replacement);
 
         }
 

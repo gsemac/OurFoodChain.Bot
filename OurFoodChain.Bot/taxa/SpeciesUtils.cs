@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
@@ -421,103 +422,6 @@ namespace OurFoodChain {
                 }
 
             }
-
-        }
-
-        public static async Task SetPictureAsync(Species species, Picture picture) {
-
-            // Set the given picture as the default picture for the species.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET pics = $url WHERE id = $species_id")) {
-
-                cmd.Parameters.AddWithValue("$url", picture is null ? string.Empty : picture.url);
-                cmd.Parameters.AddWithValue("$species_id", species.Id);
-
-                await Database.ExecuteNonQuery(cmd);
-
-            }
-
-            // Update the "pics" value for the species so we don't run into an infinite loop below.
-            // "AddPicture" will call this function if the "pics" value is empty.
-            species.Picture = picture is null ? string.Empty : picture.url;
-
-            // Add the picture to this species' picture gallery (does nothing if it's already been added).
-
-            if (!(picture is null))
-                await AddPictureAsync(species, picture);
-
-        }
-        public static async Task AddPictureAsync(Species species, Picture picture) {
-
-            if (!(picture is null)) {
-
-                // Add the picture to this species' picture gallery (does nothing if it's already been added).
-
-                await GalleryUtils.AddGalleryAsync(species);
-
-                Gallery gallery = await GalleryUtils.GetGalleryAsync(species);
-
-                await GalleryUtils.AddPictureAsync(gallery, picture);
-
-                // If the species doesn't have a default picture yet, use this picture as the default picture.
-
-                if (string.IsNullOrEmpty(species.Picture))
-                    await SetPictureAsync(species, picture);
-
-            }
-
-        }
-        public static async Task<bool> RemovePictureAsync(Species species, Picture picture) {
-
-            // Remove this picture from the species' picture gallery.
-            // Additionally, if this picture is the species' default picture, remove that as well.
-
-            if (picture is null)
-                return false;
-
-            bool success = false;
-
-            Gallery gallery = await GalleryUtils.GetGalleryAsync(species);
-            Picture[] gallery_pictures = await GalleryUtils.GetPicturesAsync(gallery);
-
-            if (gallery_pictures.Count() >= 0 && gallery_pictures.Any(x => x.id == picture.id)) {
-
-                await GalleryUtils.RemovePictureAsync(gallery, picture);
-
-                success = true;
-
-            }
-
-            if (species.Picture == picture.url) {
-
-                await SetPictureAsync(species, null);
-
-                success = true;
-
-            }
-
-            return success;
-
-        }
-        public static async Task<Picture[]> GetPicturesAsync(Species species) {
-
-            List<Picture> pictures = new List<Picture>();
-
-            Gallery gallery = await GalleryUtils.GetGalleryAsync(species);
-
-            pictures.AddRange(await GalleryUtils.GetPicturesAsync(gallery));
-
-            if (!string.IsNullOrEmpty(species.Picture) && !pictures.Any(x => x.url == species.Picture))
-                pictures.Insert(0, new Picture {
-                    url = species.Picture,
-                    artist = species.OwnerName
-                });
-
-            pictures.ForEach(x => {
-                x.footer = string.Format("Depiction of {0}", species.ShortName);
-            });
-
-            return pictures.ToArray();
 
         }
 

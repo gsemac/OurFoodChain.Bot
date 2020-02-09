@@ -1,5 +1,9 @@
 ﻿using Newtonsoft.Json;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Debug;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,18 +17,19 @@ namespace OurFoodChain.Wiki {
 
         // Public members
 
-        public string SpeciesTemplateFilePath { get; } = "data/templates/species_template.txt";
+        string SpeciesTemplateFilePath { get; } = "data/templates/species_template.txt";
+        SQLiteDatabase Db { get; } = SQLiteDatabase.FromFile(Constants.DatabaseFilePath);
 
         static void Main(string[] args)
              => new Program().MainAsync(args).GetAwaiter().GetResult();
 
         public async Task MainAsync(string[] args) {
 
-            _log("loading configuration");
+            Log("loading configuration");
 
             Config config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("wikibot-config.json"));
 
-            _log("initializing mediawiki client");
+            Log("initializing mediawiki client");
 
             MediaWikiClient client = new MediaWikiClient {
                 Protocol = config.Protocol,
@@ -33,26 +38,26 @@ namespace OurFoodChain.Wiki {
                 UserAgent = config.UserAgent
             };
 
-            client.Log += _log;
+            client.Log += Log;
 
             EditHistory history = new EditHistory();
 
             if (client.Login(config.Username, config.Password).Success) {
 
-                _log("generating link dictionary");
+                Log("generating link dictionary");
 
                 WikiLinkList LinkifyList = await _generateLinkifyListAsync();
 
-                _log("synchronizing species");
-                _log("getting species from database");
+                Log("synchronizing species");
+                Log("getting species from database");
 
                 Species[] speciesList = await SpeciesUtils.GetSpeciesAsync();
 
-                _log(string.Format("got {0} results", speciesList.Count()));
+                Log(string.Format("got {0} results", speciesList.Count()));
 
                 foreach (Species species in speciesList) {
 
-                    _log(string.Format("synchronizing species {0}", species.ShortName));
+                    Log(string.Format("synchronizing species {0}", species.ShortName));
 
                     // Create the page builder.
 
@@ -89,15 +94,15 @@ namespace OurFoodChain.Wiki {
 
                     }
 
-                    _log(string.Format("finished synchronizing species {0}", species.ShortName));
+                    Log(string.Format("finished synchronizing species {0}", species.ShortName));
 
                 }
 
             }
             else
-                _log("mediawiki login failed");
+                Log("mediawiki login failed");
 
-            _log("synchronizing complete");
+            Log("synchronizing complete");
 
             await Task.Delay(-1);
 
@@ -108,15 +113,15 @@ namespace OurFoodChain.Wiki {
         private const string BotFlag = "{{BotGenerated}}";
         private static string LogFilePath = "";
 
-        private static void _log(string message) {
+        private static void Log(string message) {
 
-            _log(new OurFoodChain.LogMessage {
-                Source = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
-                Message = message
-            });
+            Log(new LogMessage(
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
+                message
+            ));
 
         }
-        private static void _log(LogMessage message) {
+        private static void Log(ILogMessage message) {
 
             if (string.IsNullOrEmpty(LogFilePath)) {
 
@@ -228,30 +233,30 @@ namespace OurFoodChain.Wiki {
             return string.Empty;
 
         }
-        private static async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, Species species) {
+        private async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, Species species) {
 
             // Upload all images in the given species' gallery.
 
-            Picture[] pictures = await SpeciesUtils.GetPicturesAsync(species);
+            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new Utilities.SpeciesAdapter(species));
             List<string> uploadedFilenames = new List<string>();
 
             if (pictures != null) {
 
-                foreach (Picture picture in pictures) {
+                foreach (IPicture picture in pictures) {
 
                     // Skip the image if it's the same as the species' default image, because we would've already uploaded it
 
-                    if (picture.url == species.Picture)
+                    if (picture.Url == species.Picture)
                         continue;
 
-                    string uploadedFilename = GeneratePictureFilenameFromSpecies(species, picture.url);
+                    string uploadedFilename = GeneratePictureFilenameFromSpecies(species, picture.Url);
 
                     if (!string.IsNullOrEmpty(uploadedFilename)) {
 
                         UploadParameters uploadParameters = new UploadParameters {
                             UploadFileName = uploadedFilename,
-                            FilePath = picture.url,
-                            Text = picture.description
+                            FilePath = picture.Url,
+                            Text = picture.Description
                         };
 
                         uploadedFilename = await UploadPictureAsync(client, history, uploadParameters, true);
@@ -261,7 +266,7 @@ namespace OurFoodChain.Wiki {
 
                     }
                     else
-                        _log(string.Format("Failed to generate filename for picture: {0}", picture.url));
+                        Log(string.Format("Failed to generate filename for picture: {0}", picture.Url));
 
                 }
 
@@ -295,7 +300,7 @@ namespace OurFoodChain.Wiki {
                         MediaWikiApiRequestResult result = client.Upload(parameters);
 
                         if (!result.Success)
-                            _log(result.ErrorMessage);
+                            Log(result.ErrorMessage);
 
                         if (result.ErrorCode == ErrorCode.VerificationError && allowRetry) {
 
@@ -307,7 +312,7 @@ namespace OurFoodChain.Wiki {
 
                             parameters.UploadFileName = System.IO.Path.ChangeExtension(parameters.UploadFileName, ext);
 
-                            _log("file extension didn't match, retrying upload");
+                            Log("file extension didn't match, retrying upload");
 
                             return await UploadPictureAsync(client, history, parameters, false);
 
@@ -333,20 +338,20 @@ namespace OurFoodChain.Wiki {
 
                         parameters.UploadFileName = string.Empty;
 
-                        _log(ex.ToString());
+                        Log(ex.ToString());
 
                     }
 
                 }
                 else
-                    _log(string.Format("skipping file \"{0}\" (manually edited)", parameters.UploadFileName));
+                    Log(string.Format("skipping file \"{0}\" (manually edited)", parameters.UploadFileName));
 
             }
             else {
 
                 // This image has been uploaded previously, so just return its path.
 
-                _log(string.Format("skipping file \"{0}\" (previously uploaded)", parameters.UploadFileName));
+                Log(string.Format("skipping file \"{0}\" (previously uploaded)", parameters.UploadFileName));
 
                 parameters.UploadFileName = record.UploadFileName;
 
@@ -445,9 +450,9 @@ namespace OurFoodChain.Wiki {
                 if (parse_result.ErrorCode == ErrorCode.MissingTitle || parse_result.Text.Contains(BotFlag)) {
 
                     if (parse_result.ErrorCode == ErrorCode.MissingTitle)
-                        _log(string.Format("creating page \"{0}\"", pageTitle));
+                        Log(string.Format("creating page \"{0}\"", pageTitle));
                     else
-                        _log(string.Format("editing page \"{0}\"", pageTitle));
+                        Log(string.Format("editing page \"{0}\"", pageTitle));
 
                     try {
 
@@ -464,19 +469,19 @@ namespace OurFoodChain.Wiki {
 
                     }
                     catch (Exception ex) {
-                        _log(ex.ToString());
+                        Log(ex.ToString());
                     }
 
                 }
                 else {
 
-                    _log(string.Format("skipping page \"{0}\" (manually edited)", pageTitle));
+                    Log(string.Format("skipping page \"{0}\" (manually edited)", pageTitle));
 
                 }
 
             }
             else
-                _log(string.Format("skipping page \"{0}\" (previously edited)", pageTitle));
+                Log(string.Format("skipping page \"{0}\" (previously edited)", pageTitle));
 
             // Return false to indicate that no edits have occurred.
             return false;

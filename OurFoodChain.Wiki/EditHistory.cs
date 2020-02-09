@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -30,44 +31,46 @@ namespace OurFoodChain.Wiki {
 
     public class EditHistory {
 
+        // Public members
+
         public string DatabaseFilePath { get; set; } = "edit_history.db";
-        public string DatabaseConnectionString {
-            get {
-                return string.Format("Data Source={0}", DatabaseFilePath);
-            }
+
+        public EditHistory() {
+
+            database = SQLiteDatabase.FromFile(DatabaseFilePath);
+
         }
 
         public async Task AddUploadRecordAsync(string filePath, string fileName) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO UploadHistory(timestamp, file_path, upload_file_name) VALUES($timestamp, $file_path, $upload_file_name)", conn)) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO UploadHistory(timestamp, file_path, upload_file_name) VALUES($timestamp, $file_path, $upload_file_name)")) {
 
                 cmd.Parameters.AddWithValue("$timestamp", _getTimestamp());
                 cmd.Parameters.AddWithValue("$file_path", filePath);
                 cmd.Parameters.AddWithValue("$upload_file_name", fileName);
 
-                await cmd.ExecuteNonQueryAsync();
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
         }
         public async Task<UploadRecord> GetUploadRecordAsync(string filePath) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM UploadHistory WHERE file_path = $file_path")) {
 
                 cmd.Parameters.AddWithValue("$file_path", filePath);
 
-                using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
-                    if (table.Rows.Count > 0) {
+                IEnumerable<DataRow> rows = await database.GetRowsAsync(cmd);
 
-                        return new UploadRecord {
-                            Timestamp = table.Rows[0].Field<long>("timestamp"),
-                            FilePath = table.Rows[0].Field<string>("file_path"),
-                            UploadFileName = table.Rows[0].Field<string>("upload_file_name")
-                        };
+                if (rows.Count() > 0) {
 
-                    }
+                    return new UploadRecord {
+                        Timestamp = rows.First().Field<long>("timestamp"),
+                        FilePath = rows.First().Field<string>("file_path"),
+                        UploadFileName = rows.First().Field<string>("upload_file_name")
+                    };
+
+                }
 
             }
 
@@ -77,28 +80,26 @@ namespace OurFoodChain.Wiki {
 
         public async Task AddEditRecordAsync(string title, string content) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO PageEditHistory(timestamp, title, content_hash) VALUES($timestamp, $title, $content_hash)", conn)) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO PageEditHistory(timestamp, title, content_hash) VALUES($timestamp, $title, $content_hash)")) {
 
                 cmd.Parameters.AddWithValue("$timestamp", _getTimestamp());
                 cmd.Parameters.AddWithValue("$title", title);
                 cmd.Parameters.AddWithValue("$content_hash", StringUtilities.GetMD5(content).ToLower());
 
-                await cmd.ExecuteNonQueryAsync();
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
         }
         public async Task AddEditRecordAsync(long speciesId, EditRecord record) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesPageEditHistory(timestamp, edit_id, species_id) VALUES($timestamp, $edit_id, $species_id)", conn)) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO SpeciesPageEditHistory(timestamp, edit_id, species_id) VALUES($timestamp, $edit_id, $species_id)")) {
 
                 cmd.Parameters.AddWithValue("$timestamp", record.Timestamp);
                 cmd.Parameters.AddWithValue("$edit_id", record.Id);
                 cmd.Parameters.AddWithValue("$species_id", speciesId);
 
-                await cmd.ExecuteNonQueryAsync();
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -109,25 +110,25 @@ namespace OurFoodChain.Wiki {
 
             string content_hash = StringUtilities.GetMD5(content).ToLower();
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM PageEditHistory WHERE title = $title ORDER BY timestamp DESC LIMIT 1")) {
 
                 cmd.Parameters.AddWithValue("$title", title);
 
-                using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
-                    if (table.Rows.Count > 0) {
+                IEnumerable<DataRow> rows = await database.GetRowsAsync(cmd);
 
-                        EditRecord record = new EditRecord {
-                            Id = table.Rows[0].Field<long>("id"),
-                            Timestamp = table.Rows[0].Field<long>("timestamp"),
-                            Title = table.Rows[0].Field<string>("title"),
-                            ContentHash = table.Rows[0].Field<string>("content_hash")
-                        };
+                if (rows.Count() > 0) {
 
-                        if (record.ContentHash == content_hash)
-                            return record;
+                    EditRecord record = new EditRecord {
+                        Id = rows.First().Field<long>("id"),
+                        Timestamp = rows.First().Field<long>("timestamp"),
+                        Title = rows.First().Field<string>("title"),
+                        ContentHash = rows.First().Field<string>("content_hash")
+                    };
 
-                    }
+                    if (record.ContentHash == content_hash)
+                        return record;
+
+                }
 
             }
 
@@ -138,22 +139,20 @@ namespace OurFoodChain.Wiki {
 
             List<EditRecord> records = new List<EditRecord>();
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesPageEditHistory INNER JOIN PageEditHistory ON PageEditHistory.id = SpeciesPageEditHistory.edit_id WHERE species_id = $species_id")) {
 
                 cmd.Parameters.AddWithValue("$species_id", speciesId);
 
-                using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
-                    foreach (DataRow row in table.Rows) {
+                foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
-                        records.Add(new EditRecord {
-                            Id = row.Field<long>("id"),
-                            Timestamp = row.Field<long>("timestamp"),
-                            Title = row.Field<string>("title"),
-                            ContentHash = row.Field<string>("content_hash")
-                        });
+                    records.Add(new EditRecord {
+                        Id = row.Field<long>("id"),
+                        Timestamp = row.Field<long>("timestamp"),
+                        Title = row.Field<string>("title"),
+                        ContentHash = row.Field<string>("content_hash")
+                    });
 
-                    }
+                }
 
             }
 
@@ -163,14 +162,13 @@ namespace OurFoodChain.Wiki {
 
         public async Task AddRedirectRecordAsync(string title, string target) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO RedirectHistory(timestamp, title, target) VALUES($timestamp, $title, $target)", conn)) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO RedirectHistory(timestamp, title, target) VALUES($timestamp, $title, $target)")) {
 
                 cmd.Parameters.AddWithValue("$timestamp", _getTimestamp());
                 cmd.Parameters.AddWithValue("$title", title);
                 cmd.Parameters.AddWithValue("$target", target);
 
-                await cmd.ExecuteNonQueryAsync();
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -179,10 +177,8 @@ namespace OurFoodChain.Wiki {
 
             List<RedirectRecord> records = new List<RedirectRecord>();
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM RedirectHistory;"))
-            using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
-                foreach (DataRow row in table.Rows) {
+                foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
                     records.Add(new RedirectRecord {
                         Timestamp = row.Field<long>("timestamp"),
@@ -199,21 +195,19 @@ namespace OurFoodChain.Wiki {
 
             List<RedirectRecord> records = new List<RedirectRecord>();
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM RedirectHistory WHERE target = $target")) {
 
                 cmd.Parameters.AddWithValue("$target", redirectsToTitle);
 
-                using (DataTable table = await OurFoodChain.DatabaseUtils.GetRowsAsync(conn, cmd))
-                    foreach (DataRow row in table.Rows) {
+                foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
-                        records.Add(new RedirectRecord {
-                            Timestamp = row.Field<long>("timestamp"),
-                            Title = row.Field<string>("title"),
-                            Target = row.Field<string>("target")
-                        });
+                    records.Add(new RedirectRecord {
+                        Timestamp = row.Field<long>("timestamp"),
+                        Title = row.Field<string>("title"),
+                        Target = row.Field<string>("target")
+                    });
 
-                    }
+                }
 
             }
 
@@ -221,24 +215,14 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private async Task<SQLiteConnection> _getDatabaseConnectionAsync() {
+        // Private members
 
-            if (string.IsNullOrEmpty(DatabaseFilePath))
-                throw new Exception("No database file specified.");
+        private bool initialized = false;
+        private readonly SQLiteDatabase database;
 
-            if (!_initialized)
-                await _initializeDatabaseAsync();
-
-            SQLiteConnection conn = new SQLiteConnection(DatabaseConnectionString);
-
-            await conn.OpenAsync();
-
-            return conn;
-
-        }
         private async Task _initializeDatabaseAsync() {
 
-            _initialized = true;
+            initialized = true;
 
             await _executeNonQueryAsync("CREATE TABLE IF NOT EXISTS UploadHistory(timestamp INTEGER, file_path TEXT, upload_file_name TEXT)");
             await _executeNonQueryAsync("CREATE TABLE IF NOT EXISTS PageEditHistory(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, title TEXT, content_hash TEXT)");
@@ -253,14 +237,13 @@ namespace OurFoodChain.Wiki {
         }
         private async Task _executeNonQueryAsync(string command) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand(command, conn))
-                await cmd.ExecuteNonQueryAsync();
+            using (SQLiteCommand cmd = new SQLiteCommand(command))
+                await database.ExecuteNonQueryAsync(cmd);
 
         }
         private async Task<bool> _executeExistenceQueryAsync(SQLiteCommand command) {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync()) {
+            using (SQLiteConnection conn = await database.GetConnectionAsync()) {
 
                 command.Connection = conn;
 
@@ -276,17 +259,14 @@ namespace OurFoodChain.Wiki {
         }
         private async Task<long> _getDatabaseVersionAsync() {
 
-            using (SQLiteConnection conn = await _getDatabaseConnectionAsync())
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT version FROM Meta"))
-                return await OurFoodChain.DatabaseUtils.GetScalarOrDefaultAsync<long>(conn, cmd, 0);
+                return await database.GetScalarAsync<long>(cmd);
 
         }
 
         private long _getTimestamp() {
             return DateTimeOffset.Now.ToUniversalTime().ToUnixTimeSeconds();
         }
-
-        private bool _initialized = false;
 
     }
 

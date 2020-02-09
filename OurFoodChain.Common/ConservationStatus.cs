@@ -8,7 +8,7 @@ namespace OurFoodChain.Common {
        IConservationStatus {
 
         public bool IsExinct => ExtinctionDate.HasValue;
-        public DateTime? ExtinctionDate { get; set; }
+        public DateTimeOffset? ExtinctionDate { get; set; }
         public string ExtinctionReason { get; set; }
 
     }

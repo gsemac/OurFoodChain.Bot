@@ -18,6 +18,13 @@ namespace OurFoodChain.Debug {
             this.Message = message;
 
         }
+        public LogMessage(LogSeverity severity, string source, string message) {
+
+            this.Severity = severity;
+            this.Source = source;
+            this.Message = message;
+
+        }
 
         public override string ToString() {
 

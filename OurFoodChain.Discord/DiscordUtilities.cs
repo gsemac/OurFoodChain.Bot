@@ -20,6 +20,11 @@ namespace OurFoodChain.Discord {
             await channel.SendMessageAsync("", false, BuildSuccessEmbed(message).Build());
 
         }
+        public static async Task ReplyWarningAsync(IMessageChannel channel, string message) {
+
+            await channel.SendMessageAsync("", false, BuildWarningEmbed(message).Build());
+
+        }
         public static async Task ReplyErrorAsync(IMessageChannel channel, string message) {
 
             await channel.SendMessageAsync("", false, BuildErrorEmbed(message).Build());
@@ -36,6 +41,15 @@ namespace OurFoodChain.Discord {
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(string.Format("✅ {0}", message));
             embed.WithColor(Color.Green);
+
+            return embed;
+
+        }
+        public static EmbedBuilder BuildWarningEmbed(string message) {
+
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription(string.Format("⚠️ {0}", message));
+            embed.WithColor(Color.Orange);
 
             return embed;
 
@@ -155,7 +169,7 @@ namespace OurFoodChain.Discord {
                 foreach (string categoryName in commandCategories.Keys) {
 
                     string commandsList = string.Join("  ", commandCategories[categoryName]
-                        .Select(i => i.Name.AfterSubstring(groupName).Trim())
+                        .Select(i => i.Name.After(groupName).Trim())
                         .Select(s => string.Format("`{0}`", s))
                         .OrderBy(s => s));
 

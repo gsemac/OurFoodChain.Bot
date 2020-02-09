@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using OurFoodChain.Common.Extensions;
 using System.Linq;
 
-namespace OurFoodChain.Taxa {
+namespace OurFoodChain.Common.Taxa {
 
     public class TaxonRank :
         ITaxonRank {
@@ -47,7 +47,7 @@ namespace OurFoodChain.Taxa {
                 string prefix = Prefix.ToString();
 
                 if (name.StartsWith(prefix))
-                    return name.AfterSubstring(prefix);
+                    return name.After(prefix);
                 else
                     return name;
 
@@ -143,10 +143,10 @@ namespace OurFoodChain.Taxa {
             rankName = rankName.Trim().ToLowerInvariant();
 
             if (rankName.EndsWith("phylum"))
-                return rankName.ReplaceLastSubstring("phylum", "phyla");
+                return rankName.ReplaceLast("phylum", "phyla");
 
             else if (rankName.EndsWith("genus"))
-                return rankName.ReplaceLastSubstring("genus", "genera");
+                return rankName.ReplaceLast("genus", "genera");
 
             else if (rankName.EndsWith("ss"))
                 return rankName + "es"; // e.g. class -> classes
@@ -155,7 +155,7 @@ namespace OurFoodChain.Taxa {
                 return rankName; // e.g. species -> species
 
             else if (rankName.EndsWith("y"))
-                return rankName.ReplaceLastSubstring("y", "ies"); // e.g. family -> families
+                return rankName.ReplaceLast("y", "ies"); // e.g. family -> families
 
             else
                 return rankName + "s"; // e.g. domain -> domains

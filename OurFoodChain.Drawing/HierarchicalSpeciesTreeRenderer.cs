@@ -1,7 +1,7 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
-using OurFoodChain.Taxa;
+using OurFoodChain.Common.Taxa;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;

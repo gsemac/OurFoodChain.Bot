@@ -27,6 +27,17 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
+        public static DateTimeOffset TimestampToOffset(long timestamp) {
+
+            return DateTimeOffset.FromUnixTimeSeconds(timestamp);
+
+        }
+        public static long OffsetToTimestamp(DateTimeOffset offset) {
+
+            return offset.ToUnixTimeSeconds();
+
+        }
+
     }
 
 }

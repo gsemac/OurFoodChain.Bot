@@ -651,7 +651,7 @@
     </ProjectReference>
     <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj">
       <Project>{A24672F7-2D13-4E4C-87EB-9F990BEEBDB4}</Project>
-      <Name>OurFoodChain</Name>
+      <Name>OurFoodChain.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\OurFoodChain.Drawing\OurFoodChain.Drawing.csproj">
       <Project>{e24f30fd-e82f-4709-b0c3-68c7eab7ac61}</Project>

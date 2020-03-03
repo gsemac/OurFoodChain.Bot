@@ -495,7 +495,7 @@ namespace OurFoodChain.Bot.Services {
                             case "images":
 
                                 await result.FilterByAsync(async (x) => {
-                                    return (await database.GetAllPicturesAsync(new SpeciesAdapter(x))).Count() <= 0;
+                                    return (await database.GetPicturesAsync(new SpeciesAdapter(x))).Count() <= 0;
                                 }, modifier.Subtractive);
 
                                 break;
@@ -563,7 +563,7 @@ namespace OurFoodChain.Bot.Services {
                 case SearchModifierType.Artist:
 
                     await result.FilterByAsync(async (x) => {
-                        return !(await database.GetAllPicturesAsync(new SpeciesAdapter(x))).Any(n => n.Artist.ToString().Equals(modifier.Value, StringComparison.OrdinalIgnoreCase));
+                        return !(await database.GetPicturesAsync(new SpeciesAdapter(x))).Any(n => n.Artist.ToString().Equals(modifier.Value, StringComparison.OrdinalIgnoreCase));
                     }, modifier.Subtractive);
 
                     break;

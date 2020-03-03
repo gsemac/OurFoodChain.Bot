@@ -581,7 +581,7 @@ namespace OurFoodChain.Bot.Modules {
                     List<IPicture> pictures = new List<IPicture>();
 
                     foreach (Species species in result.ToArray())
-                        pictures.AddRange(await Db.GetAllPicturesAsync(new SpeciesAdapter(species)));
+                        pictures.AddRange(await Db.GetPicturesAsync(new SpeciesAdapter(species)));
 
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 

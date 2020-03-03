@@ -7,7 +7,7 @@ namespace OurFoodChain.Common.Extensions {
 
     public static class StringExtensions {
 
-        public static string ToTitleCase(this string input) {
+        public static string ToTitle(this string input) {
 
             return StringUtilities.ToTitleCase(input);
 

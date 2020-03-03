@@ -28,6 +28,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static bool IsNull(this IZoneType zoneType) {
+
+            return zoneType is null || !zoneType.Id.HasValue;
+
+        }
+
     }
 
 }

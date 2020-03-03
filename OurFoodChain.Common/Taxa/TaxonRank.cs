@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using OurFoodChain.Common.Extensions;
 using System.Linq;
+using OurFoodChain.Common.Utilities;
 
 namespace OurFoodChain.Common.Taxa {
 
@@ -19,7 +20,7 @@ namespace OurFoodChain.Common.Taxa {
                 if (!string.IsNullOrEmpty(_rankName))
                     return _rankName;
 
-                return RankTypeToRankName(Type);
+                return TaxonUtilities.GetNameFromRank(Type);
 
             }
         }
@@ -27,16 +28,16 @@ namespace OurFoodChain.Common.Taxa {
             get {
 
                 if (!string.IsNullOrEmpty(_rankName))
-                    return PluralizeRankName(_rankName);
+                    return TaxonUtilities.GetPluralFromRankName(_rankName);
 
-                return PluralizeRankName(RankTypeToRankName(Type));
+                return TaxonUtilities.GetPluralFromRankName(TaxonUtilities.GetNameFromRank(Type));
 
             }
         }
         public TaxonPrefix Prefix {
             get {
 
-                return GetPrefixFromRankName(Name);
+                return TaxonUtilities.GetPrefixFromRankName(Name);
 
             }
         }
@@ -63,7 +64,7 @@ namespace OurFoodChain.Common.Taxa {
 
         }
         public TaxonRank(string rankName) :
-           this(RankNameToRankType(rankName)) {
+           this(TaxonUtilities.GetRankFromRankName(rankName)) {
 
             if (!string.IsNullOrEmpty(rankName))
                 _rankName = rankName.Trim().ToLower();
@@ -102,82 +103,6 @@ namespace OurFoodChain.Common.Taxa {
         // Private members
 
         private readonly string _rankName;
-
-        private static TaxonRankType RankNameToRankType(string rankName) {
-
-            if (string.IsNullOrEmpty(rankName))
-                return TaxonRankType.None;
-
-            TaxonRankType result;
-
-            if (string.IsNullOrEmpty(rankName))
-                result = TaxonRankType.None;
-
-            else if (!Enum.TryParse(rankName.Trim().ToLowerInvariant(), out result))
-                result = TaxonRankType.Custom;
-
-            return result;
-
-        }
-        private static string RankTypeToRankName(TaxonRankType rankType) {
-
-            string result;
-
-            if (rankType == TaxonRankType.None)
-                result = string.Empty;
-
-            else if (rankType != TaxonRankType.Custom)
-                result = rankType.ToString().ToLowerInvariant();
-
-            else
-                throw new ArgumentOutOfRangeException(nameof(rankType));
-
-            return result;
-
-        }
-        private static string PluralizeRankName(string rankName) {
-
-            if (string.IsNullOrEmpty(rankName))
-                return string.Empty;
-
-            rankName = rankName.Trim().ToLowerInvariant();
-
-            if (rankName.EndsWith("phylum"))
-                return rankName.ReplaceLast("phylum", "phyla");
-
-            else if (rankName.EndsWith("genus"))
-                return rankName.ReplaceLast("genus", "genera");
-
-            else if (rankName.EndsWith("ss"))
-                return rankName + "es"; // e.g. class -> classes
-
-            else if (rankName.EndsWith("s"))
-                return rankName; // e.g. species -> species
-
-            else if (rankName.EndsWith("y"))
-                return rankName.ReplaceLast("y", "ies"); // e.g. family -> families
-
-            else
-                return rankName + "s"; // e.g. domain -> domains
-
-        }
-        private static TaxonPrefix GetPrefixFromRankName(string rankName) {
-
-            if (string.IsNullOrEmpty(rankName))
-                return TaxonPrefix.None;
-
-            foreach (string prefix in Enum.GetNames(typeof(TaxonPrefix))
-                .Select(p => p.ToLowerInvariant())
-                .OrderByDescending(p => p.Length)) {
-
-                if (rankName.StartsWith(prefix))
-                    return (TaxonPrefix)Enum.Parse(typeof(TaxonPrefix), prefix);
-
-            }
-
-            return TaxonPrefix.None;
-
-        }
 
     }
 

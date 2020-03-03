@@ -22,7 +22,7 @@ namespace OurFoodChain {
         public string Genus {
             get {
 
-                return genus.SafeTrim().ToTitleCase();
+                return genus.SafeTrim().ToTitle();
 
             }
             set {

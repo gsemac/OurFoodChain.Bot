@@ -9,7 +9,11 @@ namespace OurFoodChain.Common.Taxa {
         long? Id { get; set; }
         long? ParentId { get; set; }
         ITaxonRank Rank { get; }
+
         string Name { get; set; }
+        ICollection<string> CommonNames { get; }
+        string Description { get; set; }
+        ICollection<IPicture> Pictures { get; }
 
     }
 

@@ -52,14 +52,16 @@ namespace OurFoodChain.Adapters {
             get => species.Name;
             set => species.Name = value;
         }
-        public override IPicture Picture {
-            get => string.IsNullOrEmpty(species.Picture) ? null : new Picture(species.Picture) { Artist = new Creator(species.OwnerName) };
-            set => species.Picture = value?.Url ?? string.Empty;
-        }
 
         public SpeciesAdapter(Species species) {
 
             this.species = species;
+
+            if (!string.IsNullOrEmpty(species.CommonName))
+                CommonNames.Add(species.CommonName);
+
+            if (!string.IsNullOrEmpty(species.Picture))
+                Pictures.Add(new Picture(species.Picture) { Artist = new Creator(species.OwnerName) });
 
         }
 

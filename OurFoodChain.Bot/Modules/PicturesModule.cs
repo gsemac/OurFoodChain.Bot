@@ -46,7 +46,7 @@ namespace OurFoodChain.Bot {
                 IPictureGallery gallery = await Db.GetPictureGalleryAsync(new SpeciesAdapter(species)) ?? new PictureGallery();
                 bool isFirstPicture = gallery.Count() <= 0;
 
-                await Db.SetDefaultPictureAsync(new SpeciesAdapter(species), new Picture {
+                await Db.SetPictureAsync(new SpeciesAdapter(species), new Picture {
                     Url = imageUrl,
                     Artist = new Creator(isFirstPicture ? species.OwnerName : Context.User.Username)
                 });
@@ -176,7 +176,7 @@ namespace OurFoodChain.Bot {
                 if (species is null)
                     return;
 
-                IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
+                IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(new SpeciesAdapter(species));
                 IPicture picture = (pictureIndex >= 0 && pictureIndex < pictures.Count()) ? pictures.ElementAt(pictureIndex) : null;
 
                 // If the image was removed from anywhere (gallery or default species picture), this is set to "true".
@@ -214,7 +214,7 @@ namespace OurFoodChain.Bot {
             if (species is null)
                 return;
 
-            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
+            IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(new SpeciesAdapter(species));
 
             if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
 
@@ -280,7 +280,7 @@ namespace OurFoodChain.Bot {
                         pictures.Add(new Picture(taxon.pics));
 
                     foreach (Species sp in await BotUtils.GetSpeciesInTaxonFromDb(taxon))
-                        pictures.AddRange(await Db.GetAllPicturesAsync(new SpeciesAdapter(sp)));
+                        pictures.AddRange(await Db.GetPicturesAsync(new SpeciesAdapter(sp)));
 
                     await ShowGalleryAsync(Context, taxon.GetName(), pictures);
 
@@ -351,7 +351,7 @@ namespace OurFoodChain.Bot {
 
         private async Task ShowGalleryAsync(Species species) {
 
-            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
+            IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(new SpeciesAdapter(species));
 
             await ShowGalleryAsync(Context, species.ShortName, pictures);
 

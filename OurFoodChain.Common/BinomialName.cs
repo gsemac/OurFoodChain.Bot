@@ -18,7 +18,7 @@ namespace OurFoodChain.Common {
 
         public BinomialName(string genusName, string speciesName) {
 
-            GenusName = genusName.ToTitleCase();
+            GenusName = genusName.ToTitle();
             SpeciesName = speciesName.ToLowerInvariant();
 
         }

@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OurFoodChain.Common.Taxa {
 
     public class Taxon :
-        ITaxon {
+        TaxonBase {
 
         // Public members
 
-        public long? Id { get; set; }
-        public long? ParentId { get; set; }
-        public ITaxonRank Rank { get; private set; }
-        public string Name { get; set; }
+        public override ITaxonRank Rank { get; protected set; }
 
         public Taxon(string name, TaxonRankType rank) {
 

@@ -14,9 +14,7 @@ namespace OurFoodChain.Common.Taxa {
         string ShortName { get; }
         ICreator Creator { get; set; }
         DateTimeOffset CreationDate { get; set; }
-        string Description { get; set; }
         IConservationStatus Status { get; set; }
-        IPicture Picture { get; set; }
 
     }
 

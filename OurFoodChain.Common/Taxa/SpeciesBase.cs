@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OurFoodChain.Common.Taxa {
@@ -11,11 +12,12 @@ namespace OurFoodChain.Common.Taxa {
         public virtual ITaxon Genus { get; set; }
         public virtual ICreator Creator { get; set; }
         public virtual DateTimeOffset CreationDate { get; set; } = DateUtilities.GetCurrentUtcDate();
-        public virtual string Description { get; set; }
         public virtual IConservationStatus Status { get; set; } = new ConservationStatus();
         public virtual long? Id { get; set; }
         public virtual string Name { get; set; }
-        public virtual IPicture Picture { get; set; }
+        public virtual ICollection<string> CommonNames { get; set; } = new List<string>();
+        public virtual string Description { get; set; }
+        public virtual ICollection<IPicture> Pictures { get; set; } = new List<IPicture>();
 
         public BinomialName BinomialName => new BinomialName(Genus.Name, Name);
         public string FullName => BinomialName.ToString(BinomialNameFormat.Full);

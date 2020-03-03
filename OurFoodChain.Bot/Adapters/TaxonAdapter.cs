@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Common.Taxa;
+﻿using OurFoodChain.Common;
+using OurFoodChain.Common.Taxa;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,19 +9,19 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Adapters {
 
     public class TaxonAdapter :
-        ITaxon {
+        TaxonBase {
 
         // Public members
 
-        public long? Id {
+        public override long? Id {
             get => taxon.id;
             set => taxon.id = value.GetValueOrDefault(Taxon.NullId);
         }
-        public long? ParentId {
+        public override long? ParentId {
             get => taxon.parent_id;
             set => taxon.parent_id = value.GetValueOrDefault(Taxon.NullId);
         }
-        public ITaxonRank Rank {
+        public override ITaxonRank Rank {
             get {
 
                 switch (taxon.type) {
@@ -56,14 +57,24 @@ namespace OurFoodChain.Adapters {
 
             }
         }
-        public string Name {
+        public override string Name {
             get => taxon.GetName();
             set => taxon.name = value;
+        }
+        public override string Description {
+            get => taxon.description;
+            set => taxon.description = value;
         }
 
         public TaxonAdapter(Taxon taxon) {
 
             this.taxon = taxon;
+
+            if (!string.IsNullOrEmpty(taxon.CommonName))
+                CommonNames.Add(taxon.CommonName);
+
+            if (!string.IsNullOrEmpty(taxon.pics))
+                Pictures.Add(new Picture(taxon.pics));
 
         }
 

@@ -19,6 +19,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static bool IsNull(this IZone zone) {
+
+            return zone is null || !zone.Id.HasValue;
+
+        }
+
     }
 
 }

@@ -162,7 +162,7 @@ namespace OurFoodChain.Discord {
                 while (versionString.EndsWith(".0"))
                     versionString = versionString.Substring(0, versionString.Length - 2);
 
-                builder.WithTitle(string.IsNullOrEmpty(groupName) ? "Commands list" : string.Format("{0} commands list", groupName.ToTitleCase()));
+                builder.WithTitle(string.IsNullOrEmpty(groupName) ? "Commands list" : string.Format("{0} commands list", groupName.ToTitle()));
                 builder.WithFooter(string.Format("{0} v.{1} — github.com/gsemac/ourfoodchain-bot", projectName, versionString));
                 builder.WithDescription(descriptionBuilder.ToString());
 
@@ -177,7 +177,7 @@ namespace OurFoodChain.Discord {
                         commandsList = commandsList.Substring(0, MaxFieldLength);
 
                     if (commandsList.Length > 0)
-                        builder.AddField(categoryName.ToTitleCase(), commandsList);
+                        builder.AddField(categoryName.ToTitle(), commandsList);
 
                 }
 

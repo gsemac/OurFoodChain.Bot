@@ -20,6 +20,8 @@ namespace OurFoodChain.Common.Zones {
         string Name { get; set; }
         string Description { get; set; }
 
+        ICollection<IPicture> Pictures { get; set; }
+
         ZoneFlags Flags { get; set; }
 
     }

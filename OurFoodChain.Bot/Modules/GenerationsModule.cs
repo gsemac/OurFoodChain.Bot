@@ -12,20 +12,22 @@ namespace OurFoodChain.Bot {
     public class GenerationCommands :
         ModuleBase {
 
+        // Public members
+
         [Command("gen"), RequireConfigSettingEnabled("generations_enabled")]
         public async Task Gen() {
 
-            await _showGenerationAsync(Context, await GenerationUtils.GetCurrentGenerationAsync());
+            await ShowGenerationAsync(Context, await GenerationUtils.GetCurrentGenerationAsync());
 
         }
         [Command("gen"), RequireConfigSettingEnabled("generations_enabled")]
         public async Task Gen(int number) {
 
-            await _showGenerationAsync(Context, await GenerationUtils.GetGenerationAsync(number));
+            await ShowGenerationAsync(Context, await GenerationUtils.GetGenerationAsync(number));
 
         }
 
-        [Command("advancegen"), Alias("advgen"), RequireConfigSettingEnabled("generations_enabled")]
+        [Command("advancegen"), Alias("advgen"), RequireConfigSettingEnabled("generations_enabled"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AdvanceGen() {
 
             Generation generation = await GenerationUtils.AdvanceGenerationAsync();
@@ -33,7 +35,7 @@ namespace OurFoodChain.Bot {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully advanced generation to **{0}**.", generation.Name));
 
         }
-        [Command("revertgen"), Alias("revgen"), RequireConfigSettingEnabled("generations_enabled")]
+        [Command("revertgen"), Alias("revgen"), RequireConfigSettingEnabled("generations_enabled"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RevertGen() {
 
             if (await GenerationUtils.RevertGenerationAsync())
@@ -43,7 +45,9 @@ namespace OurFoodChain.Bot {
 
         }
 
-        private async Task<Bot.PaginatedMessageBuilder> _buildGenerationEmbedAsync(Generation generation) {
+        // Private members
+
+        private async Task<PaginatedMessageBuilder> BuildGenerationEmbedAsync(Generation generation) {
 
             Bot.PaginatedMessageBuilder embed = await RecentCommands.BuildRecentEventsEmbedAsync(generation.StartTimestamp, generation.EndTimestamp);
             TimeAmount time_amount_since = new TimeAmount(DateUtils.GetCurrentTimestamp() - generation.EndTimestamp, TimeUnits.Seconds);
@@ -55,9 +59,9 @@ namespace OurFoodChain.Bot {
             return embed;
 
         }
-        private async Task _showGenerationAsync(ICommandContext context, Generation generation) {
+        private async Task ShowGenerationAsync(ICommandContext context, Generation generation) {
 
-            Bot.PaginatedMessageBuilder embed = await _buildGenerationEmbedAsync(generation);
+            Bot.PaginatedMessageBuilder embed = await BuildGenerationEmbedAsync(generation);
 
             await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 

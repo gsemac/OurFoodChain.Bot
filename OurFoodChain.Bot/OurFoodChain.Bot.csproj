@@ -268,7 +268,7 @@
     <Compile Include="Modules\BulkModule.cs" />
     <Compile Include="Modules\ConfigurationModule.cs" />
     <Compile Include="Modules\PicturesModule.cs" />
-    <Compile Include="Modules\GenerationCommands.cs" />
+    <Compile Include="Modules\GenerationsModule.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\IdeasCommands.cs" />
     <Compile Include="Modules\MapModule.cs" />

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Utilities;
 using System;
@@ -176,7 +177,7 @@ namespace OurFoodChain.Bot {
             species_list.RemoveAll(x => x.IsExtinct);
             species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
-            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list,
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(species_list.Select(s => new SpeciesAdapter(s)),
                 fieldName: string.Format("Extant species with this role ({0}):", species_list.Count())));
 
             embed.SetTitle(string.Format("Role: {0}", StringUtilities.ToTitleCase(role.name)));

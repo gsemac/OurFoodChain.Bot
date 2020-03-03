@@ -3,10 +3,13 @@ using Discord.Commands;
 using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -97,7 +100,7 @@ namespace OurFoodChain.Bot.Modules {
 
             species.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
-            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("All species ({0}):", species.Count()));
+            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species.Select(s => new SpeciesAdapter(s)), fieldName: string.Format("All species ({0}):", species.Count()));
 
             // Send the result.
 
@@ -136,7 +139,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Create embed pages.
 
-            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species, fieldName: string.Format("Species in this {0} ({1}):", taxon.GetTypeName(), species.Count()));
+            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species.Select(s => new SpeciesAdapter(s)), fieldName: string.Format("Species in this {0} ({1}):", taxon.GetTypeName(), species.Count()));
 
             if (pages.Count <= 0)
                 pages.Add(new EmbedBuilder());
@@ -359,41 +362,53 @@ namespace OurFoodChain.Bot.Modules {
             // Get the zones that the species currently resides in.
             // These will be used to show warning messages (e.g., doesn't exist in the given zone).
 
-            long[] current_zone_ids = (await BotUtils.GetZonesFromDb(sp.Id)).Select(x => x.Id).ToArray();
+            IEnumerable<long> currentZoneIds = (await Db.GetZonesAsync(sp.Id))
+                .Where(info => info.Zone.Id.HasValue)
+                .Select(info => info.Zone.Id.Value);
 
             // Get the zones from user input.
-            ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
+
+            IEnumerable<string> zoneNames = ZoneUtilities.ParseZoneNameList(zoneList);
+            IEnumerable<IZone> zones = await Db.GetZonesAsync(zoneNames);
+            IEnumerable<string> invalidZones = zoneNames.Except(zones.Select(zone => zone.Name), StringComparer.OrdinalIgnoreCase);
 
             // Remove the zones from the species.
-            await SpeciesUtils.RemoveZonesAsync(sp, zones.Zones);
 
-            if (zones.InvalidZones.Count() > 0) {
+            await Db.RemoveZonesAsync(new SpeciesAdapter(sp), zones);
+
+            if (invalidZones.Count() > 0) {
 
                 // Show a warning if the user provided any invalid zones.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtilities.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
-                    zones.InvalidZones.Count() == 1 ? "does" : "do"));
+                    StringUtilities.ConjunctiveJoin(", ", invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
+                    invalidZones.Count() == 1 ? "does" : "do"));
 
             }
 
-            if (zones.Zones.Any(x => !current_zone_ids.Contains(x.Id))) {
+            if (zones.Any(zone => !currentZoneIds.Any(id => id == zone.Id))) {
 
                 // Show a warning if the species wasn't in one or more of the zones provided.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.",
                     sp.ShortName,
-                    StringUtilities.ConjunctiveJoin(", ", zones.Zones.Where(x => !current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtilities.ConjunctiveJoin(", ",
+                        zones.Where(zone => !currentZoneIds.Any(id => id == zone.Id))
+                        .Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray()))
+                    );
 
             }
 
-            if (zones.Zones.Any(x => current_zone_ids.Contains(x.Id))) {
+            if (zones.Any(zone => currentZoneIds.Any(id => id == zone.Id))) {
 
                 // Show a confirmation of all valid zones.
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.",
                     sp.ShortName,
-                    StringUtilities.DisjunctiveJoin(", ", zones.Zones.Where(x => current_zone_ids.Contains(x.Id)).Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtilities.DisjunctiveJoin(", ",
+                        zones.Where(zone => currentZoneIds.Any(id => id == zone.Id))
+                        .Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray()))
+                    );
 
             }
 
@@ -687,7 +702,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, Species species) {
+        public async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, Species species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 
@@ -714,19 +729,19 @@ namespace OurFoodChain.Bot.Modules {
 
                 embed.AddField("Owner", await SpeciesUtils.GetOwnerOrDefaultAsync(species, context), inline: true);
 
-                SpeciesZone[] zone_list = await SpeciesUtils.GetZonesAsync(species);
+                IEnumerable<ISpeciesZoneInfo> zone_list = await Db.GetZonesAsync(new SpeciesAdapter(species));
 
                 if (zone_list.Count() > 0) {
 
-                    embed_color = Bot.DiscordUtils.ConvertColor((await ZoneUtils.GetZoneTypeAsync(zone_list
-                        .GroupBy(x => x.Zone.ZoneTypeId)
+                    embed_color = DiscordUtils.ConvertColor((await Db.GetZoneTypeAsync(zone_list
+                        .GroupBy(x => x.Zone.TypeId)
                         .OrderBy(x => x.Count())
                         .Last()
                         .Key)).Color);
 
                 }
 
-                string zones_value = new SpeciesZoneCollection(zone_list).ToString(SpeciesZoneCollectionToStringOptions.Default, Bot.DiscordUtils.MaxFieldLength);
+                string zones_value = new SpeciesZoneInfoCollection(zone_list).ToString(SpeciesZoneInfoCollectionToStringOptions.Default, DiscordUtils.MaxFieldLength);
 
                 embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
 
@@ -813,28 +828,31 @@ namespace OurFoodChain.Bot.Modules {
         public async Task _plusZone(Species species, string zoneList, string notes, bool onlyShowErrors = false) {
 
             // Get the zones from user input.
-            ZoneListResult zones = await ZoneUtils.GetZonesByZoneListAsync(zoneList);
+
+            IEnumerable<string> zoneNames = ZoneUtilities.ParseZoneNameList(zoneList);
+            IEnumerable<IZone> zones = await Db.GetZonesAsync(zoneNames);
+            IEnumerable<string> invalidZones = zoneNames.Except(zones.Select(zone => zone.Name), StringComparer.OrdinalIgnoreCase);
 
             // Add the zones to the species.
-            await SpeciesUtils.AddZonesAsync(species, zones.Zones, notes);
+            await Db.AddZonesAsync(new SpeciesAdapter(species), zones, notes);
 
-            if (zones.InvalidZones.Count() > 0) {
+            if (invalidZones.Count() > 0) {
 
                 // Show a warning if the user provided any invalid zones.
 
                 await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtilities.ConjunctiveJoin(", ", zones.InvalidZones.Select(x => string.Format("**{0}**", ZoneUtils.FormatZoneName(x))).ToArray()),
-                    zones.InvalidZones.Count() == 1 ? "does" : "do"));
+                    StringUtilities.ConjunctiveJoin(", ", invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
+                    invalidZones.Count() == 1 ? "does" : "do"));
 
             }
 
-            if (zones.Zones.Count() > 0 && !onlyShowErrors) {
+            if (zones.Count() > 0 && !onlyShowErrors) {
 
                 // Show a confirmation of all valid zones.
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now inhabits {1}.",
                       species.ShortName,
-                      StringUtilities.ConjunctiveJoin(", ", zones.Zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                      StringUtilities.ConjunctiveJoin(", ", zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 
@@ -848,7 +866,7 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList,
+                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList.Select(s => new SpeciesAdapter(s)),
                     fieldName: string.Format("Species owned by {0} ({1})", username, speciesList.Count())));
 
                 embed.SetThumbnailUrl(thumbnailUrl);

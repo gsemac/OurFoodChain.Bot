@@ -1,7 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -15,6 +20,7 @@ namespace OurFoodChain.Bot.Modules {
         ModuleBase {
 
         public IOfcBotConfiguration BotConfiguration { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command("addzone"), Alias("addz"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddZone(string name, string type = "", string description = "") {
@@ -28,42 +34,42 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Allow the user to specify zones with numbers (e.g., "1") or single letters (e.g., "A").
                 // Otherwise, the name is taken as-is.
-                name = ZoneUtils.FormatZoneName(name).ToLower();
+                name = ZoneUtilities.GetFullName(name).ToLowerInvariant();
 
                 // If an invalid type was provided, assume the user meant it as a description instead.
                 // i.e., "addzone <name> <description>"
 
-                ZoneType zone_type = await ZoneUtils.GetZoneTypeAsync(type);
+                IZoneType zone_type = await Db.GetZoneTypeAsync(type);
 
-                if (zone_type is null || zone_type.Id == ZoneType.NullZoneTypeId) {
+                if (zone_type.IsNull()) {
 
                     description = type;
 
                     // Attempt to determine the zone type automatically if one wasn't provided.
                     // Currently, this is only possible if users are using the default zone types (i.e. "aquatic" and "terrestrial").
 
-                    zone_type = await ZoneUtils.GetDefaultZoneTypeAsync(name);
+                    zone_type = await Db.GetDefaultZoneTypeAsync(name);
 
                 }
 
-                if (await ZoneUtils.GetZoneAsync(name) != null) {
+                if (await Db.GetZoneAsync(name) != null) {
 
                     // Don't attempt to create the zone if it already exists.
 
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", ZoneUtils.FormatZoneName(name)));
+                    await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", ZoneUtilities.GetFullName(name)));
 
                 }
                 else {
 
-                    await ZoneUtils.AddZoneAsync(new Zone {
+                    await Db.AddZoneAsync(new Zone {
                         Name = name,
                         Description = description,
-                        ZoneTypeId = zone_type.Id
+                        TypeId = zone_type.Id
                     });
 
                     await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new {0} zone, **{1}**.",
-                        zone_type.Name.ToLower(),
-                        ZoneUtils.FormatZoneName(name)));
+                        zone_type.Name.ToLowerInvariant(),
+                        ZoneUtilities.GetFullName(name)));
 
                 }
 
@@ -74,23 +80,23 @@ namespace OurFoodChain.Bot.Modules {
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string arg0 = "") {
 
-            ZoneType zone_type = await ZoneUtils.GetZoneTypeAsync(arg0);
+            IZoneType zone_type = await Db.GetZoneTypeAsync(arg0);
 
-            if (string.IsNullOrEmpty(arg0) || ZoneUtils.ZoneTypeIsValid(zone_type)) {
+            if (string.IsNullOrEmpty(arg0) || !zone_type.IsNull()) {
 
                 // Display all zones, or, if the user passed in a valid zone type, all zones of that type.
 
-                Zone[] zones = await ZoneUtils.GetZonesAsync(zone_type);
+                IEnumerable<IZone> zones = await Db.GetZonesAsync(zone_type);
 
                 if (zones.Count() > 0) {
 
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
-                    Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
+                    PaginatedMessageBuilder embed = new PaginatedMessageBuilder {
                         Title = StringUtilities.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
                         Description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
                             BotConfiguration.Prefix,
-                            zones[0].ShortName.Contains(" ") ? string.Format("\"{0}\"", zones[0].ShortName.ToLower()) : zones[0].ShortName.ToLower())
+                            zones.First().GetShortName().Contains(" ") ? string.Format("\"{0}\"", zones.First().GetShortName().ToLowerInvariant()) : zones.First().GetShortName().ToLowerInvariant())
                     };
 
                     // Build paginated message.
@@ -98,10 +104,10 @@ namespace OurFoodChain.Bot.Modules {
                     await BotUtils.ZonesToEmbedPagesAsync(embed, zones);
                     embed.AddPageNumbers();
 
-                    if (ZoneUtils.ZoneTypeIsValid(zone_type))
-                        embed.SetColor(Bot.DiscordUtils.ConvertColor(zone_type.Color));
+                    if (!zone_type.IsNull())
+                        embed.SetColor(DiscordUtils.ConvertColor(zone_type.Color));
 
-                    await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                    await DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                 }
                 else {
@@ -115,20 +121,20 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                Zone zone = await ZoneUtils.GetZoneAsync(arg0);
+                IZone zone = await Db.GetZoneAsync(arg0);
 
                 if (await BotUtils.ReplyValidateZoneAsync(Context, zone)) {
 
                     List<Embed> pages = new List<Embed>();
 
-                    ZoneType type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId) ?? new ZoneType();
-                    string title = string.Format("{0} {1}", type.Icon, zone.FullName);
+                    IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId) ?? new ZoneType();
+                    string title = string.Format("{0} {1}", type.Icon, zone.GetFullName());
                     string description = zone.GetDescriptionOrDefault();
-                    Color color = Bot.DiscordUtils.ConvertColor(type.Color);
+                    Color color = DiscordUtils.ConvertColor(type.Color);
 
                     // Get all species living in this zone.
 
-                    List<Species> species_list = new List<Species>(await BotUtils.GetSpeciesFromDbByZone(zone));
+                    List<ISpecies> species_list = new List<ISpecies>(await Db.GetSpeciesAsync(zone));
 
                     species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
@@ -136,7 +142,7 @@ namespace OurFoodChain.Bot.Modules {
                     // The message will have a paginated species list, and a toggle button to display the species sorted by role.
 
                     List<EmbedBuilder> embed_pages = EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: (string.Format("Extant species in this zone ({0}):", species_list.Count())));
-                    Bot.PaginatedMessageBuilder paginated = new Bot.PaginatedMessageBuilder(embed_pages);
+                    PaginatedMessageBuilder paginated = new PaginatedMessageBuilder(embed_pages);
 
                     if (embed_pages.Count() <= 0)
                         embed_pages.Add(new EmbedBuilder());
@@ -145,7 +151,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     paginated.SetTitle(title);
                     paginated.SetDescription(description);
-                    paginated.SetThumbnailUrl(zone.Pics);
+                    paginated.SetThumbnailUrl(zone.Pictures.FirstOrDefault()?.Url);
                     paginated.SetColor(color);
 
                     // This page will have species organized by role.
@@ -241,7 +247,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Make sure that the given zone exists.
 
-            Zone z = await ZoneUtils.GetZoneAsync(zone);
+            IZone z = await Db.GetZoneAsync(zone);
 
             if (!await BotUtils.ReplyValidateZoneAsync(Context, z))
                 return;
@@ -271,7 +277,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get the zone from the database.
 
-            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
+            IZone zone = await Db.GetZoneAsync(zoneName);
 
             if (!await BotUtils.ReplyValidateZoneAsync(Context, zone))
                 return;
@@ -297,35 +303,35 @@ namespace OurFoodChain.Bot.Modules {
             // If the given argument is a zone type, display information for that type.
             // If the given argument is a zone name, display information for the type corresponding to that zone.
 
-            ZoneType type = await ZoneUtils.GetZoneTypeAsync(arg0);
+            IZoneType type = await Db.GetZoneTypeAsync(arg0);
 
-            if (!ZoneUtils.ZoneTypeIsValid(type)) {
+            if (type.IsNull()) {
 
                 // If no zone type exists with this name, attempt to get the type of the zone with this name.
 
-                Zone zone = await ZoneUtils.GetZoneAsync(arg0);
+                IZone zone = await Db.GetZoneAsync(arg0);
 
                 if (zone != null)
-                    type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId);
+                    type = await Db.GetZoneTypeAsync(zone.TypeId);
 
             }
 
-            if (ZoneUtils.ZoneTypeIsValid(type)) {
+            if (!type.IsNull()) {
 
                 // We got a valid zone type, so show information about the zone type.
 
-                Zone[] zones = await ZoneUtils.GetZonesAsync(type);
+                IEnumerable<IZone> zones = await Db.GetZonesAsync(type);
 
-                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
+                PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
                     Title = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count()),
                     Description = type.Description + "\n\n",
-                    Color = Bot.DiscordUtils.ConvertColor(type.Color)
+                    Color = DiscordUtils.ConvertColor(type.Color)
                 };
 
                 await BotUtils.ZonesToEmbedPagesAsync(embed, zones, showIcon: false);
                 embed.AddPageNumbers();
 
-                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                await DiscordUtils.SendMessageAsync(Context, embed.Build());
 
             }
             else
@@ -345,11 +351,11 @@ namespace OurFoodChain.Bot.Modules {
             else {
 
                 string name = args[0];
-                string icon = ZoneType.DefaultIcon;
-                System.Drawing.Color color = ZoneType.DefaultColor;
+                string icon = ZoneTypeBase.DefaultIcon;
+                System.Drawing.Color color = ZoneTypeBase.DefaultColor;
                 string description = "";
 
-                if (await ZoneUtils.GetZoneTypeAsync(name) != null) {
+                if (await Db.GetZoneTypeAsync(name) != null) {
 
                     // If a zone type with this name already exists, do not create a new one.
                     await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone type named \"{0}\" already exists.", name));
@@ -381,7 +387,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // Add the zone type to the database.
 
-                    await ZoneUtils.AddZoneTypeAsync(type);
+                    await Db.AddZoneTypeAsync(type);
 
                     await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new zone type **{0}**.", type.Name));
 
@@ -395,18 +401,18 @@ namespace OurFoodChain.Bot.Modules {
         [Command("setzonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task SetZoneType(string zoneName, string zoneType) {
 
-            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
-            ZoneType type = await ZoneUtils.GetZoneTypeAsync(zoneType);
+            IZone zone = await Db.GetZoneAsync(zoneName);
+            IZoneType type = await Db.GetZoneTypeAsync(zoneType);
 
             if (await BotUtils.ReplyValidateZoneAsync(Context, zone) && await BotUtils.ReplyValidateZoneTypeAsync(Context, type)) {
 
-                zone.ZoneTypeId = type.Id;
+                zone.TypeId = type.Id;
 
-                await ZoneUtils.UpdateZoneAsync(zone);
+                await Db.UpdateZoneAsync(zone);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the type of {0}**{1}** to **{2}**.",
-                    zone.FullName.StartsWith("Zone") ? string.Empty : "zone ",
-                    zone.FullName,
+                    zone.GetFullName().StartsWith("Zone") ? string.Empty : "zone ",
+                    zone.GetFullName(),
                     type.Name));
 
             }
@@ -416,8 +422,8 @@ namespace OurFoodChain.Bot.Modules {
         [Command("setparentzone"), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task SetParentZone(string zoneName, string parentZoneName) {
 
-            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
-            Zone parent = await ZoneUtils.GetZoneAsync(parentZoneName);
+            IZone zone = await Db.GetZoneAsync(zoneName);
+            IZone parent = await Db.GetZoneAsync(parentZoneName);
 
             if (await BotUtils.ReplyValidateZoneAsync(Context, zone) && await BotUtils.ReplyValidateZoneAsync(Context, parent)) {
 
@@ -434,19 +440,19 @@ namespace OurFoodChain.Bot.Modules {
                 else if (zone.ParentId == parent.Id) {
 
                     await BotUtils.ReplyAsync_Warning(Context, string.Format("The parent zone of **{0}** is already **{1}**.",
-                        zone.FullName,
-                        parent.FullName));
+                        zone.GetFullName(),
+                        parent.GetFullName()));
 
                 }
                 else {
 
                     zone.ParentId = parent.Id;
 
-                    await ZoneUtils.UpdateZoneAsync(zone);
+                    await Db.UpdateZoneAsync(zone);
 
                     await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the parent zone of **{0}** to **{1}**.",
-                        zone.FullName,
-                        parent.FullName));
+                        zone.GetFullName(),
+                        parent.GetFullName()));
 
                 }
 

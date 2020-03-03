@@ -1,4 +1,5 @@
 ﻿using Discord;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
@@ -186,14 +187,14 @@ namespace OurFoodChain {
 
         }
 
-        public static List<List<Species>> SpeciesListToColumns(List<Species> items, int speciesPerColumn) {
+        public static List<List<ISpecies>> SpeciesListToColumns(IEnumerable<ISpecies> items, int speciesPerColumn) {
 
-            List<List<Species>> columns = new List<List<Species>>();
+            List<List<ISpecies>> columns = new List<List<ISpecies>>();
 
-            foreach (Species sp in items) {
+            foreach (ISpecies sp in items) {
 
                 if (columns.Count <= 0 || columns.Last().Count >= speciesPerColumn)
-                    columns.Add(new List<Species>());
+                    columns.Add(new List<ISpecies>());
 
                 columns.Last().Add(sp);
 
@@ -202,20 +203,20 @@ namespace OurFoodChain {
             return columns;
 
         }
-        public static List<EmbedBuilder> SpeciesListToEmbedPages(List<Species> items, int speciesPerPage = 40, string fieldName = "\u200B", EmbedPagesFlag flags = EmbedPagesFlag.Default) {
+        public static List<EmbedBuilder> SpeciesListToEmbedPages(IEnumerable<ISpecies> items, int speciesPerPage = 40, string fieldName = "\u200B", EmbedPagesFlag flags = EmbedPagesFlag.Default) {
 
-            List<List<Species>> columns = SpeciesListToColumns(items, speciesPerPage / 2);
+            List<List<ISpecies>> columns = SpeciesListToColumns(items, speciesPerPage / 2);
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
 
             EmbedBuilder current_page = new EmbedBuilder();
             bool is_first_field = true;
 
-            foreach (List<Species> column in columns) {
+            foreach (List<ISpecies> column in columns) {
 
                 StringBuilder builder = new StringBuilder();
 
-                foreach (Species sp in column)
-                    if (flags.HasFlag(EmbedPagesFlag.CrossOutExtinctSpecies) && sp.IsExtinct)
+                foreach (ISpecies sp in column)
+                    if (flags.HasFlag(EmbedPagesFlag.CrossOutExtinctSpecies) && sp.Status.IsExinct)
                         builder.AppendLine(string.Format("~~{0}~~", sp.ShortName));
                     else
                         builder.AppendLine(sp.ShortName);

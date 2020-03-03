@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common;
+using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
@@ -15,6 +16,129 @@ namespace OurFoodChain.Data.Extensions {
     public static class SQLiteDatabaseSpeciesExtensions {
 
         // Public members
+
+        public static async Task<ISpecies> GetSpeciesAsync(this SQLiteDatabase database, long? speciesId) {
+
+            if (!speciesId.HasValue)
+                return null;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", speciesId);
+
+                DataRow row = await database.GetRowAsync(cmd);
+
+                return row is null ? null : await database.CreateSpeciesFromDataRowAsync(row);
+
+            }
+
+        }
+
+        public static async Task<IEnumerable<ISpecies>> GetBaseSpeciesAsync(this SQLiteDatabase database) {
+
+            List<ISpecies> species = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors)"))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    species.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            return species;
+
+        }
+        public static async Task<bool> IsBaseSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            return await database.GetAncestorAsync(species) is null;
+
+        }
+
+        public static async Task<IEnumerable<long>> GetAncestorIdsAsync(this SQLiteDatabase database, long speciesId) {
+
+            List<long> ancestor_ids = new List<long>();
+
+            while (true) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                    DataRow row = await database.GetRowAsync(cmd);
+
+                    if (row is null)
+                        break;
+
+                    speciesId = row.Field<long>("ancestor_id");
+
+                    ancestor_ids.Add(speciesId);
+
+                }
+
+            }
+
+            // Reverse the array so that earliest ancestors are listed first.
+            ancestor_ids.Reverse();
+
+            return ancestor_ids.ToArray();
+
+        }
+        public static async Task<ISpecies> GetAncestorAsync(this SQLiteDatabase database, ISpecies species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                DataRow row = await database.GetRowAsync(cmd);
+
+                return row is null ? null : await database.GetSpeciesAsync(row.Field<long>("ancestor_id"));
+
+            }
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetAncestorsAsync(this SQLiteDatabase database, ISpecies species) {
+
+            if (!species.Id.HasValue)
+                return Enumerable.Empty<ISpecies>();
+
+            return await database.GetAncestorsAsync(species.Id.Value);
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetAncestorsAsync(this SQLiteDatabase database, long speciesId) {
+
+            List<ISpecies> ancestor_species = new List<ISpecies>();
+
+            foreach (long species_id in await database.GetAncestorIdsAsync(speciesId))
+                ancestor_species.Add(await database.GetSpeciesAsync(species_id));
+
+            return ancestor_species.ToArray();
+
+        }
+
+        public static async Task<IConservationStatus> GetConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
+
+            IConservationStatus result = new ConservationStatus();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                DataRow row = await database.GetRowAsync(cmd);
+
+                if (row != null) {
+
+                    string reason = row.Field<string>("reason");
+                    long timestamp = (long)row.Field<decimal>("timestamp");
+
+                    result = new ConservationStatus() {
+                        ExtinctionDate = DateUtilities.TimestampToOffset(timestamp),
+                        ExtinctionReason = reason
+                    };
+
+                }
+
+            }
+
+            return result;
+
+        }
 
         public static async Task SetPictureAsync(this SQLiteDatabase database, ISpecies species, IPicture picture) {
 
@@ -132,32 +256,90 @@ namespace OurFoodChain.Data.Extensions {
             return species;
 
         }
+        public static async Task AddZonesAsync(this SQLiteDatabase database, ISpecies species, IEnumerable<IZone> zones) {
 
-        public static async Task<IConservationStatus> GetConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
+            await AddZonesAsync(database, species, zones, string.Empty);
 
-            IConservationStatus result = new ConservationStatus();
+        }
+        public static async Task AddZonesAsync(this SQLiteDatabase database, ISpecies species, IEnumerable<IZone> zones, string notes) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
+            foreach (IZone zone in zones) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesZones(species_id, zone_id, notes, timestamp) VALUES($species_id, $zone_id, $notes, $timestamp)")) {
 
-                DataRow row = await database.GetRowAsync(cmd);
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+                    cmd.Parameters.AddWithValue("$notes", string.IsNullOrEmpty(notes) ? "" : notes.Trim().ToLowerInvariant());
+                    cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
-                if (row != null) {
-
-                    string reason = row.Field<string>("reason");
-                    long timestamp = (long)row.Field<decimal>("timestamp");
-
-                    result = new ConservationStatus() {
-                        ExtinctionDate = DateUtilities.TimestampToOffset(timestamp),
-                        ExtinctionReason = reason
-                    };
+                    await database.ExecuteNonQueryAsync(cmd);
 
                 }
 
             }
 
-            return result;
+        }
+        public static async Task<IEnumerable<ISpeciesZoneInfo>> GetZonesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            return await database.GetZonesAsync(species.Id);
+
+        }
+        public static async Task<IEnumerable<ISpeciesZoneInfo>> GetZonesAsync(this SQLiteDatabase database, long? speciesId) {
+
+            List<ISpeciesZoneInfo> results = new List<ISpeciesZoneInfo>();
+
+            if (speciesId.HasValue) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesZones WHERE species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd)) {
+
+                        IZone zone = await database.GetZoneAsync(row.Field<long>("zone_id"));
+
+                        if (zone is null)
+                            continue;
+
+                        if (zone != null) {
+
+                            ISpeciesZoneInfo zoneInfo = new SpeciesZoneInfo {
+                                Zone = zone,
+                                Notes = row.Field<string>("notes"),
+                            };
+
+                            if (!row.IsNull("timestamp"))
+                                zoneInfo.Date = DateUtilities.TimestampToOffset(row.Field<long>("timestamp"));
+
+                            results.Add(zoneInfo);
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            results.Sort((lhs, rhs) => new NaturalStringComparer().Compare(lhs.Zone.Name, rhs.Zone.Name));
+
+            return results.ToArray();
+
+        }
+        public static async Task RemoveZonesAsync(this SQLiteDatabase database, ISpecies species, IEnumerable<IZone> zones) {
+
+            foreach (IZone zone in zones) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id = $species_id AND zone_id = $zone_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
 
         }
 

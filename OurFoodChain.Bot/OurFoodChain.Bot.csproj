@@ -375,15 +375,9 @@
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
     <Compile Include="Adapters\TaxonAdapter.cs" />
-    <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
     <Compile Include="Utilities\Utils.cs" />
-    <Compile Include="zones\SpeciesZoneCollection.cs" />
-    <Compile Include="zones\Zone.cs" />
-    <Compile Include="zones\ZoneListResult.cs" />
-    <Compile Include="zones\ZoneType.cs" />
-    <Compile Include="zones\ZoneUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -658,6 +652,7 @@
       <Name>OurFoodChain.Drawing</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

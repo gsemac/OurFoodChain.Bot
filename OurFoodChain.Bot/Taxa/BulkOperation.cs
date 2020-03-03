@@ -35,7 +35,7 @@ namespace OurFoodChain.Taxa {
                 throw new ArgumentException("Operation string cannot be empty.", nameof(operationString));
 
             Query = new SearchQuery(query);
-            OperationName = operation.FirstWord().ToLowerInvariant();
+            OperationName = operation.GetFirstWord().ToLowerInvariant();
             Arguments = StringUtilities.ParseArguments(operation.SkipWords(1));
 
         }

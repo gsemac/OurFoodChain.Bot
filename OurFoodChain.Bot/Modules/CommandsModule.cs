@@ -1,9 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,6 +23,7 @@ namespace OurFoodChain.Bot.Modules {
         ModuleBase {
 
         public IOfcBotConfiguration BotConfiguration { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command("+extinct"), Alias("setextinct")]
         public async Task SetExtinct(string species) {
@@ -111,10 +117,10 @@ namespace OurFoodChain.Bot.Modules {
 
             sp_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
 
-            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
-            embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list, fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
+            PaginatedMessageBuilder embed = new PaginatedMessageBuilder();
+            embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list.Select(s => new SpeciesAdapter(s)), fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
 
-            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build(), "There are currently no extinct species.");
+            await DiscordUtils.SendMessageAsync(Context, embed.Build(), "There are currently no extinct species.");
 
         }
 
@@ -296,7 +302,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species is null)
                 return;
 
-            SpeciesZone[] zones = (await SpeciesUtils.GetZonesAsync(species)).OrderBy(x => x.Timestamp).ToArray();
+            ISpeciesZoneInfo[] zones = (await Db.GetZonesAsync(new SpeciesAdapter(species))).OrderBy(x => x.Date).ToArray();
 
             if (zones.Count() <= 0) {
 
@@ -307,21 +313,21 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Group zones changes that happened closely together (12 hours).
 
-                List<List<SpeciesZone>> zone_groups = new List<List<SpeciesZone>>();
+                List<List<ISpeciesZoneInfo>> zone_groups = new List<List<ISpeciesZoneInfo>>();
 
-                long last_timestamp = zones.Count() > 0 ? zones.First().Timestamp : 0;
+                DateTimeOffset? last_timestamp = zones.Count() > 0 ? zones.First().Date : default;
 
-                foreach (SpeciesZone zone in zones) {
+                foreach (ISpeciesZoneInfo zone in zones) {
 
                     if (zone_groups.Count() <= 0)
-                        zone_groups.Add(new List<SpeciesZone>());
+                        zone_groups.Add(new List<ISpeciesZoneInfo>());
 
-                    if (zone_groups.Last().Count() <= 0 || Math.Abs(zone_groups.Last().Last().Timestamp - zone.Timestamp) < 60 * 60 * 12)
+                    if (zone_groups.Last().Count() <= 0 || Math.Abs((zone_groups.Last().Last().Date - zone.Date).Value.TotalSeconds) < 60 * 60 * 12)
                         zone_groups.Last().Add(zone);
                     else {
 
-                        last_timestamp = zone.Timestamp;
-                        zone_groups.Add(new List<SpeciesZone> { zone });
+                        last_timestamp = zone.Date;
+                        zone_groups.Add(new List<ISpeciesZoneInfo> { zone });
 
                     }
 
@@ -335,20 +341,19 @@ namespace OurFoodChain.Bot.Modules {
                     if (zone_groups[i].Count() <= 0)
                         continue;
 
-                    long ts = i == 0 ? species.Timestamp : zone_groups[i].First().Timestamp;
+                    DateTimeOffset? ts = i == 0 ? DateUtilities.TimestampToOffset(species.Timestamp) : zone_groups[i].First().Date;
 
-                    if (ts <= 0)
-                        ts = species.Timestamp;
+                    if (!ts.HasValue)
+                        ts = DateUtilities.TimestampToOffset(species.Timestamp);
 
-                    result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts, BotConfiguration, TimestampToDateStringFormat.Short)));
+                    result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts.Value.ToUnixTimeSeconds(), BotConfiguration, TimestampToDateStringFormat.Short)));
                     result.Append(i == 0 ? "Started in " : "Spread to ");
                     result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
-                    result.Append(StringUtilities.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.ShortName)));
+                    result.Append(StringUtilities.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.GetShortName())));
 
                     result.AppendLine();
 
                 }
-
 
                 await ReplyAsync(string.Format("```{0}```", result.ToString()));
 

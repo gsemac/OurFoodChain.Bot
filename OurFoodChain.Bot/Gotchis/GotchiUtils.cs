@@ -4,7 +4,11 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using OurFoodChain.Bot;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -326,7 +330,7 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public static async Task<BattleGotchi> GenerateGotchiAsync(GotchiGenerationParameters parameters) {
+        public static async Task<BattleGotchi> GenerateGotchiAsync(SQLiteDatabase database, GotchiGenerationParameters parameters) {
 
             BattleGotchi result = new BattleGotchi();
 
@@ -343,20 +347,19 @@ namespace OurFoodChain.Gotchis {
 
             // Select a random base species to start with.
 
-            Species species = parameters.Species;
+            ISpecies species = parameters.Species;
 
             if (species is null) {
 
-                Species[] base_species_list = await SpeciesUtils.GetBaseSpeciesAsync();
-
+                IEnumerable<ISpecies> base_species_list = await database.GetBaseSpeciesAsync();
 
                 if (base_species_list.Count() > 0)
                     species = base_species_list.ElementAt(BotUtils.RandomInteger(0, base_species_list.Count()));
 
             }
 
-            if (!(species is null))
-                result.Gotchi.SpeciesId = species.Id;
+            if (species != null)
+                result.Gotchi.SpeciesId = (long)species.Id;
 
             // Evolve it the given number of times.
 
@@ -605,7 +608,7 @@ namespace OurFoodChain.Gotchis {
             return outputPath;
 
         }
-        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient client, Gotchi gotchi) {
+        public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient client, SQLiteDatabase database, Gotchi gotchi) {
 
             GotchiGifCreatorParams p = new GotchiGifCreatorParams {
                 gotchi = gotchi,
@@ -613,7 +616,7 @@ namespace OurFoodChain.Gotchis {
             };
 
             return await GenerateAndUploadGotchiGifAndReplyAsync(context, botConfiguration, client,
-                new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(gotchi) });
+                new GotchiGifCreatorParams[] { p }, new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFileNameAsync(database, gotchi) });
 
         }
         public static async Task<string> GenerateAndUploadGotchiGifAndReplyAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient client, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
@@ -629,15 +632,15 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public static async Task<string> GetGotchiBackgroundFileNameAsync(Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
+        public static async Task<string> GetGotchiBackgroundFileNameAsync(SQLiteDatabase database, Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
 
             // Returns a background image based on the gotchi passed in (i.e., corresponding to the zone it resides in).
 
             if (!(gotchi is null) && gotchi.SpeciesId > 0) {
 
-                Zone[] zones = await BotUtils.GetZonesFromDb(gotchi.SpeciesId);
+                IEnumerable<ISpeciesZoneInfo> zones = await database.GetZonesAsync(gotchi.SpeciesId);
 
-                foreach (Zone zone in zones) {
+                foreach (IZone zone in zones.Select(info => info.Zone)) {
 
                     string candidate_filename = string.Format("home_{0}.png", StringUtilities.ReplaceWhitespaceCharacters(zone.GetFullName().ToLower()));
 

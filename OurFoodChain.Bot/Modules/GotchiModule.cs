@@ -11,6 +11,7 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurFoodChain.Data;
 
 namespace OurFoodChain.Bot.Modules {
 
@@ -23,6 +24,7 @@ namespace OurFoodChain.Bot.Modules {
         public IServiceProvider ServiceProvider { get; set; }
         public DiscordSocketClient DiscordClient { get; set; }
         public Discord.Services.IHelpService HelpService { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command]
         public async Task Gotchi() {
@@ -36,7 +38,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Create the gotchi GIF.
 
-            string gifUrl = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(Context, BotConfiguration, DiscordClient, gotchi);
+            string gifUrl = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(Context, BotConfiguration, DiscordClient, Db, gotchi);
 
             if (string.IsNullOrEmpty(gifUrl))
                 return;
@@ -169,7 +171,7 @@ namespace OurFoodChain.Bot.Modules {
                 cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
                 cmd.Parameters.AddWithValue("$id", gotchi.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -209,7 +211,7 @@ namespace OurFoodChain.Bot.Modules {
                 cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
                 cmd.Parameters.AddWithValue("$min_ts", GotchiUtils.MinimumFedTimestamp());
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -358,7 +360,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Challenge the user to a battle.
 
-            await GotchiBattleState.RegisterBattleAsync(Context, BotConfiguration, DiscordClient, gotchi, opposing_gotchi);
+            await GotchiBattleState.RegisterBattleAsync(Context, BotConfiguration, DiscordClient, Db, gotchi, opposing_gotchi);
 
             if (!(user is null)) {
 
@@ -395,7 +397,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     cmd.Parameters.AddWithValue("$id", gotchi.Id);
 
-                    DataRow row = await Database.GetRowAsync(cmd);
+                    DataRow row = await Db.GetRowAsync(cmd);
 
                     if (!(row is null)) {
 
@@ -442,7 +444,7 @@ namespace OurFoodChain.Bot.Modules {
                     cmd.Parameters.AddWithValue("$training_left", training_left);
                     cmd.Parameters.AddWithValue("$training_ts", training_ts);
 
-                    await Database.ExecuteNonQuery(cmd);
+                    await Db.ExecuteNonQueryAsync(cmd);
 
                 }
 
@@ -885,7 +887,7 @@ namespace OurFoodChain.Bot.Modules {
                                     cmd.Parameters.AddWithValue("$id", gotchi.Id);
                                     cmd.Parameters.AddWithValue("$born_ts", gotchi.BornTimestamp);
 
-                                    await Database.ExecuteNonQuery(cmd);
+                                    await Db.ExecuteNonQueryAsync(cmd);
 
                                 }
 

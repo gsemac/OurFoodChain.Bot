@@ -119,7 +119,7 @@ namespace OurFoodChain.Discord.Services {
                 // Suggest the most-similar command as a possible misspelling.
 
                 string messageContent = rawMessage.Content.Substring(GetCommmandArgumentsStartIndex(rawMessage));
-                string commandName = messageContent.FirstWord();
+                string commandName = messageContent.GetFirstWord();
 
                 if (!string.IsNullOrEmpty(commandName)) {
 

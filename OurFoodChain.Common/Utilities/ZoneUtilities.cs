@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -20,6 +21,20 @@ namespace OurFoodChain.Common.Utilities {
             zoneName = StringUtilities.ToTitleCase(zoneName);
 
             return zoneName;
+
+        }
+
+        public static IEnumerable<string> ParseZoneNameList(string delimitedZoneNames) {
+
+            if (string.IsNullOrWhiteSpace(delimitedZoneNames))
+                return Enumerable.Empty<string>();
+
+            string[] names = delimitedZoneNames.Split(',', '/');
+
+            for (int i = 0; i < names.Count(); ++i)
+                names[i] = names[i].Trim().ToLowerInvariant();
+
+            return names.Where(name => !string.IsNullOrEmpty(name));
 
         }
 

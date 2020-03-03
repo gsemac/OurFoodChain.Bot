@@ -1,42 +1,43 @@
-﻿using OurFoodChain.Common.Utilities;
+﻿using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Common.Zones {
 
-    public enum SpeciesZoneCollectionToStringOptions {
+    public enum SpeciesZoneInfoCollectionToStringOptions {
         None = 0,
         CollapseRanges = 1,
         GroupIdenticalComments = 2,
         Default = CollapseRanges | GroupIdenticalComments
     }
 
-    public class SpeciesZoneCollection :
-        IEnumerable<SpeciesZone> {
+    public class SpeciesZoneInfoCollection :
+        IEnumerable<ISpeciesZoneInfo> {
 
-        public SpeciesZoneCollection(IEnumerable<SpeciesZone> speciesZones) {
+        public SpeciesZoneInfoCollection(IEnumerable<ISpeciesZoneInfo> speciesZones) {
             this.speciesZones.AddRange(speciesZones);
         }
 
-        public IEnumerator<SpeciesZone> GetEnumerator() {
+        public IEnumerator<ISpeciesZoneInfo> GetEnumerator() {
             return speciesZones.GetEnumerator();
         }
         IEnumerator IEnumerable.GetEnumerator() {
-            return speciesZones.GetEnumerator();
+            return GetEnumerator();
         }
 
-        public string ToString(SpeciesZoneCollectionToStringOptions options, int maxLength) {
+        public string ToString(SpeciesZoneInfoCollectionToStringOptions options, int maxLength) {
 
             if (maxLength < 0)
                 throw new ArgumentOutOfRangeException("maxLength");
 
             string resultString = string.Empty;
 
-            if (options.HasFlag(SpeciesZoneCollectionToStringOptions.GroupIdenticalComments)) {
+            if (options.HasFlag(SpeciesZoneInfoCollectionToStringOptions.GroupIdenticalComments)) {
 
                 // We'll group zone lists according to those that have identical comments.
                 // Ex: "A, B, C (notes); D, E (other notes)
@@ -50,13 +51,13 @@ namespace OurFoodChain {
 
                         // Generate a array of all zones corresponding to this key (notes), sorted by name.
 
-                        List<string> zonesArray = keyValuePair.Select(speciesZone => speciesZone.Zone.ShortName).ToList();
+                        List<string> zonesArray = keyValuePair.Select(speciesZone => speciesZone.Zone.GetShortName()).ToList();
 
-                        zonesArray.Sort((lhs, rhs) => new ArrayUtils.NaturalStringComparer().Compare(lhs, rhs));
+                        zonesArray.Sort((lhs, rhs) => new NaturalStringComparer().Compare(lhs, rhs));
 
                         string zonesString = string.Join(", ", zonesArray);
 
-                        if (options.HasFlag(SpeciesZoneCollectionToStringOptions.CollapseRanges))
+                        if (options.HasFlag(SpeciesZoneInfoCollectionToStringOptions.CollapseRanges))
                             zonesString = StringUtilities.CollapseAlphanumericList(zonesString);
 
                         if (string.IsNullOrEmpty(keyValuePair.Key))
@@ -75,13 +76,13 @@ namespace OurFoodChain {
                 // Ex: "A (notes), B (notes), C (notes), D (other notes), E (other notes)"
 
                 string[] zonesList = speciesZones
-                    .OrderBy(x => x.Zone.ShortName)
+                    .OrderBy(x => x.Zone.GetShortName())
                     .Select(x => string.Format("{0} ({1})", x.Zone, x.Notes.ToLower()))
                     .ToArray();
 
                 string zonesString = string.Join(", ", zonesList);
 
-                if (options.HasFlag(SpeciesZoneCollectionToStringOptions.CollapseRanges))
+                if (options.HasFlag(SpeciesZoneInfoCollectionToStringOptions.CollapseRanges))
                     zonesString = StringUtilities.CollapseAlphanumericList(zonesString);
 
                 resultString = zonesString;
@@ -113,10 +114,10 @@ namespace OurFoodChain {
 
         }
         public override string ToString() {
-            return ToString(SpeciesZoneCollectionToStringOptions.Default, 0);
+            return ToString(SpeciesZoneInfoCollectionToStringOptions.Default, 0);
         }
 
-        private readonly List<SpeciesZone> speciesZones = new List<SpeciesZone>();
+        private readonly List<ISpeciesZoneInfo> speciesZones = new List<ISpeciesZoneInfo>();
 
     }
 

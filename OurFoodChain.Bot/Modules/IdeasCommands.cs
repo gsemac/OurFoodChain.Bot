@@ -109,7 +109,7 @@ namespace OurFoodChain.Bot {
                     string role_name = row.Field<string>("role_name");
 
                     ideas.Add(string.Format("**{0}** does not have any **{1}s**. Why not fill this role?",
-                        ZoneUtils.FormatZoneName(zone_name),
+                        ZoneUtilities.GetFullName(zone_name),
                         StringUtilities.ToTitleCase(role_name)));
 
                 }

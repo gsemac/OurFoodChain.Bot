@@ -142,16 +142,20 @@ namespace OurFoodChain.Data.Extensions {
             return null;
 
         }
-        public static async Task<IZoneType> GetZoneTypeAsync(this SQLiteDatabase database, long zoneTypeId) {
+        public static async Task<IZoneType> GetZoneTypeAsync(this SQLiteDatabase database, long? zoneTypeId) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM ZoneTypes WHERE id = $id")) {
+            if (zoneTypeId.HasValue) {
 
-                cmd.Parameters.AddWithValue("$id", zoneTypeId);
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM ZoneTypes WHERE id = $id")) {
 
-                DataRow row = await database.GetRowAsync(cmd);
+                    cmd.Parameters.AddWithValue("$id", zoneTypeId);
 
-                if (row != null)
-                    return CreateZoneTypeFromDataRow(row);
+                    DataRow row = await database.GetRowAsync(cmd);
+
+                    if (row != null)
+                        return CreateZoneTypeFromDataRow(row);
+
+                }
 
             }
 

@@ -18,6 +18,14 @@ namespace OurFoodChain.Common.Extensions {
             return ZoneUtilities.GetFullName(zone.Name);
 
         }
+        public static string GetDescriptionOrDefault(this IZone zone) {
+
+            if (zone is null || string.IsNullOrWhiteSpace(zone.Description))
+                return "No description provided.";
+
+            return zone.Description;
+
+        }
 
         public static bool IsNull(this IZone zone) {
 

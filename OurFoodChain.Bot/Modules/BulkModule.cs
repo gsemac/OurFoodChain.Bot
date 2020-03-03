@@ -1,5 +1,10 @@
 ﻿using Discord.Commands;
+using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Zones;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +17,7 @@ namespace OurFoodChain.Bot.Modules {
         ModuleBase {
 
         public Services.ISearchService SearchService { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         [Command("bulk"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task Bulk([Remainder]string operationString) {
@@ -40,12 +46,12 @@ namespace OurFoodChain.Bot.Modules {
                                 throw new Exception(string.Format("This operation requires {0} argument(s), but was given {1}.", 1, bulkOperation.Arguments.Count()));
 
                             string zoneName = bulkOperation.Arguments.First();
-                            Zone zone = await ZoneUtils.GetZoneAsync(zoneName);
+                            IZone zone = await Db.GetZoneAsync(zoneName);
 
                             if (await BotUtils.ReplyValidateZoneAsync(Context, zone, zoneName)) {
 
                                 PaginatedMessageBuilder message = new PaginatedMessageBuilder {
-                                    Message = string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.FullName),
+                                    Message = string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.GetFullName()),
                                     Restricted = true,
                                     Callback = async args => {
 
@@ -54,7 +60,7 @@ namespace OurFoodChain.Bot.Modules {
                                         foreach (Species species in queryResult.ToArray()) {
 
                                             //await SpeciesUtils.RemoveZonesAsync(species, (await SpeciesUtils.GetZonesAsync(species)).Select(z => z.Zone));
-                                            await SpeciesUtils.AddZonesAsync(species, new Zone[] { zone });
+                                            await Db.AddZonesAsync(new SpeciesAdapter(species), new IZone[] { zone });
 
                                         }
 

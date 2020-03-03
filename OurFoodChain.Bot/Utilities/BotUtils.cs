@@ -3,7 +3,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Bot;
 using OurFoodChain.Common;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -39,44 +41,6 @@ namespace OurFoodChain {
         public static async Task<bool> SpeciesExistsInDb(string genus, string species) {
 
             return (await GetSpeciesFromDb(genus, species)).Count() > 0;
-
-        }
-        public static async Task<Zone[]> GetZonesFromDb() {
-
-            List<Zone> zones = new List<Zone>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones;"))
-            using (DataTable rows = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in rows.Rows)
-                    zones.Add(ZoneUtils.ZoneFromDataRow(row));
-
-            return zones.ToArray();
-
-        }
-        public static async Task<Zone[]> GetZonesFromDb(long speciesId) {
-
-            List<Zone> zones = new List<Zone>();
-
-            using (SQLiteConnection conn = await Database.GetConnectionAsync())
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM SpeciesZones WHERE species_id=$species_id;")) {
-
-                cmd.Parameters.AddWithValue("$species_id", speciesId);
-
-                using (DataTable rows = await Database.GetRowsAsync(conn, cmd))
-                    foreach (DataRow row in rows.Rows) {
-
-                        Zone zone = await ZoneUtils.GetZoneAsync(row.Field<long>("zone_id"));
-
-                        if (zone is null)
-                            continue;
-
-                        zones.Add(zone);
-
-                    }
-
-            }
-
-            return zones.ToArray();
 
         }
         public static async Task<Species[]> GetSpeciesFromDb(string genus, string species) {
@@ -853,9 +817,9 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyValidateZoneAsync(ICommandContext context, Zone zone, string zoneName = "") {
+        public static async Task<bool> ReplyValidateZoneAsync(ICommandContext context, Common.Zones.IZone zone, string zoneName = "") {
 
-            if (!ZoneUtils.ZoneIsValid(zone)) {
+            if (zone.IsNull()) {
 
                 string message = "No such zone exists.";
 
@@ -871,9 +835,9 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyValidateZoneTypeAsync(ICommandContext context, ZoneType zoneType) {
+        public static async Task<bool> ReplyValidateZoneTypeAsync(ICommandContext context, IZoneType zoneType) {
 
-            if (!ZoneUtils.ZoneTypeIsValid(zoneType)) {
+            if (zoneType.IsNull()) {
 
                 await context.Channel.SendMessageAsync("No such zone type exists.");
 
@@ -1637,17 +1601,17 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task ZonesToEmbedPagesAsync(Bot.PaginatedMessageBuilder embed, Zone[] zones, bool showIcon = true) {
+        public static async Task ZonesToEmbedPagesAsync(PaginatedMessageBuilder embed, IEnumerable<IZone> zones, bool showIcon = true) {
 
             List<string> lines = new List<string>();
             int zones_per_page = 20;
-            int max_line_length = Math.Min(showIcon ? 78 : 80, (Bot.DiscordUtils.MaxEmbedLength - embed.Length) / zones_per_page);
+            int max_line_length = Math.Min(showIcon ? 78 : 80, (DiscordUtils.MaxEmbedLength - embed.Length) / zones_per_page);
 
-            foreach (Zone zone in zones) {
+            foreach (IZone zone in zones) {
 
-                ZoneType type = await ZoneUtils.GetZoneTypeAsync(zone.ZoneTypeId);
+                IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId);
 
-                string line = string.Format("{1} **{0}**\t-\t{2}", StringUtilities.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.GetShortDescription());
+                string line = string.Format("{1} **{0}**\t-\t{2}", StringUtilities.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.Description.GetFirstSentence());
 
                 if (line.Length > max_line_length)
                     line = line.Substring(0, max_line_length - 3) + "...";

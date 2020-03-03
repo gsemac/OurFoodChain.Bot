@@ -29,7 +29,7 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
-        public static string FirstWord(this string input) {
+        public static string GetFirstWord(this string input) {
 
             return StringUtilities.GetFirstWord(input);
 
@@ -37,6 +37,11 @@ namespace OurFoodChain.Common.Extensions {
         public static string SkipWords(this string input, int numWords) {
 
             return StringUtilities.SkipWords(input, numWords);
+
+        }
+        public static string GetFirstSentence(this string input) {
+
+            return StringUtilities.GetFirstSentence(input);
 
         }
 

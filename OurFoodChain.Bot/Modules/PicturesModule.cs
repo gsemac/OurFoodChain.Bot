@@ -1,12 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord;
-using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;

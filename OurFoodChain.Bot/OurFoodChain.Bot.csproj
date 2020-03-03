@@ -370,11 +370,11 @@
     <Compile Include="Taxa\SearchQuery.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
     <Compile Include="Utilities\LogMessage.cs" />
-    <Compile Include="Utilities\SpeciesAdapter.cs" />
+    <Compile Include="Adapters\SpeciesAdapter.cs" />
     <Compile Include="Utilities\StringPaginator.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
-    <Compile Include="Utilities\TaxonAdapter.cs" />
+    <Compile Include="Adapters\TaxonAdapter.cs" />
     <Compile Include="zones\SpeciesZone.cs" />
     <Compile Include="Taxa\TaxonUtils.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />

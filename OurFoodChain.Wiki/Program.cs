@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using OurFoodChain.Adapters;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
@@ -237,7 +238,7 @@ namespace OurFoodChain.Wiki {
 
             // Upload all images in the given species' gallery.
 
-            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new Utilities.SpeciesAdapter(species));
+            IEnumerable<IPicture> pictures = await Db.GetAllPicturesAsync(new SpeciesAdapter(species));
             List<string> uploadedFilenames = new List<string>();
 
             if (pictures != null) {

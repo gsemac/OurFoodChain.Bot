@@ -18,7 +18,7 @@ namespace OurFoodChain.Data.Queries {
 
             IEnumerable<string> searchTerms = StringUtilities.ParseArguments(query);
             List<string> keywords = new List<string>();
-            List<string> modifiers = new List<string>();
+            List<ISearchModifier> modifiers = new List<ISearchModifier>();
 
             foreach (string term in searchTerms
                 .Select(term => term.Trim().ToLowerInvariant())

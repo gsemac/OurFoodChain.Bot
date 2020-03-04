@@ -17,6 +17,8 @@ namespace OurFoodChain.Common.Utilities {
         double MeterConversionFactor { get; }
         LengthUnitType Type { get; }
 
+        ILengthUnit ToNearestUnits(LengthUnitType type, params string[] allowedUnits);
+
     }
 
 }

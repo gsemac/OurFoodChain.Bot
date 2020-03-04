@@ -27,7 +27,7 @@ namespace OurFoodChain.Common.Extensions {
             if (dictionary.TryGetValue(key, out TValue value))
                 return value;
 
-            return null;
+            return default(TValue);
 
         }
 

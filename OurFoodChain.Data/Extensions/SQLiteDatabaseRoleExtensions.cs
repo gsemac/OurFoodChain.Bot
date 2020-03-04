@@ -25,7 +25,7 @@ namespace OurFoodChain.Data.Extensions {
                 cmd.Parameters.AddWithValue("$species_id", speciesId);
 
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    roles.Add(Role.FromDataRow(row));
+                    roles.Add(CreateRoleFromDataRow(row));
 
             }
 

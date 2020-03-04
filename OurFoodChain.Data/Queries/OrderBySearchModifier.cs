@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,11 +30,11 @@ namespace OurFoodChain.Data.Queries {
                     break;
 
                 case OrderBy.Smallest:
-                    Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(lhs.Description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(rhs.Description).MaxSize.ToMeters()));
+                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => SpeciesSizeMatch.Find(lhs.Description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Find(rhs.Description).MaxSize.ToMeters())));
                     break;
 
                 case OrderBy.Largest:
-                    Items.Sort((lhs, rhs) => SpeciesSizeMatch.Match(rhs.Description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Match(lhs.Description).MaxSize.ToMeters()));
+                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => SpeciesSizeMatch.Find(rhs.Description).MaxSize.ToMeters().CompareTo(SpeciesSizeMatch.Find(lhs.Description).MaxSize.ToMeters())));
                     break;
 
                 case OrderBy.Count:

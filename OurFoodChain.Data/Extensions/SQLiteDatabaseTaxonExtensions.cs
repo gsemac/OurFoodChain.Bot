@@ -2,6 +2,8 @@
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
@@ -13,11 +15,11 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
-        public static async Task<ITaxon> GetTaxonAsync(this SQLiteDatabase database, long id, TaxonRankType rank) {
+        public static async Task<ITaxon> GetTaxonAsync(this SQLiteDatabase database, long? id, TaxonRankType rank) {
 
             string tableName = GetTableNameForRank(rank);
 
-            if (string.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(tableName) || !id.HasValue)
                 return null;
 
             ITaxon taxon = null;
@@ -34,6 +36,73 @@ namespace OurFoodChain.Data.Extensions {
             }
 
             return taxon;
+
+        }
+
+        public static async Task<IDictionary<TaxonRankType, ITaxon>> GetTaxaAsync(this SQLiteDatabase database, ISpecies species) {
+
+            IDictionary<TaxonRankType, ITaxon> result = new Dictionary<TaxonRankType, ITaxon>();
+
+            result.Add(TaxonRankType.Species, species);
+
+            if (species.Genus != null)
+                result.Add(TaxonRankType.Genus, species);
+
+            if (result.ContainsKey(TaxonRankType.Genus)) {
+
+                ITaxon family = await database.GetTaxonAsync(result[TaxonRankType.Genus].ParentId, TaxonRankType.Family);
+
+                if (family != null)
+                    result.Add(TaxonRankType.Family, family);
+
+            }
+
+            if (result.ContainsKey(TaxonRankType.Family)) {
+
+                ITaxon order = await database.GetTaxonAsync(result[TaxonRankType.Family].ParentId, TaxonRankType.Order);
+
+                if (order != null)
+                    result.Add(TaxonRankType.Order, order);
+
+            }
+
+            if (result.ContainsKey(TaxonRankType.Order)) {
+
+                ITaxon @class = await database.GetTaxonAsync(result[TaxonRankType.Order].ParentId, TaxonRankType.Class);
+
+                if (@class != null)
+                    result.Add(TaxonRankType.Class, @class);
+
+            }
+
+            if (result.ContainsKey(TaxonRankType.Class)) {
+
+                ITaxon phylum = await database.GetTaxonAsync(result[TaxonRankType.Class].ParentId, TaxonRankType.Phylum);
+
+                if (phylum != null)
+                    result.Add(TaxonRankType.Phylum, phylum);
+
+            }
+
+            if (result.ContainsKey(TaxonRankType.Phylum)) {
+
+                ITaxon kingdom = await database.GetTaxonAsync(result[TaxonRankType.Phylum].ParentId, TaxonRankType.Kingdom);
+
+                if (kingdom != null)
+                    result.Add(TaxonRankType.Kingdom, kingdom);
+
+            }
+
+            if (result.ContainsKey(TaxonRankType.Kingdom)) {
+
+                ITaxon domain = await database.GetTaxonAsync(result[TaxonRankType.Kingdom].ParentId, TaxonRankType.Domain);
+
+                if (domain != null)
+                    result.Add(TaxonRankType.Domain, domain);
+
+            }
+
+            return result;
 
         }
 

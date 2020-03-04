@@ -128,7 +128,7 @@ namespace OurFoodChain.Data.Extensions {
                     long timestamp = (long)row.Field<decimal>("timestamp");
 
                     result = new ConservationStatus() {
-                        ExtinctionDate = DateUtilities.TimestampToOffset(timestamp),
+                        ExtinctionDate = DateUtilities.TimestampToDate(timestamp),
                         ExtinctionReason = reason
                     };
 
@@ -309,7 +309,7 @@ namespace OurFoodChain.Data.Extensions {
                             };
 
                             if (!row.IsNull("timestamp"))
-                                zoneInfo.Date = DateUtilities.TimestampToOffset(row.Field<long>("timestamp"));
+                                zoneInfo.Date = DateUtilities.TimestampToDate(row.Field<long>("timestamp"));
 
                             results.Add(zoneInfo);
 
@@ -364,7 +364,7 @@ namespace OurFoodChain.Data.Extensions {
                 Genus = genus ?? new Taxon("?", TaxonRankType.Genus),
                 Description = row.Field<string>("description"),
                 Creator = new Creator(row.IsNull("user_id") ? default(ulong?) : row.Field<ulong>("user_id"), row.Field<string>("owner") ?? "?"),
-                CreationDate = DateUtilities.TimestampToOffset((long)row.Field<decimal>("timestamp"))
+                CreationDate = DateUtilities.TimestampToDate((long)row.Field<decimal>("timestamp"))
             };
 
             if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))

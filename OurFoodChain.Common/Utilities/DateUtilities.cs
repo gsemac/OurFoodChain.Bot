@@ -27,12 +27,23 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
-        public static DateTimeOffset TimestampToOffset(long timestamp) {
+        public static DateTimeOffset TimestampToDate(long timestamp) {
 
             return DateTimeOffset.FromUnixTimeSeconds(timestamp);
 
         }
-        public static long OffsetToTimestamp(DateTimeOffset offset) {
+        public static DateTimeOffset TimestampToDate(string timestamp) {
+
+            if (long.TryParse(timestamp, out long result))
+                return TimestampToDate(result);
+
+            if (timestamp.Equals("now", StringComparison.OrdinalIgnoreCase))
+                return GetCurrentUtcDate();
+
+            throw new ArgumentException(nameof(timestamp));
+
+        }
+        public static long DateToTimestamp(DateTimeOffset offset) {
 
             return offset.ToUnixTimeSeconds();
 

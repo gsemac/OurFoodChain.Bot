@@ -12,13 +12,13 @@ namespace OurFoodChain.Data.Queries {
         // Public members
 
         public IEnumerable<string> Keywords { get; }
-        public IEnumerable<ISearchModifier> Modifiers { get; }
+        public IEnumerable<string> Modifiers { get; }
 
         public SearchQuery(string query) {
 
             IEnumerable<string> searchTerms = StringUtilities.ParseArguments(query);
             List<string> keywords = new List<string>();
-            List<ISearchModifier> modifiers = new List<ISearchModifier>();
+            List<string> modifiers = new List<string>();
 
             foreach (string term in searchTerms
                 .Select(term => term.Trim().ToLowerInvariant())

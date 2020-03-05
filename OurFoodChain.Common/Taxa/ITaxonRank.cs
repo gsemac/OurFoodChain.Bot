@@ -9,6 +9,7 @@ namespace OurFoodChain.Common.Taxa {
     public enum TaxonRankType {
 
         None = 0,
+        Any,
 
         Domain,
         Kingdom,

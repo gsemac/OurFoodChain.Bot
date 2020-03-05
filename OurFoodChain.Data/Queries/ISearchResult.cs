@@ -6,11 +6,21 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    public enum SearchResultDisplayFormat {
+        None,
+        Gallery,
+        Leaderboard
+    }
+
     public interface ISearchResult :
         IEnumerable<ISearchResultGroup> {
 
         ISearchResultGroup DefaultGroup { get; }
         IEnumerable<ISearchResultGroup> Groups { get; }
+        SearchResultDisplayFormat DisplayFormat { get; set; }
+
+        bool HasDefaultOrdering { get; }
+        bool HasDefaultGrouping { get; }
 
         void Add(string groupName, ISpecies species);
         void Add(string groupName, IEnumerable<ISpecies> species);

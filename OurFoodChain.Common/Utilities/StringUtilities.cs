@@ -446,6 +446,18 @@ namespace OurFoodChain.Common.Utilities {
                 .Select(arg => (arg.Length > 1 && arg.StartsWith("\"") && arg.EndsWith("\"")) ? arg.Trim('"') : arg);
 
         }
+        public static IEnumerable<string> ParseDelimitedString(string input, string delimiter = ",") {
+
+            return ParseDelimitedString(input, new string[] { delimiter });
+
+        }
+        public static IEnumerable<string> ParseDelimitedString(string input, IEnumerable<string> delimiters) {
+
+            return input.Split(delimiters.ToArray(), StringSplitOptions.None)
+                .Select(item => item.Trim())
+                .Where(item => !string.IsNullOrEmpty(item));
+
+        }
 
         public static string SafeTrim(string input) {
 

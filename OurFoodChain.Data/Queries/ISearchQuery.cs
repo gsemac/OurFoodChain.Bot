@@ -7,7 +7,7 @@ namespace OurFoodChain.Data.Queries {
     public interface ISearchQuery {
 
         IEnumerable<string> Keywords { get; }
-        IEnumerable<ISearchModifier> Modifiers { get; }
+        IEnumerable<string> Modifiers { get; }
 
     }
 

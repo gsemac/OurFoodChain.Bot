@@ -38,7 +38,32 @@ namespace OurFoodChain.Data.Extensions {
             return taxon;
 
         }
+        public static async Task<ITaxon> GetTaxonAsync(this SQLiteDatabase database, string name, TaxonRankType rank) {
 
+            return (await database.GetTaxaAsync(name, rank)).FirstOrDefault();
+
+        }
+
+        public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, string name, TaxonRankType rank) {
+
+            List<ITaxon> taxa = new List<ITaxon>();
+            string tableName = GetTableNameForRank(rank);
+
+            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(name))
+                return Enumerable.Empty<ITaxon>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name = $name OR common_name = $name", tableName))) {
+
+                cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    taxa.Add(CreateTaxonFromDataRow(row, rank));
+
+            }
+
+            return taxa;
+
+        }
         public static async Task<IDictionary<TaxonRankType, ITaxon>> GetTaxaAsync(this SQLiteDatabase database, ISpecies species) {
 
             IDictionary<TaxonRankType, ITaxon> result = new Dictionary<TaxonRankType, ITaxon>();

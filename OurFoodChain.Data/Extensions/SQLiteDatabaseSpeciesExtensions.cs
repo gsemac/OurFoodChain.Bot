@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
@@ -17,6 +18,91 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database) {
+
+            List<ISpecies> species = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species"))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    species.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            return species;
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, string name) {
+
+            // We don't know for sure if the user passed in a binomial name or a common name/species name.
+            // If the input is a valid binomial name, we'll use it to find the requested species.
+            // Otherwise, or if the first attempt doesn't return a match, we'll treat it as a common name/species name.
+
+            IBinomialName input = BinomialName.Parse(name);
+
+            List<ISpecies> result = new List<ISpecies>();
+
+            if (!string.IsNullOrEmpty(input.GenusName)) {
+
+                // Attempt to get the species using name/genus.
+
+                result.AddRange(await database.GetSpeciesAsync(input.GenusName, input.SpeciesName));
+
+            }
+
+            if (result.Count() <= 0) {
+
+                // Attempt to get the species by common name/species name.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
+
+                    cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd))
+                        result.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+                }
+
+            }
+
+            return result;
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, string genus, string species) {
+
+            IBinomialName input = BinomialName.Parse(genus, species);
+
+            // If the species is the empty string, don't bother trying to find any matches.
+            // This prevents species with an empty, but non-null common name (set to "") from being returned.
+
+            if (string.IsNullOrEmpty(input.SpeciesName))
+                return Array.Empty<ISpecies>();
+
+            if (string.IsNullOrEmpty(input.GenusName)) {
+
+                // If the user didn't pass in a genus, we'll look up the species by name (name or common name).
+                return await database.GetSpeciesAsync(input.SpeciesName);
+
+            }
+            else if (input.IsAbbreviated) {
+
+                // If the genus is abbreviated (e.g. "Cornu" -> "C.") but not null, we'll look for matching species and determine the genus afterwards.
+                // Notice that this case does not allow for looking up the species by common name, which should not occur when the genus is included.
+
+                IEnumerable<ISpecies> result = await database.GetSpeciesAsync(input.SpeciesName);
+
+                return result.Where(s => s.Genus != null && s.Genus.Name.StartsWith(input.GenusName, StringComparison.OrdinalIgnoreCase));
+
+            }
+            else {
+
+                // If we've been given full genus and species names, we can attempt to get the species directly.
+                // Although genera can have common names, only allow the genus to be looked up by its scientific name. Generally users wouldn't use the common name in this context.
+
+                ISpecies speciesResult = await database.GetSpeciesByGenusAndSpeciesNameAsync(input.GenusName, input.SpeciesName);
+
+                return (speciesResult is null) ? Array.Empty<ISpecies>() : new ISpecies[] { speciesResult };
+
+            }
+
+        }
         public static async Task<ISpecies> GetSpeciesAsync(this SQLiteDatabase database, long? speciesId) {
 
             if (!speciesId.HasValue)
@@ -51,7 +137,10 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IEnumerable<long>> GetAncestorIdsAsync(this SQLiteDatabase database, long speciesId) {
+        public static async Task<IEnumerable<long>> GetAncestorIdsAsync(this SQLiteDatabase database, long? speciesId) {
+
+            if (!speciesId.HasValue)
+                return Enumerable.Empty<long>();
 
             List<long> ancestor_ids = new List<long>();
 
@@ -111,6 +200,22 @@ namespace OurFoodChain.Data.Extensions {
             return ancestor_species.ToArray();
 
         }
+        public static async Task<IEnumerable<ISpecies>> GetDirectDescendantsAsync(this SQLiteDatabase database, ISpecies species) {
+
+            List<ISpecies> result = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id)")) {
+
+                cmd.Parameters.AddWithValue("$ancestor_id", species.Id);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    result.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            }
+
+            return result;
+
+        }
 
         public static async Task<IConservationStatus> GetConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
 
@@ -137,6 +242,56 @@ namespace OurFoodChain.Data.Extensions {
             }
 
             return result;
+
+        }
+        public static async Task<bool> IsEndangeredAsync(this SQLiteDatabase database, ISpecies species) {
+
+            // Consider a species "endangered" if:
+            // - All of its prey has gone extinct.
+            // - It has a descendant in the same zone that consumes all of the same prey items.
+
+            bool isEndangered = false;
+
+            if (species.Status.IsExinct)
+                return isEndangered;
+
+            if (!isEndangered) {
+
+                // Check if all of this species' prey species have gone extinct.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species WHERE id = $id AND id NOT IN (SELECT species_id FROM Predates WHERE eats_id NOT IN (SELECT species_id FROM Extinctions)) AND id IN (SELECT species_id from Predates)")) {
+
+                    cmd.Parameters.AddWithValue("$id", species.Id);
+
+                    isEndangered = await database.GetScalarAsync<long>(cmd) > 0;
+
+                }
+
+            }
+
+            if (!isEndangered) {
+
+                // Check if this species has a direct descendant in the same zone that consumes all of the same prey items.
+
+                string query =
+                    @"SELECT COUNT(*) FROM Species WHERE id IN (SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id) AND EXISTS (
+                        SELECT * FROM (SELECT COUNT(*) AS prey_count FROM Predates WHERE species_id = $ancestor_id) WHERE prey_count > 0 AND prey_count = (
+			                SELECT COUNT(*) FROM ((SELECT * FROM Predates WHERE species_id = Species.id) Predates1 INNER JOIN (SELECT * FROM Predates WHERE species_id = $ancestor_id) Predates2 ON Predates1.eats_id = Predates2.eats_id)
+                        )
+	                )
+                    AND EXISTS (SELECT * FROM SpeciesZones WHERE species_id = Species.id AND zone_id IN (SELECT zone_id FROM SpeciesZones WHERE species_id = $ancestor_id))";
+
+                using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
+                    cmd.Parameters.AddWithValue("$ancestor_id", species.Id);
+
+                    isEndangered = await database.GetScalarAsync<long>(cmd) > 0;
+
+                }
+
+            }
+
+            return isEndangered;
 
         }
 
@@ -343,6 +498,53 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<IEnumerable<ISpecies>> GetPredatorsAsync(this SQLiteDatabase database, ISpecies species) {
+
+            List<ISpecies> result = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Predates WHERE eats_id = $species_id)")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    result.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            }
+
+            return result.ToArray();
+
+        }
+        public static async Task<IEnumerable<IPreyInfo>> GetPreyAsync(this SQLiteDatabase database, ISpecies species) {
+
+            return await database.GetPreyAsync(species.Id);
+
+        }
+        public static async Task<IEnumerable<IPreyInfo>> GetPreyAsync(this SQLiteDatabase database, long? speciesId) {
+
+            if (!speciesId.HasValue)
+                return Enumerable.Empty<IPreyInfo>();
+
+            List<IPreyInfo> result = new List<IPreyInfo>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM (SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)) INNER JOIN Predates WHERE eats_id = id AND species_id = $species_id;")) {
+
+                cmd.Parameters.AddWithValue("$species_id", speciesId);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd)) {
+
+                    result.Add(new PreyInfo {
+                        Prey = await database.CreateSpeciesFromDataRowAsync(row),
+                        Notes = row.Field<string>("notes")
+                    });
+
+                }
+
+            }
+
+            return result;
+
+        }
+
         // Private members
 
         private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row) {
@@ -353,7 +555,7 @@ namespace OurFoodChain.Data.Extensions {
             return await database.CreateSpeciesFromDataRowAsync(row, genus);
 
         }
-        public static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus) {
+        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus) {
 
             ISpecies species = new Species {
                 Id = row.Field<long>("id"),
@@ -376,6 +578,30 @@ namespace OurFoodChain.Data.Extensions {
             species.Status = await database.GetConservationStatusAsync(species);
 
             return species;
+
+        }
+        private static async Task<ISpecies> GetSpeciesByGenusAndSpeciesNameAsync(this SQLiteDatabase database, string genus, string species) {
+
+            ITaxon genusInfo = await database.GetTaxonAsync(genus, TaxonRankType.Genus);
+
+            // If the genus doesn't exist, the species cannot possibly exist either.
+
+            if (genusInfo.IsNull())
+                return null;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE genus_id = $genus_id AND name = $species")) {
+
+                cmd.Parameters.AddWithValue("$genus_id", genusInfo.Id);
+                cmd.Parameters.AddWithValue("$species", species.ToLowerInvariant());
+
+                DataRow result = await database.GetRowAsync(cmd);
+
+                if (result is null)
+                    return null;
+
+                return await database.CreateSpeciesFromDataRowAsync(result, genusInfo);
+
+            }
 
         }
 

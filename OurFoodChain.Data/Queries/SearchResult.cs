@@ -31,6 +31,10 @@ namespace OurFoodChain.Data.Queries {
 
             }
         }
+        public SearchResultDisplayFormat DisplayFormat { get; set; } = SearchResultDisplayFormat.None;
+
+        public bool HasDefaultOrdering => hasDefaultOrdering;
+        public bool HasDefaultGrouping => hasDefaultGrouping;
 
         public void Add(string groupName, ISpecies species) {
 
@@ -85,6 +89,8 @@ namespace OurFoodChain.Data.Queries {
                 foreach (string group in await groupingFunction(s))
                     Add(group, s);
 
+            hasDefaultGrouping = false;
+
         }
         public async Task FilterByAsync(Func<ISpecies, Task<bool>> filterFunction, bool invertCondition = false) {
 
@@ -124,6 +130,8 @@ namespace OurFoodChain.Data.Queries {
 
             foreach (ISearchResultGroup group in groups.Values)
                 await group.SortByAsync(resultComparer);
+
+            hasDefaultOrdering = false;
 
         }
         public async Task FormatByAsync(Func<ISpecies, Task<string>> formatterFunction) {
@@ -169,6 +177,8 @@ namespace OurFoodChain.Data.Queries {
 
         private readonly SortedDictionary<string, ISearchResultGroup> groups = new SortedDictionary<string, ISearchResultGroup>(new NaturalStringComparer());
         private IComparer<ISearchResultGroup> groupComparer = null;
+        private bool hasDefaultGrouping = true;
+        private bool hasDefaultOrdering = true;
 
     }
 

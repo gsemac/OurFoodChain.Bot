@@ -10,7 +10,7 @@ namespace OurFoodChain.Data.Queries {
 
         SQLiteDatabase Database { get; }
 
-        Task<ICreator> GetCreatorAsync(string name);
+        Task<ICreator> GetCreatorAsync(ICreator creator);
 
     }
 

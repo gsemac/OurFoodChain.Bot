@@ -1106,7 +1106,7 @@ namespace OurFoodChain {
             await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
 
         }
-        public static async Task Command_ShowTaxon(ICommandContext context, IOfcBotConfiguration botConfiguration, TaxonRank type, string name) {
+        public static async Task Command_ShowTaxon(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, TaxonRank type, string name) {
 
             if (string.IsNullOrEmpty(name))
                 await Command_ShowTaxon(context, type);
@@ -1126,7 +1126,7 @@ namespace OurFoodChain {
 
                     Species species = await SpeciesUtils.GetSpeciesAsync(taxon.id);
 
-                    await Bot.Modules.SpeciesModule.ShowSpeciesInfoAsync(context, botConfiguration, new SpeciesAdapter(species));
+                    await Bot.Modules.SpeciesModule.ShowSpeciesInfoAsync(context, botConfiguration, db, species);
 
                     return;
 

@@ -2,6 +2,7 @@
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,12 +19,13 @@ namespace OurFoodChain.Bot.Modules {
         // Public members
 
         public IOfcBotConfiguration BotConfiguration { get; set; }
+        public SQLiteDatabase Db { get; set; }
 
         // Genus
 
         [Command("genus"), Alias("g", "genera")]
         public async Task Genus(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Genus, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Genus, name);
         }
         [Command("addgenus"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddGenus(string genus, string description = "") {
@@ -113,7 +115,7 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("family"), Alias("f", "families")]
         public async Task Family(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Family, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Family, name);
         }
         [Command("addfamily"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddFamily(string name, string description = "") {
@@ -148,7 +150,7 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("order"), Alias("o", "orders")]
         public async Task Order(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Order, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Order, name);
         }
         [Command("addorder"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddOrder(string name, string description = "") {
@@ -183,7 +185,7 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("class"), Alias("c", "classes")]
         public async Task Class(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Class, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Class, name);
         }
         [Command("addclass"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddClass(string name, string description = "") {
@@ -218,7 +220,7 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("phylum"), Alias("p", "phyla")]
         public async Task Phylum(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Phylum, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Phylum, name);
         }
         [Command("addphylum"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPhylum(string name, string description = "") {
@@ -251,7 +253,7 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("kingdom"), Alias("k", "kingdoms")]
         public async Task Kingdom(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Kingdom, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Kingdom, name);
         }
         [Command("addkingdom"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddKingdom(string name, string description = "") {
@@ -286,7 +288,7 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("domain"), Alias("d", "domains")]
         public async Task Domain(string name = "") {
-            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, TaxonRank.Domain, name);
+            await BotUtils.Command_ShowTaxon(Context, BotConfiguration, Db, TaxonRank.Domain, name);
         }
         [Command("adddomain"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddDomain(string name, string description = "") {

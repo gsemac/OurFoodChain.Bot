@@ -40,7 +40,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.Count() > 0) {
 
                 if (await BotUtils.ReplyValidateSpeciesAsync(Context, species))
-                    await ShowSpeciesInfoAsync(Context, species[0]);
+                    await ShowSpeciesInfoAsync(Context, Config, Db, species[0]);
 
             }
             else {
@@ -53,14 +53,14 @@ namespace OurFoodChain.Bot.Modules {
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
                     await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name, async (BotUtils.ConfirmSuggestionArgs args) => await GetInfo(args.Suggestion));
                 else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
-                    await BotUtils.Command_ShowTaxon(Context, Config, taxa[0].type, name);
+                    await BotUtils.Command_ShowTaxon(Context, Config, Db, taxa[0].type, name);
 
             }
 
         }
         [Command("info"), Alias("i")]
         public async Task GetInfo(string genusName, string speciesName) {
-            await ShowSpeciesInfoAsync(Context, genusName, speciesName);
+            await ShowSpeciesInfoAsync(Context, Config, Db, genusName, speciesName);
         }
 
         [Command("species"), Alias("sp", "s")]
@@ -69,11 +69,11 @@ namespace OurFoodChain.Bot.Modules {
         }
         [Command("species"), Alias("sp", "s")]
         public async Task SpeciesInfo(string species) {
-            await ShowSpeciesInfoAsync(Context, species);
+            await ShowSpeciesInfoAsync(Context, Config, Db, species);
         }
         [Command("species"), Alias("sp", "s")]
         public async Task SpeciesInfo(string genus, string species) {
-            await ShowSpeciesInfoAsync(Context, genus, species);
+            await ShowSpeciesInfoAsync(Context, Config, Db, genus, species);
         }
 
         [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
@@ -543,7 +543,7 @@ namespace OurFoodChain.Bot.Modules {
                 if (row is null)
                     await BotUtils.ReplyAsync_Info(Context, "There are currently no extant species.");
                 else
-                    await ShowSpeciesInfoAsync(Context, await SpeciesUtils.SpeciesFromDataRow(row));
+                    await ShowSpeciesInfoAsync(Context, Config, Db, await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -572,7 +572,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.Count() <= 0)
                 await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtilities.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
             else
-                await ShowSpeciesInfoAsync(Context, species[BotUtils.RandomInteger(species.Count())]);
+                await ShowSpeciesInfoAsync(Context, Config, Db, species[BotUtils.RandomInteger(species.Count())]);
 
         }
 
@@ -635,14 +635,14 @@ namespace OurFoodChain.Bot.Modules {
 
                     }
 
-                    Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
+                    PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
                         Title = string.Format("Search results ({0})", result.Groups.Count())
                     };
 
                     embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
                     embed.AddPageNumbers();
 
-                    await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                    await DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                 }
                 else {
@@ -650,7 +650,7 @@ namespace OurFoodChain.Bot.Modules {
                     if (result.Count() == 1) {
 
                         // If there's only one result, just show that species.
-                        await ShowSpeciesInfoAsync(Context, (await result.GetResultsAsync()).First());
+                        await ShowSpeciesInfoAsync(Context, Config, Db, (await result.GetResultsAsync()).First());
 
                     }
                     else {
@@ -684,27 +684,22 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, Species species) {
-
-            await ShowSpeciesInfoAsync(context, Config, species);
-
+        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, string speciesName) {
+            await ShowSpeciesInfoAsync(context, botConfiguration, db, string.Empty, speciesName);
         }
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, string speciesName) {
-            await ShowSpeciesInfoAsync(context, string.Empty, speciesName);
-        }
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, string genusName, string speciesName) {
+        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, string genusName, string speciesName) {
 
             Species sp = await BotUtils.ReplyAsync_FindSpecies(context, genusName, speciesName,
-            async (BotUtils.ConfirmSuggestionArgs args) => await ShowSpeciesInfoAsync(context, args.Suggestion));
+            async (BotUtils.ConfirmSuggestionArgs args) => await ShowSpeciesInfoAsync(context, botConfiguration, db, args.Suggestion));
 
             if (sp is null)
                 return;
 
-            await ShowSpeciesInfoAsync(context, sp);
+            await ShowSpeciesInfoAsync(context, botConfiguration, db, sp);
 
         }
 
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, Species species) {
+        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, Species species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 
@@ -731,11 +726,11 @@ namespace OurFoodChain.Bot.Modules {
 
                 embed.AddField("Owner", await SpeciesUtils.GetOwnerOrDefaultAsync(species, context), inline: true);
 
-                IEnumerable<ISpeciesZoneInfo> zone_list = await Db.GetZonesAsync(new SpeciesAdapter(species));
+                IEnumerable<ISpeciesZoneInfo> zone_list = await db.GetZonesAsync(new SpeciesAdapter(species));
 
                 if (zone_list.Count() > 0) {
 
-                    embed_color = DiscordUtils.ConvertColor((await Db.GetZoneTypeAsync(zone_list
+                    embed_color = DiscordUtils.ConvertColor((await db.GetZoneTypeAsync(zone_list
                         .GroupBy(x => x.Zone.TypeId)
                         .OrderBy(x => x.Count())
                         .Last()

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj" />
+    <ProjectReference Include="..\OurFoodChain.Data\OurFoodChain.Data.csproj" />
+    <ProjectReference Include="..\OurFoodChain.Debug\OurFoodChain.Debug.csproj" />
+  </ItemGroup>
+
+</Project>

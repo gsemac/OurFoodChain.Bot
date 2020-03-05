@@ -73,6 +73,78 @@ namespace OurFoodChain.Trophies.Extensions {
             }
 
         }
+        public static async Task<long> GetTimesTrophyUnlockedAsync(this SQLiteDatabase database, ITrophy trophy) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Trophies WHERE trophy_name = $trophy_name")) {
+
+                cmd.Parameters.AddWithValue("$trophy_name", trophy.Identifier);
+
+                return await database.GetScalarAsync<long>(cmd);
+
+            }
+
+        }
+        public static async Task<IEnumerable<IUnlockedTrophyInfo>> GetCreatorsWithTrophyAsync(this SQLiteDatabase database, ITrophy trophy) {
+
+            List<IUnlockedTrophyInfo> results = new List<IUnlockedTrophyInfo>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT user_id, timestamp FROM Trophies WHERE trophy_name = $trophy_name")) {
+
+                cmd.Parameters.AddWithValue("$trophy_name", trophy.Identifier);
+
+                IEnumerable<DataRow> rows = await database.GetRowsAsync(cmd);
+
+                foreach (DataRow row in rows) {
+
+                    ICreator creator = new Creator((ulong)row.Field<long>("user_id"), string.Empty);
+                    DateTimeOffset dateEarned = DateUtilities.TimestampToDate(row.Field<long>("timestamp"));
+
+                    results.Add(new UnlockedTrophyInfo(creator, trophy) {
+                        DateFirstUnlocked = dateEarned,
+                        TimesUnlocked = rows.Count()
+                    });
+
+                }
+
+            }
+
+            return results;
+
+        }
+        public static async Task<double> GetTrophyCompletionRateAsync(this SQLiteDatabase database, ITrophy trophy) {
+
+            // The completion rate is determined from the number of users who have earned the trophy and the number of users who have submitted species.
+
+            long times_unlocked = await database.GetTimesTrophyUnlockedAsync(trophy);
+            long total_users = 0;
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM (SELECT user_id FROM Species GROUP BY user_id)"))
+                total_users = await database.GetScalarAsync<long>(cmd);
+
+            return (total_users <= 0) ? 0.0 : (100.0 * times_unlocked / total_users);
+
+        }
+        public static async Task<double> GetTrophyCompletionRateAsync(this SQLiteDatabase database, ICreator creator, IEnumerable<ITrophy> trophyList, bool includeOneTimeTrophies = false) {
+
+            IEnumerable<IUnlockedTrophyInfo> unlocked = await database.GetUnlockedTrophiesAsync(creator, trophyList);
+
+            int unlocked_count = unlocked
+                .Where(x => {
+
+                    if (includeOneTimeTrophies)
+                        return true;
+
+                    ITrophy t = x.Trophy;
+
+                    return t != null && !t.Flags.HasFlag(TrophyFlags.OneTime);
+
+                })
+                .Count();
+            int trophy_count = trophyList.Where(x => includeOneTimeTrophies || !x.Flags.HasFlag(TrophyFlags.OneTime)).Count();
+
+            return trophy_count <= 0 ? 0.0 : (100.0 * unlocked_count / trophy_count);
+
+        }
 
     }
 

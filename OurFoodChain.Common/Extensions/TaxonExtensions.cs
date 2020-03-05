@@ -9,7 +9,7 @@ namespace OurFoodChain.Common.Extensions {
 
         public static bool IsNull(this ITaxon taxon) {
 
-            return taxon is null || !taxon.Id.HasValue;
+            return taxon is null || !taxon.Id.HasValue || taxon.Id < 0;
 
         }
 

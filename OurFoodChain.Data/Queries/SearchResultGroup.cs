@@ -37,9 +37,20 @@ namespace OurFoodChain.Data.Queries {
 
         }
 
+        public IEnumerable<ISpecies> GetResults() {
+
+            return Items;
+
+        }
+        public IEnumerable<string> GetStringResults() {
+
+            return GetStringResultsAsync().Result;
+
+        }
+
         public async Task<IEnumerable<ISpecies>> GetResultsAsync() {
 
-            return await Task.FromResult(Items);
+            return await Task.FromResult(GetResults());
 
         }
         public async Task<IEnumerable<string>> GetStringResultsAsync() {

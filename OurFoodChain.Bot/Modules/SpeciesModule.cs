@@ -4,10 +4,12 @@ using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Data.Queries;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,7 +27,6 @@ namespace OurFoodChain.Bot.Modules {
         // Public members
 
         public IOfcBotConfiguration Config { get; set; }
-        public Services.ISearchService SearchService { get; set; }
         public SQLiteDatabase Db { get; set; }
 
         [Command("info"), Alias("i")]
@@ -579,8 +580,8 @@ namespace OurFoodChain.Bot.Modules {
 
             // Create and execute the search query.
 
-            Taxa.SearchQuery query = new Taxa.SearchQuery(queryString);
-            Taxa.SearchResult result = await SearchService.GetQueryResultAsync(Context, query);
+            ISearchQuery query = new SearchQuery(queryString);
+            ISearchResult result = await Db.GetSearchResultsAsync(new SearchContext(Context, Db), query);
 
             // Build the embed.
 
@@ -591,7 +592,7 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Gallery) {
+                if (result.DisplayFormat == SearchResultDisplayFormat.Gallery) {
 
                     List<IPicture> pictures = new List<IPicture>();
 
@@ -601,16 +602,16 @@ namespace OurFoodChain.Bot.Modules {
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 
                 }
-                else if (result.DisplayFormat == Taxa.SearchResultDisplayFormat.Leaderboard) {
+                else if (result.DisplayFormat == SearchResultDisplayFormat.Leaderboard) {
 
                     // Match each group to a rank depending on how many results it contains.
 
-                    Dictionary<Taxa.SearchResult.Group, long> groupRanks = new Dictionary<Taxa.SearchResult.Group, long>();
+                    Dictionary<ISearchResultGroup, long> groupRanks = new Dictionary<ISearchResultGroup, long>();
 
                     long rank = 0;
                     int lastCount = -1;
 
-                    foreach (Taxa.SearchResult.Group group in result.Groups.OrderByDescending(x => x.Count())) {
+                    foreach (ISearchResultGroup group in result.Groups.OrderByDescending(x => x.Count())) {
 
                         groupRanks[group] = (lastCount >= 0 && group.Count() == lastCount) ? rank : ++rank;
 
@@ -622,7 +623,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     List<string> lines = new List<string>();
 
-                    foreach (Taxa.SearchResult.Group group in result.Groups) {
+                    foreach (ISearchResultGroup group in result.Groups) {
 
                         lines.Add(string.Format("**`{0}.`**{1}`{2}` {3}",
                             groupRanks[group].ToString("000"),
@@ -648,17 +649,17 @@ namespace OurFoodChain.Bot.Modules {
                     if (result.Count() == 1) {
 
                         // If there's only one result, just show that species.
-                        await ShowSpeciesInfoAsync(Context, result.ToArray()[0]);
+                        await ShowSpeciesInfoAsync(Context, (await result.GetResultsAsync()).First());
 
                     }
                     else {
 
-                        Bot.PaginatedMessageBuilder embed;
+                        PaginatedMessageBuilder embed;
 
-                        if (result.HasGroup(Taxa.SearchResult.DefaultGroupName)) {
+                        if (result.ContainsGroup(Data.Queries.SearchResult.DefaultGroupName)) {
 
                             // If there's only one group, just list the species without creating separate fields.
-                            embed = new PaginatedMessageBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.ToStringArray().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+                            embed = new PaginatedMessageBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.GetStringResults().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
 
                         }
                         else {
@@ -682,7 +683,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, Species species) {
+        public async Task ShowSpeciesInfoAsync(ICommandContext context, ISpecies species) {
 
             await ShowSpeciesInfoAsync(context, Config, species);
 
@@ -702,7 +703,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, Species species) {
+        public async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, ISpecies species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 

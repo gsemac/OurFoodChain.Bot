@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using OurFoodChain.Bot;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using System;
@@ -762,7 +763,7 @@ namespace OurFoodChain {
             await Bot.DiscordUtils.SendMessageAsync(context, message_content.Build(), respondToSenderOnly: true);
 
         }
-        public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, Species[] speciesList) {
+        public static async Task ReplyAsync_MatchingSpecies(ICommandContext context, IEnumerable<Species> speciesList) {
 
             EmbedBuilder embed = new EmbedBuilder();
             List<string> lines = new List<string>();
@@ -790,7 +791,7 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static async Task<bool> ReplyValidateSpeciesAsync(ICommandContext context, Species[] speciesList) {
+        public static async Task<bool> ReplyValidateSpeciesAsync(ICommandContext context, IEnumerable<Species> speciesList) {
 
             if (speciesList is null || speciesList.Count() <= 0) {
                 await ReplyAsync_NoSuchSpeciesExists(context);

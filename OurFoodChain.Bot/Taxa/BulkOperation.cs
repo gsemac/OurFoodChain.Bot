@@ -5,13 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Queries;
 
 namespace OurFoodChain.Taxa {
 
     public class BulkOperation :
         IBulkOperation {
 
-        public SearchQuery Query { get; }
+        public ISearchQuery Query { get; }
         public string OperationName { get; }
         public IEnumerable<string> Arguments { get; }
 

@@ -63,7 +63,6 @@ namespace OurFoodChain.Bot {
                 .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
-                .AddSingleton<Services.ISearchService, Services.SearchService>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }

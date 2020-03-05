@@ -5,6 +5,7 @@ using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Data.Queries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,6 @@ namespace OurFoodChain.Bot.Modules {
     public class BulkModule :
         ModuleBase {
 
-        public Services.ISearchService SearchService { get; set; }
         public SQLiteDatabase Db { get; set; }
 
         [Command("bulk"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
@@ -25,7 +25,7 @@ namespace OurFoodChain.Bot.Modules {
             // Instantiate the bulk operation and get the query results.
 
             Taxa.IBulkOperation bulkOperation = new Taxa.BulkOperation(operationString);
-            Taxa.SearchResult queryResult = await SearchService.GetQueryResultAsync(Context, bulkOperation.Query);
+            ISearchResult queryResult = await Db.GetSearchResultsAsync(new SearchContext(Context, Db), bulkOperation.Query);
 
             if (queryResult.Count() <= 0) {
 

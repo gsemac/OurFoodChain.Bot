@@ -263,6 +263,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="SearchContext.cs" />
     <Compile Include="IOfcBotConfiguration.cs" />
     <Compile Include="Modules\AdminCommands.cs" />
     <Compile Include="Modules\BulkModule.cs" />
@@ -306,14 +307,8 @@
     <Compile Include="Gotchis\GotchiStatusRegistry.cs" />
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
-    <Compile Include="Services\ISearchService.cs" />
-    <Compile Include="Services\SearchService.cs" />
     <Compile Include="Taxa\BulkOperation.cs" />
     <Compile Include="Taxa\IBulkOperation.cs" />
-    <Compile Include="Taxa\ISearchModifier.cs" />
-    <Compile Include="Taxa\ISearchResult.cs" />
-    <Compile Include="Taxa\SearchModifier.cs" />
-    <Compile Include="Taxa\SearchResult.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />
     <Compile Include="Gotchis\GotchiType.cs" />
     <Compile Include="Gotchis\GotchiTypeRegistry.cs" />
@@ -364,10 +359,8 @@
     <Compile Include="reviews\ReviewCache.cs" />
     <Compile Include="reviews\ReviewChannelInfo.cs" />
     <Compile Include="reviews\ReviewInfo.cs" />
-    <Compile Include="Taxa\SpeciesSizeMatch.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
     <Compile Include="PaginatedMessageBuilder.cs" />
-    <Compile Include="Taxa\SearchQuery.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
     <Compile Include="Utilities\LogMessage.cs" />
     <Compile Include="Adapters\SpeciesAdapter.cs" />

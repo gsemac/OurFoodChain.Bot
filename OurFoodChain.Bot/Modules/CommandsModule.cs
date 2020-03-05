@@ -5,6 +5,7 @@ using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
@@ -373,17 +374,17 @@ namespace OurFoodChain.Bot.Modules {
             // <species> <units>    -> returns size for that species, using the given units
 
             Species species = null;
-            LengthUnit units = LengthUnit.Unknown;
+            ILengthUnit units = null;
 
             // Attempt to get the specified species, assuming the user passed in <genus> <species>.
 
-            Species[] species_array = await BotUtils.GetSpeciesFromDb(genusOrSpecies, speciesOrUnits);
+            IEnumerable<Species> speciesResults = await BotUtils.GetSpeciesFromDb(genusOrSpecies, speciesOrUnits);
 
-            if (species_array.Count() > 1)
-                await BotUtils.ReplyValidateSpeciesAsync(Context, species_array);
-            else if (species_array.Count() == 1)
-                species = species_array[0];
-            else if (species_array.Count() <= 0) {
+            if (speciesResults.Count() > 1)
+                await BotUtils.ReplyValidateSpeciesAsync(Context, speciesResults);
+            else if (speciesResults.Count() == 1)
+                species = speciesResults.First();
+            else if (speciesResults.Count() <= 0) {
 
                 // If we didn't get any species by treating the arguments as <genus> <species>, attempt to get the species by <species> only.         
                 species = await BotUtils.ReplyFindSpeciesAsync(Context, "", genusOrSpecies);
@@ -396,9 +397,9 @@ namespace OurFoodChain.Bot.Modules {
                 // Assume the second argument was the desired units.
                 // Make sure the units given are valid.
 
-                units = new Length(0.0, speciesOrUnits).Units;
+                LengthUnit.TryParse(speciesOrUnits, out units);
 
-                if (units == LengthUnit.Unknown) {
+                if (units is null) {
 
                     await BotUtils.ReplyAsync_Error(Context, string.Format("Invalid units (\"{0}\").", speciesOrUnits));
 
@@ -408,31 +409,31 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            if (!(species is null))
+            if (species != null)
                 await Size(species, units);
 
         }
         public async Task Size(Species species, string units) {
 
-            LengthUnit length_units = new Length(0.0, units).Units;
+            LengthUnit.TryParse(units, out ILengthUnit lengthUnits);
 
-            if (length_units == LengthUnit.Unknown)
+            if (lengthUnits is null)
                 await BotUtils.ReplyAsync_Error(Context, string.Format("Invalid units (\"{0}\").", units));
             else
-                await Size(species, length_units);
+                await Size(species, lengthUnits);
 
         }
-        public async Task Size(Species species, LengthUnit units) {
+        public async Task Size(Species species, ILengthUnit units) {
 
             // Attempt to get the size of the species.
 
-            SpeciesSizeMatch match = SpeciesSizeMatch.Match(species.Description);
+            SpeciesSizeMatch match = SpeciesSizeMatch.Find(species.Description);
 
             // Output the result.
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.Title = string.Format("Size of {0}", species.FullName);
-            embed.WithDescription(units == LengthUnit.Unknown ? match.ToString() : match.ToString(units));
+            embed.WithDescription(units is null ? match.ToString() : match.ToString(units));
             embed.WithFooter("Size is determined from species description, and may not be accurate.");
 
             await ReplyAsync("", false, embed.Build());

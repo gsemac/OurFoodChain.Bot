@@ -15,6 +15,9 @@ namespace OurFoodChain.Data.Queries {
         Task SortByAsync(IComparer<ISpecies> resultComparer);
         Task FormatByAsync(Func<ISpecies, Task<string>> formatterFunction);
 
+        IEnumerable<ISpecies> GetResults();
+        IEnumerable<string> GetStringResults();
+
         Task<IEnumerable<ISpecies>> GetResultsAsync();
         Task<IEnumerable<string>> GetStringResultsAsync();
 

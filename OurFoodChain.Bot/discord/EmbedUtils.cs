@@ -1,6 +1,7 @@
 ﻿using Discord;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Queries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,14 +97,14 @@ namespace OurFoodChain {
             return pages;
 
         }
-        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(Taxa.SearchResult result, int itemsPerField = 10) {
+        public static List<EmbedBuilder> SearchQueryResultToEmbedPages(ISearchResult result, int itemsPerField = 10) {
 
             List<EmbedBuilder> pages = new List<EmbedBuilder>();
             int fields_per_page = 6;
 
-            foreach (Taxa.SearchResult.Group group in result.Groups) {
+            foreach (ISearchResultGroup group in result.Groups) {
 
-                List<string> items = group.ToStringArray().ToList();
+                List<string> items = group.GetStringResults().ToList();
 
                 List<List<string>> columns = ListToColumns(items, itemsPerField);
                 int column_index = 1;

@@ -27,6 +27,7 @@ namespace OurFoodChain.Bot.Modules {
         // Public members
 
         public IOfcBotConfiguration Config { get; set; }
+        public OurFoodChain.Services.TrophyScanner TrophyScanner { get; set; }
         public SQLiteDatabase Db { get; set; }
 
         [Command("info"), Alias("i")]
@@ -249,7 +250,7 @@ namespace OurFoodChain.Bot.Modules {
             // Add the user to the trophy scanner queue in case their species earned them any new trophies.
 
             if (Config.TrophiesEnabled)
-                await Global.TrophyScanner.AddToQueueAsync(Context, Context.User.Id);
+                await TrophyScanner.EnqueueAsync(new Creator(Context.User.Id, Context.User.Username), Context);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
@@ -431,7 +432,7 @@ namespace OurFoodChain.Bot.Modules {
                 // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
 
                 if (Config.TrophiesEnabled)
-                    await Global.TrophyScanner.AddToQueueAsync(Context, user.Id);
+                    await TrophyScanner.EnqueueAsync(new Creator(user.Id, user.Username), Context);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.ShortName, user.Username));
 
@@ -683,7 +684,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, ISpecies species) {
+        public async Task ShowSpeciesInfoAsync(ICommandContext context, Species species) {
 
             await ShowSpeciesInfoAsync(context, Config, species);
 
@@ -703,7 +704,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, ISpecies species) {
+        public async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, Species species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
 

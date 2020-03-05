@@ -1,12 +1,15 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Adapters;
 using OurFoodChain.Bot;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -838,7 +841,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyValidateZoneTypeAsync(ICommandContext context, IZoneType zoneType) {
 
-            if (zoneType.IsNull()) {
+            if (!zoneType.IsValid()) {
 
                 await context.Channel.SendMessageAsync("No such zone type exists.");
 
@@ -1123,7 +1126,7 @@ namespace OurFoodChain {
 
                     Species species = await SpeciesUtils.GetSpeciesAsync(taxon.id);
 
-                    await Bot.Modules.SpeciesModule.ShowSpeciesInfoAsync(context, botConfiguration, species);
+                    await Bot.Modules.SpeciesModule.ShowSpeciesInfoAsync(context, botConfiguration, new SpeciesAdapter(species));
 
                     return;
 
@@ -1602,7 +1605,7 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task ZonesToEmbedPagesAsync(PaginatedMessageBuilder embed, IEnumerable<IZone> zones, bool showIcon = true) {
+        public static async Task ZonesToEmbedPagesAsync(PaginatedMessageBuilder embed, IEnumerable<IZone> zones, SQLiteDatabase database, bool showIcon = true) {
 
             List<string> lines = new List<string>();
             int zones_per_page = 20;
@@ -1610,7 +1613,7 @@ namespace OurFoodChain {
 
             foreach (IZone zone in zones) {
 
-                IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId);
+                IZoneType type = await database.GetZoneTypeAsync(zone.TypeId);
 
                 string line = string.Format("{1} **{0}**\t-\t{2}", StringUtilities.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.Description.GetFirstSentence());
 

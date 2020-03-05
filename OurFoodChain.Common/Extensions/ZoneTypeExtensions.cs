@@ -28,9 +28,9 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
-        public static bool IsNull(this IZoneType zoneType) {
+        public static bool IsValid(this IZoneType zoneType) {
 
-            return zoneType is null || !zoneType.Id.HasValue;
+            return zoneType != null && zoneType.Id.HasValue && zoneType.Id >= 0;
 
         }
 

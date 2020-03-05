@@ -41,7 +41,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 IZoneType zone_type = await Db.GetZoneTypeAsync(type);
 
-                if (zone_type.IsNull()) {
+                if (!zone_type.IsValid()) {
 
                     description = type;
 
@@ -82,7 +82,7 @@ namespace OurFoodChain.Bot.Modules {
 
             IZoneType zone_type = await Db.GetZoneTypeAsync(arg0);
 
-            if (string.IsNullOrEmpty(arg0) || !zone_type.IsNull()) {
+            if (string.IsNullOrEmpty(arg0) || zone_type.IsValid()) {
 
                 // Display all zones, or, if the user passed in a valid zone type, all zones of that type.
 
@@ -101,10 +101,10 @@ namespace OurFoodChain.Bot.Modules {
 
                     // Build paginated message.
 
-                    await BotUtils.ZonesToEmbedPagesAsync(embed, zones);
+                    await BotUtils.ZonesToEmbedPagesAsync(embed, zones, Db);
                     embed.AddPageNumbers();
 
-                    if (!zone_type.IsNull())
+                    if (zone_type.IsValid())
                         embed.SetColor(DiscordUtils.ConvertColor(zone_type.Color));
 
                     await DiscordUtils.SendMessageAsync(Context, embed.Build());
@@ -305,7 +305,7 @@ namespace OurFoodChain.Bot.Modules {
 
             IZoneType type = await Db.GetZoneTypeAsync(arg0);
 
-            if (type.IsNull()) {
+            if (!type.IsValid()) {
 
                 // If no zone type exists with this name, attempt to get the type of the zone with this name.
 
@@ -316,7 +316,7 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            if (!type.IsNull()) {
+            if (type.IsValid()) {
 
                 // We got a valid zone type, so show information about the zone type.
 
@@ -328,7 +328,7 @@ namespace OurFoodChain.Bot.Modules {
                     Color = DiscordUtils.ConvertColor(type.Color)
                 };
 
-                await BotUtils.ZonesToEmbedPagesAsync(embed, zones, showIcon: false);
+                await BotUtils.ZonesToEmbedPagesAsync(embed, zones, Db, showIcon: false);
                 embed.AddPageNumbers();
 
                 await DiscordUtils.SendMessageAsync(Context, embed.Build());

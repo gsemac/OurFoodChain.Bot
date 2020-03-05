@@ -10,6 +10,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Trophies;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,6 +18,8 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurFoodChain.Trophies.Extensions;
+using OurFoodChain.Common;
 
 namespace OurFoodChain.Bot.Modules {
 
@@ -25,6 +28,7 @@ namespace OurFoodChain.Bot.Modules {
 
         public IOfcBotConfiguration BotConfiguration { get; set; }
         public SQLiteDatabase Db { get; set; }
+        public OurFoodChain.Services.TrophyScanner TrophyScanner { get; set; }
 
         [Command("+extinct"), Alias("setextinct")]
         public async Task SetExtinct(string species) {
@@ -569,15 +573,17 @@ namespace OurFoodChain.Bot.Modules {
 
                 string rarest_trophy = "N/A";
 
-                Trophies.UnlockedTrophyInfo[] unlocked = await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id);
+                IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())).ToArray();
 
                 if (unlocked.Count() > 0) {
 
-                    Array.Sort(unlocked, (lhs, rhs) => lhs.timesUnlocked.CompareTo(rhs.timesUnlocked));
+                    Array.Sort(unlocked, (lhs, rhs) => lhs.TimesUnlocked.CompareTo(rhs.TimesUnlocked));
 
-                    Trophies.Trophy trophy = await Global.TrophyRegistry.GetTrophyByIdentifierAsync(unlocked[0].identifier);
+                    ITrophy trophy = TrophyScanner.GetTrophies()
+                        .Where(t => t.Identifier.Equals(unlocked[0].Trophy.Identifier))
+                        .FirstOrDefault();
 
-                    rarest_trophy = trophy.GetName();
+                    rarest_trophy = trophy.Name;
 
                 }
 
@@ -612,8 +618,8 @@ namespace OurFoodChain.Bot.Modules {
                 if (BotConfiguration.TrophiesEnabled) {
 
                     embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
-                        (await Global.TrophyRegistry.GetUnlockedTrophiesAsync(user.Id)).Count(),
-                        await Global.TrophyRegistry.GetUserCompletionRateAsync(user.Id)), inline: true);
+                        (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())).Count(),
+                        await Db.GetTrophyCompletionRateAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())), inline: true);
 
                     embed.AddField("Rarest trophy", rarest_trophy, inline: true);
 

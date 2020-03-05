@@ -820,7 +820,7 @@ namespace OurFoodChain {
         }
         public static async Task<bool> ReplyValidateZoneAsync(ICommandContext context, Common.Zones.IZone zone, string zoneName = "") {
 
-            if (zone.IsNull()) {
+            if (!zone.IsValid()) {
 
                 string message = "No such zone exists.";
 

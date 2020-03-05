@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common.Zones;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -386,7 +387,7 @@ namespace OurFoodChain.Trophies {
         private async Task<bool> _checkTrophy_helper_hasSpeciesWithZoneDescriptionMatch(TrophyScanner.ScannerQueueItem item, string regexPattern) {
 
             // Get all zones.
-            List<Zone> zones = new List<Zone>(await BotUtils.GetZonesFromDb());
+            List<IZone> zones = new List<IZone>(await BotUtils.GetZonesFromDb());
 
             // Filter list so we only have zones with cold climates.
             zones.RemoveAll(zone => !Regex.IsMatch(zone.Description, regexPattern));
@@ -427,7 +428,7 @@ namespace OurFoodChain.Trophies {
 
             foreach (string zone_type_name in zoneTypeNames) {
 
-                ZoneType zone_type = await ZoneUtils.GetZoneTypeAsync(zone_type_name);
+                IZoneType zone_type = await ZoneUtils.GetZoneTypeAsync(zone_type_name);
 
                 // If any of the zone types are invalid, the trophy is automatically invalidated.
 

@@ -64,6 +64,21 @@ namespace OurFoodChain.Data.Extensions {
             return taxa;
 
         }
+        public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, TaxonRankType rank) {
+
+            List<ITaxon> taxa = new List<ITaxon>();
+            string tableName = GetTableNameForRank(rank);
+
+            if (string.IsNullOrEmpty(tableName))
+                return Enumerable.Empty<ITaxon>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0}", tableName)))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    taxa.Add(CreateTaxonFromDataRow(row, rank));
+
+            return taxa;
+
+        }
         public static async Task<IDictionary<TaxonRankType, ITaxon>> GetTaxaAsync(this SQLiteDatabase database, ISpecies species) {
 
             IDictionary<TaxonRankType, ITaxon> result = new Dictionary<TaxonRankType, ITaxon>();
@@ -128,6 +143,36 @@ namespace OurFoodChain.Data.Extensions {
             }
 
             return result;
+
+        }
+
+        public static async Task<IEnumerable<ITaxon>> GetSubtaxaAsync(this SQLiteDatabase database, ITaxon taxon) {
+
+            List<ITaxon> result = new List<ITaxon>();
+
+            string tableName = GetTableNameForRank(TaxonUtilities.GetChildRank(taxon.Rank.Type));
+            string parentColumnName = GetFieldNameForRank(taxon.Rank.Type);
+
+            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(parentColumnName) || !taxon.Id.HasValue)
+                return Enumerable.Empty<ITaxon>();
+
+            string query = "SELECT * FROM {0} WHERE {1} = $parent_id";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(string.Format(query, tableName, parentColumnName))) {
+
+                cmd.Parameters.AddWithValue("$parent_id", taxon.Id);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    result.Add(CreateTaxonFromDataRow(row, TaxonUtilities.GetChildRank(taxon.Rank.Type)));
+
+            }
+
+            // Sort taxa alphabetically by name.
+
+            result.Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));
+
+            return result;
+
 
         }
 

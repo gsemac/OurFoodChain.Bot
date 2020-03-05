@@ -32,9 +32,9 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
-        public static bool IsNull(this IZone zone) {
+        public static bool IsValid(this IZone zone) {
 
-            return zone is null || !zone.Id.HasValue;
+            return zone != null && zone.Id.HasValue && zone.Id >= 0;
 
         }
 

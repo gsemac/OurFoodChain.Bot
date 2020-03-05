@@ -271,7 +271,7 @@
     <Compile Include="Modules\PicturesModule.cs" />
     <Compile Include="Modules\GenerationsModule.cs" />
     <Compile Include="Modules\HelpModule.cs" />
-    <Compile Include="Modules\IdeasCommands.cs" />
+    <Compile Include="Modules\IdeaModule.cs" />
     <Compile Include="Modules\MapModule.cs" />
     <Compile Include="Modules\PeriodCommands.cs" />
     <Compile Include="Modules\PreyCommands.cs" />

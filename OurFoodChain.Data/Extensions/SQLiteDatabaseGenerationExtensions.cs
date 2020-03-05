@@ -83,7 +83,7 @@ namespace OurFoodChain.Data.Extensions {
 
         // Private members
 
-        public static IGeneration CreateGenerationFromDataRow(DataRow row) {
+        private static IGeneration CreateGenerationFromDataRow(DataRow row) {
 
             if (row is null)
                 return null;

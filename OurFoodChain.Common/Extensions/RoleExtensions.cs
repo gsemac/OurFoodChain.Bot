@@ -21,9 +21,9 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
-        public static bool IsNull(this IRole role) {
+        public static bool IsValid(this IRole role) {
 
-            return role is null || !role.Id.HasValue;
+            return role != null && role.Id.HasValue && role.Id >= 0;
 
         }
 

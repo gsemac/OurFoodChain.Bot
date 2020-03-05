@@ -1,5 +1,10 @@
 ﻿using Discord.Commands;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,19 +15,23 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class IdeasCommands :
+    public class IdeaModule :
         ModuleBase {
+
+        // Public members
+
+        public SQLiteDatabase Db { get; set; }
 
         [Command("idea")]
         public async Task Idea() {
 
             List<string> ideas = new List<string>();
 
-            ideas.AddRange(await _getEmptyZoneIdeasAsync());
-            ideas.AddRange(await _getSmallGeneraIdeasAsync());
-            ideas.AddRange(await _getEmptyLineageIdeasAsync());
-            ideas.AddRange(await _getNoPredatorIdeasAsync());
-            ideas.AddRange(await _getMissingRolesInZoneIdeasAsync());
+            ideas.AddRange(await GetEmptyZoneIdeasAsync());
+            ideas.AddRange(await GetSmallGenusIdeasAsync());
+            ideas.AddRange(await GetEmptyLineageIdeasAsync());
+            ideas.AddRange(await GetNoPredatorIdeasAsync());
+            ideas.AddRange(await GetMissingRolesInZoneIdeasAsync());
 
             if (ideas.Count() > 0)
                 await BotUtils.ReplyAsync_Info(Context, string.Format("💡 {0}", ideas[new Random().Next(ideas.Count())]));
@@ -31,38 +40,47 @@ namespace OurFoodChain.Bot {
 
         }
 
-        // Checks for empty zones
-        private async Task<string[]> _getEmptyZoneIdeasAsync() {
+        // Private members
+
+        private async Task<IEnumerable<string>> GetEmptyZoneIdeasAsync() {
+
+            // Checks for empty zones
 
             List<string> ideas = new List<string>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id NOT IN (SELECT zone_id FROM SpeciesZones);"))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in table.Rows)
-                    ideas.Add(string.Format("**{0}** does not contain any species yet. Why not make one?", ZoneUtils.ZoneFromDataRow(row).GetFullName()));
+            foreach (IZone zone in await Db.GetZonesAsync()) {
 
-            return ideas.ToArray();
+                if ((await Db.GetSpeciesAsync(zone)).Count() <= 0)
+                    ideas.Add(string.Format("**{0}** does not contain any species yet. Why not make one?", zone.GetFullName()));
+
+            }
+
+            return ideas;
 
         }
-        // Checks for genera with only one species
-        private async Task<string[]> _getSmallGeneraIdeasAsync() {
+        private async Task<IEnumerable<string>> GetSmallGenusIdeasAsync() {
+
+            // Checks for genera with only one species
 
             List<string> ideas = new List<string>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE id IN (SELECT genus_id FROM(SELECT genus_id, COUNT(genus_id) AS c FROM (SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions)) GROUP BY genus_id) WHERE c <= 1);"))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in table.Rows)
-                    ideas.Add(string.Format("Genus **{0}** only has one species in it. Why not make another?", Taxon.FromDataRow(row, TaxonRank.Genus).GetName()));
+            foreach (ITaxon genus in await Db.GetTaxaAsync(TaxonRankType.Genus)) {
 
-            return ideas.ToArray();
+                if ((await Db.GetSubtaxaAsync(genus)).Count() <= 0)
+                    ideas.Add(string.Format("Genus **{0}** only has one species in it. Why not make another?", genus.Name.ToTitle()));
+
+            }
+
+            return ideas;
 
         }
-        // Checks for species with empty lineage
-        private async Task<string[]> _getEmptyLineageIdeasAsync() {
+        private async Task<IEnumerable<string>> GetEmptyLineageIdeasAsync() {
+
+            // Checks for species with empty lineage
 
             List<string> ideas = new List<string>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors) AND id NOT IN (SELECT ancestor_id FROM Ancestors) AND id NOT IN (SELECT species_id FROM Extinctions);"))
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors) AND id NOT IN (SELECT ancestor_id FROM Ancestors) AND id NOT IN (SELECT species_id FROM Extinctions)"))
             using (DataTable table = await Database.GetRowsAsync(cmd))
                 foreach (DataRow row in table.Rows)
                     ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", (await SpeciesUtils.SpeciesFromDataRow(row)).ShortName));
@@ -70,8 +88,9 @@ namespace OurFoodChain.Bot {
             return ideas.ToArray();
 
         }
-        // Checks for species with no predators (that aren't themselves predators)
-        private async Task<string[]> _getNoPredatorIdeasAsync() {
+        private async Task<IEnumerable<string>> GetNoPredatorIdeasAsync() {
+
+            // Checks for species with no predators (that aren't themselves predators)
 
             List<string> ideas = new List<string>();
 
@@ -93,8 +112,9 @@ namespace OurFoodChain.Bot {
             return ideas.ToArray();
 
         }
-        // Checks for roles that are unfulfilled for a given zone
-        private async Task<string[]> _getMissingRolesInZoneIdeasAsync() {
+        private async Task<IEnumerable<string>> GetMissingRolesInZoneIdeasAsync() {
+
+            // Checks for roles that are unfulfilled for a given zone
 
             List<string> ideas = new List<string>();
 

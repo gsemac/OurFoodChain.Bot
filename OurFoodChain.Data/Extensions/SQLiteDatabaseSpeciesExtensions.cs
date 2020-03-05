@@ -612,7 +612,7 @@ namespace OurFoodChain.Data.Extensions {
 
             // If the genus doesn't exist, the species cannot possibly exist either.
 
-            if (genusInfo.IsNull())
+            if (!genusInfo.IsValid())
                 return null;
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE genus_id = $genus_id AND name = $species")) {

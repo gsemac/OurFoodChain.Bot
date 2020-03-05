@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("anc", "ancestor")]
     public class AncestorSearchModifier :
         SearchModifierBase {
 

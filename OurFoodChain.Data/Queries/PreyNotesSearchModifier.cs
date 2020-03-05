@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("preynote", "preynotes")]
     public class PreyNotesSearchModifier :
           SearchModifierBase {
 

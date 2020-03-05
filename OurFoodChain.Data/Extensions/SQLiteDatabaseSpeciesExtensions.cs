@@ -4,6 +4,7 @@ using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
+using OurFoodChain.Data.Queries;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -142,7 +143,7 @@ namespace OurFoodChain.Data.Extensions {
             if (!speciesId.HasValue)
                 return Enumerable.Empty<long>();
 
-            List<long> ancestor_ids = new List<long>();
+            List<long> ancestorIds = new List<long>();
 
             while (true) {
 
@@ -152,21 +153,25 @@ namespace OurFoodChain.Data.Extensions {
 
                     DataRow row = await database.GetRowAsync(cmd);
 
-                    if (row is null)
+                    if (row != null) {
+
+                        speciesId = row.Field<long>("ancestor_id");
+
+                        if (speciesId.HasValue)
+                            ancestorIds.Add((long)speciesId);
+
+                    }
+                    else
                         break;
-
-                    speciesId = row.Field<long>("ancestor_id");
-
-                    ancestor_ids.Add(speciesId);
 
                 }
 
             }
 
             // Reverse the array so that earliest ancestors are listed first.
-            ancestor_ids.Reverse();
+            ancestorIds.Reverse();
 
-            return ancestor_ids.ToArray();
+            return ancestorIds.ToArray();
 
         }
         public static async Task<ISpecies> GetAncestorAsync(this SQLiteDatabase database, ISpecies species) {
@@ -545,6 +550,27 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<ISearchResult> GetSearchResultsAsync(this SQLiteDatabase database, ISearchContext context, ISearchQuery query) {
+
+            List<ISpecies> results = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = GetSqlCommandFromSearchQuery(query)) {
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            }
+
+            // Apply any post-match modifiers (e.g. groupings), and return the result.
+
+            ISearchResult result = await ApplyPostMatchModifiersAsync(results, context, query);
+
+            // Return the result.
+
+            return result;
+
+        }
+
         // Private members
 
         private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row) {
@@ -602,6 +628,58 @@ namespace OurFoodChain.Data.Extensions {
                 return await database.CreateSpeciesFromDataRowAsync(result, genusInfo);
 
             }
+
+        }
+
+        private static SQLiteCommand GetSqlCommandFromSearchQuery(ISearchQuery query) {
+
+            // Build up a list of conditions to query for.
+
+            List<string> conditions = new List<string>();
+
+            // Create a condition for each basic search term.
+
+            for (int i = 0; i < query.Keywords.Count(); ++i)
+                conditions.Add(string.Format("(name LIKE {0} OR description LIKE {0} OR common_name LIKE {0})", string.Format("$term{0}", i)));
+
+            // Build the SQL query.
+
+            string sqlQueryString;
+
+            if (conditions.Count > 0)
+                sqlQueryString = string.Format("SELECT * FROM Species WHERE {0};", string.Join(" AND ", conditions));
+            else
+                sqlQueryString = "SELECT * FROM Species;";
+
+            SQLiteCommand command = new SQLiteCommand(sqlQueryString);
+
+            // Replace all parameters with their respective terms.
+
+            for (int i = 0; i < query.Keywords.Count(); ++i) {
+
+                string term = "%" + query.Keywords.ElementAt(i).Trim() + "%";
+
+                command.Parameters.AddWithValue(string.Format("$term{0}", i), term);
+
+            }
+
+            return command;
+
+        }
+        private static async Task<ISearchResult> ApplyPostMatchModifiersAsync(IEnumerable<ISpecies> results, ISearchContext context, ISearchQuery query) {
+
+            ISearchResult result = new SearchResult(results);
+
+            foreach (string modifier in query.Modifiers) {
+
+                ISearchModifier searchModifier = context.GetSearchModifier(modifier);
+
+                if (searchModifier != null)
+                    await searchModifier.ApplyAsync(context, result);
+
+            }
+
+            return result;
 
         }
 

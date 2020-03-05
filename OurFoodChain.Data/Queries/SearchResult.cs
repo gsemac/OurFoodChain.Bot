@@ -36,6 +36,13 @@ namespace OurFoodChain.Data.Queries {
         public bool HasDefaultOrdering => hasDefaultOrdering;
         public bool HasDefaultGrouping => hasDefaultGrouping;
 
+        public SearchResult() { }
+        public SearchResult(IEnumerable<ISpecies> results) {
+
+            Add(DefaultGroupName, results);
+
+        }
+
         public void Add(string groupName, ISpecies species) {
 
             Add(groupName, new ISpecies[] { species });

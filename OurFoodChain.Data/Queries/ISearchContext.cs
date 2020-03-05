@@ -10,6 +10,10 @@ namespace OurFoodChain.Data.Queries {
 
         SQLiteDatabase Database { get; }
 
+        void RegisterSearchModifier<T>() where T : ISearchModifier, new();
+        ISearchModifier GetSearchModifier(string modifier);
+        ISearchModifier GetSearchModifier(string name, string value);
+
         Task<ICreator> GetCreatorAsync(ICreator creator);
 
     }

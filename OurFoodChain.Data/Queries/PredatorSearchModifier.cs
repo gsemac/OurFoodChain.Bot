@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("pred", "predator")]
     public class PredatorSearchModifier :
          SearchModifierBase {
 

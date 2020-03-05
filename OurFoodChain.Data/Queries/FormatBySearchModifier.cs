@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("n", "name", "format")]
     public class FormatBySearchModifier :
         ISearchModifier {
 

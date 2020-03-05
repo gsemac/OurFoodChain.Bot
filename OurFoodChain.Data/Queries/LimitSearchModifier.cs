@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("limit")]
     public class LimitSearchModifier :
         SearchModifierBase {
 

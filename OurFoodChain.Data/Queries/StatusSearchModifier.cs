@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("status")]
     public class StatusSearchModifier :
           SearchModifierBase {
 

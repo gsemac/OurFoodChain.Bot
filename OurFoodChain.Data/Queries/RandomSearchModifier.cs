@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("random")]
     public class RandomSearchModifier :
         SearchModifierBase {
 

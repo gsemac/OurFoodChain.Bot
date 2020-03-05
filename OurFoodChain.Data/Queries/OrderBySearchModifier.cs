@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("orderby", "sortby", "sort", "ordering")]
     public class OrderBySearchModifier :
         ISearchModifier {
 

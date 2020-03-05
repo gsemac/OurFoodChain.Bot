@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("r", "role")]
     public class RoleSearchModifier :
      ISearchModifier {
 

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("groupby", "group")]
     public class GroupBySearchModifier :
         ISearchModifier {
 

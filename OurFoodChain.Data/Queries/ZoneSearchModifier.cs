@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("z", "zone")]
     public class ZoneSearchModifier :
          ISearchModifier {
 

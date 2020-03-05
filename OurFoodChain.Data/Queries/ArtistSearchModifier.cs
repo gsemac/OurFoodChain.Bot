@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("artist")]
     class ArtistSearchModifier :
         SearchModifierBase {
 

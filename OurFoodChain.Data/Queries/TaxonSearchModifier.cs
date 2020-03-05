@@ -9,18 +9,15 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Queries {
 
+    [SearchModifier("s", "species", "g", "genus", "f", "family", "o", "order", "c", "class", "p", "phylum", "k", "kingdom", "d", "domain", "t", "taxon")]
     public class TaxonSearchModifier :
         SearchModifierBase {
 
         // Public members
 
-        public TaxonSearchModifier(TaxonRankType rank) {
-
-            this.rank = rank;
-
-        }
-
         public async override Task ApplyAsync(ISearchContext context, ISearchResult result) {
+
+            TaxonRankType rank = ParseRankType(Name);
 
             switch (rank) {
 
@@ -69,7 +66,52 @@ namespace OurFoodChain.Data.Queries {
 
         // Private members
 
-        private readonly TaxonRankType rank;
+        private TaxonRankType ParseRankType(string input) {
+
+            switch (input.ToLowerInvariant()) {
+
+                case "s":
+                case "species":
+                    return TaxonRankType.Species;
+
+                case "g":
+                case "genus":
+                    return TaxonRankType.Genus;
+
+                case "f":
+                case "family":
+                    return TaxonRankType.Family;
+
+                case "o":
+                case "order":
+                    return TaxonRankType.Order;
+
+                case "c":
+                case "class":
+                    return TaxonRankType.Class;
+
+                case "p":
+                case "phylum":
+                    return TaxonRankType.Phylum;
+
+                case "k":
+                case "kingdom":
+                    return TaxonRankType.Kingdom;
+
+                case "d":
+                case "domain":
+                    return TaxonRankType.Domain;
+
+                case "t":
+                case "taxon":
+                    return TaxonRankType.Any;
+
+                default:
+                    return TaxonRankType.None;
+
+            }
+
+        }
 
     }
 

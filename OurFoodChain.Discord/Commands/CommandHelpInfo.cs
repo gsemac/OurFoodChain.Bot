@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace OurFoodChain.Discord {
+namespace OurFoodChain.Discord.Commands {
 
     public class CommandHelpInfo :
         ICommandHelpInfo {

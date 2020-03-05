@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using OurFoodChain.Data;
 using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Commands;
 
 namespace OurFoodChain.Bot.Modules {
 
@@ -629,7 +630,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("help"), Alias("h")]
         public async Task Help() {
 
-            IEnumerable<Discord.ICommandHelpInfo> helpInfos = await HelpService.GetCommandHelpInfoAsync(Context);
+            IEnumerable<ICommandHelpInfo> helpInfos = await HelpService.GetCommandHelpInfoAsync(Context);
 
             await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfos, BotConfiguration, "gotchi").ToDiscordEmbed());
 
@@ -637,7 +638,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("help"), Alias("h")]
         public async Task Help(string commandName) {
 
-            Discord.ICommandHelpInfo helpInfo = await HelpService.GetCommandHelpInfoAsync("gotchi " + commandName.Trim());
+            ICommandHelpInfo helpInfo = await HelpService.GetCommandHelpInfoAsync("gotchi " + commandName.Trim());
 
             await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfo, BotConfiguration).ToDiscordEmbed());
 

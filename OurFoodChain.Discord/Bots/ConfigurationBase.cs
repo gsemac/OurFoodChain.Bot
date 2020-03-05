@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace OurFoodChain.Discord {
+namespace OurFoodChain.Discord.Bots {
 
     public abstract class ConfigurationBase :
         IConfiguration {
@@ -44,7 +45,12 @@ namespace OurFoodChain.Discord {
 
         public void Save(string filePath) {
 
-            System.IO.File.WriteAllText(filePath, JsonConvert.SerializeObject(this, Formatting.Indented));
+            System.IO.File.WriteAllText(filePath, JsonConvert.SerializeObject(this, new JsonSerializerSettings() {
+                ContractResolver = new DefaultContractResolver() {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                },
+                Formatting = Formatting.Indented
+            }));
 
         }
 
@@ -55,7 +61,9 @@ namespace OurFoodChain.Discord {
         }
         public static T Parse<T>(string json) {
 
-            return JsonConvert.DeserializeObject<T>(json);
+            return JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings() {
+                ContractResolver = new ConfigurationPropertyContractResolver()
+            });
 
         }
 

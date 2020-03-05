@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 using DiscordNet = Discord.Net;
 
-namespace OurFoodChain.Discord {
+namespace OurFoodChain.Discord.Bots {
 
     public abstract class DiscordBotBase :
         IDiscordBot {

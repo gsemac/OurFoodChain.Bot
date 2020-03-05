@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Newtonsoft.Json;
+using OurFoodChain.Discord.Bots;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public interface IOfcBotConfiguration :
-        Discord.IBotConfiguration {
+        IBotConfiguration {
 
         ulong[] BotAdminUserIds { get; set; }
         ulong[] ModRoleIds { get; set; }

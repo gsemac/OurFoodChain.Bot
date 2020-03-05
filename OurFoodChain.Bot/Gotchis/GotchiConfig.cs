@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using OurFoodChain.Discord.Bots;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Gotchis {
 
     public class GotchiConfig :
-        Discord.ConfigurationBase {
+        ConfigurationBase {
 
         [JsonProperty("sleep_hours")]
         public int SleepHours { get; set; } = 8;

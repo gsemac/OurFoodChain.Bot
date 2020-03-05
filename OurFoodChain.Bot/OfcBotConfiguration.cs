@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Newtonsoft.Json;
+using OurFoodChain.Discord.Bots;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,34 +11,23 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public class OfcBotConfiguration :
-        Discord.BotConfiguration,
+        BotConfiguration,
         IOfcBotConfiguration {
 
-        [JsonProperty("bot_admin_user_ids")]
         public ulong[] BotAdminUserIds { get; set; }
-        [JsonProperty("mod_role_ids")]
         public ulong[] ModRoleIds { get; set; }
 
-        [JsonProperty("scratch_channel")]
         public ulong ScratchChannel { get; set; }
-        [JsonProperty("scratch_server")]
         public ulong ScratchServer { get; set; }
-        [JsonProperty("review_channels")]
         public ulong[][] ReviewChannels { get; set; }
 
-        [JsonProperty("world_name")]
         public string WorldName { get; set; } = "";
 
-        [JsonProperty("wiki_url_format")]
         public string WikiUrlFormat { get; set; } = "";
 
-        [JsonProperty("trophies_enabled")]
         public bool TrophiesEnabled { get; set; } = true;
-        [JsonProperty("gotchis_enabled")]
         public bool GotchisEnabled { get; set; } = true;
-        [JsonProperty("generations_enabled")]
         public bool GenerationsEnabled { get; set; } = false;
-        [JsonProperty("advanced_commands_enabled")]
         public bool AdvancedCommandsEnabled { get; set; } = false;
 
         public PrivilegeLevel GetPrivilegeLevel(IUser user) {

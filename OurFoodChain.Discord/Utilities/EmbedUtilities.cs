@@ -2,6 +2,8 @@
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Discord.Bots;
+using OurFoodChain.Discord.Commands;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using System;

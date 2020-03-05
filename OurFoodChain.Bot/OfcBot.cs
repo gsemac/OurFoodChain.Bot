@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using OurFoodChain.Discord.Bots;
 using OurFoodChain.Services;
 using OurFoodChain.Trophies;
 using System;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public class OfcBot :
-        Discord.DiscordBotBase {
+        DiscordBotBase {
 
         // Public members
 
@@ -65,6 +66,7 @@ namespace OurFoodChain.Bot {
                 .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
+                .AddSingleton<Discord.Services.IPaginatedMessageService, Discord.Services.PaginatedMessageService>()
                 .AddSingleton<OurFoodChain.Services.TrophyScanner>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
@@ -77,11 +79,11 @@ namespace OurFoodChain.Bot {
 
             if (Configuration.TrophiesEnabled) {
 
-                ITrophyScanner trophyScanner = serviceProvider.GetService<ITrophyScanner>();
+                ITrophyScanner trophyScanner = serviceProvider.GetService<OurFoodChain.Services.TrophyScanner>();
 
                 trophyScanner.Log += LogAsync;
 
-                await serviceProvider.GetService<ITrophyScanner>().RegisterTrophiesAsync();
+                await trophyScanner.RegisterTrophiesAsync();
 
             }
 
@@ -125,7 +127,7 @@ namespace OurFoodChain.Bot {
             // Load gotchi config.
 
             if (System.IO.File.Exists("gotchi-config.json"))
-                gotchiContext.Config = Discord.ConfigurationBase.Open<Gotchis.GotchiConfig>("gotchi-config.json");
+                gotchiContext.Config = ConfigurationBase.Open<Gotchis.GotchiConfig>("gotchi-config.json");
 
             // Initialize registries.
 

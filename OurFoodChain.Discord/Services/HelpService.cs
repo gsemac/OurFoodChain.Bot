@@ -1,6 +1,8 @@
 ﻿using Discord.Commands;
 using Newtonsoft.Json;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Discord.Bots;
+using OurFoodChain.Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;

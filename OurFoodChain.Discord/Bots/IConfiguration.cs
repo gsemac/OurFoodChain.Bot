@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OurFoodChain.Discord {
+namespace OurFoodChain.Discord.Bots {
 
     public interface IConfiguration {
 

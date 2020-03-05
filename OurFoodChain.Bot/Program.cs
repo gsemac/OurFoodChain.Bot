@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Discord.Bots;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,7 @@ namespace OurFoodChain {
             else {
 
                 Bot.OfcBotConfiguration configuration =
-                    Discord.ConfigurationBase.Open<Bot.OfcBotConfiguration>(configFilePath);
+                    ConfigurationBase.Open<Bot.OfcBotConfiguration>(configFilePath);
 
                 Bot.OfcBot bot = new Bot.OfcBot(configuration);
 

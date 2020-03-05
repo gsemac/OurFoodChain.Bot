@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace OurFoodChain.Discord {
+namespace OurFoodChain.Discord.Bots {
 
     public interface IDiscordBot {
 

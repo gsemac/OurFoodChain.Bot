@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -5,11 +5,13 @@ using OurFoodChain.Adapters;
 using OurFoodChain.Bot;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Generations;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -830,7 +832,7 @@ namespace OurFoodChain {
                 if (!string.IsNullOrEmpty(zoneName))
                     message = string.Format("Zone \"{0}\" does not exist.", zoneName);
 
-                await Discord.DiscordUtilities.ReplyErrorAsync(context.Channel, message);
+                await DiscordUtilities.ReplyErrorAsync(context.Channel, message);
 
                 return false;
 
@@ -1628,11 +1630,11 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<string> TimestampToDateStringAsync(long timestamp, IOfcBotConfiguration botConfiguration, TimestampToDateStringFormat format = TimestampToDateStringFormat.Default) {
+        public static async Task<string> TimestampToDateStringAsync(long timestamp, IOfcBotContext context, TimestampToDateStringFormat format = TimestampToDateStringFormat.Default) {
 
-            if (botConfiguration.GenerationsEnabled) {
+            if (context.Configuration.GenerationsEnabled) {
 
-                Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(timestamp);
+                IGeneration gen = await context.Database.GetGenerationByDateAsync(DateUtilities.TimestampToDate(timestamp));
 
                 return gen is null ? "Gen ???" : gen.Name;
 

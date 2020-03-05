@@ -227,7 +227,7 @@ namespace OurFoodChain.Bot.Modules {
                     Tree = tree,
                     DrawLines = false,
                     MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
-                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, BotConfiguration, TimestampToDateStringFormat.Short).Result
+                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short).Result
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -269,7 +269,7 @@ namespace OurFoodChain.Bot.Modules {
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
                     MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
-                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, BotConfiguration, TimestampToDateStringFormat.Short).Result
+                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short).Result
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -351,7 +351,7 @@ namespace OurFoodChain.Bot.Modules {
                     if (!ts.HasValue)
                         ts = DateUtilities.TimestampToDate(species.Timestamp);
 
-                    result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts.Value.ToUnixTimeSeconds(), BotConfiguration, TimestampToDateStringFormat.Short)));
+                    result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts.Value.ToUnixTimeSeconds(), new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short)));
                     result.Append(i == 0 ? "Started in " : "Spread to ");
                     result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
                     result.Append(StringUtilities.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.GetShortName())));
@@ -596,7 +596,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     embed.WithDescription(string.Format("{0} made their first species during **{1}**.\nSince then, they have submitted **{2:0.0}** species per generation.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, BotConfiguration),
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, BotConfiguration, Db)),
                         speciesPerGeneration,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -605,7 +605,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     embed.WithDescription(string.Format("{0} made their first species on **{1}**.\nSince then, they have submitted **{2:0.0}** species per day.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, BotConfiguration),
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, BotConfiguration, Db)),
                         daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
                         (double)userSpeciesCount / speciesCount * 100.0));
 

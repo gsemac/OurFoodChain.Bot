@@ -5,15 +5,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Common.Utilities {
 
     public class StringPaginator :
         IEnumerable<string> {
 
-        public int MaxPageLength { get; set; } = 2048;
+        // Public members
 
-        public StringPaginator(string input) {
-            inputText = string.IsNullOrEmpty(input) ? "" : input.Trim();
+        public const int DefaultMaxPageLength = 2048;
+
+        public int MaxPageLength { get; set; } = DefaultMaxPageLength;
+
+        public StringPaginator(string input) :
+            this(input, DefaultMaxPageLength) {
+        }
+        public StringPaginator(string input, int maxPageLength) {
+
+            this.inputText = string.IsNullOrEmpty(input) ? "" : input.Trim();
+            this.MaxPageLength = maxPageLength;
+
         }
 
         public IEnumerator<string> GetEnumerator() {
@@ -22,6 +32,8 @@ namespace OurFoodChain {
         IEnumerator IEnumerable.GetEnumerator() {
             return GetPages().GetEnumerator();
         }
+
+        // Private members
 
         private readonly string inputText;
 

@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +23,10 @@ namespace OurFoodChain.Bot.Modules {
         public async Task Set(string key, string value) {
 
             if (BotConfiguration.SetProperty(key, value))
-                await Discord.DiscordUtilities.ReplySuccessAsync(Context.Channel,
+                await DiscordUtilities.ReplySuccessAsync(Context.Channel,
                     string.Format("Successfully set **{0}** to **{1}**.", key, value));
             else
-                await Discord.DiscordUtilities.ReplyErrorAsync(Context.Channel,
+                await DiscordUtilities.ReplyErrorAsync(Context.Channel,
                     string.Format("No setting with the name **{0}** exists.", key));
 
             // Reload commands (the commands available are dependent on configuration settings).
@@ -45,7 +46,7 @@ namespace OurFoodChain.Bot.Modules {
 
             BotConfiguration.Save(configFilename);
 
-            await Discord.DiscordUtilities.ReplySuccessAsync(Context.Channel,
+            await DiscordUtilities.ReplySuccessAsync(Context.Channel,
                 string.Format("Successfully saved config to **{0}**.", configFilename));
 
         }

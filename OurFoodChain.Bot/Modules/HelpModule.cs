@@ -2,6 +2,8 @@
 using Discord.Commands;
 using Newtonsoft.Json;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +27,7 @@ namespace OurFoodChain.Bot.Modules {
 
             IEnumerable<Discord.ICommandHelpInfo> helpInfos = await HelpService.GetCommandHelpInfoAsync(Context);
 
-            await ReplyAsync(embed: Discord.DiscordUtilities.BuildCommandHelpInfoEmbed(helpInfos, BotConfiguration).Build());
+            await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfos, BotConfiguration).ToDiscordEmbed());
 
         }
         [Command("help"), Alias("h")]
@@ -33,7 +35,7 @@ namespace OurFoodChain.Bot.Modules {
 
             Discord.ICommandHelpInfo helpInfo = await HelpService.GetCommandHelpInfoAsync(commandName.Trim());
 
-            await ReplyAsync(embed: Discord.DiscordUtilities.BuildCommandHelpInfoEmbed(helpInfo, BotConfiguration).Build());
+            await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfo, BotConfiguration).ToDiscordEmbed());
 
         }
 

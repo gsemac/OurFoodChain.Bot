@@ -6,6 +6,7 @@ using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (queryResult.Count() <= 0) {
 
-                await Discord.DiscordUtilities.ReplyInfoAsync(Context.Channel, "No species matching this query could be found.");
+                await DiscordUtilities.ReplyInfoAsync(Context.Channel, "No species matching this query could be found.");
 
             }
             else {
@@ -55,7 +56,7 @@ namespace OurFoodChain.Bot.Modules {
                                     Restricted = true,
                                     Callback = async args => {
 
-                                        await Discord.DiscordUtilities.ReplyInfoAsync(Context.Channel, "Performing the requested operation.");
+                                        await DiscordUtilities.ReplyInfoAsync(Context.Channel, "Performing the requested operation.");
 
                                         foreach (Species species in queryResult.ToArray()) {
 
@@ -64,7 +65,7 @@ namespace OurFoodChain.Bot.Modules {
 
                                         }
 
-                                        await Discord.DiscordUtilities.ReplySuccessAsync(Context.Channel, "Operation completed successfully.");
+                                        await DiscordUtilities.ReplySuccessAsync(Context.Channel, "Operation completed successfully.");
 
                                     }
                                 };
@@ -80,7 +81,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     default:
 
-                        await Discord.DiscordUtilities.ReplyErrorAsync(Context.Channel, string.Format("Unknown operation \"{0}\".", bulkOperation.OperationName));
+                        await DiscordUtilities.ReplyErrorAsync(Context.Channel, string.Format("Unknown operation \"{0}\".", bulkOperation.OperationName));
 
                         break;
 

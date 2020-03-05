@@ -6,7 +6,7 @@ using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
-using OurFoodChain.Discord;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;

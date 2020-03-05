@@ -10,6 +10,8 @@ using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
+using OurFoodChain.Discord.Messaging;
+using OurFoodChain.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -650,7 +652,9 @@ namespace OurFoodChain.Bot.Modules {
                     if (result.Count() == 1) {
 
                         // If there's only one result, just show that species.
-                        await ShowSpeciesInfoAsync(Context, Config, Db, (await result.GetResultsAsync()).First());
+
+                        ISpecies species = (await result.GetResultsAsync()).First();
+                        IPaginatedMessage message = await EmbedUtilities.BuildSpeciesMessageAsync(species, null);
 
                     }
                     else {
@@ -698,7 +702,6 @@ namespace OurFoodChain.Bot.Modules {
             await ShowSpeciesInfoAsync(context, botConfiguration, db, sp);
 
         }
-
         public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, Species species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
@@ -758,7 +761,7 @@ namespace OurFoodChain.Bot.Modules {
                         long timestamp = (long)row.Field<decimal>("timestamp");
 
                         if (!string.IsNullOrEmpty(reason))
-                            descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(timestamp, botConfiguration), reason));
+                            descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(timestamp, new OfcBotContext(context, botConfiguration, db)), reason));
 
                     }
 

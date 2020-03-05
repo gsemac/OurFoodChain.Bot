@@ -263,6 +263,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="IOfcBotContext.cs" />
+    <Compile Include="OfcBotContext.cs" />
     <Compile Include="SearchContext.cs" />
     <Compile Include="IOfcBotConfiguration.cs" />
     <Compile Include="Modules\AdminCommands.cs" />
@@ -349,6 +351,7 @@
     <Compile Include="Taxa\CommonName.cs" />
     <Compile Include="Taxa\BinomialName.cs" />
     <Compile Include="Utilities\DateUtils.cs" />
+    <Compile Include="Utilities\EmbedUtilities.cs" />
     <Compile Include="Utilities\HelpUtils.cs" />
     <Compile Include="Utilities\IoUtils.cs" />
     <Compile Include="MultiPartMessage.cs" />
@@ -360,7 +363,6 @@
     <Compile Include="Taxa\SpeciesUtils.cs" />
     <Compile Include="Utilities\LogMessage.cs" />
     <Compile Include="Adapters\SpeciesAdapter.cs" />
-    <Compile Include="Utilities\StringPaginator.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />
     <Compile Include="Adapters\TaxonAdapter.cs" />

@@ -15,6 +15,15 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
 
+    [Flags]
+    public enum UserInfoQueryFlags {
+        // If a user ID is provided, only return results that match that user ID.
+        PreferUserIdMatch = 0,
+        // Returns results that match the user ID or the username.
+        MatchEither = 1,
+        Default = PreferUserIdMatch
+    }
+
     public static class SQLiteDatabaseSpeciesExtensions {
 
         // Public members
@@ -118,6 +127,32 @@ namespace OurFoodChain.Data.Extensions {
                 return row is null ? null : await database.CreateSpeciesFromDataRowAsync(row);
 
             }
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, ICreator creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
+
+            string query = !creator.UserId.HasValue ?
+                "SELECT * FROM Species WHERE owner = $owner" :
+                "SELECT * FROM Species WHERE user_id = $user_id";
+
+            if (flags.HasFlag(UserInfoQueryFlags.MatchEither))
+                query = "SELECT * FROM Species WHERE owner = $owner OR user_id = $user_id";
+
+            List<ISpecies> result = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
+                cmd.Parameters.AddWithValue("$owner", creator.Name);
+                cmd.Parameters.AddWithValue("$user_id", creator.UserId);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    result.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+                result.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
+
+            }
+
+            return result;
 
         }
 

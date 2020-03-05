@@ -126,6 +126,17 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<IEnumerable<IZoneType>> GetZoneTypesAsync(this SQLiteDatabase database) {
+
+            List<IZoneType> results = new List<IZoneType>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM ZoneTypes"))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(CreateZoneTypeFromDataRow(row));
+
+            return results;
+
+        }
         public static async Task<IZoneType> GetZoneTypeAsync(this SQLiteDatabase database, string zoneTypeName) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM ZoneTypes WHERE name = $name")) {

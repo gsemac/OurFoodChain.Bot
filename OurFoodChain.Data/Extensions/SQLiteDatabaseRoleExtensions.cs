@@ -14,6 +14,21 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
+        public static async Task<IEnumerable<IRole>> GetRolesAsync(this SQLiteDatabase database) {
+
+            List<IRole> roles = new List<IRole>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles"))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    roles.Add(CreateRoleFromDataRow(row));
+
+            // Sort roles by name in alphabetical order.
+
+            roles.Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));
+
+            return roles;
+
+        }
         public static async Task<IEnumerable<IRole>> GetRolesAsync(this SQLiteDatabase database, long? speciesId) {
 
             // Return all roles assigned to the given species.

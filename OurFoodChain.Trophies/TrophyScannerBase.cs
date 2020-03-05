@@ -52,6 +52,8 @@ namespace OurFoodChain.Trophies {
 
             // Register all trophies in the assembly.
 
+            OnLog(LogSeverity.Info, "Registering trophies");
+
             foreach (Type type in AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
                 .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ITrophy)))
@@ -62,6 +64,23 @@ namespace OurFoodChain.Trophies {
                 trophies.Add(instance);
 
             }
+
+            trophies.Add(new Trophy("To Infinity And Beyond", "Own a species that spreads to another zone."));
+            trophies.Add(new Trophy("A New World", "Create a species that spreads across an ocean body."));
+            trophies.Add(new Trophy("One To Rule Them All", "Create a species that turns into an apex predator."));
+            trophies.Add(new Trophy("I Am Selection", "Create a species that is the direct cause of another species extinction."));
+
+            trophies.Add(new Trophy("Colonization", "Be the first to create a eusocial species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Let There Be Light", "Be the first to create a species that makes light.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Master Of The Skies", "Be the first to create a species capable of flight.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Did You Hear That?", "Be the first to make a species that makes noise.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Double Trouble", "Be the first to make a species with two legs.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Can We Keep It?", "Be the first to create a species with fur.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Turn On The AC!", "Be the first to create a warm-blooded species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+            trophies.Add(new Trophy("Imposter", "Be the first to create a species that mimics another species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
+
+            OnLog(LogSeverity.Info, "Finished registering trophies");
 
         }
         public void RegisterTrophy(ITrophy trophy) {

@@ -33,8 +33,8 @@ namespace OurFoodChain.Adapters {
             }
         }
         public override DateTimeOffset CreationDate {
-            get => DateUtilities.TimestampToDate(species.Timestamp);
-            set => species.Timestamp = DateUtilities.DateToTimestamp(value);
+            get => DateUtilities.GetDateFromTimestamp(species.Timestamp);
+            set => species.Timestamp = DateUtilities.GetTimestampFromDate(value);
         }
         public override string Description {
             get => species.Description;

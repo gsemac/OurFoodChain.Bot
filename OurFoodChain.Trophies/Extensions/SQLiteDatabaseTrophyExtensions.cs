@@ -42,7 +42,7 @@ namespace OurFoodChain.Trophies.Extensions {
 
                         IUnlockedTrophyInfo info = new UnlockedTrophyInfo(creator, trophy) {
                             TimesUnlocked = (int)timesUnlocked,
-                            DateUnlocked = DateUtilities.TimestampToDate(row.Field<long>("timestamp"))
+                            DateUnlocked = DateUtilities.GetDateFromTimestamp(row.Field<long>("timestamp"))
                         };
 
                         unlocked.Add(info);
@@ -64,7 +64,7 @@ namespace OurFoodChain.Trophies.Extensions {
 
                     cmd.Parameters.AddWithValue("$user_id", creator.UserId);
                     cmd.Parameters.AddWithValue("$trophy_name", trophy.Identifier);
-                    cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetCurrentUtcTimestamp());
+                    cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetCurrentTimestampUtc());
 
                     await database.ExecuteNonQueryAsync(cmd);
 
@@ -97,7 +97,7 @@ namespace OurFoodChain.Trophies.Extensions {
                 foreach (DataRow row in rows) {
 
                     ICreator creator = new Creator((ulong)row.Field<long>("user_id"), string.Empty);
-                    DateTimeOffset dateEarned = DateUtilities.TimestampToDate(row.Field<long>("timestamp"));
+                    DateTimeOffset dateEarned = DateUtilities.GetDateFromTimestamp(row.Field<long>("timestamp"));
 
                     results.Add(new UnlockedTrophyInfo(creator, trophy) {
                         DateUnlocked = dateEarned,

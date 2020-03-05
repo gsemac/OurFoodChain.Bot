@@ -346,10 +346,10 @@ namespace OurFoodChain.Bot.Modules {
                     if (zone_groups[i].Count() <= 0)
                         continue;
 
-                    DateTimeOffset? ts = i == 0 ? DateUtilities.TimestampToDate(species.Timestamp) : zone_groups[i].First().Date;
+                    DateTimeOffset? ts = i == 0 ? DateUtilities.GetDateFromTimestamp(species.Timestamp) : zone_groups[i].First().Date;
 
                     if (!ts.HasValue)
-                        ts = DateUtilities.TimestampToDate(species.Timestamp);
+                        ts = DateUtilities.GetDateFromTimestamp(species.Timestamp);
 
                     result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts.Value.ToUnixTimeSeconds(), new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short)));
                     result.Append(i == 0 ? "Started in " : "Spread to ");

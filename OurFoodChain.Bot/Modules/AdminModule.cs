@@ -33,7 +33,7 @@ namespace OurFoodChain.Bot {
                             string.Format("Uploading database backup ({0:0.##} MB).\nThe backup will be posted in this channel when it is complete.",
                             new System.IO.FileInfo(Database.FilePath).Length / 1024000.0));
 
-                        await Context.Channel.SendFileAsync(Database.FilePath, string.Format("`Database backup ({0})`", DateUtilities.GetCurrentUtcDate()));
+                        await Context.Channel.SendFileAsync(Database.FilePath, string.Format("`Database backup ({0})`", DateUtilities.GetCurrentDateUtc()));
 
                     }
                     catch (Exception) {

@@ -61,7 +61,7 @@ namespace OurFoodChain.Data.Extensions {
 
                 // Update the end date of the current generation.
 
-                generation.EndDate = DateUtilities.GetCurrentUtcDate();
+                generation.EndDate = DateUtilities.GetCurrentDateUtc();
 
                 await database.UpdateGenerationAsync(generation);
 
@@ -71,7 +71,7 @@ namespace OurFoodChain.Data.Extensions {
 
             generation = new Generation {
                 Number = generation is null ? 1 : generation.Number + 1,
-                StartDate = generation is null ? DateTimeOffset.MinValue : DateUtilities.GetCurrentUtcDate(),
+                StartDate = generation is null ? DateTimeOffset.MinValue : DateUtilities.GetCurrentDateUtc(),
                 EndDate = DateTimeOffset.MaxValue
             };
 
@@ -91,8 +91,8 @@ namespace OurFoodChain.Data.Extensions {
             IGeneration generation = new Generation {
                 Id = row.Field<long>("id"),
                 Number = int.Parse(Regex.Match(row.Field<string>("name"), @"\d+$").Value),
-                StartDate = DateUtilities.TimestampToDate(row.Field<string>("start_ts")),
-                EndDate = DateUtilities.TimestampToDate(row.Field<string>("end_ts"))
+                StartDate = DateUtilities.GetDateFromTimestamp(row.Field<string>("start_ts")),
+                EndDate = DateUtilities.GetDateFromTimestamp(row.Field<string>("end_ts"))
             };
 
             return generation;
@@ -121,8 +121,8 @@ namespace OurFoodChain.Data.Extensions {
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Period(name, start_ts, end_ts) VALUES($name, $start_ts, $end_ts)")) {
 
                 cmd.Parameters.AddWithValue("$name", generation.Name.ToLowerInvariant());
-                cmd.Parameters.AddWithValue("$start_ts", DateUtilities.DateToTimestamp(generation.StartDate));
-                cmd.Parameters.AddWithValue("$end_ts", DateUtilities.DateToTimestamp(generation.EndDate));
+                cmd.Parameters.AddWithValue("$start_ts", DateUtilities.GetTimestampFromDate(generation.StartDate));
+                cmd.Parameters.AddWithValue("$end_ts", DateUtilities.GetTimestampFromDate(generation.EndDate));
 
                 await database.ExecuteNonQueryAsync(cmd);
 
@@ -135,8 +135,8 @@ namespace OurFoodChain.Data.Extensions {
 
                 cmd.Parameters.AddWithValue("$id", generation.Id);
                 cmd.Parameters.AddWithValue("$name", generation.Name.ToLowerInvariant());
-                cmd.Parameters.AddWithValue("$start_ts", DateUtilities.DateToTimestamp(generation.StartDate));
-                cmd.Parameters.AddWithValue("$end_ts", DateUtilities.DateToTimestamp(generation.EndDate));
+                cmd.Parameters.AddWithValue("$start_ts", DateUtilities.GetTimestampFromDate(generation.StartDate));
+                cmd.Parameters.AddWithValue("$end_ts", DateUtilities.GetTimestampFromDate(generation.EndDate));
 
                 await database.ExecuteNonQueryAsync(cmd);
 

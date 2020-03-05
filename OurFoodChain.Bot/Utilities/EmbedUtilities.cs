@@ -67,7 +67,7 @@ namespace OurFoodChain.Utilities {
                 embed.Color = Color.Red;
 
                 if (!string.IsNullOrEmpty(species.Status.ExtinctionReason))
-                    descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(DateUtilities.DateToTimestamp((DateTimeOffset)species.Status.ExtinctionDate), botContext), species.Status.ExtinctionReason));
+                    descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(DateUtilities.GetTimestampFromDate((DateTimeOffset)species.Status.ExtinctionDate), botContext), species.Status.ExtinctionReason));
 
             }
 

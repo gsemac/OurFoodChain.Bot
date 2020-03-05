@@ -51,7 +51,7 @@ namespace OurFoodChain.Bot.Modules {
                 description_builder.AppendLine(string.Format("{0} **{1}** - Earned {2} ({3:0.#}%)",
                    trophy.Icon,
                    trophy.Name,
-                   DateUtils.TimestampToShortDateString(DateUtilities.DateToTimestamp(info.DateUnlocked)),
+                   DateUtils.TimestampToShortDateString(DateUtilities.GetTimestampFromDate(info.DateUnlocked)),
                    await Db.GetTrophyCompletionRateAsync(trophy)
                   ));
 

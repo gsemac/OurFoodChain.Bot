@@ -1634,7 +1634,7 @@ namespace OurFoodChain {
 
             if (context.Configuration.GenerationsEnabled) {
 
-                IGeneration gen = await context.Database.GetGenerationByDateAsync(DateUtilities.TimestampToDate(timestamp));
+                IGeneration gen = await context.Database.GetGenerationByDateAsync(DateUtilities.GetDateFromTimestamp(timestamp));
 
                 return gen is null ? "Gen ???" : gen.Name;
 

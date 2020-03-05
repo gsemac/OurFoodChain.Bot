@@ -10,7 +10,7 @@ namespace OurFoodChain.Trophies {
         ICreator Creator { get; }
         ITrophy Trophy { get; }
         int TimesUnlocked { get; set; }
-        DateTimeOffset DateFirstUnlocked { get; set; }
+        DateTimeOffset DateUnlocked { get; set; }
 
     }
 

@@ -3,6 +3,8 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using OurFoodChain.Services;
+using OurFoodChain.Trophies;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -63,6 +65,7 @@ namespace OurFoodChain.Bot {
                 .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
+                .AddSingleton<OurFoodChain.Services.TrophyScanner>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }
@@ -72,6 +75,16 @@ namespace OurFoodChain.Bot {
 
             await serviceProvider.GetService<Services.GotchiBackgroundService>().InitializeAsync();
 
+            if (Configuration.TrophiesEnabled) {
+
+                ITrophyScanner trophyScanner = serviceProvider.GetService<ITrophyScanner>();
+
+                trophyScanner.Log += LogAsync;
+
+                await serviceProvider.GetService<ITrophyScanner>().RegisterTrophiesAsync();
+
+            }
+
         }
 
         protected static async Task LogAsync(LogSeverity severity, string source, string message) {
@@ -80,6 +93,13 @@ namespace OurFoodChain.Bot {
 
         }
         protected static async Task LogAsync(LogMessage logMessage) {
+
+            Console.WriteLine(logMessage.ToString());
+
+            await Task.CompletedTask;
+
+        }
+        protected static async Task LogAsync(Debug.ILogMessage logMessage) {
 
             Console.WriteLine(logMessage.ToString());
 

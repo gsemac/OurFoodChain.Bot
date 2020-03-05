@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,14 @@ namespace OurFoodChain.Common.Extensions {
         }
 
         public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key) {
+
+            if (dictionary.TryGetValue(key, out TValue value))
+                return value;
+
+            return default(TValue);
+
+        }
+        public static TValue GetOrDefault<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key) {
 
             if (dictionary.TryGetValue(key, out TValue value))
                 return value;

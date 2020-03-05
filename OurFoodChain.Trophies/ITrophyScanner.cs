@@ -9,14 +9,14 @@ namespace OurFoodChain.Trophies {
 
     public interface ITrophyScanner {
 
-        event EventHandler<LogMessage> Log;
-        event EventHandler<IUnlockedTrophyInfo> TrophyUnlocked;
+        event Func<ILogMessage, Task> Log;
+        event Func<IUnlockedTrophyInfo, Task> TrophyUnlocked;
 
         void RegisterTrophy(ITrophy trophy);
-        void RegisterTrophies();
+        Task RegisterTrophiesAsync();
         IEnumerable<ITrophy> GetTrophies();
 
-        Task EnqueueAsync(ICreator creator, bool scanImmediately = false);
+        Task<bool> EnqueueAsync(ICreator creator, bool scanImmediately = false);
 
     }
 

@@ -12,7 +12,7 @@ namespace OurFoodChain.Trophies {
         public ICreator Creator { get; }
         public ITrophy Trophy { get; }
         public int TimesUnlocked { get; set; } = 1;
-        public DateTimeOffset DateFirstUnlocked { get; set; } = DateUtilities.GetCurrentUtcDate();
+        public DateTimeOffset DateUnlocked { get; set; } = DateUtilities.GetCurrentUtcDate();
 
         public UnlockedTrophyInfo(ICreator creator, ITrophy trophy) {
 

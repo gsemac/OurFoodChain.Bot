@@ -42,7 +42,7 @@ namespace OurFoodChain.Trophies.Extensions {
 
                         IUnlockedTrophyInfo info = new UnlockedTrophyInfo(creator, trophy) {
                             TimesUnlocked = (int)timesUnlocked,
-                            DateFirstUnlocked = DateUtilities.TimestampToDate(row.Field<long>("timestamp"))
+                            DateUnlocked = DateUtilities.TimestampToDate(row.Field<long>("timestamp"))
                         };
 
                         unlocked.Add(info);
@@ -100,7 +100,7 @@ namespace OurFoodChain.Trophies.Extensions {
                     DateTimeOffset dateEarned = DateUtilities.TimestampToDate(row.Field<long>("timestamp"));
 
                     results.Add(new UnlockedTrophyInfo(creator, trophy) {
-                        DateFirstUnlocked = dateEarned,
+                        DateUnlocked = dateEarned,
                         TimesUnlocked = rows.Count()
                     });
 

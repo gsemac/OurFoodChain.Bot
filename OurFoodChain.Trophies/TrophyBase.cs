@@ -12,6 +12,8 @@ namespace OurFoodChain.Trophies {
 
         // Public members
 
+        public const string HiddenTrophyDescription = "This is a hidden trophy. Unlock it for details!";
+
         public string Icon => GetIcon();
         public string Name { get; }
         public string Description { get; }

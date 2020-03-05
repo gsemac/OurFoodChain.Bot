@@ -32,7 +32,7 @@ namespace OurFoodChain.Bot.Services {
             await base.InstallCommandsAsync();
 
             if (!_configuration.TrophiesEnabled)
-                await CommandService.RemoveModuleAsync<Modules.TrophiesModule>();
+                await CommandService.RemoveModuleAsync<Modules.TrophyModule>();
 
             if (!_configuration.GotchisEnabled)
                 await CommandService.RemoveModuleAsync<Modules.GotchiModule>();

@@ -17,12 +17,12 @@ namespace OurFoodChain.Trophies {
 
         // Public members
 
-        public event EventHandler<LogMessage> Log;
-        public event EventHandler<IUnlockedTrophyInfo> TrophyUnlocked;
+        public event Func<ILogMessage, Task> Log;
+        public event Func<IUnlockedTrophyInfo, Task> TrophyUnlocked;
 
         public int ScanDelay => 60 * 5; // 5 minutes
 
-        public async Task EnqueueAsync(ICreator creator, bool scanImmediately = false) {
+        public async Task<bool> EnqueueAsync(ICreator creator, bool scanImmediately = false) {
 
             // If the user already exists in the queue, don't add them again.
 
@@ -39,7 +39,11 @@ namespace OurFoodChain.Trophies {
 
                 await StartScannerAsync();
 
+                return true;
+
             }
+
+            return false;
 
         }
 
@@ -48,11 +52,11 @@ namespace OurFoodChain.Trophies {
             return trophies;
 
         }
-        public void RegisterTrophies() {
+        public async Task RegisterTrophiesAsync() {
 
             // Register all trophies in the assembly.
 
-            OnLog(LogSeverity.Info, "Registering trophies");
+            await OnLogAsync(LogSeverity.Info, "Registering trophies");
 
             foreach (Type type in AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
@@ -80,7 +84,7 @@ namespace OurFoodChain.Trophies {
             trophies.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime));
             trophies.Add(new Trophy("Imposter", "Be the first to create a species that mimics another species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
 
-            OnLog(LogSeverity.Info, "Finished registering trophies");
+            await OnLogAsync(LogSeverity.Info, "Finished registering trophies");
 
         }
         public void RegisterTrophy(ITrophy trophy) {
@@ -97,19 +101,19 @@ namespace OurFoodChain.Trophies {
 
         }
 
-        protected void OnLog(LogMessage logMessage) {
+        protected async Task OnLogAsync(ILogMessage logMessage) {
 
-            Log?.Invoke(this, logMessage);
-
-        }
-        protected void OnLog(LogSeverity severity, string message) {
-
-            OnLog(new LogMessage(severity, "Trophies", message));
+            await Log?.Invoke(logMessage);
 
         }
-        protected void OnTrophyUnlocked(IUnlockedTrophyInfo info) {
+        protected async Task OnLogAsync(LogSeverity severity, string message) {
 
-            TrophyUnlocked?.Invoke(this, info);
+            await OnLogAsync(new LogMessage(severity, "Trophies", message));
+
+        }
+        protected async Task OnTrophyUnlockedAsync(IUnlockedTrophyInfo info) {
+
+            await TrophyUnlocked?.Invoke(info);
 
         }
 
@@ -136,7 +140,7 @@ namespace OurFoodChain.Trophies {
 
             _ = Task.Run(async () => {
 
-                OnLog(LogSeverity.Info, "Starting trophy scanner");
+                await OnLogAsync(LogSeverity.Info, "Starting trophy scanner");
 
                 while (queue.Count > 0) {
 
@@ -159,7 +163,7 @@ namespace OurFoodChain.Trophies {
 
                 scannerIsActive = false;
 
-                OnLog(LogSeverity.Info, "Shutting down trophy scanner");
+                await OnLogAsync(LogSeverity.Info, "Shutting down trophy scanner");
 
             });
 
@@ -192,7 +196,7 @@ namespace OurFoodChain.Trophies {
 
                         // Pop the new trophy.
 
-                        OnTrophyUnlocked(new UnlockedTrophyInfo(item.Creator, trophy));
+                        await OnTrophyUnlockedAsync(new UnlockedTrophyInfo(item.Creator, trophy));
 
                     }
 
@@ -200,7 +204,7 @@ namespace OurFoodChain.Trophies {
                 // If an error occurs when checking a trophy, we'll just move on to the next one.
                 catch (Exception ex) {
 
-                    OnLog(LogSeverity.Error, string.Format("Exception occured while checking \"{0}\" trophy: {1}",
+                    await OnLogAsync(LogSeverity.Error, string.Format("Exception occured while checking \"{0}\" trophy: {1}",
                         trophy.Name,
                         ex.ToString()));
 

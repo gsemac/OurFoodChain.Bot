@@ -307,6 +307,7 @@
     <Compile Include="Gotchis\GotchiStatusRegistry.cs" />
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
+    <Compile Include="Services\TrophyScanner.cs" />
     <Compile Include="Taxa\BulkOperation.cs" />
     <Compile Include="Taxa\IBulkOperation.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />
@@ -336,12 +337,7 @@
     <Compile Include="Taxa\Species.cs" />
     <Compile Include="Taxa\PreyInfo.cs" />
     <Compile Include="Taxa\Taxon.cs" />
-    <Compile Include="Modules\TrophiesModule.cs" />
-    <Compile Include="trophies\Trophy.cs" />
-    <Compile Include="trophies\TrophyUser.cs" />
-    <Compile Include="trophies\UnlockedTrophyInfo.cs" />
-    <Compile Include="Services\TrophyRegistry.cs" />
-    <Compile Include="Services\TrophyScanner.cs" />
+    <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="users\UserRank.cs" />
     <Compile Include="Utilities\ArrayUtils.cs" />
     <Compile Include="Modules\CommandsModule.cs" />
@@ -643,6 +639,10 @@
     <ProjectReference Include="..\OurFoodChain.Drawing\OurFoodChain.Drawing.csproj">
       <Project>{e24f30fd-e82f-4709-b0c3-68c7eab7ac61}</Project>
       <Name>OurFoodChain.Drawing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Trophies\OurFoodChain.Trophies.csproj">
+      <Project>{bd426b2e-c9e4-4e76-9f04-ae0666052131}</Project>
+      <Name>OurFoodChain.Trophies</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

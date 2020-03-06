@@ -30,24 +30,41 @@ namespace OurFoodChain.Common.Utilities {
 
         public static DateTimeOffset GetDateFromTimestamp(long timestamp) {
 
-            return DateTimeOffset.FromUnixTimeSeconds(timestamp);
+            return DateTimeOffset.FromUnixTimeSeconds(timestamp).ToUniversalTime();
 
         }
         public static DateTimeOffset GetDateFromTimestamp(string timestamp) {
 
-            if (long.TryParse(timestamp, out long result))
-                return GetDateFromTimestamp(result);
-
-            if (timestamp.Equals("now", StringComparison.OrdinalIgnoreCase))
-                return GetCurrentDateUtc();
-
-            throw new ArgumentException(nameof(timestamp));
+            return GetDateFromTimestamp(ParseTimestamp(timestamp));
 
         }
 
         public static long GetTimestampFromDate(DateTimeOffset offset) {
 
             return offset.ToUnixTimeSeconds();
+
+        }
+
+        public static long ParseTimestamp(string timestamp) {
+
+            if (long.TryParse(timestamp, out long result))
+                return result;
+
+            if (timestamp.Equals("now", StringComparison.OrdinalIgnoreCase))
+                return GetCurrentTimestampUtc();
+
+            throw new ArgumentException(nameof(timestamp));
+
+        }
+
+        public static long GetMinTimestamp() {
+
+            return GetTimestampFromDate(DateTimeOffset.MinValue);
+
+        }
+        public static long GetMaxTimestamp() {
+
+            return GetTimestampFromDate(DateTimeOffset.MaxValue);
 
         }
 

@@ -14,37 +14,9 @@ namespace OurFoodChain {
 
     public class DateUtils {
 
-        public static long GetCurrentTimestamp() {
-            return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        }
-        public static long GetMaxTimestamp() {
-
-            // Allows us to use the TimeSpan class with timestamps.
-            // If this were to be long.MaxValue, it would surpass the maximum number of ticks.
-
-            return (long)TimeSpan.MaxValue.TotalSeconds;
-
-        }
-        public static long ParseTimestamp(string input) {
-
-            if (long.TryParse(input, out long result))
-                return result;
-
-            if (input.ToLower() == "now")
-                return GetCurrentTimestamp();
-
-            throw new Exception("Unable to parse timestamp string");
-
-        }
-
         public static DateTime TimestampToDateTime(long timestamp) {
 
             return DateTimeOffset.FromUnixTimeSeconds(timestamp).Date.ToUniversalTime();
-
-        }
-        public static DateTimeOffset TimestampToDateTimeOffset(long timestamp) {
-
-            return DateTimeOffset.FromUnixTimeSeconds(timestamp).ToUniversalTime();
 
         }
 

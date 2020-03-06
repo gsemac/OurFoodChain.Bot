@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -161,7 +162,7 @@ namespace OurFoodChain.Bot {
 
             if (multiPartMessages.TryAdd(context.User.Id, message)) {
 
-                message.Timestamp = DateUtils.GetCurrentTimestamp();
+                message.Timestamp = DateUtilities.GetCurrentTimestampUtc();
 
                 await context.Channel.SendMessageAsync(string.IsNullOrEmpty(text) ? message.Text : text);
 

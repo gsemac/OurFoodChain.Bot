@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Common.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -69,7 +70,7 @@ namespace OurFoodChain {
 
                 // Update the end date of the current generation.
 
-                generation.EndTimestamp = DateUtils.GetCurrentTimestamp();
+                generation.EndTimestamp = DateUtilities.GetCurrentTimestampUtc();
 
                 await _updateGenerationAsync(generation);
 
@@ -79,8 +80,8 @@ namespace OurFoodChain {
 
             generation = new Generation {
                 Number = generation is null ? 1 : generation.Number + 1,
-                StartTimestamp = generation is null ? 0 : DateUtils.GetCurrentTimestamp(),
-                EndTimestamp = DateUtils.GetMaxTimestamp()
+                StartTimestamp = generation is null ? 0 : DateUtilities.GetCurrentTimestampUtc(),
+                EndTimestamp = DateUtilities.GetMaxTimestamp()
             };
 
             await _addGenerationAsync(generation);
@@ -103,7 +104,7 @@ namespace OurFoodChain {
 
             // Update the end timestamp of the previous generation so that it is now the current generation.
 
-            generation.EndTimestamp = DateUtils.GetMaxTimestamp();
+            generation.EndTimestamp = DateUtilities.GetMaxTimestamp();
 
             await _updateGenerationAsync(generation);
 
@@ -119,8 +120,8 @@ namespace OurFoodChain {
             Generation generation = new Generation {
                 Id = row.Field<long>("id"),
                 Number = int.Parse(Regex.Match(row.Field<string>("name"), @"\d+$").Value),
-                StartTimestamp = DateUtils.ParseTimestamp(row.Field<string>("start_ts")),
-                EndTimestamp = DateUtils.ParseTimestamp(row.Field<string>("end_ts"))
+                StartTimestamp = DateUtilities.ParseTimestamp(row.Field<string>("start_ts")),
+                EndTimestamp = DateUtilities.ParseTimestamp(row.Field<string>("end_ts"))
             };
 
             return generation;

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -24,8 +25,8 @@ namespace OurFoodChain.Bot {
 
             if (time_amount != null) {
 
-                long start_ts = DateUtils.GetCurrentTimestamp() - time_amount.ToUnixTimeSeconds();
-                long end_ts = DateUtils.GetCurrentTimestamp();
+                long start_ts = DateUtilities.GetCurrentTimestampUtc() - time_amount.ToUnixTimeSeconds();
+                long end_ts = DateUtilities.GetCurrentTimestampUtc();
 
                 await ShowRecentEventsAsync(Context, start_ts, end_ts, timeUnit: time_amount.Unit);
 

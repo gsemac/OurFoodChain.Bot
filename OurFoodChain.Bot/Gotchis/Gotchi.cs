@@ -37,8 +37,8 @@ namespace OurFoodChain.Gotchis {
             }
         }
         public ulong OwnerId { get; set; } = UserInfo.NullId;
-        public long FedTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
-        public long BornTimestamp { get; set; } = DateUtils.GetCurrentTimestamp();
+        public long FedTimestamp { get; set; } = DateUtilities.GetCurrentTimestampUtc();
+        public long BornTimestamp { get; set; } = DateUtilities.GetCurrentTimestampUtc();
         public long DiedTimestamp { get; set; } = 0;
         public long EvolvedTimestamp { get; set; } = 0;
         public long ViewedTimestamp { get; set; } = 0;
@@ -48,7 +48,7 @@ namespace OurFoodChain.Gotchis {
         public int Age {
             get {
 
-                long ts = DateUtils.GetCurrentTimestamp();
+                long ts = DateUtilities.GetCurrentTimestampUtc();
 
                 return (int)(((DiedTimestamp > 0 ? DiedTimestamp : ts) - BornTimestamp) / 60 / 60 / 24);
 

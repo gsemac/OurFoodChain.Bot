@@ -89,7 +89,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Update the viewed timestamp.
 
-            await GotchiUtils.SetViewedTimestampAsync(gotchi, DateUtils.GetCurrentTimestamp());
+            await GotchiUtils.SetViewedTimestampAsync(gotchi, DateUtilities.GetCurrentTimestampUtc());
 
             // Send the message.
 
@@ -413,12 +413,12 @@ namespace OurFoodChain.Bot.Modules {
 
                 // If it's been more than 15 minutes since the training timestamp was updated, reset the training count.
 
-                long minutes_elapsed = (DateUtils.GetCurrentTimestamp() - training_ts) / 60;
+                long minutes_elapsed = (DateUtilities.GetCurrentTimestampUtc() - training_ts) / 60;
 
                 if (minutes_elapsed >= Global.GotchiContext.Config.TrainingCooldown) {
 
                     training_left = Global.GotchiContext.Config.TrainingLimit;
-                    training_ts = DateUtils.GetCurrentTimestamp();
+                    training_ts = DateUtilities.GetCurrentTimestampUtc();
 
                 }
 

@@ -550,7 +550,7 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                long daysSinceFirstSubmission = (DateUtils.GetCurrentTimestamp() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
+                long daysSinceFirstSubmission = (DateUtilities.GetCurrentTimestampUtc() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
                 UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchEither);
 
                 // Get the user's most active genus.

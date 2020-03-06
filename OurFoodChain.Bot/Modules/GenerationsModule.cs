@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Utilities;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
@@ -45,11 +46,11 @@ namespace OurFoodChain.Bot {
         private async Task<PaginatedMessageBuilder> BuildGenerationEmbedAsync(Generation generation) {
 
             Bot.PaginatedMessageBuilder embed = await RecentCommands.BuildRecentEventsEmbedAsync(generation.StartTimestamp, generation.EndTimestamp);
-            TimeAmount time_amount_since = new TimeAmount(DateUtils.GetCurrentTimestamp() - generation.EndTimestamp, TimeUnits.Seconds);
+            TimeAmount time_amount_since = new TimeAmount(DateUtilities.GetCurrentTimestampUtc() - generation.EndTimestamp, TimeUnits.Seconds);
 
             embed.SetTitle(string.Format("{0} ({1})",
                 generation.Name,
-                generation.EndTimestamp == DateUtils.GetMaxTimestamp() ? "Current" : time_amount_since.Reduce().ToString() + " ago"));
+                generation.EndTimestamp == DateUtilities.GetMaxTimestamp() ? "Current" : time_amount_since.Reduce().ToString() + " ago"));
 
             return embed;
 

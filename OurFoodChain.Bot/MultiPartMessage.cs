@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -37,7 +38,7 @@ namespace OurFoodChain.Bot {
         public string Text { get; set; } = string.Empty;
         public string[] UserData { get; set; } = new string[] { };
 
-        public long Timestamp { get; set; } = DateUtils.GetCurrentTimestamp();
+        public long Timestamp { get; set; } = DateUtilities.GetCurrentTimestampUtc();
         public bool AllowCancel { get; set; } = true;
 
     }

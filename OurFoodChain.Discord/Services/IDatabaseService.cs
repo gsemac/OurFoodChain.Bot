@@ -12,6 +12,7 @@ namespace OurFoodChain.Discord.Services {
 
         event Func<ILogMessage, Task> Log;
 
+        Task InitializeAsync();
         Task<SQLiteDatabase> GetDatabaseAsync(ulong serverId);
         Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId);
 

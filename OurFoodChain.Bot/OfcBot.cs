@@ -31,12 +31,6 @@ namespace OurFoodChain.Bot {
 
             await LogAsync(LogSeverity.Info, "OurFoodChain", "Starting bot");
 
-            // Initialize the database (apply updates, etc.).
-
-            await BackupDatabaseAsync();
-
-            await InitializeDatabaseAsync();
-
             // Copy user's custom data to the main data directory.
 
             await CopyCustomDataFilesAsync();
@@ -68,6 +62,7 @@ namespace OurFoodChain.Bot {
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Discord.Services.IPaginatedMessageService, Discord.Services.PaginatedMessageService>()
                 .AddSingleton<OurFoodChain.Services.TrophyScanner>()
+                .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.SingleDatabaseService>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }
@@ -76,6 +71,16 @@ namespace OurFoodChain.Bot {
             await base.InitializeServicesAsync(serviceProvider);
 
             await serviceProvider.GetService<Services.GotchiBackgroundService>().InitializeAsync();
+
+            Discord.Services.IDatabaseService databaseService = serviceProvider.GetService<Discord.Services.IDatabaseService>();
+
+            if (databaseService != null) {
+
+                databaseService.Log += LogAsync;
+
+                await databaseService.InitializeAsync();
+
+            }
 
             if (Configuration.TrophiesEnabled) {
 
@@ -181,38 +186,6 @@ namespace OurFoodChain.Bot {
                 }
 
             }
-
-        }
-
-        private async Task BackupDatabaseAsync() {
-
-            if (System.IO.File.Exists(Constants.DatabaseFilePath)) {
-
-                string backupFilename = string.Format("{0}-{1}",
-                    Common.Utilities.DateUtilities.GetCurrentTimestamp(),
-                    System.IO.Path.GetFileName(Constants.DatabaseFilePath));
-
-                await LogAsync(LogSeverity.Info, "Database", "Creating database backup");
-
-                System.IO.Directory.CreateDirectory("backups");
-
-                System.IO.File.Copy(Constants.DatabaseFilePath, System.IO.Path.Combine("backups", backupFilename));
-
-            }
-
-            await Task.CompletedTask;
-
-        }
-        private async Task InitializeDatabaseAsync() {
-
-            await LogAsync(LogSeverity.Info, "Database", "Initializing database");
-
-            Data.SQLiteDatabase database = Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath);
-            Data.SQLiteDatabaseUpdater updater = new Data.SQLiteDatabaseUpdater(Constants.DatabaseUpdatesDirectory);
-
-            updater.Log += async (sender, e) => await LogAsync(new LogMessage((LogSeverity)e.Severity, e.Source, e.Message));
-
-            await updater.ApplyUpdatesAsync(database);
 
         }
 

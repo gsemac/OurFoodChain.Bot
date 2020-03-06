@@ -19,6 +19,13 @@ namespace OurFoodChain.Discord.Services {
 
         public event Func<ILogMessage, Task> Log;
 
+        public string DatabaseUpdatesDirectory { get; set; } = "data/updates/";
+
+        public virtual async Task InitializeAsync() {
+
+            await Task.CompletedTask;
+
+        }
         public abstract Task<SQLiteDatabase> GetDatabaseAsync(ulong serverId);
         public abstract Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId);
 
@@ -26,7 +33,8 @@ namespace OurFoodChain.Discord.Services {
 
         protected async Task OnLogAsync(ILogMessage logMessage) {
 
-            await Log?.Invoke(logMessage);
+            if (Log != null)
+                await Log.Invoke(logMessage);
 
         }
         protected async Task OnLogAsync(Debug.LogSeverity severity, string message) {
@@ -98,10 +106,10 @@ namespace OurFoodChain.Discord.Services {
 
         private async Task<SQLiteDatabase> InitializeDatabaseAsync(string databaseFilePath) {
 
-            await OnLogAsync(Debug.LogSeverity.Info, "Initializing database " + databaseFilePath);
+            await OnLogAsync(Debug.LogSeverity.Info, "Initializing database: " + databaseFilePath);
 
             SQLiteDatabase database = SQLiteDatabase.FromFile(databaseFilePath);
-            SQLiteDatabaseUpdater updater = new SQLiteDatabaseUpdater(databaseFilePath);
+            SQLiteDatabaseUpdater updater = new SQLiteDatabaseUpdater(DatabaseUpdatesDirectory);
 
             updater.Log += async (sender, e) => await OnLogAsync(new Debug.LogMessage(e.Severity, e.Source, e.Message));
 

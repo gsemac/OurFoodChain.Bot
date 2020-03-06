@@ -100,6 +100,29 @@ namespace OurFoodChain.Data.Extensions {
             return taxa;
 
         }
+        public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, string name) {
+
+            // Return all taxa that have the given name.
+
+            List<ITaxon> result = new List<ITaxon>();
+
+            TaxonRankType[] ranks = new TaxonRankType[] {
+                TaxonRankType.Domain,
+                TaxonRankType.Kingdom,
+                TaxonRankType.Phylum,
+                TaxonRankType.Class,
+                TaxonRankType.Order,
+                TaxonRankType.Family,
+                TaxonRankType.Genus,
+                TaxonRankType.Species
+            };
+
+            foreach (TaxonRankType rank in ranks)
+                result.AddRange(await database.GetTaxaAsync(name, rank));
+
+            return result;
+
+        }
         public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, TaxonRankType rank) {
 
             List<ITaxon> taxa = new List<ITaxon>();

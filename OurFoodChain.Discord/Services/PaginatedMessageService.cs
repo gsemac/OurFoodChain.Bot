@@ -18,7 +18,7 @@ namespace OurFoodChain.Discord.Services {
 
         // Public members
 
-        public int MaxPaginatedMessages { get; set; } = 2;
+        public int MaxPaginatedMessages { get; set; } = 50;
 
         public PaginatedMessageService(DiscordSocketClient client) {
 

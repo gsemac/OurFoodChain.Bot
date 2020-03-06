@@ -26,34 +26,47 @@ namespace OurFoodChain.Bot.Modules {
     public class SpeciesModule :
         OfcModuleBase {
 
-        // Public members
-
-        public OurFoodChain.Services.TrophyScanner TrophyScanner { get; set; }
+        // Public members       
 
         [Command("info"), Alias("i")]
-        public async Task GetInfo(string name) {
+        public async Task GetInfo([Remainder]string name) {
 
             // Prioritize species first.
 
-            Species[] species = await BotUtils.GetSpeciesFromDb("", name);
+            IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(name);
 
-            if (species.Count() > 0) {
+            if (matchingSpecies.Count() > 0) {
 
-                if (await BotUtils.ReplyValidateSpeciesAsync(Context, species))
-                    await ShowSpeciesInfoAsync(Context, Config, Db, species[0]);
+                ISpecies species = await ReplyValidateSpeciesAsync(matchingSpecies);
+
+                if (species.IsValid())
+                    await ShowSpeciesAsync(species);
 
             }
             else {
 
                 // Otherwise, show other taxon.
 
-                Taxon[] taxa = await BotUtils.GetTaxaFromDb(name);
+                IEnumerable<ITaxon> taxa = await Db.GetTaxaAsync(name);
 
-                if (taxa.Count() <= 0)
+                if (taxa.Count() <= 0) {
+
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
-                    await BotUtils.ReplyAsync_SpeciesSuggestions(Context, "", name, async (BotUtils.ConfirmSuggestionArgs args) => await GetInfo(args.Suggestion));
-                else if (await BotUtils.ReplyAsync_ValidateTaxa(Context, taxa))
-                    await BotUtils.Command_ShowTaxon(Context, Config, Db, taxa[0].type, name);
+
+                    ISpecies species = await ReplySpeciesSuggestionAsync(string.Empty, name);
+
+                    if (species.IsValid())
+                        await ShowSpeciesAsync(species);
+
+                }
+                else {
+
+                    ITaxon taxon = await ReplyValidateTaxaAsync(taxa);
+
+                    if (taxon.IsValid())
+                        await BotUtils.Command_ShowTaxon(Context, Config, Db, taxa[0].type, name);
+
+                }
 
             }
 
@@ -702,6 +715,8 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
+
+
         public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, string speciesName) {
             await ShowSpeciesInfoAsync(context, botConfiguration, db, string.Empty, speciesName);
         }
@@ -839,7 +854,7 @@ namespace OurFoodChain.Bot.Modules {
 
         // Private members
 
-        public async Task AddSpeciesToZonesAsync(ISpecies species, string zoneList, string notes, bool onlyShowErrors = false) {
+        private async Task AddSpeciesToZonesAsync(ISpecies species, string zoneList, string notes, bool onlyShowErrors = false) {
 
             // Get the zones from user input.
 
@@ -933,6 +948,18 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
+        public async Task ShowSpeciesAsync(ISpecies species) {
+
+            IPaginatedMessage message = await EmbedUtilities.BuildSpeciesMessageAsync(species, BotContext);
+
+            await ReplyAsync(message);
+
+        }
+        public async Task ShowTaxonAsync(ITaxon taxon) {
+
+
+
+        }
 
     }
 

@@ -98,6 +98,124 @@ namespace OurFoodChain.Utilities {
             return paginatedMessage;
 
         }
+        public static async Task<IPaginatedMessage> BuildTaxonMessageAsync(ITaxon taxon, IOfcBotContext botContext) {
+
+            if (!taxon.IsValid())
+                return null;
+
+            List<string> subItems = new List<string>();
+
+            if (taxon.Rank.Type == TaxonRankType.Species) {
+
+                ISpecies species = await botContext.Database.GetSpeciesAsync(taxon.Id);
+
+                return await BuildSpeciesMessageAsync(species, botContext);
+
+            }
+            else if (taxon.Rank.Type == TaxonRankType.Genus) {
+
+                // For genera, get all species underneath it.
+                // This will let us check if the species is extinct, and cross it out if that's the case.
+
+                List<ISpecies> speciesList = new List<ISpecies>();
+
+                foreach (ITaxon subtaxon in await botContext.Database.GetSubtaxaAsync(taxon))
+                    speciesList.Add(await botContext.Database.GetSpeciesAsync(subtaxon.Id));
+
+                speciesList.Sort((lhs, rhs) => lhs.GetName().CompareTo(rhs.GetName()));
+
+                foreach (ISpecies species in speciesList.Where(s => s.IsValid())) {
+
+                    if (species.Status.IsExinct)
+                        subItems.Add(string.Format("~~{0}~~", species.GetName()));
+                    else
+                        subItems.Add(species.GetName());
+
+                }
+
+            }
+            else {
+
+                // Get all subtaxa under this taxon.
+
+                IEnumerable<ITaxon> subtaxa = await botContext.Database.GetSubtaxaAsync(taxon);
+
+                // Add all subtaxa to the list.
+
+                foreach (ITaxon subtaxon in subtaxa) {
+
+                    if (subtaxon.Rank.Type == TaxonRankType.Species) {
+
+                        // Do not attempt to count sub-taxa for species.
+
+                        subItems.Add(subtaxon.GetName());
+
+                    }
+                    else {
+
+                        // Count the number of species under this taxon.
+                        // Taxa with no species under them will not be displayed.
+
+                        long species_count = await CountSpeciesInTaxonFromDb(t);
+
+                        if (species_count <= 0)
+                            continue;
+
+                        // Count the sub-taxa under this taxon.
+
+                        long subtaxa_count = 0;
+
+                        using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT COUNT(*) FROM {0} WHERE {1}=$parent_id;",
+                            Taxon.TypeToDatabaseTableName(t.GetChildRank()),
+                            Taxon.TypeToDatabaseColumnName(t.type)
+                            ))) {
+
+                            cmd.Parameters.AddWithValue("$parent_id", t.id);
+
+                            subtaxa_count = await Database.GetScalar<long>(cmd);
+
+                        }
+
+                        // Add the taxon to the list.
+
+                        if (subtaxa_count > 0)
+                            subItems.Add(string.Format("{0} ({1})", t.GetName(), subtaxa_count));
+
+                    }
+
+                }
+
+            }
+
+            // Generate embed pages.
+
+            string title = string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
+            string field_title = string.Format("{0} in this {1} ({2}):", StringUtilities.ToTitleCase(Taxon.GetRankName(Taxon.TypeToChildType(type), plural: true)), Taxon.GetRankName(type), subItems.Count());
+            string thumbnail_url = taxon.pics;
+
+            StringBuilder description = new StringBuilder();
+            description.AppendLine(taxon.GetDescriptionOrDefault());
+
+            if (subItems.Count() <= 0) {
+
+                description.AppendLine();
+                description.AppendLine(string.Format("This {0} contains no {1}.", Taxon.GetRankName(type), Taxon.GetRankName(Taxon.TypeToChildType(type), plural: true)));
+
+            }
+
+            List<EmbedBuilder> embed_pages = EmbedUtils.ListToEmbedPages(subItems, fieldName: field_title);
+            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(embed_pages);
+
+            embed.SetTitle(title);
+            embed.SetThumbnailUrl(thumbnail_url);
+            embed.SetDescription(description.ToString());
+
+            if (subItems.Count() > 0 && taxon.type != TaxonRank.Genus)
+                embed.AppendFooter(string.Format(" — Empty {0} are not listed.", Taxon.GetRankName(taxon.GetChildRank(), plural: true)));
+
+            await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
+
+        }
 
     }
 

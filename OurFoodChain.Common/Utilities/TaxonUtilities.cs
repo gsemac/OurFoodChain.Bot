@@ -41,6 +41,11 @@ namespace OurFoodChain.Common.Utilities {
             return result;
 
         }
+        public static string GetPluralFromRank(TaxonRankType rank) {
+
+            return GetPluralFromRankName(GetNameFromRank(rank));
+
+        }
         public static string GetPluralFromRankName(string rankName) {
 
             if (string.IsNullOrEmpty(rankName))

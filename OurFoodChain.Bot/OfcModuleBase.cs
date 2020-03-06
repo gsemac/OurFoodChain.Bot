@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using OurFoodChain.Bot;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
@@ -24,9 +25,11 @@ namespace OurFoodChain {
         public IDatabaseService DatabaseService { get; set; }
         public IPaginatedMessageService PaginatedMessageService { get; set; }
         public IOfcBotConfiguration Config { get; set; }
+        public Services.TrophyScanner TrophyScanner { get; set; }
 
         public SQLiteDatabase Db => GetDatabaseAsync().Result;
         public SearchContext SearchContext => new SearchContext(Context, Db);
+        public OfcBotContext BotContext => new OfcBotContext(Context, Config, Db);
 
         public async Task<SQLiteDatabase> GetDatabaseAsync() => await DatabaseService.GetDatabaseAsync(Context.Guild.Id);
 
@@ -48,7 +51,7 @@ namespace OurFoodChain {
 
                 // The species could not be found.
 
-                species = await ReplySpeciesSuggestionAync(genusName, speciesName);
+                species = await ReplySpeciesSuggestionAsync(genusName, speciesName);
 
             }
             else if (matchingSpecies.Count() > 1) {
@@ -67,8 +70,94 @@ namespace OurFoodChain {
             return species;
 
         }
+        public async Task<ISpecies> ReplyValidateSpeciesAsync(IEnumerable<ISpecies> matchingSpecies) {
 
-        public async Task<ISpecies> ReplySpeciesSuggestionAync(string genusName, string speciesName) {
+            ISpecies species = null;
+
+            if (matchingSpecies.Count() <= 0) {
+
+                await ReplyNoSuchSpeciesExistsAsync(null);
+
+            }
+            else if (matchingSpecies.Count() > 1) {
+
+                await ReplyMatchingSpeciesAsync(matchingSpecies);
+
+            }
+            else {
+
+                species = matchingSpecies.First();
+
+            }
+
+            return species;
+
+        }
+        public async Task<ITaxon> ReplyValidateTaxaAsync(IEnumerable<ITaxon> matchingTaxa) {
+
+            ITaxon result = null;
+
+            if (matchingTaxa is null || matchingTaxa.Count() <= 0) {
+
+                // No taxa exist in the list.
+
+                await ReplyErrorAsync("No such taxon exists.");
+
+            }
+
+            if (matchingTaxa.Count() > 1) {
+
+                // Multiple taxa are in the list.
+
+                SortedDictionary<TaxonRankType, List<ITaxon>> taxaDict = new SortedDictionary<TaxonRankType, List<ITaxon>>();
+
+                foreach (ITaxon taxon in matchingTaxa) {
+
+                    if (!taxaDict.ContainsKey(taxon.Rank.Type))
+                        taxaDict[taxon.Rank.Type] = new List<ITaxon>();
+
+                    taxaDict[taxon.Rank.Type].Add(taxon);
+
+                }
+
+                Embed embed = new Embed();
+
+                if (taxaDict.Keys.Count() > 1)
+                    embed.Title = string.Format("Matching taxa ({0})", matchingTaxa.Count());
+
+                foreach (TaxonRankType type in taxaDict.Keys) {
+
+                    taxaDict[type].Sort((lhs, rhs) => lhs.Name.CompareTo(rhs.Name));
+
+                    StringBuilder fieldContent = new StringBuilder();
+
+                    foreach (ITaxon taxon in taxaDict[type])
+                        fieldContent.AppendLine(type == TaxonRankType.Species ? (await Db.GetSpeciesAsync(taxon.Id))?.ShortName : taxon.GetName());
+
+                    embed.AddField(string.Format("{0}{1} ({2})",
+                        taxaDict.Keys.Count() == 1 ? "Matching " : "",
+                        taxaDict.Keys.Count() == 1 ? TaxonUtilities.GetPluralFromRank(type).ToLowerInvariant() : TaxonUtilities.GetPluralFromRank(type).ToTitle(),
+                        taxaDict[type].Count()),
+                        fieldContent.ToString());
+
+                }
+
+                await ReplyAsync(embed);
+
+            }
+            else if (matchingTaxa.Count() == 1) {
+
+                // We have a single taxon.
+
+                result = matchingTaxa.First();
+
+            }
+
+            return result;
+
+        }
+
+        public async Task<ISpecies> ReplySpeciesSuggestionAsync(string genusName, string speciesName) {
 
             int minimumDistance = int.MaxValue;
             ISpecies suggestion = null;

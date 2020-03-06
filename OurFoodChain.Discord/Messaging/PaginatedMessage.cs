@@ -47,6 +47,11 @@ namespace OurFoodChain.Discord.Messaging {
             this.pages.AddRange(pages.Select(page => new Message() { Embed = page }));
 
         }
+        public PaginatedMessage(string message) {
+
+            pages.Add(new Message(message));
+
+        }
 
         public PaginatedMessageReactionType GetReactionType(string emoji) {
 

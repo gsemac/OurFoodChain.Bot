@@ -2,10 +2,12 @@
 using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
+using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
@@ -16,9 +18,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot.Modules {
 
     public class BulkModule :
-        ModuleBase {
-
-        public SQLiteDatabase Db { get; set; }
+        OfcModuleBase {
 
         [Command("bulk"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task Bulk([Remainder]string operationString) {
@@ -26,11 +26,11 @@ namespace OurFoodChain.Bot.Modules {
             // Instantiate the bulk operation and get the query results.
 
             Taxa.IBulkOperation bulkOperation = new Taxa.BulkOperation(operationString);
-            ISearchResult queryResult = await Db.GetSearchResultsAsync(new SearchContext(Context, Db), bulkOperation.Query);
+            ISearchResult queryResult = await Db.GetSearchResultsAsync(SearchContext, bulkOperation.Query);
 
             if (queryResult.Count() <= 0) {
 
-                await DiscordUtilities.ReplyInfoAsync(Context.Channel, "No species matching this query could be found.");
+                await ReplyInfoAsync("No species matching this query could be found.");
 
             }
             else {
@@ -51,28 +51,26 @@ namespace OurFoodChain.Bot.Modules {
 
                             if (await BotUtils.ReplyValidateZoneAsync(Context, zone, zoneName)) {
 
-                                PaginatedMessageBuilder message = new PaginatedMessageBuilder {
-                                    Message = string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.GetFullName()),
-                                    Restricted = true,
-                                    Callback = async args => {
-
-                                        await DiscordUtilities.ReplyInfoAsync(Context.Channel, "Performing the requested operation.");
-
-                                        foreach (Species species in queryResult.ToArray()) {
-
-                                            //await SpeciesUtils.RemoveZonesAsync(species, (await SpeciesUtils.GetZonesAsync(species)).Select(z => z.Zone));
-                                            await Db.AddZonesAsync(new SpeciesAdapter(species), new IZone[] { zone });
-
-                                        }
-
-                                        await DiscordUtilities.ReplySuccessAsync(Context.Channel, "Operation completed successfully.");
-
-                                    }
+                                IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.GetFullName())) {
+                                    Restricted = true
                                 };
 
-                                message.AddReaction(PaginatedMessageReaction.Yes);
+                                message.AddReaction(PaginatedMessageReactionType.Yes, async (args) => {
 
-                                await DiscordUtils.SendMessageAsync(Context, message.Build());
+                                    await ReplyInfoAsync("Performing the requested operation.");
+
+                                    foreach (ISpecies species in await queryResult.GetResultsAsync()) {
+
+                                        //await SpeciesUtils.RemoveZonesAsync(species, (await SpeciesUtils.GetZonesAsync(species)).Select(z => z.Zone));
+                                        await Db.AddZonesAsync(species, new IZone[] { zone });
+
+                                    }
+
+                                    await ReplySuccessAsync("Operation completed successfully.");
+
+                                });
+
+                                await ReplyAsync(message);
 
                             }
 
@@ -81,7 +79,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     default:
 
-                        await DiscordUtilities.ReplyErrorAsync(Context.Channel, string.Format("Unknown operation \"{0}\".", bulkOperation.OperationName));
+                        await ReplyErrorAsync(string.Format("Unknown operation \"{0}\".", bulkOperation.OperationName));
 
                         break;
 

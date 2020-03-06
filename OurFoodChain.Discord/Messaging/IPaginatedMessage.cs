@@ -27,7 +27,7 @@ namespace OurFoodChain.Discord.Messaging {
         PaginatedMessageReactionType GetReactionType(string emoji);
 
         void AddReaction(string emoji, Func<IPaginatedMessageReactionArgs, Task> callback);
-        void AddReaction(PaginatedMessageReactionType reactionType, Action<IPaginatedMessageReactionArgs, Task> callback);
+        void AddReaction(PaginatedMessageReactionType reactionType, Func<IPaginatedMessageReactionArgs, Task> callback);
 
         Task HandleReactionAsync(IPaginatedMessageReactionArgs args);
 

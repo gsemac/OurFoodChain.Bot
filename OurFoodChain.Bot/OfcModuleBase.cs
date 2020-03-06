@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using OurFoodChain.Bot;
 using OurFoodChain.Data;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Services;
@@ -16,6 +17,7 @@ namespace OurFoodChain {
 
         public IDatabaseService DatabaseService { get; set; }
         public IPaginatedMessageService PaginatedMessageService { get; set; }
+        public IOfcBotConfiguration Config { get; set; }
 
         public SQLiteDatabase Db => GetDatabaseAsync().Result;
         public SearchContext SearchContext => new SearchContext(Context, Db);

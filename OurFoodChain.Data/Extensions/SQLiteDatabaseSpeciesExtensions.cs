@@ -49,11 +49,11 @@ namespace OurFoodChain.Data.Extensions {
 
             List<ISpecies> result = new List<ISpecies>();
 
-            if (!string.IsNullOrEmpty(input.GenusName)) {
+            if (!string.IsNullOrEmpty(input.Genus)) {
 
                 // Attempt to get the species using name/genus.
 
-                result.AddRange(await database.GetSpeciesAsync(input.GenusName, input.SpeciesName));
+                result.AddRange(await database.GetSpeciesAsync(input.Genus, input.Species));
 
             }
 
@@ -82,13 +82,13 @@ namespace OurFoodChain.Data.Extensions {
             // If the species is the empty string, don't bother trying to find any matches.
             // This prevents species with an empty, but non-null common name (set to "") from being returned.
 
-            if (string.IsNullOrEmpty(input.SpeciesName))
+            if (string.IsNullOrEmpty(input.Species))
                 return Array.Empty<ISpecies>();
 
-            if (string.IsNullOrEmpty(input.GenusName)) {
+            if (string.IsNullOrEmpty(input.Genus)) {
 
                 // If the user didn't pass in a genus, we'll look up the species by name (name or common name).
-                return await database.GetSpeciesAsync(input.SpeciesName);
+                return await database.GetSpeciesAsync(input.Species);
 
             }
             else if (input.IsAbbreviated) {
@@ -96,9 +96,9 @@ namespace OurFoodChain.Data.Extensions {
                 // If the genus is abbreviated (e.g. "Cornu" -> "C.") but not null, we'll look for matching species and determine the genus afterwards.
                 // Notice that this case does not allow for looking up the species by common name, which should not occur when the genus is included.
 
-                IEnumerable<ISpecies> result = await database.GetSpeciesAsync(input.SpeciesName);
+                IEnumerable<ISpecies> result = await database.GetSpeciesAsync(input.Species);
 
-                return result.Where(s => s.Genus != null && s.Genus.Name.StartsWith(input.GenusName, StringComparison.OrdinalIgnoreCase));
+                return result.Where(s => s.Genus != null && s.Genus.Name.StartsWith(input.Genus, StringComparison.OrdinalIgnoreCase));
 
             }
             else {
@@ -106,7 +106,7 @@ namespace OurFoodChain.Data.Extensions {
                 // If we've been given full genus and species names, we can attempt to get the species directly.
                 // Although genera can have common names, only allow the genus to be looked up by its scientific name. Generally users wouldn't use the common name in this context.
 
-                ISpecies speciesResult = await database.GetSpeciesByGenusAndSpeciesNameAsync(input.GenusName, input.SpeciesName);
+                ISpecies speciesResult = await database.GetSpeciesByGenusAndSpeciesNameAsync(input.Genus, input.Species);
 
                 return (speciesResult is null) ? Array.Empty<ISpecies>() : new ISpecies[] { speciesResult };
 

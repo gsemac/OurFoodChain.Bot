@@ -24,13 +24,11 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot.Modules {
 
     public class SpeciesModule :
-        ModuleBase {
+        OfcModuleBase {
 
         // Public members
 
-        public IOfcBotConfiguration Config { get; set; }
         public OurFoodChain.Services.TrophyScanner TrophyScanner { get; set; }
-        public SQLiteDatabase Db { get; set; }
 
         [Command("info"), Alias("i")]
         public async Task GetInfo(string name) {
@@ -215,8 +213,8 @@ namespace OurFoodChain.Bot.Modules {
 
             // Check if the species already exists before attempting to add it.
 
-            if ((await BotUtils.GetSpeciesFromDb(genus, species)).Count() > 0) {
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("The species \"{0}\" already exists.", BotUtils.GenerateSpeciesName(genus, species)));
+            if ((await Db.GetSpeciesAsync(genus, species)).Count() > 0) {
+                await ReplyWarningAsync(string.Format("The species \"{0}\" already exists.", BotUtils.GenerateSpeciesName(genus, species)));
                 return;
             }
 

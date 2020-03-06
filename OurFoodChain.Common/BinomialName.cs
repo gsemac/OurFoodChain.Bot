@@ -10,14 +10,14 @@ namespace OurFoodChain.Common {
     public class BinomialName :
         IBinomialName {
 
-        public string GenusName { get; }
-        public string SpeciesName { get; }
-        public bool IsAbbreviated => Regex.IsMatch(GenusName.ToLowerInvariant(), @"^[a-zA-Z]\.?$", RegexOptions.IgnoreCase);
+        public string Genus { get; }
+        public string Species { get; }
+        public bool IsAbbreviated => Regex.IsMatch(Genus.ToLowerInvariant(), @"^[a-zA-Z]\.?$", RegexOptions.IgnoreCase);
 
         public BinomialName(string genusName, string speciesName) {
 
-            GenusName = genusName?.TrimEnd('.').ToTitle() ?? string.Empty;
-            SpeciesName = speciesName.ToLowerInvariant();
+            Genus = genusName?.TrimEnd('.').ToTitle() ?? string.Empty;
+            Species = speciesName.ToLowerInvariant();
 
         }
 
@@ -28,19 +28,19 @@ namespace OurFoodChain.Common {
         }
         public string ToString(BinomialNameFormat format) {
 
-            if (string.IsNullOrEmpty(GenusName) || format == BinomialNameFormat.Species) {
+            if (string.IsNullOrEmpty(Genus) || format == BinomialNameFormat.Species) {
 
-                return SpeciesName.ToLowerInvariant();
+                return Species.ToLowerInvariant();
 
             }
             else if (format == BinomialNameFormat.Abbreviated) {
 
-                return string.Format("{0}. {1}", char.ToUpperInvariant(GenusName.First()), SpeciesName.ToLowerInvariant());
+                return string.Format("{0}. {1}", char.ToUpperInvariant(Genus.First()), Species.ToLowerInvariant());
 
             }
             else {
 
-                return string.Format("{0} {1}", GenusName.TrimEnd('.').ToTitle(), SpeciesName);
+                return string.Format("{0} {1}", Genus.TrimEnd('.').ToTitle(), Species);
 
             }
 

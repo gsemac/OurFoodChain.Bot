@@ -12,8 +12,8 @@ namespace OurFoodChain.Common {
 
     public interface IBinomialName {
 
-        string GenusName { get; }
-        string SpeciesName { get; }
+        string Genus { get; }
+        string Species { get; }
         bool IsAbbreviated { get; }
 
     }

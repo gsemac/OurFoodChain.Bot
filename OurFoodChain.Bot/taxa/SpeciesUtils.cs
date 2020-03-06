@@ -58,7 +58,7 @@ namespace OurFoodChain {
             // If the input is a valid binomial name, we'll use it to find the requested species.
             // Otherwise, or if the first attempt doesn't return a match, we'll treat it as a common name/species name.
 
-            BinomialName input = BinomialName.Parse(name);
+            IBinomialName input = BinomialName.Parse(name);
 
             List<Species> result = new List<Species>();
 
@@ -91,7 +91,7 @@ namespace OurFoodChain {
         }
         public static async Task<Species[]> GetSpeciesAsync(string genus, string species) {
 
-            BinomialName input = BinomialName.Parse(genus, species);
+            IBinomialName input = BinomialName.Parse(genus, species);
 
             // If the species is the empty string, don't bother trying to find any matches.
             // This prevents species with an empty, but non-null common name (set to "") from being returned.

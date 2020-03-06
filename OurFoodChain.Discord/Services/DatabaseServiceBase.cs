@@ -115,6 +115,8 @@ namespace OurFoodChain.Discord.Services {
 
             await updater.ApplyUpdatesAsync(database);
 
+            GetDatabaseStatus(databaseFilePath).Initialized = true;
+
             return database;
 
         }

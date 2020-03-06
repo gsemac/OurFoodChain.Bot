@@ -88,7 +88,7 @@ namespace OurFoodChain.Bot {
 
                 trophyScanner.Log += LogAsync;
 
-                await trophyScanner.RegisterTrophiesAsync();
+                await trophyScanner.RegisterTrophiesAsync(RegisterTrophiesOptions.RegisterDefaultTrophies);
 
             }
 

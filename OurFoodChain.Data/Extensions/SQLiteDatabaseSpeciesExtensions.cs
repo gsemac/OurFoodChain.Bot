@@ -28,6 +28,23 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
+        public static async Task AddSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp, user_id) VALUES($name, $description, $genus_id, $owner, $timestamp, $user_id)")) {
+
+                cmd.Parameters.AddWithValue("$name", species.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$description", species.Description);
+                cmd.Parameters.AddWithValue("$genus_id", species.ParentId);
+                cmd.Parameters.AddWithValue("$owner", species.Creator.Name);
+                cmd.Parameters.AddWithValue("$user_id", species.Creator.UserId);
+                cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetCurrentTimestampUtc());
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+
         public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database) {
 
             List<ISpecies> species = new List<ISpecies>();
@@ -620,13 +637,12 @@ namespace OurFoodChain.Data.Extensions {
 
             ISpecies species = new Species {
                 Id = row.Field<long>("id"),
-                ParentId = row.Field<long>("genus_id"),
                 Name = row.Field<string>("name"),
                 // The genus should never be null, but there was instance where a user manually edited the database and the genus ID was invalid.
                 // We should at least try to handle this situation gracefully.
-                Genus = genus ?? new Taxon("?", TaxonRankType.Genus),
+                Genus = genus ?? new Taxon(TaxonRankType.Genus, "?"),
                 Description = row.Field<string>("description"),
-                Creator = new Creator(row.IsNull("user_id") ? default(ulong?) : row.Field<ulong>("user_id"), row.Field<string>("owner") ?? "?"),
+                Creator = new Creator(row.IsNull("user_id") ? default(ulong?) : (ulong)row.Field<long>("user_id"), row.Field<string>("owner") ?? "?"),
                 CreationDate = DateUtilities.GetDateFromTimestamp((long)row.Field<decimal>("timestamp"))
             };
 

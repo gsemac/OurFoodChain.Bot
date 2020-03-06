@@ -15,7 +15,7 @@ namespace OurFoodChain.Adapters {
         // Public members
 
         public override ITaxon Genus {
-            get => new Common.Taxa.Taxon(species.GenusName, TaxonRankType.Genus);
+            get => new Common.Taxa.Taxon(TaxonRankType.Genus, species.GenusName);
             set {
 
                 species.GenusName = value.Name;

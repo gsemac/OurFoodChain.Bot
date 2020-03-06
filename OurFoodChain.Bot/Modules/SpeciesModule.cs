@@ -10,10 +10,10 @@ using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Utilities;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -209,83 +209,97 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("addspecies"), Alias("addsp"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task AddSpecies(string genus, string species, string zone = "", string description = "") {
+        public async Task AddSpecies(string genusName, string speciesName, string zoneNames = "", string description = "") {
 
-            // Check if the species already exists before attempting to add it.
+            if ((await Db.GetSpeciesAsync(genusName, speciesName)).Count() > 0) {
 
-            if ((await Db.GetSpeciesAsync(genus, species)).Count() > 0) {
-                await ReplyWarningAsync(string.Format("The species \"{0}\" already exists.", BotUtils.GenerateSpeciesName(genus, species)));
-                return;
-            }
+                // If the species already exists, do nothing.
 
-            await BotUtils.AddGenusToDb(genus);
-
-            Taxon genus_info = await BotUtils.GetGenusFromDb(genus);
-
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp, user_id) VALUES($name, $description, $genus_id, $owner, $timestamp, $user_id);")) {
-
-                cmd.Parameters.AddWithValue("$name", species.ToLower());
-                cmd.Parameters.AddWithValue("$description", description);
-                cmd.Parameters.AddWithValue("$genus_id", genus_info.id);
-                cmd.Parameters.AddWithValue("$owner", Context.User.Username);
-                cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
-                cmd.Parameters.AddWithValue("$timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-
-                await Database.ExecuteNonQuery(cmd);
+                await ReplyWarningAsync(string.Format("The species \"{0}\" already exists.", BinomialName.Parse(genusName, speciesName)));
 
             }
+            else {
 
-            Species[] sp_list = await BotUtils.GetSpeciesFromDb(genus, species);
-            Species sp = sp_list.Count() > 0 ? sp_list[0] : null;
-            long species_id = sp == null ? -1 : sp.Id;
+                // Get or add the species' genus.
 
-            if (species_id < 0) {
-                await BotUtils.ReplyAsync_Error(Context, "Failed to add species (invalid Species ID).");
-                return;
+                ITaxon genus = await Db.GetTaxonAsync(genusName, TaxonRankType.Genus);
+
+                if (genus is null) {
+
+                    await Db.AddTaxonAsync(new Common.Taxa.Taxon(TaxonRankType.Genus, genusName));
+
+                    genus = await Db.GetTaxonAsync(genusName, TaxonRankType.Genus);
+
+                }
+
+                // Add the species.
+
+                ISpecies species = new Common.Taxa.Species() {
+                    Name = speciesName,
+                    Description = description,
+                    Genus = genus,
+                    Creator = Context.User.ToCreator()
+                };
+
+                await Db.AddSpeciesAsync(species);
+
+                // Make sure the species was added successfully.
+
+                species = (await Db.GetSpeciesAsync(genusName, speciesName)).FirstOrDefault();
+
+                if (!species.IsValid()) {
+
+                    await ReplyErrorAsync("Failed to add species (invalid Species ID).");
+
+                }
+                else {
+
+                    // Add the species to the given zones.
+
+                    await AddSpeciesToZonesAsync(species, zoneNames, string.Empty, onlyShowErrors: true);
+
+                    // Add the user to the trophy scanner queue in case their species earned them any new trophies.
+
+                    if (Config.TrophiesEnabled)
+                        await TrophyScanner.EnqueueAsync(Context.User.ToCreator(), Context);
+
+                    await ReplySuccessAsync(string.Format("Successfully created new species, **{0}**.", BinomialName.Parse(genusName, speciesName)));
+
+                }
+
             }
-
-            // Add to all given zones.
-            await _plusZone(sp, zone, string.Empty, onlyShowErrors: true);
-
-            // Add the user to the trophy scanner queue in case their species earned them any new trophies.
-
-            if (Config.TrophiesEnabled)
-                await TrophyScanner.EnqueueAsync(new Creator(Context.User.Id, Context.User.Username), Context);
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new species, **{0}**.", BotUtils.GenerateSpeciesName(genus, species)));
 
         }
 
         [Command("setzone"), Alias("setzones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetZone(string genus, string species, string zone = "") {
+        public async Task SetZone(string arg0, string arg1, string arg2 = "") {
+
+            // <genus> <species> <zone>
+            // <species> <zone>
 
             // If the zone argument is empty, assume the user omitted the genus.
 
-            if (string.IsNullOrEmpty(zone)) {
-                zone = species;
-                species = genus;
-                genus = string.Empty;
+            if (string.IsNullOrEmpty(arg2)) {
+                arg2 = arg1;
+                arg1 = arg0;
+                arg0 = string.Empty;
             }
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(arg0, arg1);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            // Delete existing zone information for the species.
+                // Delete existing zone information for the species.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesZones WHERE species_id=$species_id;")) {
+                await Db.RemoveZonesAsync(species, (await Db.GetZonesAsync(species)).Select(info => info.Zone));
 
-                cmd.Parameters.AddWithValue("$species_id", sp.Id);
+                // Add new zone information for the species.
 
-                await Database.ExecuteNonQuery(cmd);
+                await AddSpeciesToZonesAsync(species, arg2, string.Empty, onlyShowErrors: false);
 
             }
-
-            // Add new zone information for the species.
-            await _plusZone(sp, zone, string.Empty, onlyShowErrors: false);
 
         }
 
@@ -298,29 +312,30 @@ namespace OurFoodChain.Bot.Modules {
 
             // If a species exists with the given genus/species, assume the user intended case (2).
 
-            Species[] species_list = await SpeciesUtils.GetSpeciesAsync(arg0, arg1);
+            IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(arg0, arg1);
 
-            if (species_list.Count() == 1) {
+            if (matchingSpecies.Count() == 1) {
 
                 // If there is a unqiue species match, proceed with the assumption of case (2).
 
-                await _plusZone(species_list[0], zoneList: arg2, notes: string.Empty, onlyShowErrors: false);
+                await AddSpeciesToZonesAsync(matchingSpecies.First(), zoneList: arg2, notes: string.Empty, onlyShowErrors: false);
 
             }
-            else if (species_list.Count() > 1) {
+            else if (matchingSpecies.Count() > 1) {
 
                 // If there are species matches but no unique result, show the user.
-                await BotUtils.ReplyValidateSpeciesAsync(Context, species_list);
+
+                await ReplyMatchingSpeciesAsync(matchingSpecies);
 
             }
-            else if (species_list.Count() <= 0) {
+            else if (matchingSpecies.Count() <= 0) {
 
                 // If there were no matches, assume the user intended case (1).
 
-                species_list = await SpeciesUtils.GetSpeciesAsync(string.Empty, arg0);
+                ISpecies species = await GetSpeciesOrReplyAsync(string.Empty, arg0);
 
-                if (await BotUtils.ReplyValidateSpeciesAsync(Context, species_list))
-                    await _plusZone(species_list[0], zoneList: arg1, notes: arg2, onlyShowErrors: false);
+                if (species.IsValid())
+                    await AddSpeciesToZonesAsync(species, zoneList: arg1, notes: arg2, onlyShowErrors: false);
 
             }
 
@@ -330,16 +345,12 @@ namespace OurFoodChain.Bot.Modules {
             await PlusZone(string.Empty, species, zoneList, string.Empty);
         }
         [Command("+zone"), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task PlusZone(string genus, string species, string zoneList, string notes) {
+        public async Task PlusZone(string genusName, string speciesName, string zoneList, string notes) {
 
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, Config, PrivilegeLevel.ServerModerator))
-                return;
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-
-            if (!(sp is null))
-                await _plusZone(sp, zoneList: zoneList, notes: notes, onlyShowErrors: false);
+            if (species.IsValid())
+                await AddSpeciesToZonesAsync(species, zoneList: zoneList, notes: notes, onlyShowErrors: false);
 
         }
 
@@ -823,24 +834,38 @@ namespace OurFoodChain.Bot.Modules {
 
         // Private members
 
-        public async Task _plusZone(Species species, string zoneList, string notes, bool onlyShowErrors = false) {
+        public async Task AddSpeciesToZonesAsync(ISpecies species, string zoneList, string notes, bool onlyShowErrors = false) {
 
             // Get the zones from user input.
 
             IEnumerable<string> zoneNames = ZoneUtilities.ParseZoneNameList(zoneList);
-            IEnumerable<IZone> zones = await Db.GetZonesAsync(zoneNames);
-            IEnumerable<string> invalidZones = zoneNames.Except(zones.Select(zone => zone.Name), StringComparer.OrdinalIgnoreCase);
+            List<string> invalidZoneNames = new List<string>();
+
+            List<IZone> zones = new List<IZone>();
+
+            foreach (string zoneName in zoneNames) {
+
+                IZone zone = await Db.GetZoneAsync(zoneName);
+
+                if (zone.IsValid())
+                    zones.Add(zone);
+                else
+                    invalidZoneNames.Add(zoneName);
+
+            }
 
             // Add the zones to the species.
-            await Db.AddZonesAsync(new SpeciesAdapter(species), zones, notes);
 
-            if (invalidZones.Count() > 0) {
+            await Db.AddZonesAsync(species, zones, notes);
+
+            if (invalidZoneNames.Count() > 0) {
 
                 // Show a warning if the user provided any invalid zones.
 
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtilities.ConjunctiveJoin(", ", invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
-                    invalidZones.Count() == 1 ? "does" : "do"));
+                await ReplyWarningAsync(
+                    string.Format("{0} {1} not exist.",
+                    StringUtilities.ConjunctiveJoin(", ", invalidZoneNames.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x)))),
+                    invalidZoneNames.Count() == 1 ? "does" : "do"));
 
             }
 
@@ -848,9 +873,10 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Show a confirmation of all valid zones.
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now inhabits {1}.",
-                      species.ShortName,
-                      StringUtilities.ConjunctiveJoin(", ", zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                await ReplySuccessAsync(
+                    string.Format("**{0}** now inhabits {1}.",
+                    species.ShortName,
+                    StringUtilities.ConjunctiveJoin(", ", zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 

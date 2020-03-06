@@ -15,6 +15,42 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
+        public static async Task AddTaxonAsync(this SQLiteDatabase database, ITaxon taxon) {
+
+            string tableName = GetTableNameForRank(taxon.Rank.Type);
+
+            if (!string.IsNullOrEmpty(tableName)) {
+
+                string parentFieldName = GetFieldNameForRank(TaxonUtilities.GetParentRank(taxon.Rank.Type));
+
+                string query;
+
+                if (!string.IsNullOrEmpty(parentFieldName) && taxon.ParentId > 0)
+                    query = string.Format("INSERT OR IGNORE INTO {0}(name, description, pics, {1}) VALUES($name, $description, $pics, $parent_id)", tableName, parentFieldName);
+                else
+                    query = string.Format("INSERT OR IGNORE INTO {0}(name, description, pics) VALUES($name, $description, $pics)", tableName);
+
+                using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
+                    cmd.Parameters.AddWithValue("$name", taxon.Name.ToLowerInvariant());
+                    cmd.Parameters.AddWithValue("$description", taxon.Description);
+                    cmd.Parameters.AddWithValue("$pics", taxon.Pictures.FirstOrDefault()?.Url);
+
+                    if (!string.IsNullOrEmpty(parentFieldName) && taxon.ParentId > 0) {
+
+                        cmd.Parameters.AddWithValue("$parent_column", parentFieldName);
+                        cmd.Parameters.AddWithValue("$parent_id", taxon.ParentId);
+
+                    }
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
+
+        }
+
         public static async Task<ITaxon> GetTaxonAsync(this SQLiteDatabase database, long? id, TaxonRankType rank) {
 
             string tableName = GetTableNameForRank(rank);
@@ -198,7 +234,7 @@ namespace OurFoodChain.Data.Extensions {
         }
         private static ITaxon CreateTaxonFromDataRow(DataRow row, TaxonRankType rank) {
 
-            ITaxon taxon = new Taxon(row.Field<string>("name"), rank) {
+            ITaxon taxon = new Taxon(rank, row.Field<string>("name")) {
                 Id = row.Field<long>("id"),
                 Description = row.Field<string>("description")
             };

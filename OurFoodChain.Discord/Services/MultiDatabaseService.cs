@@ -29,7 +29,13 @@ namespace OurFoodChain.Discord.Services {
 
         private string GetDatabasePathForGuild(ulong serverId) {
 
-            return string.Format("{0}/{0}.db", serverId);
+            string databaseDirectory = serverId.ToString();
+            string databaseFilePath = System.IO.Path.Combine(databaseDirectory, "data.db");
+
+            if (!System.IO.Directory.Exists(databaseDirectory))
+                System.IO.Directory.CreateDirectory(databaseDirectory);
+
+            return databaseFilePath;
 
         }
 

@@ -12,7 +12,7 @@ namespace OurFoodChain.Common.Taxa {
 
         public override ITaxonRank Rank { get; protected set; }
 
-        public Taxon(string name, TaxonRankType rank) {
+        public Taxon(TaxonRankType rank, string name) {
 
             this.Name = name;
             this.Rank = new TaxonRank(rank);

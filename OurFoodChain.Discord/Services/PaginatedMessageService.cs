@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
@@ -17,7 +18,7 @@ namespace OurFoodChain.Discord.Services {
 
         // Public members
 
-        public int MaxPaginatedMessages { get; set; } = 50;
+        public int MaxPaginatedMessages { get; set; } = 2;
 
         public PaginatedMessageService(DiscordSocketClient client) {
 
@@ -28,32 +29,23 @@ namespace OurFoodChain.Discord.Services {
 
         }
 
-        public async Task SendMessageAsync(ICommandContext context, IPaginatedMessage message) {
+        public async Task SendMessageAndWaitAsync(ICommandContext context, IPaginatedMessage message) {
 
-            if (message.Count() > 0) {
+            PaginatedMessageInfo info = await SendMessageAndReturnInfoAsync(context, message);
 
-                IUserMessage sentMessage = await context.Channel.SendMessageAsync(message.First().Text, false, message.First().Embed.ToDiscordEmbed());
+            if (info != null) {
 
-                foreach (string reaction in message.Reactions)
-                    await sentMessage.AddReactionAsync(new Emoji(reaction));
+                // Block until we get a reaction.
 
-                if (paginatedMessages.Count() >= MaxPaginatedMessages) {
-
-                    // Remove the oldest message.
-
-                    ulong oldestMessageId = paginatedMessages.Keys.Min();
-
-                    paginatedMessages.TryRemove(oldestMessageId, out _);
-
-                }
-
-                paginatedMessages.TryAdd(sentMessage.Id, new PaginatedMessageInfo {
-                    SentMessage = sentMessage,
-                    Context = context,
-                    Message = message
-                });
+                info.Waiter = new ManualResetEvent(false);
+                info.Waiter.WaitOne();
 
             }
+
+        }
+        public async Task SendMessageAsync(ICommandContext context, IPaginatedMessage message) {
+
+            await SendMessageAndReturnInfoAsync(context, message);
 
         }
 
@@ -64,6 +56,7 @@ namespace OurFoodChain.Discord.Services {
             public IUserMessage SentMessage { get; set; }
             public IPaginatedMessage Message { get; set; }
             public ICommandContext Context { get; set; }
+            public ManualResetEvent Waiter { get; set; }
 
         }
 
@@ -119,6 +112,55 @@ namespace OurFoodChain.Discord.Services {
                 });
 
             }
+
+            // If the message was blocking, unblock it.
+
+            messageInfo.Waiter?.Set();
+
+        }
+
+        private async Task<PaginatedMessageInfo> SendMessageAndReturnInfoAsync(ICommandContext context, IPaginatedMessage message) {
+
+            if (message != null && message.Count() > 0) {
+
+                IUserMessage sentMessage = await context.Channel.SendMessageAsync(message.FirstOrDefault()?.Text, false, message.FirstOrDefault()?.Embed?.ToDiscordEmbed());
+
+                foreach (string reaction in message.Reactions)
+                    await sentMessage.AddReactionAsync(new Emoji(reaction));
+
+                if (paginatedMessages.Count() >= MaxPaginatedMessages) {
+
+                    // Remove the oldest message.
+
+                    ulong oldestMessageId = paginatedMessages.Keys.Min();
+
+                    if (paginatedMessages.TryRemove(oldestMessageId, out PaginatedMessageInfo removedInfo)) {
+
+                        // Unblock the message (if it was blocking).
+
+                        removedInfo.Waiter?.Set();
+                        removedInfo.Waiter?.Dispose();
+
+                        // Remove reactions that were added by the bot.
+
+                        await removedInfo.SentMessage.RemoveReactionsAsync(client.CurrentUser,
+                            removedInfo.Message.Reactions.Select(r => new Emoji(r)).ToArray());
+
+                    }
+
+                }
+
+                PaginatedMessageInfo info = new PaginatedMessageInfo {
+                    SentMessage = sentMessage,
+                    Context = context,
+                    Message = message
+                };
+
+                if (paginatedMessages.TryAdd(sentMessage.Id, info))
+                    return info;
+            }
+
+            return null;
 
         }
 

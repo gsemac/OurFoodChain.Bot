@@ -28,6 +28,12 @@ namespace OurFoodChain.Common.Taxa {
         }
         public ITaxonRank Rank => new TaxonRank(TaxonRankType.Species);
 
+        public override string ToString() {
+
+            return BinomialName.ToString();
+
+        }
+
     }
 
 }

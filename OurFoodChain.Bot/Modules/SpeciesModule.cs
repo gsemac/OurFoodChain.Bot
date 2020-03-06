@@ -73,7 +73,9 @@ namespace OurFoodChain.Bot.Modules {
         }
         [Command("species"), Alias("sp", "s")]
         public async Task SpeciesInfo(string genus, string species) {
+
             await ShowSpeciesInfoAsync(Context, Config, Db, genus, species);
+
         }
 
         [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
@@ -306,7 +308,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("+zone"), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+zone", RunMode = RunMode.Async), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusZone(string arg0, string arg1, string arg2) {
 
             // Possible cases:
@@ -343,11 +345,11 @@ namespace OurFoodChain.Bot.Modules {
             }
 
         }
-        [Command("+zone"), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+zone", RunMode = RunMode.Async), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusZone(string species, string zoneList) {
             await PlusZone(string.Empty, species, zoneList, string.Empty);
         }
-        [Command("+zone"), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+zone", RunMode = RunMode.Async), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusZone(string genusName, string speciesName, string zoneList, string notes) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);

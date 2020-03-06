@@ -15,6 +15,7 @@ namespace OurFoodChain.Discord.Messaging {
         public bool Enabled { get; set; } = true;
         public bool PaginationEnabled { get; set; } = true;
         public bool Restricted { get; set; } = false;
+        public bool Blocking { get; set; } = false;
 
         public IMessage CurrentPage => pages[currentPageIndex];
 
@@ -46,6 +47,12 @@ namespace OurFoodChain.Discord.Messaging {
 
             this.pages.AddRange(pages.Select(page => new Message() { Embed = page }));
 
+        }
+        public PaginatedMessage(IMessage message) :
+            this(new IMessage[] { message }) {
+        }
+        public PaginatedMessage(IEmbed embed) :
+            this(new IEmbed[] { embed }) {
         }
         public PaginatedMessage(string message) {
 

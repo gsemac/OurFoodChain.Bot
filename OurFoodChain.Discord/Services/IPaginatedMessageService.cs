@@ -10,6 +10,7 @@ namespace OurFoodChain.Discord.Services {
     public interface IPaginatedMessageService {
 
         Task SendMessageAsync(ICommandContext context, IPaginatedMessage message);
+        Task SendMessageAndWaitAsync(ICommandContext context, IPaginatedMessage message);
 
     }
 

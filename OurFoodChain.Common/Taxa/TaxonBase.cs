@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Common.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,6 +17,12 @@ namespace OurFoodChain.Common.Taxa {
         public ICollection<string> CommonNames { get; } = new List<string>();
         public virtual string Description { get; set; }
         public ICollection<IPicture> Pictures { get; } = new List<IPicture>();
+
+        public override string ToString() {
+
+            return Name.ToTitle();
+
+        }
 
     }
 

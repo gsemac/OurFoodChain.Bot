@@ -36,6 +36,7 @@ namespace OurFoodChain {
         public async Task ReplySuccessAsync(string message) => await DiscordUtilities.ReplySuccessAsync(Context.Channel, message);
 
         public async Task ReplyAsync(IPaginatedMessage message) => await PaginatedMessageService.SendMessageAsync(Context, message);
+        public async Task ReplyAndWaitAsync(IPaginatedMessage message) => await PaginatedMessageService.SendMessageAndWaitAsync(Context, message);
         public async Task ReplyAsync(IEmbed message) => await ReplyAsync("", false, message.ToDiscordEmbed());
 
         public async Task<ISpecies> GetSpeciesOrReplyAsync(string genusName, string speciesName) {
@@ -47,7 +48,7 @@ namespace OurFoodChain {
 
                 // The species could not be found.
 
-                await ReplySpeciesSuggestionAync(genusName, speciesName);
+                species = await ReplySpeciesSuggestionAync(genusName, speciesName);
 
             }
             else if (matchingSpecies.Count() > 1) {
@@ -67,42 +68,63 @@ namespace OurFoodChain {
 
         }
 
-        public async Task ReplySpeciesSuggestionAync(string genusName, string speciesName) {
+        public async Task<ISpecies> ReplySpeciesSuggestionAync(string genusName, string speciesName) {
 
             int minimumDistance = int.MaxValue;
-            string suggestion = string.Empty;
+            ISpecies suggestion = null;
 
-            foreach (ISpecies sp in await Db.GetSpeciesAsync()) {
+            foreach (ISpecies species in await Db.GetSpeciesAsync()) {
 
-                int dist = StringUtilities.GetLevenshteinDistance(speciesName, sp.Name);
+                int dist = StringUtilities.GetLevenshteinDistance(speciesName, species.Name);
 
                 if (dist < minimumDistance) {
 
                     minimumDistance = dist;
 
-                    suggestion = sp.ShortName;
+                    suggestion = species;
 
                 }
 
             }
 
-            await ReplyNoSuchSpeciesExistsAsync(suggestion);
+            return await ReplyNoSuchSpeciesExistsAsync(suggestion);
 
         }
-        public async Task ReplyNoSuchSpeciesExistsAsync(string suggestion) {
+        public async Task<ISpecies> ReplyNoSuchSpeciesExistsAsync(ISpecies suggestion) {
 
             StringBuilder sb = new StringBuilder();
 
             sb.Append("No such species exists.");
 
-            if (!string.IsNullOrEmpty(suggestion))
+            if (suggestion != null)
                 sb.Append(string.Format(" Did you mean **{0}**?", suggestion));
 
             IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(sb.ToString()) {
                 Restricted = true
             };
 
-            await ReplyAsync(message);
+            if (suggestion != null) {
+
+                bool confirmed = false;
+
+                message.AddReaction(PaginatedMessageReactionType.Yes, async (args) => {
+
+                    confirmed = true;
+
+                    await Task.CompletedTask;
+
+                });
+
+                await ReplyAndWaitAsync(message);
+
+                if (!confirmed)
+                    suggestion = null;
+
+            }
+            else
+                await ReplyAsync(message);
+
+            return suggestion;
 
         }
         public async Task ReplyMatchingSpeciesAsync(IEnumerable<ISpecies> speciesList) {
@@ -121,7 +143,7 @@ namespace OurFoodChain {
             await ReplyAsync(embed);
 
         }
-               
+
     }
 
 }

@@ -39,6 +39,14 @@ namespace OurFoodChain.Common.Extensions {
             return default(TValue);
 
         }
+        public static TValue GetOrDefault<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue) {
+
+            if (dictionary.TryGetValue(key, out TValue value))
+                return value;
+
+            return defaultValue;
+
+        }
 
     }
 

@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj" />
+    <ProjectReference Include="..\OurFoodChain.Data\OurFoodChain.Data.csproj" />
   </ItemGroup>
 
 </Project>

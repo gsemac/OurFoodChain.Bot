@@ -62,7 +62,7 @@ namespace OurFoodChain.Bot {
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Discord.Services.IPaginatedMessageService, Discord.Services.PaginatedMessageService>()
                 .AddSingleton<OurFoodChain.Services.TrophyScanner>()
-                .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.SingleDatabaseService>()
+                .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }

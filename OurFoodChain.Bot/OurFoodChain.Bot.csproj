@@ -265,6 +265,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="IOfcBotContext.cs" />
     <Compile Include="OfcBotContext.cs" />
+    <Compile Include="OfcModuleBase.cs" />
     <Compile Include="SearchContext.cs" />
     <Compile Include="IOfcBotConfiguration.cs" />
     <Compile Include="Modules\AdminModule.cs" />

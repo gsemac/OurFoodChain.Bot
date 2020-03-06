@@ -274,15 +274,18 @@ namespace OurFoodChain.Bot.Modules {
         [Command("setzone"), Alias("setzones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetZone(string arg0, string arg1, string arg2 = "") {
 
-            // <genus> <species> <zone>
-            // <species> <zone>
+            // Possible cases:
+            // 1. <genus> <species> <zone>
+            // 2. <species> <zone>
 
-            // If the zone argument is empty, assume the user omitted the genus.
+            // If the zone argument is empty, assume the user omitted the genus (2).
 
             if (string.IsNullOrEmpty(arg2)) {
+
                 arg2 = arg1;
                 arg1 = arg0;
                 arg0 = string.Empty;
+
             }
 
             // Get the specified species.

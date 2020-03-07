@@ -10,6 +10,10 @@ namespace OurFoodChain.Common {
         public ulong? UserId { get; set; }
         public string Name { get; set; }
 
+        public long SpeciesCount { get; set; } = 0;
+        public DateTimeOffset? FirstSpeciesDate { get; set; }
+        public DateTimeOffset? LastSpeciesDate { get; set; }
+
         public Creator(string name) {
 
             this.Name = name;

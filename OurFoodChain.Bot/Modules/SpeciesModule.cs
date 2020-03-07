@@ -458,37 +458,22 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("addedby"), Alias("ownedby", "own", "owned")]
         public async Task AddedBy() {
+
             await AddedBy(Context.User);
+
         }
         [Command("addedby"), Alias("ownedby", "own", "owned")]
         public async Task AddedBy(IUser user) {
 
-            if (user is null)
-                user = Context.User;
+            ICreator creator = (user ?? Context.User).ToCreator();
 
             // Get all species belonging to this user.
 
-            List<Species> species_list = new List<Species>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE owner = $owner OR user_id = $user_id;")) {
-
-                cmd.Parameters.AddWithValue("$owner", user.Username);
-                cmd.Parameters.AddWithValue("$user_id", user.Id);
-
-                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
-
-                    foreach (DataRow row in rows.Rows)
-                        species_list.Add(await SpeciesUtils.SpeciesFromDataRow(row));
-
-                    species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
-
-                }
-
-            }
+            IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(creator)).OrderBy(s => s.GetShortName());
 
             // Display the species belonging to this user.
 
-            await _displaySpeciesAddedBy(user.Username, user.GetAvatarUrl(size: 32), species_list);
+            await ReplySpeciesAddedByAsync(creator, user.GetAvatarUrl(size: 32), species);
 
         }
         [Command("addedby"), Alias("ownedby", "own", "owned")]
@@ -497,21 +482,25 @@ namespace OurFoodChain.Bot.Modules {
             // If we get this overload, then the requested user does not currently exist in the guild.
 
             // If we've seen the user before, we can get their information from the database.
-            UserInfo userInfo = await UserUtils.GetUserInfoAsync(owner);
 
-            if (userInfo != null) {
+            ICreator creator = await Db.GetCreatorAsync(owner);
+
+            if (creator != null) {
 
                 // The user exists in the database, so create a list of all species they own.
-                Species[] species = await UserUtils.GetSpeciesAsync(userInfo);
+
+                IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(creator)).OrderBy(s => s.GetShortName());
 
                 // Display the species list.
-                await _displaySpeciesAddedBy(userInfo.Username, string.Empty, species.ToList());
+
+                await ReplySpeciesAddedByAsync(creator, string.Empty, species);
 
             }
             else {
 
                 // The user does not exist in the database.
-                await BotUtils.ReplyAsync_Error(Context, "No such user exists.");
+
+                await ReplyErrorAsync("No such user exists.");
 
             }
 
@@ -672,8 +661,6 @@ namespace OurFoodChain.Bot.Modules {
 
 
         }
-
-
 
         public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, string speciesName) {
             await ShowSpeciesInfoAsync(context, botConfiguration, db, string.Empty, speciesName);
@@ -859,21 +846,21 @@ namespace OurFoodChain.Bot.Modules {
             }
 
         }
-        private async Task _displaySpeciesAddedBy(string username, string thumbnailUrl, List<Species> speciesList) {
+        private async Task ReplySpeciesAddedByAsync(ICreator creator, string thumbnailUrl, IEnumerable<ISpecies> species) {
 
-            if (speciesList.Count() <= 0) {
+            if (species.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not submitted any species yet.", username));
+                await ReplyInfoAsync($"**{creator}** has not submitted any species yet.");
 
             }
             else {
 
-                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.SpeciesListToEmbedPages(speciesList.Select(s => new SpeciesAdapter(s)),
-                    fieldName: string.Format("Species owned by {0} ({1})", username, speciesList.Count())));
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Species owned by {creator} ({species.Count()})", species, options: EmbedPaginationOptions.AddPageNumbers);
 
-                embed.SetThumbnailUrl(thumbnailUrl);
+                foreach (Discord.Messaging.IEmbed page in pages)
+                    page.ThumbnailUrl = thumbnailUrl;
 
-                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
             }
 

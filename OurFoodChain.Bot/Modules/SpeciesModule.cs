@@ -635,20 +635,6 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, string speciesName) {
-            await ShowSpeciesInfoAsync(context, botConfiguration, db, string.Empty, speciesName);
-        }
-        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, string genusName, string speciesName) {
-
-            Species sp = await BotUtils.ReplyAsync_FindSpecies(context, genusName, speciesName,
-            async (BotUtils.ConfirmSuggestionArgs args) => await ShowSpeciesInfoAsync(context, botConfiguration, db, args.Suggestion));
-
-            if (sp is null)
-                return;
-
-            await ShowSpeciesInfoAsync(context, botConfiguration, db, sp);
-
-        }
         public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, Species species) {
 
             if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {

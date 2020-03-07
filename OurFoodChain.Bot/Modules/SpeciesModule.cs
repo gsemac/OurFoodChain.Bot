@@ -402,55 +402,66 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setowner", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOwner(string speciesName, IUser user) {
+
             await SetOwner(string.Empty, speciesName, user);
+
         }
-        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setowner", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOwner(string genusName, string speciesName, IUser user) {
 
-            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (species != null) {
+            if (species.IsValid()) {
 
-                await SpeciesUtils.SetOwnerAsync(species, user.Username, user.Id);
+                species.Creator = user.ToCreator();
+
+                await Db.UpdateSpeciesAsync(species);
 
                 // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
 
                 if (Config.TrophiesEnabled)
-                    await TrophyScanner.EnqueueAsync(new Creator(user.Id, user.Username), Context);
+                    await TrophyScanner.EnqueueAsync(user.ToCreator(), Context);
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.ShortName, user.Username));
+                await ReplySuccessAsync($"**{species.GetShortName()}** is now owned by **{species.Creator}**.");
 
             }
 
         }
-        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setowner", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOwner(string speciesName, string ownerName) {
+
             await SetOwner(string.Empty, speciesName, ownerName);
+
         }
-        [Command("setowner"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setowner", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetOwner(string genusName, string speciesName, string ownerName) {
 
-            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (species != null) {
+            if (species.IsValid()) {
 
                 // If we've seen this user before, get their user ID from the database.
 
-                UserInfo userInfo = await UserUtils.GetUserInfoAsync(ownerName);
+                ICreator creator = await Db.GetCreatorAsync(ownerName);
 
-                if (userInfo != null) {
+                if (creator.IsValid()) {
 
-                    ownerName = userInfo.Username;
-
-                    await SpeciesUtils.SetOwnerAsync(species, userInfo.Username, userInfo.Id);
+                    species.Creator = creator;
 
                 }
-                else
-                    await SpeciesUtils.SetOwnerAsync(species, ownerName);
+                else {
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** is now owned by **{1}**.", species.ShortName, ownerName));
+                    species.Creator = new Creator(ownerName);
+
+                    await ReplyWarningAsync($"**{species.Creator}** is not an existing user. Was this intentional?");
+
+                }
+
+                await Db.UpdateSpeciesAsync(species);
+
+                await ReplySuccessAsync($"**{species.GetShortName()}** is now owned by **{species.Creator}**.");
 
             }
 
@@ -547,13 +558,13 @@ namespace OurFoodChain.Bot.Modules {
             // Create and execute the search query.
 
             ISearchQuery query = new SearchQuery(queryString);
-            ISearchResult result = await Db.GetSearchResultsAsync(new SearchContext(Context, Db), query);
+            ISearchResult result = await Db.GetSearchResultsAsync(SearchContext, query);
 
             // Build the embed.
 
             if (result.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, "No species matching this query could be found.");
+                await ReplyInfoAsync("No species matching this query could be found.");
 
             }
             else {
@@ -562,8 +573,8 @@ namespace OurFoodChain.Bot.Modules {
 
                     List<IPicture> pictures = new List<IPicture>();
 
-                    foreach (Species species in result.ToArray())
-                        pictures.AddRange(await Db.GetPicturesAsync(new SpeciesAdapter(species)));
+                    foreach (ISpecies species in await result.GetResultsAsync())
+                        pictures.AddRange(species.Pictures);
 
                     await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
 

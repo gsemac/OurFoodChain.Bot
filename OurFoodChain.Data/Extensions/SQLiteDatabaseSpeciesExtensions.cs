@@ -47,10 +47,13 @@ namespace OurFoodChain.Data.Extensions {
 
         public static async Task UpdateSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name = $name WHERE id = $species_id")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name = $name, owner = $owner, user_id = $user_id WHERE id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 cmd.Parameters.AddWithValue("$name", species.Name.ToLowerInvariant());
-                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                cmd.Parameters.AddWithValue("$owner", species.Creator.Name);
+                cmd.Parameters.AddWithValue("$user_id", species.Creator.UserId);
 
                 await database.ExecuteNonQueryAsync(cmd);
 

@@ -192,7 +192,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // If the species already exists, do nothing.
 
-                await ReplyWarningAsync($"The species {BinomialName.Parse(genusName, speciesName)} already exists.");
+                await ReplyWarningAsync($"The species **{BinomialName.Parse(genusName, speciesName)}** already exists.");
 
             }
             else {
@@ -248,7 +248,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("setzone"), Alias("setzones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setzone", RunMode = RunMode.Async), Alias("setzones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetZone(string arg0, string arg1, string arg2 = "") {
 
             // Possible cases:
@@ -321,87 +321,82 @@ namespace OurFoodChain.Bot.Modules {
 
         }
         [Command("+zone", RunMode = RunMode.Async), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task PlusZone(string species, string zoneList) {
-            await PlusZone(string.Empty, species, zoneList, string.Empty);
+        public async Task PlusZone(string speciesName, string zoneNames) {
+
+            await PlusZone(string.Empty, speciesName, zoneNames, string.Empty);
+
         }
         [Command("+zone", RunMode = RunMode.Async), Alias("+zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task PlusZone(string genusName, string speciesName, string zoneList, string notes) {
+        public async Task PlusZone(string genusName, string speciesName, string zoneNames, string notes) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
             if (species.IsValid())
-                await AddSpeciesToZonesAsync(species, zoneList: zoneList, notes: notes, onlyShowErrors: false);
+                await AddSpeciesToZonesAsync(species, zoneList: zoneNames, notes: notes, onlyShowErrors: false);
 
         }
 
-        [Command("-zone"), Alias("-zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task MinusZone(string species, string zone) {
-            await MinusZone("", species, zone);
-        }
-        [Command("-zone"), Alias("-zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task MinusZone(string genus, string species, string zoneList) {
+        [Command("-zone", RunMode = RunMode.Async), Alias("-zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task MinusZone(string speciesName, string zoneNames) {
 
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeAsync(Context, Config, PrivilegeLevel.ServerModerator))
-                return;
+            await MinusZone(string.Empty, speciesName, zoneNames);
+
+        }
+        [Command("-zone", RunMode = RunMode.Async), Alias("-zones"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task MinusZone(string genusName, string speciesName, string zoneNames) {
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            // Get the zones that the species currently resides in.
-            // These will be used to show warning messages (e.g., doesn't exist in the given zone).
+                // Get the zones that the species currently resides in.
+                // These will be used to show warning messages (e.g., doesn't exist in the given zone).
 
-            IEnumerable<long> currentZoneIds = (await Db.GetZonesAsync(sp.Id))
-                .Where(info => info.Zone.Id.HasValue)
-                .Select(info => info.Zone.Id.Value);
+                IEnumerable<long> currentZoneIds = (await Db.GetZonesAsync(species.Id))
+                    .Where(info => info.Zone.Id.HasValue)
+                    .Select(info => info.Zone.Id.Value);
 
-            // Get the zones from user input.
+                // Get the zones from user input.
 
-            IEnumerable<string> zoneNames = ZoneUtilities.ParseZoneNameList(zoneList);
-            IEnumerable<IZone> zones = await Db.GetZonesAsync(zoneNames);
-            IEnumerable<string> invalidZones = zoneNames.Except(zones.Select(zone => zone.Name), StringComparer.OrdinalIgnoreCase);
+                IEnumerable<string> parsedZoneNames = ZoneUtilities.ParseZoneNameList(zoneNames);
+                IEnumerable<IZone> zones = await Db.GetZonesAsync(parsedZoneNames);
+                IEnumerable<string> invalidZones = parsedZoneNames.Except(zones.Select(zone => zone.Name), StringComparer.OrdinalIgnoreCase);
 
-            // Remove the zones from the species.
+                // Remove the zones from the species.
 
-            await Db.RemoveZonesAsync(new SpeciesAdapter(sp), zones);
+                await Db.RemoveZonesAsync(species, zones);
 
-            if (invalidZones.Count() > 0) {
+                if (invalidZones.Count() > 0) {
 
-                // Show a warning if the user provided any invalid zones.
+                    // Show a warning if the user provided any invalid zones.
 
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("{0} {1} not exist.",
-                    StringUtilities.ConjunctiveJoin(", ", invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
-                    invalidZones.Count() == 1 ? "does" : "do"));
+                    await ReplyWarningAsync(string.Format("{0} {1} not exist.",
+                        StringUtilities.ConjunctiveJoin(", ", invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
+                        invalidZones.Count() == 1 ? "does" : "do"));
 
-            }
+                }
 
-            if (zones.Any(zone => !currentZoneIds.Any(id => id == zone.Id))) {
+                if (zones.Any(zone => !currentZoneIds.Any(id => id == zone.Id))) {
 
-                // Show a warning if the species wasn't in one or more of the zones provided.
+                    // Show a warning if the species wasn't in one or more of the zones provided.
 
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is already absent from {1}.",
-                    sp.ShortName,
-                    StringUtilities.ConjunctiveJoin(", ",
-                        zones.Where(zone => !currentZoneIds.Any(id => id == zone.Id))
-                        .Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray()))
-                    );
+                    await ReplyWarningAsync(string.Format("**{0}** is already absent from {1}.",
+                        species.GetShortName(),
+                        StringUtilities.ConjunctiveJoin(", ", zones.Where(zone => !currentZoneIds.Any(id => id == zone.Id)).Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray())));
 
-            }
+                }
 
-            if (zones.Any(zone => currentZoneIds.Any(id => id == zone.Id))) {
+                if (zones.Any(zone => currentZoneIds.Any(id => id == zone.Id))) {
 
-                // Show a confirmation of all valid zones.
+                    // Show a confirmation of all valid zones.
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer inhabits {1}.",
-                    sp.ShortName,
-                    StringUtilities.DisjunctiveJoin(", ",
-                        zones.Where(zone => currentZoneIds.Any(id => id == zone.Id))
-                        .Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray()))
-                    );
+                    await ReplySuccessAsync(string.Format("**{0}** no longer inhabits {1}.",
+                        species.GetShortName(),
+                        StringUtilities.DisjunctiveJoin(", ", zones.Where(zone => currentZoneIds.Any(id => id == zone.Id)).Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray())));
+
+                }
 
             }
 

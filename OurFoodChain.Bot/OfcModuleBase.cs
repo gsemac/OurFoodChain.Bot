@@ -234,7 +234,7 @@ namespace OurFoodChain {
 
             embed.Title = string.Format("Matching species ({0})", speciesList.Count());
 
-            foreach (Species sp in speciesList)
+            foreach (ISpecies sp in speciesList)
                 lines.Add(sp.FullName);
 
             embed.Description = (string.Join(Environment.NewLine, lines));

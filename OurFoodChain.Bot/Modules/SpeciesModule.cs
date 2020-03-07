@@ -156,32 +156,32 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("setspecies"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetSpecies(string species, string newName) {
-            await SetSpecies("", species, newName);
+        [Command("setspecies", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetSpecies(string speciesName, string newSpeciesName) {
+
+            await SetSpecies(string.Empty, speciesName, newSpeciesName);
+
         }
-        [Command("setspecies"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetSpecies(string genus, string species, string newName) {
+        [Command("setspecies", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetSpecies(string genusName, string speciesName, string newSpeciesName) {
 
-            // Get the specified species.
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            newSpeciesName = newSpeciesName.SafeTrim();
 
-            if (sp is null)
-                return;
+            if (species.IsValid() && !string.IsNullOrWhiteSpace(newSpeciesName)) {
 
-            // Update the species.
+                string oldSpeciesName = species.ShortName;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name=$name WHERE id=$species_id;")) {
+                // Update the species.
 
-                cmd.Parameters.AddWithValue("$name", newName.ToLower());
-                cmd.Parameters.AddWithValue("$species_id", sp.Id);
+                species.Name = newSpeciesName;
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.UpdateSpeciesAsync(species);
+
+                await ReplySuccessAsync($"**{oldSpeciesName}** has been successfully renamed to **{BinomialName.Parse(genusName, newSpeciesName)}**.");
 
             }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been successfully renamed to **{1}**.", sp.ShortName, BotUtils.GenerateSpeciesName(sp.GenusName, newName)));
 
         }
 

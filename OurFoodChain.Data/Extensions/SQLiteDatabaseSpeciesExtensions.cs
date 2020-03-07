@@ -45,6 +45,19 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task UpdateSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name = $name WHERE id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$name", species.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+
         public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database) {
 
             List<ISpecies> species = new List<ISpecies>();

@@ -241,9 +241,9 @@ namespace OurFoodChain.Data.Extensions {
 
             if (taxon.GetRank() == TaxonRankType.Species) {
 
-                // Return all species with the same name as the taxon.
+                // Return the species corresponding to this taxon.
 
-                species.AddRange(await database.GetSpeciesAsync("", taxon.Name));
+                species.Add(await database.GetSpeciesAsync(taxon.Id));
 
             }
             else {

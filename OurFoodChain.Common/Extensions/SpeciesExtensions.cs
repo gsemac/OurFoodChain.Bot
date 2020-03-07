@@ -18,6 +18,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static bool IsExtinct(this ISpecies species) {
+
+            return species?.Status?.IsExinct ?? false;
+
+        }
+
     }
 
 }

@@ -485,7 +485,7 @@ namespace OurFoodChain.Bot.Modules {
 
             ICreator creator = await Db.GetCreatorAsync(owner);
 
-            if (creator != null) {
+            if (creator.IsValid()) {
 
                 // The user exists in the database, so create a list of all species they own.
 
@@ -511,16 +511,12 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get a random species from the database.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions) ORDER BY RANDOM() LIMIT 1;")) {
+            ISpecies species = await Db.GetRandomSpeciesAsync();
 
-                DataRow row = await Database.GetRowAsync(cmd);
-
-                if (row is null)
-                    await BotUtils.ReplyAsync_Info(Context, "There are currently no extant species.");
-                else
-                    await ShowSpeciesInfoAsync(Context, Config, Db, await SpeciesUtils.SpeciesFromDataRow(row));
-
-            }
+            if (species.IsValid())
+                await ReplySpeciesAsync(species);
+            else
+                await ReplyInfoAsync("There are currently no extant species.");
 
         }
         [Command("random"), Alias("rand")]
@@ -528,26 +524,20 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get the taxon.
 
-            Taxon taxon = await BotUtils.GetTaxonFromDb(taxonName);
+            ITaxon taxon = await ReplyValidateTaxaAsync((await Db.GetTaxaAsync(taxonName)).Where(t => t.GetRank() != TaxonRankType.Species));
 
-            if (taxon is null) {
+            if (taxon.IsValid()) {
 
-                await BotUtils.ReplyAsync_Error(Context, "No such taxon exists.");
+                // Get all species under that taxon.
 
-                return;
+                IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(taxon)).Where(s => !s.IsExtinct());
+
+                if (species.Count() <= 0)
+                    await ReplyInfoAsync($"{taxon.GetRank().GetName().ToTitle()} **{taxon.GetName()}** does not contain any extant species.");
+                else
+                    await ReplySpeciesAsync(species.ElementAt(NumberUtilities.GetRandomInteger(species.Count())));
 
             }
-
-            // Get all species under that taxon.
-
-            List<Species> species = new List<Species>();
-            species.AddRange(await BotUtils.GetSpeciesInTaxonFromDb(taxon));
-            species.RemoveAll(x => x.IsExtinct);
-
-            if (species.Count() <= 0)
-                await BotUtils.ReplyAsync_Info(Context, string.Format("{0} **{1}** does not contain any extant species.", StringUtilities.ToTitleCase(taxon.GetTypeName()), taxon.GetName()));
-            else
-                await ShowSpeciesInfoAsync(Context, Config, Db, species[BotUtils.RandomInteger(species.Count())]);
 
         }
 

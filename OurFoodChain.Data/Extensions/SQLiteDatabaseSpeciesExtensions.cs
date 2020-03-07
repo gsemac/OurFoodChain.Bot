@@ -203,6 +203,18 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<ISpecies> GetRandomSpeciesAsync(this SQLiteDatabase database) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions) ORDER BY RANDOM() LIMIT 1")) {
+
+                DataRow row = await database.GetRowAsync(cmd);
+
+                return row is null ? null : await database.CreateSpeciesFromDataRowAsync(row);
+
+            }
+
+        }
+
         public static async Task<IEnumerable<long>> GetAncestorIdsAsync(this SQLiteDatabase database, long? speciesId) {
 
             if (!speciesId.HasValue)

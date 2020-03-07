@@ -7,11 +7,13 @@ namespace OurFoodChain.Discord.Messaging {
     public class EmbedField :
         IEmbedField {
 
+        public const string EmptyName = "\u200B";
+
         public string Name { get; set; }
         public string Value { get; set; }
         public bool Inline { get; set; } = false;
 
-        public int Length => Name.Length + Value.Length;
+        public int Length => (int)(Name?.Length + Value?.Length);
 
         public EmbedField(string name, object value) {
 

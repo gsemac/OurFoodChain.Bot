@@ -12,7 +12,6 @@ using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
-using OurFoodChain.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -28,7 +27,7 @@ namespace OurFoodChain.Bot.Modules {
 
         // Public members       
 
-        [Command("info"), Alias("i")]
+        [Command("info", RunMode = RunMode.Async), Alias("i")]
         public async Task GetInfo([Remainder]string name) {
 
             // Prioritize species first.
@@ -36,11 +35,11 @@ namespace OurFoodChain.Bot.Modules {
             IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(name);
 
             if (matchingSpecies.Count() > 0) {
-
+               
                 ISpecies species = await ReplyValidateSpeciesAsync(matchingSpecies);
-
+               
                 if (species.IsValid())
-                    await ShowSpeciesAsync(species);
+                    await ReplySpeciesAsync(species);
 
             }
             else {
@@ -52,11 +51,11 @@ namespace OurFoodChain.Bot.Modules {
                 if (taxa.Count() <= 0) {
 
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
-
+                    
                     ISpecies species = await ReplySpeciesSuggestionAsync(string.Empty, name);
-
+                   
                     if (species.IsValid())
-                        await ShowSpeciesAsync(species);
+                        await ReplySpeciesAsync(species);
 
                 }
                 else {
@@ -64,16 +63,12 @@ namespace OurFoodChain.Bot.Modules {
                     ITaxon taxon = await ReplyValidateTaxaAsync(taxa);
 
                     if (taxon.IsValid())
-                        await BotUtils.Command_ShowTaxon(Context, Config, Db, taxa[0].type, name);
+                        await ReplyTaxonAsync(taxon);
 
                 }
 
             }
 
-        }
-        [Command("info"), Alias("i")]
-        public async Task GetInfo(string genusName, string speciesName) {
-            await ShowSpeciesInfoAsync(Context, Config, Db, genusName, speciesName);
         }
 
         [Command("species"), Alias("sp", "s")]
@@ -681,7 +676,8 @@ namespace OurFoodChain.Bot.Modules {
                         // If there's only one result, just show that species.
 
                         ISpecies species = (await result.GetResultsAsync()).First();
-                        IPaginatedMessage message = await EmbedUtilities.BuildSpeciesMessageAsync(species, null);
+
+                        await ReplySpeciesAsync(species);
 
                     }
                     else {
@@ -945,19 +941,6 @@ namespace OurFoodChain.Bot.Modules {
                 title = title.Trim();
 
             return title;
-
-        }
-
-        public async Task ShowSpeciesAsync(ISpecies species) {
-
-            IPaginatedMessage message = await EmbedUtilities.BuildSpeciesMessageAsync(species, BotContext);
-
-            await ReplyAsync(message);
-
-        }
-        public async Task ShowTaxonAsync(ITaxon taxon) {
-
-
 
         }
 

@@ -9,44 +9,34 @@ namespace OurFoodChain.Common.Utilities {
 
     public static class TaxonUtilities {
 
-        public static TaxonRankType GetRankFromRankName(string rankName) {
+        // Public members
 
-            if (string.IsNullOrEmpty(rankName))
-                return TaxonRankType.None;
-
-            TaxonRankType result;
-
-            if (string.IsNullOrEmpty(rankName))
-                result = TaxonRankType.None;
-
-            else if (!Enum.TryParse(rankName.Trim().ToLowerInvariant(), out result))
-                result = TaxonRankType.Custom;
-
-            return result;
-
-        }
-        public static string GetNameFromRank(TaxonRankType rank) {
+        public static string GetNameForRank(TaxonRankType rank, bool plural = false) {
 
             string result;
 
-            if (rank == TaxonRankType.None)
-                result = string.Empty;
+            if (plural) {
 
-            else if (rank != TaxonRankType.Custom)
-                result = rank.ToString().ToLowerInvariant();
+                result = GetPluralForRank(rank);
 
-            else
-                throw new ArgumentOutOfRangeException(nameof(rank));
+            }
+            else {
+
+                if (rank == TaxonRankType.None)
+                    result = string.Empty;
+
+                else if (rank != TaxonRankType.Custom)
+                    result = rank.ToString().ToLowerInvariant();
+
+                else
+                    throw new ArgumentOutOfRangeException(nameof(rank));
+
+            }
 
             return result;
 
         }
-        public static string GetPluralFromRank(TaxonRankType rank) {
-
-            return GetPluralFromRankName(GetNameFromRank(rank));
-
-        }
-        public static string GetPluralFromRankName(string rankName) {
+        public static string GetPluralName(string rankName) {
 
             if (string.IsNullOrEmpty(rankName))
                 return string.Empty;
@@ -72,6 +62,23 @@ namespace OurFoodChain.Common.Utilities {
                 return rankName + "s"; // e.g. domain -> domains
 
         }
+
+        public static TaxonRankType GetRankFromRankName(string rankName) {
+
+            if (string.IsNullOrEmpty(rankName))
+                return TaxonRankType.None;
+
+            TaxonRankType result;
+
+            if (string.IsNullOrEmpty(rankName))
+                result = TaxonRankType.None;
+
+            else if (!Enum.TryParse(rankName.Trim().ToLowerInvariant(), out result))
+                result = TaxonRankType.Custom;
+
+            return result;
+
+        }
         public static TaxonPrefix GetPrefixFromRankName(string rankName) {
 
             if (string.IsNullOrEmpty(rankName))
@@ -89,6 +96,7 @@ namespace OurFoodChain.Common.Utilities {
             return TaxonPrefix.None;
 
         }
+
         public static TaxonRankType GetParentRank(TaxonRankType rank) {
 
             switch (rank) {
@@ -137,6 +145,14 @@ namespace OurFoodChain.Common.Utilities {
                     return TaxonRankType.None;
 
             }
+
+        }
+
+        // Private members
+
+        private static string GetPluralForRank(TaxonRankType rank) {
+
+            return GetPluralName(GetNameForRank(rank));
 
         }
 

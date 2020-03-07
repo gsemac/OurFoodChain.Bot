@@ -12,6 +12,16 @@ namespace OurFoodChain.Common.Extensions {
             return StringUtilities.ToTitleCase(input);
 
         }
+        public static string ToSentence(this string input) {
+
+            return StringUtilities.ToSentenceCase(input);
+
+        }
+        public static string ToPossessive(this string input) {
+
+            return StringUtilities.ToPossessive(input);
+
+        }
 
         public static string After(this string input, string substring) {
 

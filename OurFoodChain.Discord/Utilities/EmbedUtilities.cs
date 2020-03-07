@@ -20,6 +20,8 @@ namespace OurFoodChain.Discord.Utilities {
 
     public static class EmbedUtilities {
 
+        // Public members
+
         public static Messaging.IEmbed BuildSuccessEmbed(string message) {
 
             Messaging.Embed embed = new Messaging.Embed {
@@ -204,21 +206,8 @@ namespace OurFoodChain.Discord.Utilities {
 
                 }
 
-                if (options.HasFlag(EmbedPaginationOptions.AddPageNumbers)) {
-
-                    int num = 1;
-
-                    foreach (Messaging.IEmbed page in pages) {
-
-                        string pageNumberString = string.Format("Page {0} of {1}", num, pages.Count());
-
-                        page.Footer = string.IsNullOrEmpty(page.Footer) ? pageNumberString : string.Format("{0} — {1}", pageNumberString, page.Footer);
-
-                        ++num;
-
-                    }
-
-                }
+                if (options.HasFlag(EmbedPaginationOptions.AddPageNumbers))
+                    AddPageNumbers(pages);
 
             }
             else {
@@ -228,6 +217,87 @@ namespace OurFoodChain.Discord.Utilities {
             }
 
             return pages;
+
+        }
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<string> listItems, int itemsPerPage = 40, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+
+            if (string.IsNullOrWhiteSpace(listTitle))
+                listTitle = Messaging.EmbedField.EmptyName;
+
+            IEnumerable<IEnumerable<string>> columns = ListToColumns(listItems, itemsPerPage / 2);
+            List<Messaging.IEmbed> pages = new List<Messaging.IEmbed>();
+
+            Messaging.IEmbed currentPage = new Messaging.Embed();
+            bool isFirstField = true;
+
+            foreach (IEnumerable<string> column in columns) {
+
+                StringBuilder builder = new StringBuilder();
+
+                foreach (string item in column)
+                    builder.AppendLine(item);
+
+                if (isFirstField) {
+
+                    currentPage.AddField(listTitle, builder.ToString(), inline: true);
+
+                    isFirstField = false;
+
+                }
+                else {
+
+                    currentPage.AddField(Messaging.EmbedField.EmptyName, builder.ToString(), inline: true);
+
+                    pages.Add(currentPage);
+
+                    currentPage = new Messaging.Embed();
+                    isFirstField = true;
+
+                }
+
+            }
+
+            if (currentPage.Fields.Count() > 0)
+                pages.Add(currentPage);
+
+            if (options.HasFlag(EmbedPaginationOptions.AddPageNumbers))
+                AddPageNumbers(pages);
+
+            return pages;
+
+        }
+
+        // Private members
+
+        private static void AddPageNumbers(IEnumerable<Messaging.IEmbed> pages) {
+
+            int num = 1;
+
+            foreach (Messaging.IEmbed page in pages) {
+
+                string pageNumberString = string.Format("Page {0} of {1}", num, pages.Count());
+
+                page.Footer = string.IsNullOrEmpty(page.Footer) ? pageNumberString : string.Format("{0} — {1}", pageNumberString, page.Footer);
+
+                ++num;
+
+            }
+
+        }
+        private static IEnumerable<IEnumerable<string>> ListToColumns(IEnumerable<string> items, int itemsPerColumn) {
+
+            List<List<string>> columns = new List<List<string>>();
+
+            foreach (string item in items) {
+
+                if (columns.Count <= 0 || columns.Last().Count >= itemsPerColumn)
+                    columns.Add(new List<string>());
+
+                columns.Last().Add(item);
+
+            }
+
+            return columns;
 
         }
 

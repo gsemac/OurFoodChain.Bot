@@ -15,7 +15,9 @@ namespace OurFoodChain.Discord.Extensions {
             embedBuilder.WithThumbnailUrl(embed.ThumbnailUrl);
             embedBuilder.WithDescription(embed.Description);
             embedBuilder.WithFooter(embed.Footer);
-            embedBuilder.WithColor(embed.Color.ToDiscordColor());
+
+            if (embed.Color.HasValue)
+                embedBuilder.WithColor(embed.Color.Value.ToDiscordColor());
 
             foreach (Messaging.IEmbedField field in embed.Fields)
                 embedBuilder.AddField(field.Name, field.Value, field.Inline);

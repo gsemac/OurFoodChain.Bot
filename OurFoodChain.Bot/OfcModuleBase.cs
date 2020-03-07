@@ -1,8 +1,12 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using OurFoodChain.Bot;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Generations;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
@@ -11,6 +15,7 @@ using OurFoodChain.Discord.Services;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,7 +45,7 @@ namespace OurFoodChain {
 
         public async Task ReplyAsync(IPaginatedMessage message) => await PaginatedMessageService.SendMessageAsync(Context, message);
         public async Task ReplyAndWaitAsync(IPaginatedMessage message) => await PaginatedMessageService.SendMessageAndWaitAsync(Context, message);
-        public async Task ReplyAsync(IEmbed message) => await ReplyAsync("", false, message.ToDiscordEmbed());
+        public async Task ReplyAsync(Discord.Messaging.IEmbed message) => await ReplyAsync("", false, message.ToDiscordEmbed());
 
         public async Task<ISpecies> GetSpeciesOrReplyAsync(string genusName, string speciesName) {
 
@@ -120,7 +125,7 @@ namespace OurFoodChain {
 
                 }
 
-                Embed embed = new Embed();
+                Discord.Messaging.Embed embed = new Discord.Messaging.Embed();
 
                 if (taxaDict.Keys.Count() > 1)
                     embed.Title = string.Format("Matching taxa ({0})", matchingTaxa.Count());
@@ -136,7 +141,7 @@ namespace OurFoodChain {
 
                     embed.AddField(string.Format("{0}{1} ({2})",
                         taxaDict.Keys.Count() == 1 ? "Matching " : "",
-                        taxaDict.Keys.Count() == 1 ? TaxonUtilities.GetPluralFromRank(type).ToLowerInvariant() : TaxonUtilities.GetPluralFromRank(type).ToTitle(),
+                        taxaDict.Keys.Count() == 1 ? type.GetName(true).ToLowerInvariant() : type.GetName(true).ToTitle(),
                         taxaDict[type].Count()),
                         fieldContent.ToString());
 
@@ -218,7 +223,7 @@ namespace OurFoodChain {
         }
         public async Task ReplyMatchingSpeciesAsync(IEnumerable<ISpecies> speciesList) {
 
-            Embed embed = new Embed();
+            Discord.Messaging.Embed embed = new Discord.Messaging.Embed();
 
             List<string> lines = new List<string>();
 
@@ -232,6 +237,224 @@ namespace OurFoodChain {
             await ReplyAsync(embed);
 
         }
+
+        public async Task ReplySpeciesAsync(ISpecies species) {
+
+            IPaginatedMessage message = await BuildSpeciesMessageAsync(species);
+
+            await ReplyAsync(message);
+
+        }
+        public async Task ReplyTaxonAsync(ITaxon taxon) {
+
+            IPaginatedMessage message = await BuildTaxonMessageAsync(taxon);
+
+            await ReplyAsync(message);
+
+        }
+
+        // Private members
+
+        public async Task<IPaginatedMessage> BuildSpeciesMessageAsync(ISpecies species) {
+
+            if (!species.IsValid())
+                return null;
+
+            Discord.Messaging.Embed embed = new Discord.Messaging.Embed {
+                Title = species.FullName
+            };
+
+            if (species.CommonNames.Count() > 0)
+                embed.Title += string.Format(" ({0})", string.Join(", ", species.CommonNames));
+
+            if (Config.GenerationsEnabled) {
+
+                // Add a field for the generation.
+
+                IGeneration gen = await Db.GetGenerationByDateAsync(species.CreationDate);
+
+                embed.AddField("Gen", gen is null ? "???" : gen.Number.ToString(), inline: true);
+
+            }
+
+            // Add a field for the species owner.
+
+            embed.AddField("Owner", await GetCreatorAsync(species.Creator), inline: true);
+
+            // Add a field for the species' zones.
+
+            IEnumerable<ISpeciesZoneInfo> speciesZoneList = await Db.GetZonesAsync(species);
+
+            if (speciesZoneList.Count() > 0)
+                embed.Color = (await Db.GetZoneTypeAsync(speciesZoneList.GroupBy(x => x.Zone.TypeId).OrderBy(x => x.Count()).Last().Key)).Color;
+
+            string zonesFieldValue = speciesZoneList.ToString(ZoneListToStringOptions.None, DiscordUtilities.MaxFieldLength);
+
+            embed.AddField("Zone(s)", string.IsNullOrEmpty(zonesFieldValue) ? "None" : zonesFieldValue, inline: true);
+
+            // Add the species' description.
+
+            StringBuilder descriptionBuilder = new StringBuilder();
+
+            if (species.Status.IsExinct) {
+
+                embed.Title = "[EXTINCT] " + embed.Title;
+                embed.Color = System.Drawing.Color.Red;
+
+                if (!string.IsNullOrEmpty(species.Status.ExtinctionReason))
+                    descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(DateUtilities.GetTimestampFromDate((DateTimeOffset)species.Status.ExtinctionDate), BotContext), species.Status.ExtinctionReason));
+
+            }
+
+            descriptionBuilder.Append(species.GetDescriptionOrDefault());
+
+            embed.Description = descriptionBuilder.ToString();
+
+            // Add the species' picture.
+
+            embed.ThumbnailUrl = species.GetPictureUrl();
+
+            if (!string.IsNullOrEmpty(Config.WikiUrlFormat)) {
+
+                // Discord automatically encodes certain characters in URIs, which doesn't allow us to update the config via Discord when we have "{0}" in the URL.
+                // Replace this with the proper string before attempting to call string.Format.
+
+                // string format = botContext.Configuration.WikiUrlFormat.Replace("%7B0%7D", "{0}");
+
+                // embed.Url = string.Format(format, Uri.EscapeUriString(GetWikiPageTitleForSpecies(species, common_names)));
+
+            }
+
+            // Create embed pages.
+
+            IEnumerable<Discord.Messaging.IEmbed> embedPages = EmbedUtilities.CreateEmbedPages(embed, EmbedPaginationOptions.AddPageNumbers);
+            IPaginatedMessage paginatedMessage = new Discord.Messaging.PaginatedMessage(embedPages);
+
+            return paginatedMessage;
+
+        }
+        public async Task<IPaginatedMessage> BuildTaxonMessageAsync(ITaxon taxon) {
+
+            if (!taxon.IsValid())
+                return null;
+
+            List<string> subItems = new List<string>();
+
+            if (taxon.Rank.Type == TaxonRankType.Species) {
+
+                ISpecies species = await Db.GetSpeciesAsync(taxon.Id);
+
+                return await BuildSpeciesMessageAsync(species);
+
+            }
+            else if (taxon.Rank.Type == TaxonRankType.Genus) {
+
+                // For genera, get all species underneath it.
+                // This will let us check if the species is extinct, and cross it out if that's the case.
+
+                List<ISpecies> speciesList = new List<ISpecies>();
+
+                foreach (ITaxon subtaxon in await Db.GetSubtaxaAsync(taxon))
+                    speciesList.Add(await Db.GetSpeciesAsync(subtaxon.Id));
+
+                speciesList.Sort((lhs, rhs) => lhs.GetName().CompareTo(rhs.GetName()));
+
+                foreach (ISpecies species in speciesList.Where(s => s.IsValid())) {
+
+                    if (species.Status.IsExinct)
+                        subItems.Add(string.Format("~~{0}~~", species.GetName()));
+                    else
+                        subItems.Add(species.GetName());
+
+                }
+
+            }
+            else {
+
+                // Get all subtaxa under this taxon.
+
+                IEnumerable<ITaxon> subtaxa = await Db.GetSubtaxaAsync(taxon);
+
+                // Add all subtaxa to the list.
+
+                foreach (ITaxon subtaxon in subtaxa) {
+
+                    if (subtaxon.Rank.Type == TaxonRankType.Species) {
+
+                        // Do not attempt to count sub-taxa for species.
+
+                        subItems.Add(subtaxon.GetName());
+
+                    }
+                    else {
+
+                        // Count the number of species under this taxon.
+                        // Taxa with no species under them will not be displayed.
+
+                        long speciesCount = await Db.GetSpeciesCountAsync(taxon);
+
+                        if (speciesCount > 0) {
+
+                            // Count the sub-taxa under this taxon.
+
+                            long subtaxaCount = (await Db.GetSubtaxaAsync(taxon)).Count();
+
+                            // Add the taxon to the list.
+
+                            if (subtaxaCount > 0)
+                                subItems.Add(string.Format("{0} ({1})", subtaxon.GetName(), subtaxaCount));
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            // Generate embed pages.
+
+            string title = taxon.CommonNames.Count() <= 0 ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName());
+            string fieldTitle = string.Format("{0} in this {1} ({2}):", taxon.GetChildRank().GetName(true).ToTitle(), taxon.GetRank().GetName().ToLowerInvariant(), subItems.Count());
+            string thumbnailUrl = taxon.GetPictureUrl();
+
+            StringBuilder description = new StringBuilder();
+            description.AppendLine(taxon.GetDescriptionOrDefault());
+
+            if (subItems.Count() <= 0) {
+
+                description.AppendLine();
+                description.AppendLine(string.Format("This {0} contains no {1}.", taxon.GetRank().GetName(), taxon.GetChildRank().GetName(true)));
+
+            }
+
+            IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(fieldTitle, subItems, options: EmbedPaginationOptions.AddPageNumbers);
+            IPaginatedMessage paginatedMessage = new Discord.Messaging.PaginatedMessage(pages);
+
+            foreach (Discord.Messaging.IEmbed page in paginatedMessage.Select(m => m.Embed)) {
+
+                page.Title = title;
+                page.ThumbnailUrl = thumbnailUrl;
+                page.Description = description.ToString();
+
+                if (subItems.Count() > 0 && taxon.GetRank() != TaxonRankType.Genus)
+                    page.Footer += string.Format(" — Empty {0} are not listed.", taxon.GetChildRank().GetName(true));
+
+            }
+
+            return paginatedMessage;
+
+        }
+
+        public async Task<ICreator> GetCreatorAsync(ICreator creator) {
+
+            IUser user = await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, creator);
+
+            return user?.ToCreator() ?? creator;
+
+        }
+
+        // Private members
 
     }
 

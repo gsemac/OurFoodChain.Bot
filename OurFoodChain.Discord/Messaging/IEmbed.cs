@@ -12,7 +12,7 @@ namespace OurFoodChain.Discord.Messaging {
         string ThumbnailUrl { get; set; }
         string Description { get; set; }
         string Footer { get; set; }
-        Color Color { get; set; }
+        Color? Color { get; set; }
         IEnumerable<IEmbedField> Fields { get; }
 
         int Length { get; }

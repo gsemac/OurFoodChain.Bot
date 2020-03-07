@@ -16,14 +16,20 @@ namespace OurFoodChain.Discord.Messaging {
         public string ThumbnailUrl { get; set; }
         public string Description { get; set; }
         public string Footer { get; set; }
-        public Color Color { get; set; }
+        public Color? Color { get; set; } 
 
         public IEnumerable<IEmbedField> Fields => fields;
 
         public int Length {
             get {
 
-                int length = Title.Length + Url.Length + ThumbnailUrl.Length + Description.Length + Footer.Length;
+                int length = (int)(
+                    Title?.Length +
+                    Url?.Length +
+                    ThumbnailUrl?.Length +
+                    Description?.Length + 
+                    Footer?.Length
+                    ?? 0);
 
                 length += Fields.Sum(f => f.Length);
 

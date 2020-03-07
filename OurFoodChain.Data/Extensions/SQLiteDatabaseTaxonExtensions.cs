@@ -235,11 +235,46 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<long> GetSpeciesCountAsync(this SQLiteDatabase database, ITaxon taxon) {
+
+            if (!taxon.IsValid())
+                return 0;
+
+            long speciesCount = 0;
+
+            if (taxon.Rank.Type == TaxonRankType.Species) {
+
+                // If a species was passed in, count it as a single species.
+                speciesCount += 1;
+
+            }
+            else if (taxon.Rank.Type == TaxonRankType.Genus) {
+
+                // Count all species within this genus.
+
+                speciesCount += (await database.GetSubtaxaAsync(taxon)).Count();
+
+            }
+            else {
+
+                // Get all subtaxa and call this function recursively to get the species from each of them.
+
+                IEnumerable<ITaxon> subtaxa = await database.GetSubtaxaAsync(taxon);
+
+                foreach (ITaxon subtaxon in subtaxa)
+                    speciesCount += await database.GetSpeciesCountAsync(taxon);
+
+            }
+
+            return speciesCount;
+
+        }
+
         // Private members
 
         private static string GetTableNameForRank(TaxonRankType rank) {
 
-            string tableName = TaxonUtilities.GetNameFromRank(rank).ToTitle();
+            string tableName = TaxonUtilities.GetNameForRank(rank).ToTitle();
 
             if (tableName.Equals("Order"))
                 tableName = "Ord";
@@ -252,7 +287,7 @@ namespace OurFoodChain.Data.Extensions {
             if (rank <= 0)
                 return string.Empty;
 
-            return string.Format("{0}_id", TaxonUtilities.GetNameFromRank(rank).ToLowerInvariant());
+            return string.Format("{0}_id", TaxonUtilities.GetNameForRank(rank).ToLowerInvariant());
 
         }
         private static ITaxon CreateTaxonFromDataRow(DataRow row, TaxonRankType rank) {

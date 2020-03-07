@@ -20,7 +20,7 @@ namespace OurFoodChain.Common.Taxa {
                 if (!string.IsNullOrEmpty(_rankName))
                     return _rankName;
 
-                return TaxonUtilities.GetNameFromRank(Type);
+                return TaxonUtilities.GetNameForRank(Type);
 
             }
         }
@@ -28,9 +28,9 @@ namespace OurFoodChain.Common.Taxa {
             get {
 
                 if (!string.IsNullOrEmpty(_rankName))
-                    return TaxonUtilities.GetPluralFromRankName(_rankName);
+                    return TaxonUtilities.GetPluralName(_rankName);
 
-                return TaxonUtilities.GetPluralFromRankName(TaxonUtilities.GetNameFromRank(Type));
+                return TaxonUtilities.GetNameForRank(Type, true);
 
             }
         }

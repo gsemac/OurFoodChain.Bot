@@ -257,6 +257,72 @@ namespace OurFoodChain {
             await ReplyAsync(message);
 
         }
+        public async Task ReplyGalleryAsync(string galleryName, IEnumerable<IPicture> pictures) {
+
+            // If there were no images for this query, show a message and quit.
+
+            if (pictures.Count() <= 0) {
+
+                await ReplyInfoAsync($"**{galleryName.ToTitle()}** does not have any pictures.");
+
+            }
+            else {
+
+                // Display a paginated image gallery.
+
+                List<Discord.Messaging.IEmbed> pages = new List<Discord.Messaging.IEmbed>(pictures.Select((picture, i) => {
+
+                    Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
+
+                    string title = string.Format("Pictures of {0} ({1} of {2})", galleryName.ToTitle(), i + 1, pictures.Count());
+                    string footer = string.Format("\"{0}\" by {1} — {2}", picture.Name, picture.Artist, picture.Caption);
+
+                    embed.Title = title;
+                    embed.ImageUrl = picture.Url;
+                    embed.Description = picture.Description;
+                    embed.Footer = footer;
+
+                    return embed;
+
+
+                }));
+
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+
+            }
+
+        }
+        public async Task ReplyLeaderboardAsync(ILeaderboard leaderboard) {
+
+            List<string> lines = new List<string>(leaderboard.Select(item => {
+
+                int rankWidth = leaderboard.Count().ToString().Length;
+                int scoreWidth = leaderboard.Max(i => i.Score).ToString().Length;
+
+                return string.Format("**`{0}.`**{1}`{2}` {3}",
+                    item.Rank.ToString("0".PadRight(rankWidth, '0')),
+                    item.Icon,
+                    item.Score.ToString("0".PadRight(rankWidth, '0')),
+                    string.Format(item.Rank <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(item.Name) ? "Results" : item.Name.ToTitle())
+                );
+
+            }));
+
+            IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, itemsPerPage: 20, columnsPerPage: 1, options: EmbedPaginationOptions.AddPageNumbers);
+
+            string title = leaderboard.Title;
+
+            if (string.IsNullOrWhiteSpace(title))
+                title = "Leaderboard";
+
+            title = $"🏆 {title.ToTitle()} ({lines.Count()})";
+
+            foreach (Discord.Messaging.IEmbed page in pages)
+                page.Title = title;
+
+            await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+
+        }
 
         // Private members
 

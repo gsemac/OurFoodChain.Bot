@@ -145,7 +145,7 @@ namespace OurFoodChain.Data.Extensions {
             result.Add(TaxonRankType.Species, species);
 
             if (species.Genus != null)
-                result.Add(TaxonRankType.Genus, species);
+                result.Add(TaxonRankType.Genus, species.Genus);
 
             if (result.ContainsKey(TaxonRankType.Genus)) {
 

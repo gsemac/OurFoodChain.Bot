@@ -120,7 +120,7 @@ namespace OurFoodChain.Data.Queries {
 
             // Remove all empty groups.
 
-            foreach (string key in groups.Keys.Where(x => groups[x].Count() <= 0))
+            foreach (string key in groups.Keys.Where(x => groups[x].Count() <= 0).ToArray())
                 groups.Remove(key);
 
         }

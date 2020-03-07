@@ -3,6 +3,7 @@ using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Queries;
 using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Commands;
 using OurFoodChain.Discord.Extensions;
@@ -24,6 +25,7 @@ namespace OurFoodChain.Discord.Utilities {
         // Public members
 
         public const int DefaultItemsPerPage = 40;
+        public const int DefaultColumnsPerPage = 2;
 
         public static Messaging.IEmbed BuildSuccessEmbed(string message) {
 
@@ -222,16 +224,16 @@ namespace OurFoodChain.Discord.Utilities {
             return pages;
 
         }
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<string> listItems, int itemsPerPage = DefaultItemsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<string> listItems, int itemsPerPage = DefaultItemsPerPage, int columnsPerPage = DefaultColumnsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
 
             if (string.IsNullOrWhiteSpace(listTitle))
                 listTitle = Messaging.EmbedField.EmptyName;
 
-            IEnumerable<IEnumerable<string>> columns = ListToColumns(listItems, itemsPerPage / 2);
+            IEnumerable<IEnumerable<string>> columns = ListToColumns(listItems, itemsPerPage / columnsPerPage);
             List<Messaging.IEmbed> pages = new List<Messaging.IEmbed>();
 
             Messaging.IEmbed currentPage = new Messaging.Embed();
-            bool isFirstField = true;
+            int fieldCount = 0;
 
             foreach (IEnumerable<string> column in columns) {
 
@@ -240,11 +242,22 @@ namespace OurFoodChain.Discord.Utilities {
                 foreach (string item in column)
                     builder.AppendLine(item);
 
-                if (isFirstField) {
+                if (fieldCount <= 0) {
 
-                    currentPage.AddField(listTitle, builder.ToString(), inline: true);
+                    if (columnsPerPage == 1) {
 
-                    isFirstField = false;
+                        // If there's only one column, add text directly to the description.
+
+                        currentPage.Description = builder.ToString();
+
+                    }
+                    else {
+
+                        currentPage.AddField(listTitle, builder.ToString(), inline: true);
+
+                    }
+
+                    ++fieldCount;
 
                 }
                 else {
@@ -253,15 +266,23 @@ namespace OurFoodChain.Discord.Utilities {
 
                     pages.Add(currentPage);
 
-                    currentPage = new Messaging.Embed();
-                    isFirstField = true;
+                    if (++fieldCount >= columnsPerPage) {
+
+                        currentPage = new Messaging.Embed();
+                        fieldCount = 0;
+
+                    }
 
                 }
 
             }
 
-            if (currentPage.Fields.Count() > 0)
+            if (currentPage.Fields.Count() > 0 || currentPage.Description.Length > 0)
                 pages.Add(currentPage);
+
+            if (columnsPerPage == 1)
+                foreach (Messaging.IEmbed page in pages)
+                    page.Title = listTitle;
 
             if (options.HasFlag(EmbedPaginationOptions.AddPageNumbers))
                 AddPageNumbers(pages);
@@ -269,7 +290,7 @@ namespace OurFoodChain.Discord.Utilities {
             return pages;
 
         }
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, int itemsPerPage = DefaultItemsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, int itemsPerPage = DefaultItemsPerPage, int columnsPerPage = DefaultColumnsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
 
             IEnumerable<string> stringListItems = listItems.Select(species => {
 
@@ -282,7 +303,49 @@ namespace OurFoodChain.Discord.Utilities {
 
             });
 
-            return CreateEmbedPages(listTitle, stringListItems, itemsPerPage, options);
+            return CreateEmbedPages(listTitle, stringListItems, itemsPerPage, columnsPerPage, options);
+
+        }
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(ISearchResult searchResult) {
+
+            List<Messaging.IEmbed> pages = new List<Messaging.IEmbed>();
+
+            int itemsPerField = 10;
+            int fieldsPerPage = 6;
+
+            foreach (ISearchResultGroup group in searchResult.Groups) {
+
+                IEnumerable<string> items = group.GetStringResults();
+
+                IEnumerable<IEnumerable<string>> columns = ListToColumns(items, itemsPerField);
+                int columnIndex = 1;
+
+                foreach (IEnumerable<string> column in columns) {
+
+                    // Create the field for this column.
+
+                    string title = group.Name.Length > 25 ? group.Name.Substring(0, 22) + "..." : group.Name;
+                    string fieldName = columnIndex == 1 ? string.Format("{0} ({1})", title.ToTitle(), items.Count()) : string.Format("...", title.ToTitle());
+                    string fieldValue = string.Join(Environment.NewLine, column);
+
+                    IEmbedField field = new Messaging.EmbedField(fieldName, fieldValue) { Inline = true };
+
+                    ++columnIndex;
+
+                    // Add the field to the embed, creating a new page if needed.
+
+                    int fieldLength = field.Length;
+
+                    if (pages.Count() <= 0 || pages.Last().Fields.Count() >= fieldsPerPage || pages.Last().Length + fieldLength > DiscordUtilities.MaxEmbedLength)
+                        pages.Add(new Messaging.Embed());
+
+                    pages.Last().AddField(field);
+
+                }
+
+            }
+
+            return pages;
 
         }
 

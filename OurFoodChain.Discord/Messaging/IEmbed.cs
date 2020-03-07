@@ -9,6 +9,7 @@ namespace OurFoodChain.Discord.Messaging {
 
         string Title { get; set; }
         string Url { get; set; }
+        string ImageUrl { get; set; }
         string ThumbnailUrl { get; set; }
         string Description { get; set; }
         string Footer { get; set; }

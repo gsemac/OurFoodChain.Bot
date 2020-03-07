@@ -560,9 +560,9 @@ namespace OurFoodChain.Bot.Modules {
             ISearchQuery query = new SearchQuery(queryString);
             ISearchResult result = await Db.GetSearchResultsAsync(SearchContext, query);
 
-            // Build the embed.
-
             if (result.Count() <= 0) {
+
+                // There are no results to display.
 
                 await ReplyInfoAsync("No species matching this query could be found.");
 
@@ -571,54 +571,26 @@ namespace OurFoodChain.Bot.Modules {
 
                 if (result.DisplayFormat == SearchResultDisplayFormat.Gallery) {
 
+                    // Display the result as a picture gallery.
+
                     List<IPicture> pictures = new List<IPicture>();
 
                     foreach (ISpecies species in await result.GetResultsAsync())
                         pictures.AddRange(species.Pictures);
 
-                    await GalleryCommands.ShowGalleryAsync(Context, string.Format("search results ({0})", result.Count()), pictures.ToArray());
+                    await ReplyGalleryAsync($"search results ({result.Count()})", pictures);
 
                 }
                 else if (result.DisplayFormat == SearchResultDisplayFormat.Leaderboard) {
 
-                    // Match each group to a rank depending on how many results it contains.
+                    // Display the result as a leaderboard.
 
-                    Dictionary<ISearchResultGroup, long> groupRanks = new Dictionary<ISearchResultGroup, long>();
+                    ILeaderboard leaderboard = new Leaderboard("Search results");
 
-                    long rank = 0;
-                    int lastCount = -1;
+                    foreach (ISearchResultGroup group in result.Groups)
+                        leaderboard.Add(group.Name, group.Count());
 
-                    foreach (ISearchResultGroup group in result.Groups.OrderByDescending(x => x.Count())) {
-
-                        groupRanks[group] = (lastCount >= 0 && group.Count() == lastCount) ? rank : ++rank;
-
-                        lastCount = group.Count();
-
-                    }
-
-                    // Create a list of groups that will be displayed to the user.
-
-                    List<string> lines = new List<string>();
-
-                    foreach (ISearchResultGroup group in result.Groups) {
-
-                        lines.Add(string.Format("**`{0}.`**{1}`{2}` {3}",
-                            groupRanks[group].ToString("000"),
-                            UserRank.GetRankIcon(groupRanks[group]),
-                            group.Count().ToString("000"),
-                            string.Format(groupRanks[group] <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(group.Name) ? "Results" : StringUtilities.ToTitleCase(group.Name))
-                        ));
-
-                    }
-
-                    PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
-                        Title = string.Format("Search results ({0})", result.Groups.Count())
-                    };
-
-                    embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
-                    embed.AddPageNumbers();
-
-                    await DiscordUtils.SendMessageAsync(Context, embed.Build());
+                    await ReplyLeaderboardAsync(leaderboard);
 
                 }
                 else {
@@ -634,25 +606,25 @@ namespace OurFoodChain.Bot.Modules {
                     }
                     else {
 
-                        PaginatedMessageBuilder embed;
+                        IPaginatedMessage message;
 
                         if (result.ContainsGroup(Data.Queries.SearchResult.DefaultGroupName)) {
 
                             // If there's only one group, just list the species without creating separate fields.
-                            embed = new PaginatedMessageBuilder(EmbedUtils.ListToEmbedPages(result.DefaultGroup.GetStringResults().ToList(), fieldName: string.Format("Search results ({0})", result.Count())));
+
+                            message = new Discord.Messaging.PaginatedMessage(EmbedUtilities.CreateEmbedPages(
+                                $"Search results ({result.Count()})",
+                                result.DefaultGroup.GetStringResults(),
+                                options: EmbedPaginationOptions.AddPageNumbers));
 
                         }
                         else {
 
-                            embed = new PaginatedMessageBuilder();
-                            embed.AddPages(EmbedUtils.SearchQueryResultToEmbedPages(result));
+                            message = new Discord.Messaging.PaginatedMessage(EmbedUtilities.CreateEmbedPages(result));
 
                         }
 
-                        embed.SetFooter("");
-                        embed.AddPageNumbers();
-
-                        await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                        await ReplyAsync(message);
 
                     }
 

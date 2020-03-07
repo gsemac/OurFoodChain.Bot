@@ -142,7 +142,7 @@ namespace OurFoodChain {
                     StringBuilder fieldContent = new StringBuilder();
 
                     foreach (ITaxon taxon in taxaDict[type])
-                        fieldContent.AppendLine(type == TaxonRankType.Species ? (await Db.GetSpeciesAsync(taxon.Id))?.ShortName : taxon.GetName());
+                        fieldContent.AppendLine(type == TaxonRankType.Species ? (await Db.GetSpeciesAsync(taxon.Id))?.GetShortName() : taxon.GetName());
 
                     embed.AddField(string.Format("{0}{1} ({2})",
                         taxaDict.Keys.Count() == 1 ? "Matching " : "",
@@ -234,8 +234,8 @@ namespace OurFoodChain {
 
             embed.Title = string.Format("Matching species ({0})", speciesList.Count());
 
-            foreach (ISpecies sp in speciesList)
-                lines.Add(sp.FullName);
+            foreach (ISpecies species in speciesList)
+                lines.Add(species.GetFullName());
 
             embed.Description = (string.Join(Environment.NewLine, lines));
 
@@ -266,7 +266,7 @@ namespace OurFoodChain {
                 return null;
 
             Discord.Messaging.Embed embed = new Discord.Messaging.Embed {
-                Title = species.FullName
+                Title = species.GetShortName()
             };
 
             if (species.CommonNames.Count() > 0)

@@ -1,4 +1,5 @@
 ﻿using Discord;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data.Queries;
@@ -218,9 +219,9 @@ namespace OurFoodChain {
 
                 foreach (ISpecies sp in column)
                     if (flags.HasFlag(EmbedPagesFlag.CrossOutExtinctSpecies) && sp.Status.IsExinct)
-                        builder.AppendLine(string.Format("~~{0}~~", sp.ShortName));
+                        builder.AppendLine(string.Format("~~{0}~~", sp.GetShortName()));
                     else
-                        builder.AppendLine(sp.ShortName);
+                        builder.AppendLine(sp.GetShortName());
 
                 if (is_first_field) {
 

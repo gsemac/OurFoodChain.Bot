@@ -387,7 +387,7 @@ namespace OurFoodChain.Gotchis {
 
             // Generate a name for the gotchi.
 
-            result.Gotchi.Name = (species is null ? "Wild Gotchi" : species.ShortName) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.Level);
+            result.Gotchi.Name = (species is null ? "Wild Gotchi" : species.GetShortName()) + string.Format(" (Lv. {0})", result.Stats is null ? 1 : result.Stats.Level);
 
             return result;
 

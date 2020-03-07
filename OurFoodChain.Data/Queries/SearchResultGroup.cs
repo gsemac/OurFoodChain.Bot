@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Common.Taxa;
+﻿using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -86,7 +87,7 @@ namespace OurFoodChain.Data.Queries {
             if (formatter != null)
                 result = await formatter(species);
             else
-                result = species.ShortName;
+                result = species.GetShortName();
 
             if (species.Status.IsExinct)
                 result = string.Format("~~{0}~~", result);

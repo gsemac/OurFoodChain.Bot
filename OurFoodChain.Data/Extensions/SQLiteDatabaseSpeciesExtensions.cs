@@ -178,7 +178,7 @@ namespace OurFoodChain.Data.Extensions {
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
                     result.Add(await database.CreateSpeciesFromDataRowAsync(row));
 
-                result.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
+                result.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
             }
 
@@ -455,7 +455,7 @@ namespace OurFoodChain.Data.Extensions {
                 pictures.Insert(0, species.Pictures.First());
 
             pictures.ForEach(p => {
-                p.Caption = string.Format("Depiction of {0}", species.ShortName);
+                p.Caption = string.Format("Depiction of {0}", species.GetShortName());
             });
 
             return pictures;

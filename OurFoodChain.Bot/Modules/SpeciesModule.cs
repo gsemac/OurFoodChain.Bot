@@ -93,7 +93,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get all species.
 
-            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync()).OrderBy(s => s.ShortName));
+            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync()).OrderBy(s => s.GetShortName()));
 
             if (species.Count <= 0) {
 
@@ -123,7 +123,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Get all species under that taxon.
 
-                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon)).OrderBy(s => s.ShortName));
+                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon)).OrderBy(s => s.GetShortName()));
 
                 // Create embed pages.
 
@@ -171,7 +171,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid() && !string.IsNullOrWhiteSpace(newSpeciesName)) {
 
-                string oldSpeciesName = species.ShortName;
+                string oldSpeciesName = species.GetShortName();
 
                 // Update the species.
 
@@ -858,7 +858,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await ReplySuccessAsync(
                     string.Format("**{0}** now inhabits {1}.",
-                    species.ShortName,
+                    species.GetShortName(),
                     StringUtilities.ConjunctiveJoin(", ", zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }

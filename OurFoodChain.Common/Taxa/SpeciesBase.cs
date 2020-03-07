@@ -20,8 +20,6 @@ namespace OurFoodChain.Common.Taxa {
         public virtual ICollection<IPicture> Pictures { get; set; } = new List<IPicture>();
 
         public BinomialName BinomialName => new BinomialName(Genus.Name, Name);
-        public string FullName => BinomialName.ToString(BinomialNameFormat.Full);
-        public string ShortName => BinomialName.ToString(BinomialNameFormat.Abbreviated);
         public long? ParentId {
             get => Genus.Id;
             set => throw new InvalidOperationException("Set the parent taxon directly through the Genus property.");

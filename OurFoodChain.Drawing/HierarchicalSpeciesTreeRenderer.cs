@@ -309,7 +309,7 @@ namespace OurFoodChain.Drawing {
 
             // Draw the name of the species.
 
-            canvas.DrawText(node.Value.Species.ShortName,
+            canvas.DrawText(node.Value.Species.GetShortName(),
                 new PointF(node.Value.Bounds.X, node.Value.Bounds.Y),
                 font,
                 node.Value.Species.Id == HighlightedSpecies.Id ? HighlightColor : TextColor);

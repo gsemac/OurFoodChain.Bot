@@ -22,11 +22,11 @@ namespace OurFoodChain.Data.Queries {
             switch (ParseFormatBy(Value)) {
 
                 case FormatBy.CommonName:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.CommonNames.FirstOrDefault()?.ToTitle() ?? species.ShortName));
+                    await result.FormatByAsync(async (species) => await Task.FromResult(species.CommonNames.FirstOrDefault()?.ToTitle() ?? species.GetShortName()));
                     break;
 
                 case FormatBy.FullName:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.FullName));
+                    await result.FormatByAsync(async (species) => await Task.FromResult(species.GetFullName()));
                     break;
 
                 case FormatBy.SpeciesOnly:
@@ -50,7 +50,7 @@ namespace OurFoodChain.Data.Queries {
 
                 default:
                 case FormatBy.ShortName:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.ShortName));
+                    await result.FormatByAsync(async (species) => await Task.FromResult(species.GetShortName()));
                     break;
 
             }

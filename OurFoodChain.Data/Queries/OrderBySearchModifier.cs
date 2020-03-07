@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Common.Taxa;
+﻿using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace OurFoodChain.Data.Queries {
 
                 default:
                 case OrderBy.Default:
-                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName)));
+                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName())));
                     break;
 
             }

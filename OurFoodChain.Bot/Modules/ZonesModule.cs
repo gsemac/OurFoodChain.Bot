@@ -136,7 +136,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     List<ISpecies> species_list = new List<ISpecies>(await Db.GetSpeciesAsync(zone));
 
-                    species_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
+                    species_list.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
                     // Starting building a paginated message.
                     // The message will have a paginated species list, and a toggle button to display the species sorted by role.

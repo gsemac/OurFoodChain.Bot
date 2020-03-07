@@ -41,12 +41,12 @@ namespace OurFoodChain.Bot.Services {
 
         // Protected members
 
-        protected override async Task MessageReceivedAsync(SocketMessage rawMessage) {
+        protected override async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
             if (await DiscordUtils.HandleMultiPartMessageResponseAsync(rawMessage))
                 return;
 
-            await base.MessageReceivedAsync(rawMessage);
+            await base.OnMessageReceivedAsync(rawMessage);
 
         }
 

@@ -35,9 +35,9 @@ namespace OurFoodChain.Bot.Modules {
             IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(name);
 
             if (matchingSpecies.Count() > 0) {
-               
+
                 ISpecies species = await ReplyValidateSpeciesAsync(matchingSpecies);
-               
+
                 if (species.IsValid())
                     await ReplySpeciesAsync(species);
 
@@ -51,9 +51,9 @@ namespace OurFoodChain.Bot.Modules {
                 if (taxa.Count() <= 0) {
 
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
-                    
+
                     ISpecies species = await ReplySpeciesSuggestionAsync(string.Empty, name);
-                   
+
                     if (species.IsValid())
                         await ReplySpeciesAsync(species);
 

@@ -34,7 +34,8 @@ namespace OurFoodChain.Discord.Services {
             _discordClient = discordClient;
             CommandService = commandService;
 
-            _discordClient.MessageReceived += MessageReceivedAsync;
+            _discordClient.MessageReceived += OnMessageReceivedAsync;
+            CommandService.CommandExecuted += OnCommandExecutedAsync;
 
         }
 
@@ -58,19 +59,19 @@ namespace OurFoodChain.Discord.Services {
 
         protected CommandService CommandService { get; private set; }
 
-        protected virtual async Task MessageReceivedAsync(SocketMessage rawMessage) {
+        protected virtual async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
             if (rawMessage.Content == _configuration.Prefix)
                 return;
 
-            if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage)) {
+            if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage))
+                await HandleCommandAsync(rawMessage);
 
-                IResult commandResult = await HandleCommandAsync(rawMessage);
+        }
+        protected async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result) {
 
-                if (!commandResult.IsSuccess)
-                    await ShowCommandErrorAsync(rawMessage, commandResult);
-
-            }
+            if (!string.IsNullOrEmpty(result?.ErrorReason))
+                await ShowCommandErrorAsync(command, context, result);
 
         }
 
@@ -86,15 +87,18 @@ namespace OurFoodChain.Discord.Services {
             return result;
 
         }
-        protected async Task ShowCommandErrorAsync(IMessage rawMessage, IResult result) {
+        protected async Task ShowCommandErrorAsync(Optional<CommandInfo> command, ICommandContext context, IResult result) {
 
-            bool showDefaultErrorMessage = true;
+            if (result is null) {
 
-            if (result.Error == CommandError.BadArgCount) {
+                await ShowGenericCommandErrorAsync(command, context, result);
+
+            }
+            else if (result.Error == CommandError.BadArgCount) {
 
                 // Get the name of the command that the user attempted to use.
 
-                string commandName = GetCommandName(rawMessage);
+                string commandName = GetCommandName(context.Message);
 
                 // If help documentation exists for this command, display it.
 
@@ -105,23 +109,23 @@ namespace OurFoodChain.Discord.Services {
                     EmbedBuilder embed = new EmbedBuilder();
 
                     embed.WithColor(Color.Red);
-                    embed.WithTitle(string.Format("Incorrect usage of \"{0}\" command", commandName.ToLower()));
+                    embed.WithTitle(string.Format("Incorrect use of \"{0}\" command", commandName.ToLower()));
                     embed.WithDescription("❌ " + result.ErrorReason);
                     embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
                         .Select(e => string.Format("`{0}{1}{2}`", _configuration.Prefix, commandName, e.SkipWords(1)))));
 
-                    await rawMessage.Channel.SendMessageAsync("", false, embed.Build());
-
-                    showDefaultErrorMessage = false;
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
 
                 }
+                else
+                    await ShowGenericCommandErrorAsync(command, context, result);
 
             }
             else if (result.Error == CommandError.UnknownCommand) {
 
                 // Suggest the most-similar command as a possible misspelling.
 
-                string messageContent = rawMessage.Content.Substring(GetCommmandArgumentsStartIndex(rawMessage));
+                string messageContent = context.Message.Content.Substring(GetCommmandArgumentsStartIndex(context.Message));
                 string commandName = messageContent.GetFirstWord();
 
                 if (!string.IsNullOrEmpty(commandName)) {
@@ -129,17 +133,34 @@ namespace OurFoodChain.Discord.Services {
                     string suggestedCommandName = StringUtilities.GetBestMatch(commandName, GetCommandNames());
                     ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(suggestedCommandName);
 
-                    await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, string.Format("Unknown command. Did you mean **{0}**?",
-                        commandHelpInfo.Name));
-
-                    showDefaultErrorMessage = false;
+                    await DiscordUtilities.ReplyErrorAsync(context.Channel, string.Format($"Unknown command. Did you mean **{commandHelpInfo.Name}**?"));
 
                 }
+                else
+                    await ShowGenericCommandErrorAsync(command, context, result);
 
             }
+            else
+                await ShowGenericCommandErrorAsync(command, context, result);
 
-            if (showDefaultErrorMessage)
-                await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, result.ErrorReason);
+        }
+        private async Task ShowGenericCommandErrorAsync(Optional<CommandInfo> command, ICommandContext context, IResult result) {
+
+            if (result is null) {
+
+                // Show a generic message if we don't have a result indicating what happened.
+
+                if (command.IsSpecified)
+                    await DiscordUtilities.ReplyErrorAsync(context.Channel, $"Something went wrong while executing the **{command.Value.Name}** command.");
+                else
+                    await DiscordUtilities.ReplyErrorAsync(context.Channel, $"Something went wrong while executing the command.");
+
+            }
+            else {
+
+                await DiscordUtilities.ReplyErrorAsync(context.Channel, result.ErrorReason);
+
+            }
 
         }
 

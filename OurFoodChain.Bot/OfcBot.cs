@@ -29,7 +29,7 @@ namespace OurFoodChain.Bot {
 
         public override async Task StartAsync() {
 
-            await LogAsync(LogSeverity.Info, "OurFoodChain", "Starting bot");
+            await OnLogAsync(LogSeverity.Info, "OurFoodChain", "Starting bot");
 
             // Copy user's custom data to the main data directory.
 
@@ -40,13 +40,11 @@ namespace OurFoodChain.Bot {
 
             // Initialize services.
 
-            await LogAsync(LogSeverity.Info, "OurFoodChain", "Configuring services");
+            await OnLogAsync(LogSeverity.Info, "OurFoodChain", "Configuring services");
 
             await base.StartAsync();
 
-            Client.Log += LogAsync;
-            Client.ReactionAdded += ReactionAddedAsync;
-            Client.ReactionRemoved += ReactionRemovedAsync;
+            Client.Log += OnLogAsync;
 
         }
 
@@ -76,7 +74,7 @@ namespace OurFoodChain.Bot {
 
             if (databaseService != null) {
 
-                databaseService.Log += LogAsync;
+                databaseService.Log += OnLogAsync;
 
                 await databaseService.InitializeAsync();
 
@@ -86,7 +84,7 @@ namespace OurFoodChain.Bot {
 
                 ITrophyScanner trophyScanner = serviceProvider.GetService<OurFoodChain.Services.TrophyScanner>();
 
-                trophyScanner.Log += LogAsync;
+                trophyScanner.Log += OnLogAsync;
 
                 await trophyScanner.RegisterTrophiesAsync(RegisterTrophiesOptions.RegisterDefaultTrophies);
 
@@ -94,19 +92,19 @@ namespace OurFoodChain.Bot {
 
         }
 
-        protected static async Task LogAsync(LogSeverity severity, string source, string message) {
+        protected async Task OnLogAsync(LogSeverity severity, string source, string message) {
 
-            await LogAsync(new LogMessage(severity, source, message));
+            await OnLogAsync(new LogMessage(severity, source, message));
 
         }
-        protected static async Task LogAsync(LogMessage logMessage) {
+        protected async Task OnLogAsync(LogMessage logMessage) {
 
             Console.WriteLine(logMessage.ToString());
 
             await Task.CompletedTask;
 
         }
-        protected static async Task LogAsync(Debug.ILogMessage logMessage) {
+        protected async Task OnLogAsync(Debug.ILogMessage logMessage) {
 
             Console.WriteLine(logMessage.ToString());
 
@@ -116,18 +114,11 @@ namespace OurFoodChain.Bot {
 
         // Private members
 
-        private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
-            await DiscordUtils.HandlePaginatedMessageReactionAsync(cached, Client, channel, reaction, true);
-        }
-        private async Task ReactionRemovedAsync(Cacheable<IUserMessage, ulong> cached, ISocketMessageChannel channel, SocketReaction reaction) {
-            await DiscordUtils.HandlePaginatedMessageReactionAsync(cached, Client, channel, reaction, false);
-        }
-
         private async Task InitializeGotchiContextAsync() {
 
             Gotchis.GotchiContext gotchiContext = new Gotchis.GotchiContext();
 
-            gotchiContext.LogAsync += async x => await LogAsync(x);
+            gotchiContext.LogAsync += async x => await OnLogAsync(x);
 
             // Load gotchi config.
 
@@ -136,23 +127,23 @@ namespace OurFoodChain.Bot {
 
             // Initialize registries.
 
-            await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi types");
+            await OnLogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi types");
 
             await gotchiContext.TypeRegistry.RegisterAllAsync(Constants.GotchiDataDirectory + "types/");
 
-            await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi types");
+            await OnLogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi types");
 
-            await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi statuses");
+            await OnLogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi statuses");
 
             await gotchiContext.StatusRegistry.RegisterAllAsync(Constants.GotchiDataDirectory + "statuses/");
 
-            await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi statuses");
+            await OnLogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi statuses");
 
-            await LogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi moves");
+            await OnLogAsync(LogSeverity.Info, "Gotchi", "Registering gotchi moves");
 
             await gotchiContext.MoveRegistry.RegisterAllAsync(Constants.GotchiDataDirectory + "moves/");
 
-            await LogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi moves");
+            await OnLogAsync(LogSeverity.Info, "Gotchi", "Finished registering gotchi moves");
 
             Global.GotchiContext = gotchiContext;
 
@@ -166,7 +157,7 @@ namespace OurFoodChain.Bot {
 
                 if (customFiles.Count() > 0) {
 
-                    await LogAsync(LogSeverity.Info, "Database", "Copying custom data files");
+                    await OnLogAsync(LogSeverity.Info, "Database", "Copying custom data files");
 
                     foreach (string inputFilePath in customFiles) {
 

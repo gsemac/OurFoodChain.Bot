@@ -266,7 +266,7 @@ namespace OurFoodChain {
                 return null;
 
             Discord.Messaging.Embed embed = new Discord.Messaging.Embed {
-                Title = species.GetShortName()
+                Title = species.GetFullName()
             };
 
             if (species.CommonNames.Count() > 0)

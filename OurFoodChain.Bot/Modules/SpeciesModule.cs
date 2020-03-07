@@ -192,7 +192,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // If the species already exists, do nothing.
 
-                await ReplyWarningAsync(string.Format("The species \"{0}\" already exists.", BinomialName.Parse(genusName, speciesName)));
+                await ReplyWarningAsync($"The species {BinomialName.Parse(genusName, speciesName)} already exists.");
 
             }
             else {
@@ -224,12 +224,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 species = (await Db.GetSpeciesAsync(genusName, speciesName)).FirstOrDefault();
 
-                if (!species.IsValid()) {
-
-                    await ReplyErrorAsync("Failed to add species (invalid Species ID).");
-
-                }
-                else {
+                if (species.IsValid()) {
 
                     // Add the species to the given zones.
 
@@ -240,7 +235,12 @@ namespace OurFoodChain.Bot.Modules {
                     if (Config.TrophiesEnabled)
                         await TrophyScanner.EnqueueAsync(Context.User.ToCreator(), Context);
 
-                    await ReplySuccessAsync(string.Format("Successfully created new species, **{0}**.", BinomialName.Parse(genusName, speciesName)));
+                    await ReplySuccessAsync($"Successfully created new species, **{species.GetFullName()}**.");
+
+                }
+                else {
+
+                    await ReplyErrorAsync("Failed to add species (invalid Species ID).");
 
                 }
 

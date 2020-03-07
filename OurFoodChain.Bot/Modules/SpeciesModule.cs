@@ -12,6 +12,7 @@ using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -28,11 +29,11 @@ namespace OurFoodChain.Bot.Modules {
         // Public members       
 
         [Command("info", RunMode = RunMode.Async), Alias("i")]
-        public async Task GetInfo([Remainder]string name) {
+        public async Task GetInfo([Remainder]string taxonName) {
 
             // Prioritize species first.
 
-            IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(name);
+            IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(taxonName);
 
             if (matchingSpecies.Count() > 0) {
 
@@ -46,13 +47,13 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Otherwise, show other taxon.
 
-                IEnumerable<ITaxon> taxa = await Db.GetTaxaAsync(name);
+                IEnumerable<ITaxon> taxa = await Db.GetTaxaAsync(taxonName);
 
                 if (taxa.Count() <= 0) {
 
                     // This command was traditionally used with species, so show the user species suggestions in the event of no matches.
 
-                    ISpecies species = await ReplySpeciesSuggestionAsync(string.Empty, name);
+                    ISpecies species = await ReplySpeciesSuggestionAsync(string.Empty, taxonName);
 
                     if (species.IsValid())
                         await ReplySpeciesAsync(species);
@@ -73,16 +74,17 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("species"), Alias("sp", "s")]
         public async Task SpeciesInfo() {
-            await ListSpecies();
-        }
-        [Command("species"), Alias("sp", "s")]
-        public async Task SpeciesInfo(string species) {
-            await ShowSpeciesInfoAsync(Context, Config, Db, species);
-        }
-        [Command("species"), Alias("sp", "s")]
-        public async Task SpeciesInfo(string genus, string species) {
 
-            await ShowSpeciesInfoAsync(Context, Config, Db, genus, species);
+            await ListSpecies();
+
+        }
+        [Command("species", RunMode = RunMode.Async), Alias("sp", "s")]
+        public async Task SpeciesInfo([Remainder]string speciesName) {
+
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
+
+            if (species.IsValid())
+                await ReplySpeciesAsync(species);
 
         }
 
@@ -91,37 +93,23 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get all species.
 
-            List<Species> species = new List<Species>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species;"))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in table.Rows)
-                    species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
-
-            // If there are no species, state so.
+            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync()).OrderBy(s => s.ShortName));
 
             if (species.Count <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, "No species have been added yet.");
-
-                return;
+                await ReplyInfoAsync("No species have been added yet.");
 
             }
+            else {
 
-            // Create embed pages.
+                // Create embed pages.
 
-            species.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"All species ({species.Count()}):", species, options: EmbedPaginationOptions.AddPageNumbers);
+                IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(pages);
 
-            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species.Select(s => new SpeciesAdapter(s)), fieldName: string.Format("All species ({0}):", species.Count()));
+                await ReplyAsync(message);
 
-            // Send the result.
-
-            Bot.PaginatedMessage reply = new Bot.PaginatedMessage();
-
-            foreach (EmbedBuilder page in pages)
-                reply.Pages.Add(page.Build());
-
-            await Bot.DiscordUtils.SendMessageAsync(Context, reply);
+            }
 
         }
         [Command("listspecies"), Alias("specieslist", "listsp", "splist")]
@@ -129,63 +117,42 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get the taxon.
 
-            Taxon taxon = await BotUtils.GetTaxonFromDb(taxonName);
+            ITaxon taxon = await ReplyValidateTaxaAsync((await Db.GetTaxaAsync(taxonName)).Where(t => t.GetRank() != TaxonRankType.Species));
 
-            if (taxon is null) {
+            if (taxon.IsValid()) {
 
-                await BotUtils.ReplyAsync_Error(Context, "No such taxon exists.");
+                // Get all species under that taxon.
 
-                return;
+                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon)).OrderBy(s => s.ShortName));
 
-            }
+                // Create embed pages.
 
-            // Get all species under that taxon.
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Species in this {taxon.GetRank().GetName()} ({species.Count()}):", species, options: EmbedPaginationOptions.AddPageNumbers);
 
-            List<Species> species = new List<Species>();
-            species.AddRange(await BotUtils.GetSpeciesInTaxonFromDb(taxon));
+                StringBuilder descriptionBuilder = new StringBuilder();
 
-            species.Sort((lhs, rhs) => lhs.FullName.CompareTo(rhs.FullName));
+                descriptionBuilder.AppendLine(taxon.GetDescriptionOrDefault());
 
-            // We might get a lot of species, which may not fit in one embed.
-            // We'll need to use a paginated embed to reliably display the full list.
+                if (species.Count() <= 0) {
 
-            // Create embed pages.
+                    descriptionBuilder.AppendLine();
+                    descriptionBuilder.AppendLine($"This {taxon.GetRank().GetName()} contains no species.");
 
-            List<EmbedBuilder> pages = EmbedUtils.SpeciesListToEmbedPages(species.Select(s => new SpeciesAdapter(s)), fieldName: string.Format("Species in this {0} ({1}):", taxon.GetTypeName(), species.Count()));
+                }
 
-            if (pages.Count <= 0)
-                pages.Add(new EmbedBuilder());
+                foreach (Discord.Messaging.IEmbed page in pages) {
 
-            // Add description to the first page.
+                    page.Title = taxon.CommonNames.Count() <= 0 ? taxon.GetName() : $"{taxon.GetName()} ({taxon.GetCommonName()})";
+                    page.Description = descriptionBuilder.ToString();
+                    page.ThumbnailUrl = taxon.GetPictureUrl();
 
-            StringBuilder description_builder = new StringBuilder();
-            description_builder.AppendLine(taxon.GetDescriptionOrDefault());
+                }
 
-            if (species.Count() <= 0) {
+                // Send the result.
 
-                description_builder.AppendLine();
-                description_builder.AppendLine(string.Format("This {0} contains no species.", Taxon.GetRankName(taxon.type)));
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
             }
-
-            // Add title to all pages.
-
-            foreach (EmbedBuilder page in pages) {
-
-                page.WithTitle(string.IsNullOrEmpty(taxon.CommonName) ? taxon.GetName() : string.Format("{0} ({1})", taxon.GetName(), taxon.GetCommonName()));
-                page.WithDescription(description_builder.ToString());
-                page.WithThumbnailUrl(taxon.pics);
-
-            }
-
-            // Send the result.
-
-            Bot.PaginatedMessage reply = new Bot.PaginatedMessage();
-
-            foreach (EmbedBuilder page in pages)
-                reply.Pages.Add(page.Build());
-
-            await Bot.DiscordUtils.SendMessageAsync(Context, reply);
 
         }
 

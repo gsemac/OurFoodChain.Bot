@@ -47,6 +47,11 @@ namespace OurFoodChain {
         public async Task ReplyAndWaitAsync(IPaginatedMessage message) => await PaginatedMessageService.SendMessageAndWaitAsync(Context, message);
         public async Task ReplyAsync(Discord.Messaging.IEmbed message) => await ReplyAsync("", false, message.ToDiscordEmbed());
 
+        public async Task<ISpecies> GetSpeciesOrReplyAsync(string speciesName) {
+
+            return await GetSpeciesOrReplyAsync(string.Empty, speciesName);
+
+        }
         public async Task<ISpecies> GetSpeciesOrReplyAsync(string genusName, string speciesName) {
 
             ISpecies species = null;

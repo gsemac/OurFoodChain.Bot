@@ -235,6 +235,29 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, ITaxon taxon) {
+
+            List<ISpecies> species = new List<ISpecies>();
+
+            if (taxon.GetRank() == TaxonRankType.Species) {
+
+                // Return all species with the same name as the taxon.
+
+                species.AddRange(await database.GetSpeciesAsync("", taxon.Name));
+
+            }
+            else {
+
+                // Get all subtaxa and call this function recursively to get the species from each of them.
+
+                foreach (ITaxon subtaxon in await database.GetSubtaxaAsync(taxon))
+                    species.AddRange(await database.GetSpeciesAsync(subtaxon));
+
+            }
+
+            return species;
+
+        }
         public static async Task<long> GetSpeciesCountAsync(this SQLiteDatabase database, ITaxon taxon) {
 
             if (!taxon.IsValid())
@@ -246,13 +269,6 @@ namespace OurFoodChain.Data.Extensions {
 
                 // If a species was passed in, count it as a single species.
                 speciesCount += 1;
-
-            }
-            else if (taxon.Rank.Type == TaxonRankType.Genus) {
-
-                // Count all species within this genus.
-
-                speciesCount += (await database.GetSubtaxaAsync(taxon)).Count();
 
             }
             else {

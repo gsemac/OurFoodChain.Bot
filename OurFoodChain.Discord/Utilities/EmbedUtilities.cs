@@ -1,4 +1,5 @@
 ﻿using Discord;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
@@ -21,6 +22,8 @@ namespace OurFoodChain.Discord.Utilities {
     public static class EmbedUtilities {
 
         // Public members
+
+        public const int DefaultItemsPerPage = 40;
 
         public static Messaging.IEmbed BuildSuccessEmbed(string message) {
 
@@ -219,7 +222,7 @@ namespace OurFoodChain.Discord.Utilities {
             return pages;
 
         }
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<string> listItems, int itemsPerPage = 40, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<string> listItems, int itemsPerPage = DefaultItemsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
 
             if (string.IsNullOrWhiteSpace(listTitle))
                 listTitle = Messaging.EmbedField.EmptyName;
@@ -264,6 +267,22 @@ namespace OurFoodChain.Discord.Utilities {
                 AddPageNumbers(pages);
 
             return pages;
+
+        }
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, int itemsPerPage = DefaultItemsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+
+            IEnumerable<string> stringListItems = listItems.Select(species => {
+
+                string name = species.BinomialName.ToString(BinomialNameFormat.Abbreviated);
+
+                if (species != null && species.Status != null && species.Status.IsExinct)
+                    name = string.Format("~~{0}~~", name);
+
+                return name;
+
+            });
+
+            return CreateEmbedPages(listTitle, stringListItems, itemsPerPage, options);
 
         }
 

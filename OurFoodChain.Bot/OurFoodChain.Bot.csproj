@@ -342,7 +342,6 @@
     <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="users\UserRank.cs" />
-    <Compile Include="Utilities\ArrayUtils.cs" />
     <Compile Include="Modules\CommandsModule.cs" />
     <Compile Include="database\Database.cs" />
     <Compile Include="OfcBot.cs" />
@@ -351,7 +350,6 @@
     <Compile Include="Utilities\BotUtils.cs" />
     <Compile Include="Taxa\CommonName.cs" />
     <Compile Include="Utilities\DateUtils.cs" />
-    <Compile Include="Utilities\HelpUtils.cs" />
     <Compile Include="Utilities\IoUtils.cs" />
     <Compile Include="MultiPartMessage.cs" />
     <Compile Include="reviews\ReviewCache.cs" />
@@ -360,7 +358,6 @@
     <Compile Include="Discord\EmbedUtils.cs" />
     <Compile Include="PaginatedMessageBuilder.cs" />
     <Compile Include="Taxa\SpeciesUtils.cs" />
-    <Compile Include="Utilities\LogMessage.cs" />
     <Compile Include="Adapters\SpeciesAdapter.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="users\UserUtils.cs" />

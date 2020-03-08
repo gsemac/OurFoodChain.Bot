@@ -3,6 +3,7 @@ using Discord.Commands;
 using OurFoodChain.Common;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Queries;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace OurFoodChain {
 
         public async override Task<ICreator> GetCreatorAsync(ICreator creator) {
 
-            IUser discordUser = await Bot.DiscordUtils.GetUserFromUsernameOrMentionAsync(commandContext, creator.Name);
+            IUser discordUser = await DiscordUtilities.GetDiscordUserFromStringAsync(commandContext, creator.Name);
 
             if (discordUser is null)
                 return creator;

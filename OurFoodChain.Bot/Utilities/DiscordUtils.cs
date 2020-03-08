@@ -197,21 +197,6 @@ namespace OurFoodChain.Bot {
 
         }
 
-        public static async Task<IUser> GetUserFromUsernameOrMentionAsync(ICommandContext context, string usernameOrMention) {
-
-            if (context is null || context.Guild is null)
-                return null;
-
-            IReadOnlyCollection<IGuildUser> users = await context.Guild.GetUsersAsync();
-
-            foreach (IGuildUser user in users)
-                if (UserMatchesUsernameOrMention(user, usernameOrMention))
-                    return user;
-
-            return null;
-
-        }
-
         public static Color ConvertColor(System.Drawing.Color color) {
             return new Color(color.R, color.G, color.B);
         }
@@ -237,27 +222,6 @@ namespace OurFoodChain.Bot {
 
         private static Dictionary<ulong, PaginatedMessage> paginatedMessages = new Dictionary<ulong, PaginatedMessage>();
         private static ConcurrentDictionary<ulong, MultiPartMessage> multiPartMessages = new ConcurrentDictionary<ulong, MultiPartMessage>();
-
-        private static bool UserMatchesUsernameOrMention(IGuildUser user, string usernameOrMention) {
-
-            if (user is null)
-                return false;
-
-            string username = string.IsNullOrEmpty(user.Username) ? string.Empty : user.Username.ToLower();
-            string nickname = string.IsNullOrEmpty(user.Nickname) ? string.Empty : user.Nickname.ToLower();
-            string full_username = string.Format("{0}#{1}", username, user.Discriminator).ToLower();
-
-            // Mentions may look like either of the following:
-            // <@id>
-            // <@!id>
-            // The exclamation mark means that they have a nickname: https://stackoverflow.com/questions/45269613/discord-userid-vs-userid
-
-            return username == usernameOrMention ||
-                nickname == usernameOrMention ||
-                full_username == usernameOrMention ||
-                Regex.Matches(usernameOrMention, @"^<@!?(\d+)\>$").Cast<Match>().Any(x => x.Groups[1].Value == user.Id.ToString());
-
-        }
 
     }
 

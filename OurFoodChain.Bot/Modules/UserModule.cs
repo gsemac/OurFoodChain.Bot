@@ -268,6 +268,56 @@ namespace OurFoodChain.Modules {
 
         }
 
+        [Command("addedby"), Alias("ownedby", "own", "owned")]
+        public async Task AddedBy() {
+
+            await AddedBy(Context.User);
+
+        }
+        [Command("addedby"), Alias("ownedby", "own", "owned")]
+        public async Task AddedBy(IUser user) {
+
+            ICreator creator = (user ?? Context.User).ToCreator();
+
+            // Get all species belonging to this user.
+
+            IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(creator)).OrderBy(s => s.GetShortName());
+
+            // Display the species belonging to this user.
+
+            await ReplySpeciesAddedByAsync(creator, user.GetAvatarUrl(size: 32), species);
+
+        }
+        [Command("addedby"), Alias("ownedby", "own", "owned")]
+        public async Task AddedBy(string owner) {
+
+            // If we get this overload, then the requested user does not currently exist in the guild.
+
+            // If we've seen the user before, we can get their information from the database.
+
+            ICreator creator = await Db.GetCreatorAsync(owner);
+
+            if (creator.IsValid()) {
+
+                // The user exists in the database, so create a list of all species they own.
+
+                IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(creator)).OrderBy(s => s.GetShortName());
+
+                // Display the species list.
+
+                await ReplySpeciesAddedByAsync(creator, string.Empty, species);
+
+            }
+            else {
+
+                // The user does not exist in the database.
+
+                await ReplyErrorAsync("No such user exists.");
+
+            }
+
+        }
+
     }
 
 }

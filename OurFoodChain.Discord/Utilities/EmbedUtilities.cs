@@ -17,7 +17,8 @@ namespace OurFoodChain.Discord.Utilities {
 
     public enum EmbedPaginationOptions {
         None = 0,
-        AddPageNumbers = 1
+        AddPageNumbers = 1,
+        NoStrikethrough = 2
     }
 
     public static class EmbedUtilities {
@@ -296,7 +297,7 @@ namespace OurFoodChain.Discord.Utilities {
 
                 string name = species.BinomialName.ToString(BinomialNameFormat.Abbreviated);
 
-                if (species != null && species.Status != null && species.Status.IsExinct)
+                if (species.IsExtinct() && !options.HasFlag(EmbedPaginationOptions.NoStrikethrough))
                     name = string.Format("~~{0}~~", name);
 
                 return name;

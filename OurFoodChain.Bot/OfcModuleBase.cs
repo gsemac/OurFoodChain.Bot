@@ -626,11 +626,40 @@ namespace OurFoodChain {
 
         }
 
+        public async Task<ISpeciesAmbiguityResolverResult> ReplyResolveAmbiguityAsync(string arg0, string arg1, string arg2) {
+
+            ISpeciesAmbiguityResolver resolver = new SpeciesAmbiguityResolver(await GetDatabaseAsync());
+            ISpeciesAmbiguityResolverResult result = await resolver.ResolveAsync(arg0, arg1, arg2);
+
+            if (result.First is null && result.Second is null)
+                await ReplyErrorAsync("Unable to unambiguously determine either species.");
+            else if (result.First is null)
+                await ReplyErrorAsync("Unable to unambiguously determine the first species.");
+            else if (result.Second is null)
+                await ReplyErrorAsync("Unable to unambiguously determine the second species.");
+
+            return result;
+
+        }
+
         public async Task<ICreator> GetCreatorAsync(ICreator creator) {
 
             IUser user = await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, creator);
 
             return user?.ToCreator() ?? creator;
+
+        }
+        public async Task<string> GetDateStringAsync(DateTimeOffset date, DateStringFormat format) {
+
+            if (Config.GenerationsEnabled) {
+
+                IGeneration gen = await Db.GetGenerationByDateAsync(date);
+
+                return gen is null ? "Gen ???" : gen.Name;
+
+            }
+
+            return DateUtilities.GetDateString(date, format);
 
         }
 

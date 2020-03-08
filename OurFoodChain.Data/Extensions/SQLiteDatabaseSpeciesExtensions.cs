@@ -71,6 +71,10 @@ namespace OurFoodChain.Data.Extensions {
             await database.DeleteCommonNamesAsync(species);
             await database.AddCommonNamesAsync(species);
 
+            // Update conservation status.
+
+            await database.UpdateConservationStatusAsync(species);
+
         }
 
         public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database) {
@@ -201,6 +205,33 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<IEnumerable<ISpecies>> GetExtinctSpeciesAsync(this SQLiteDatabase database) {
+
+            List<ISpecies> results = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Extinctions)"))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            results.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+            return results;
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetExtantSpeciesAsync(this SQLiteDatabase database) {
+
+            List<ISpecies> results = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions)"))
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            results.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+            return results;
+
+        }
+
         public static async Task<IEnumerable<ISpecies>> GetBaseSpeciesAsync(this SQLiteDatabase database) {
 
             List<ISpecies> species = new List<ISpecies>();
@@ -313,34 +344,19 @@ namespace OurFoodChain.Data.Extensions {
             return result;
 
         }
+        public static async Task SetAncestorAsync(this SQLiteDatabase database, ISpecies childSpecies, ISpecies ancestorSpecies) {
 
-        public static async Task<IConservationStatus> GetConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Ancestors(species_id, ancestor_id) VALUES($species_id, $ancestor_id)")) {
 
-            IConservationStatus result = new ConservationStatus();
+                cmd.Parameters.AddWithValue("$species_id", childSpecies.Id);
+                cmd.Parameters.AddWithValue("$ancestor_id", ancestorSpecies.Id);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
-
-                cmd.Parameters.AddWithValue("$species_id", species.Id);
-
-                DataRow row = await database.GetRowAsync(cmd);
-
-                if (row != null) {
-
-                    string reason = row.Field<string>("reason");
-                    long timestamp = (long)row.Field<decimal>("timestamp");
-
-                    result = new ConservationStatus() {
-                        ExtinctionDate = DateUtilities.GetDateFromTimestamp(timestamp),
-                        ExtinctionReason = reason
-                    };
-
-                }
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
-            return result;
-
         }
+
         public static async Task<bool> IsEndangeredAsync(this SQLiteDatabase database, ISpecies species) {
 
             // Consider a species "endangered" if:
@@ -841,6 +857,88 @@ namespace OurFoodChain.Data.Extensions {
 
                     cmd.Parameters.AddWithValue("$species_id", species.Id);
                     cmd.Parameters.AddWithValue("$name", commonName.ToLowerInvariant());
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
+
+        }
+
+        private static async Task<IConservationStatus> GetConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
+
+            IConservationStatus result = new ConservationStatus();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                DataRow row = await database.GetRowAsync(cmd);
+
+                if (row != null) {
+
+                    string reason = row.Field<string>("reason");
+                    long timestamp = (long)row.Field<decimal>("timestamp");
+
+                    result = new ConservationStatus() {
+                        ExtinctionDate = DateUtilities.GetDateFromTimestamp(timestamp),
+                        ExtinctionReason = reason
+                    };
+
+                }
+
+            }
+
+            return result;
+
+        }
+        private static async Task UpdateConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
+
+            if (species.Status.IsExinct) {
+
+                // If the species is extinct, either update its existing extinction record, or add a new one.
+
+                IConservationStatus status = await database.GetConservationStatusAsync(species);
+
+                if (status is null) {
+
+                    // The species does not have an existing extinction record, so add a new one.
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp)")) {
+
+                        cmd.Parameters.AddWithValue("$species_id", species.Id);
+                        cmd.Parameters.AddWithValue("$reason", species.Status.ExtinctionReason);
+                        cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetTimestampFromDate(species.Status.ExtinctionDate ?? DateUtilities.GetCurrentDateUtc()));
+
+                        await database.ExecuteNonQueryAsync(cmd);
+
+                    }
+
+                }
+                else {
+
+                    // The species has an existing extinction record, so update the extinction reason.
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Extinctions SET reason = $reason WHERE species_id = $species_id")) {
+
+                        cmd.Parameters.AddWithValue("$species_id", species.Id);
+                        cmd.Parameters.AddWithValue("$reason", species.Status.ExtinctionReason);
+
+                        await database.ExecuteNonQueryAsync(cmd);
+
+                    }
+
+                }
+
+            }
+            else {
+
+                // If the species is not extinct, delete any extinction record it may have.
+
+                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Extinctions WHERE species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                     await database.ExecuteNonQueryAsync(cmd);
 

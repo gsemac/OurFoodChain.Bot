@@ -3,6 +3,7 @@ using Discord.Commands;
 using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
+using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
@@ -228,7 +229,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // Add the species to the given zones.
 
-                    await AddSpeciesToZonesAsync(species, zoneNames, string.Empty, onlyShowErrors: true);
+                    await ReplyAddSpeciesToZonesAsync(species, zoneNames, string.Empty, onlyShowErrors: true);
 
                     // Add the user to the trophy scanner queue in case their species earned them any new trophies.
 
@@ -277,7 +278,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Add new zone information for the species.
 
-                await AddSpeciesToZonesAsync(species, arg2, string.Empty, onlyShowErrors: false);
+                await ReplyAddSpeciesToZonesAsync(species, arg2, string.Empty, onlyShowErrors: false);
 
             }
 
@@ -298,7 +299,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // If there is a unqiue species match, proceed with the assumption of case (2).
 
-                await AddSpeciesToZonesAsync(matchingSpecies.First(), zoneList: arg2, notes: string.Empty, onlyShowErrors: false);
+                await ReplyAddSpeciesToZonesAsync(matchingSpecies.First(), zoneList: arg2, notes: string.Empty, onlyShowErrors: false);
 
             }
             else if (matchingSpecies.Count() > 1) {
@@ -315,7 +316,7 @@ namespace OurFoodChain.Bot.Modules {
                 ISpecies species = await GetSpeciesOrReplyAsync(string.Empty, arg0);
 
                 if (species.IsValid())
-                    await AddSpeciesToZonesAsync(species, zoneList: arg1, notes: arg2, onlyShowErrors: false);
+                    await ReplyAddSpeciesToZonesAsync(species, zoneList: arg1, notes: arg2, onlyShowErrors: false);
 
             }
 
@@ -332,7 +333,7 @@ namespace OurFoodChain.Bot.Modules {
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
             if (species.IsValid())
-                await AddSpeciesToZonesAsync(species, zoneList: zoneNames, notes: notes, onlyShowErrors: false);
+                await ReplyAddSpeciesToZonesAsync(species, zoneList: zoneNames, notes: notes, onlyShowErrors: false);
 
         }
 
@@ -467,56 +468,6 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy() {
-
-            await AddedBy(Context.User);
-
-        }
-        [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy(IUser user) {
-
-            ICreator creator = (user ?? Context.User).ToCreator();
-
-            // Get all species belonging to this user.
-
-            IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(creator)).OrderBy(s => s.GetShortName());
-
-            // Display the species belonging to this user.
-
-            await ReplySpeciesAddedByAsync(creator, user.GetAvatarUrl(size: 32), species);
-
-        }
-        [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy(string owner) {
-
-            // If we get this overload, then the requested user does not currently exist in the guild.
-
-            // If we've seen the user before, we can get their information from the database.
-
-            ICreator creator = await Db.GetCreatorAsync(owner);
-
-            if (creator.IsValid()) {
-
-                // The user exists in the database, so create a list of all species they own.
-
-                IEnumerable<ISpecies> species = (await Db.GetSpeciesAsync(creator)).OrderBy(s => s.GetShortName());
-
-                // Display the species list.
-
-                await ReplySpeciesAddedByAsync(creator, string.Empty, species);
-
-            }
-            else {
-
-                // The user does not exist in the database.
-
-                await ReplyErrorAsync("No such user exists.");
-
-            }
-
-        }
-
         [Command("random"), Alias("rand")]
         public async Task Random() {
 
@@ -635,204 +586,186 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("+extinct"), Alias("setextinct")]
-        public async Task SetExtinct(string species) {
-            await SetExtinct("", species, "");
+        [Command("+extinct", RunMode = RunMode.Async), Alias("setextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetExtinct(string speciesName) {
+
+            await SetExtinct(string.Empty, speciesName, string.Empty);
+
         }
-        [Command("+extinct"), Alias("setextinct")]
+        [Command("+extinct", RunMode = RunMode.Async), Alias("setextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetExtinct(string arg0, string arg1) {
 
-            // We either have a genus/species, or a species/description.
+            // Possible cases:
+            // 1. <genus> <species>
+            // 2. <species> <reason>
 
-            Species[] species_list = await SpeciesUtils.GetSpeciesAsync(arg0, arg1);
+            IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(arg0, arg1);
 
-            if (species_list.Count() > 0)
-                // If such a species does exist, assume we have a genus/species.
+            if (matchingSpecies.Count() > 0) {
+
+                // One or more matching species exists, so we have case (1).
+
                 await SetExtinct(arg0, arg1, string.Empty);
-            else
-                // If no such species exists, assume we have a species/description.
+
+            }
+            else {
+
+                // No matching species exist, so we have case (2).
+
                 await SetExtinct(string.Empty, arg0, arg1);
-
-        }
-        [Command("+extinct"), Alias("setextinct")]
-        public async Task SetExtinct(string genus, string species, string reason) {
-
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-
-            if (sp is null)
-                return;
-
-            await SetExtinct(sp, reason);
-
-        }
-        private async Task SetExtinct(Species species, string reason) {
-
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator, species))
-                return;
-
-            await SpeciesUtils.SetExtinctionInfoAsync(species, new ExtinctionInfo {
-                IsExtinct = true,
-                Reason = reason,
-                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            });
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format(
-                species.IsExtinct ?
-                "Updated extinction details for **{0}**." :
-                "The last **{0}** has perished, and the species is now extinct.",
-                species.ShortName));
-
-        }
-
-        [Command("-extinct"), Alias("setextant", "unextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task MinusExtinct(string species) {
-            await MinusExtinct("", species);
-        }
-        [Command("-extinct"), Alias("setextant", "unextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task MinusExtinct(string genus, string species) {
-
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-
-            if (sp is null)
-                return;
-
-            // If the species is not extinct, don't do anything.
-
-            if (!sp.IsExtinct) {
-
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** is not extinct.", sp.ShortName));
-
-                return;
 
             }
 
-            // Delete the extinction from the database.
+        }
+        [Command("+extinct", RunMode = RunMode.Async), Alias("setextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetExtinct(string genusName, string speciesName, string reason) {
 
-            await SpeciesUtils.SetExtinctionInfoAsync(sp, new ExtinctionInfo { IsExtinct = false });
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("A population of **{0}** has been discovered! The species is no longer considered extinct.", sp.ShortName));
+            if (species.IsValid()) {
+
+                bool alreadyExtinct = species.IsExtinct();
+
+                species.Status.ExtinctionDate = DateUtilities.GetCurrentDateUtc();
+                species.Status.ExtinctionReason = reason;
+
+                await Db.UpdateSpeciesAsync(species);
+
+                string confirmationMessage = alreadyExtinct ?
+                    $"Updated extinction details for **{species.GetShortName()}**." :
+                    $"The last **{species.GetShortName()}** has perished, and the species is now extinct.";
+
+                await ReplySuccessAsync(confirmationMessage);
+
+            }
+
+        }
+
+        [Command("-extinct", RunMode = RunMode.Async), Alias("setextant", "unextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task MinusExtinct(string speciesName) {
+
+            await MinusExtinct(string.Empty, speciesName);
+
+        }
+        [Command("-extinct", RunMode = RunMode.Async), Alias("setextant", "unextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task MinusExtinct(string genusName, string speciesName) {
+
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+
+            if (species.IsValid()) {
+
+                if (species.IsExtinct()) {
+
+                    // The species is extinct.
+
+                    species.Status.ExtinctionDate = null;
+
+                    await Db.UpdateSpeciesAsync(species);
+
+                    await ReplySuccessAsync($"A population of **{species.GetShortName()}** has been discovered! The species is no longer considered extinct.");
+
+                }
+                else {
+
+                    // The species was not extinct.
+
+                    await ReplyWarningAsync($"**{species.GetShortName()}** is not extinct.");
+
+                }
+
+            }
 
         }
 
         [Command("extinct")]
         public async Task Extinct() {
 
-            List<Species> sp_list = new List<Species>();
+            IEnumerable<ISpecies> species = await Db.GetExtinctSpeciesAsync();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Extinctions);"))
-            using (DataTable rows = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in rows.Rows)
-                    sp_list.Add(await SpeciesUtils.SpeciesFromDataRow(row));
+            if (species.Count() > 0) {
 
-            sp_list.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Extinct species ({species.Count()})", species, options: EmbedPaginationOptions.NoStrikethrough | EmbedPaginationOptions.AddPageNumbers);
 
-            PaginatedMessageBuilder embed = new PaginatedMessageBuilder();
-            embed.AddPages(EmbedUtils.SpeciesListToEmbedPages(sp_list.Select(s => new SpeciesAdapter(s)), fieldName: string.Format("Extinct species ({0})", sp_list.Count()), flags: EmbedPagesFlag.None));
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
-            await DiscordUtils.SendMessageAsync(Context, embed.Build(), "There are currently no extinct species.");
-
-        }
-
-        [Command("setancestor"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetAncestor(string species, string ancestorSpecies) {
-            await SetAncestor(string.Empty, species, string.Empty, ancestorSpecies);
-        }
-        [Command("setancestor"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetAncestor(string genus, string species, string ancestorSpecies) {
-            await SetAncestor(genus, species, genus, ancestorSpecies);
-        }
-        [Command("setancestor"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetAncestor(string genus, string species, string ancestorGenus, string ancestorSpecies) {
-
-            // Get the descendant and ancestor species.
-
-            Species[] descendant_list = await BotUtils.GetSpeciesFromDb(genus, species);
-            Species[] ancestor_list = await BotUtils.GetSpeciesFromDb(ancestorGenus, ancestorSpecies);
-
-            if (descendant_list.Count() > 1)
-                await BotUtils.ReplyAsync_Error(Context, string.Format("The child species \"{0}\" is too vague (there are multiple matches). Try including the genus.", species));
-            else if (ancestor_list.Count() > 1)
-                await BotUtils.ReplyAsync_Error(Context, string.Format("The ancestor species \"{0}\" is too vague (there are multiple matches). Try including the genus.", ancestorSpecies));
-            else if (descendant_list.Count() == 0)
-                await BotUtils.ReplyAsync_Error(Context, "The child species does not exist.");
-            else if (ancestor_list.Count() == 0)
-                await BotUtils.ReplyAsync_Error(Context, "The parent species does not exist.");
-            else if (descendant_list[0].Id == ancestor_list[0].Id)
-                await BotUtils.ReplyAsync_Error(Context, "A species cannot be its own ancestor.");
+            }
             else {
 
-                Species descendant = descendant_list[0];
-                Species ancestor = ancestor_list[0];
+                await ReplyAsync("There are currently no extinct species.");
 
-                // Check if an ancestor has already been set for this species. If so, update the ancestor, but we'll show a different message later notifying the user of the change.
+            }
 
-                Species existing_ancestor_sp = null;
+        }
+        [Command("extant")]
+        public async Task Extant() {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id=$species_id;")) {
+            IEnumerable<ISpecies> species = await Db.GetExtantSpeciesAsync();
 
-                    cmd.Parameters.AddWithValue("$species_id", descendant.Id);
+            if (species.Count() > 0) {
 
-                    DataRow row = await Database.GetRowAsync(cmd);
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Extant species ({species.Count()})", species, options: EmbedPaginationOptions.AddPageNumbers);
 
-                    if (!(row is null)) {
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
-                        long ancestor_id = row.Field<long>("ancestor_id");
+            }
+            else {
 
-                        existing_ancestor_sp = await BotUtils.GetSpeciesFromDb(ancestor_id);
-
-                    }
-
-                }
-
-                // If the ancestor has already been set to the species specified, quit.
-
-                if (!(existing_ancestor_sp is null) && existing_ancestor_sp.Id == ancestor.Id) {
-
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** has already been set as the ancestor of **{1}**.", ancestor.ShortName, descendant.ShortName));
-
-                    return;
-
-                }
-
-                // Insert the new relationship into the database.
-
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Ancestors(species_id, ancestor_id) VALUES($species_id, $ancestor_id);")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", descendant.Id);
-                    cmd.Parameters.AddWithValue("$ancestor_id", ancestor.Id);
-
-                    await Database.ExecuteNonQuery(cmd);
-
-                }
-
-                if (existing_ancestor_sp is null)
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has been set as the ancestor of **{1}**.", ancestor.ShortName, descendant.ShortName));
-                else
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has replaced **{1}** as the ancestor of **{2}**.", ancestor.ShortName, existing_ancestor_sp.ShortName, descendant.ShortName));
+                await ReplyAsync("There are currently no extant species.");
 
             }
 
         }
 
-        [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
-        public async Task Lineage(string speciesName) {
-            await Lineage(string.Empty, speciesName);
+        [Command("setancestor", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetAncestor(string childSpeciesName, string ancestorSpeciesName) {
+
+            await SetAncestor(string.Empty, childSpeciesName, string.Empty, ancestorSpeciesName);
+
         }
-        [Command("ancestry"), Alias("lineage", "ancestors", "anc")]
+        [Command("setancestor", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetAncestor(string arg0, string arg1, string arg2) {
+
+            // Possible cases:
+            // 1. <childGenus> <childSpecies> <ancestorSpecies>
+            // 2. <childSpecies> <ancestorGenus> <ancestorSpecies>
+
+            ISpeciesAmbiguityResolverResult result = await ReplyResolveAmbiguityAsync(arg0, arg1, arg2);
+
+            if (result.Success)
+                await ReplySetAncestorAsync(result.First, result.Second);
+
+        }
+        [Command("setancestor", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetAncestor(string childGenusName, string childSpeciesName, string ancestorGenusName, string ancestorSpeciesName) {
+
+            ISpecies childSpecies = await GetSpeciesOrReplyAsync(childGenusName, childSpeciesName);
+            ISpecies ancestorSpecies = childSpecies.IsValid() ? await GetSpeciesOrReplyAsync(ancestorGenusName, ancestorSpeciesName) : null;
+
+            if (childSpecies.IsValid() && ancestorSpecies.IsValid())
+                await ReplySetAncestorAsync(childSpecies, ancestorSpecies);
+
+        }
+
+        [Command("ancestry", RunMode = RunMode.Async), Alias("lineage", "ancestors", "anc")]
+        public async Task Lineage(string speciesName) {
+
+            await Lineage(string.Empty, speciesName);
+
+        }
+        [Command("ancestry", RunMode = RunMode.Async), Alias("lineage", "ancestors", "anc")]
         public async Task Lineage(string genusName, string speciesName) {
 
-            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (species != null) {
+            if (species.IsValid()) {
 
-                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(species, AncestryTreeGenerationFlags.AncestorsOnly);
+                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(Db, species, AncestryTreeGenerationFlags.AncestorsOnly);
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
                     DrawLines = false,
-                    MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
-                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short).Result
+                    MaxLength = DiscordUtilities.MaxMessageLength - 6, // account for code block markup
+                    TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -840,41 +773,46 @@ namespace OurFoodChain.Bot.Modules {
             }
 
         }
-        [Command("ancestry2"), Alias("lineage2", "anc2")]
+        [Command("ancestry2", RunMode = RunMode.Async), Alias("lineage2", "anc2")]
         public async Task Lineage2(string species) {
-            await Lineage2("", species);
-        }
-        [Command("ancestry2"), Alias("lineage2", "anc2")]
-        public async Task Lineage2(string genus, string species) {
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-
-            if (sp is null)
-                return;
-
-            string image = await AncestryTreeImageRenderer.Save(sp, AncestryTreeGenerationFlags.Full);
-
-            await Context.Channel.SendFileAsync(image);
+            await Lineage2(string.Empty, species);
 
         }
+        [Command("ancestry2", RunMode = RunMode.Async), Alias("lineage2", "anc2")]
+        public async Task Lineage2(string genusName, string speciesName) {
 
-        [Command("evolution"), Alias("evo")]
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+
+            if (species.IsValid()) {
+
+                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.Full);
+
+                await Context.Channel.SendFileAsync(image);
+
+            }
+
+        }
+
+        [Command("evolution", RunMode = RunMode.Async), Alias("evo")]
         public async Task Evolution(string speciesName) {
+
             await Evolution(string.Empty, speciesName);
+
         }
-        [Command("evolution"), Alias("evo")]
+        [Command("evolution", RunMode = RunMode.Async), Alias("evo")]
         public async Task Evolution(string genusName, string speciesName) {
 
-            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (species != null) {
+            if (species.IsValid()) {
 
-                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(species, AncestryTreeGenerationFlags.DescendantsOnly);
+                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(Db, species, AncestryTreeGenerationFlags.DescendantsOnly);
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
                     MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
-                    TimestampFormatter = x => BotUtils.TimestampToDateStringAsync(x, new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short).Result
+                    TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -882,225 +820,206 @@ namespace OurFoodChain.Bot.Modules {
             }
 
         }
-        [Command("evolution2"), Alias("evo2")]
-        public async Task Evolution2(string species) {
-            await Evolution2("", species);
-        }
-        [Command("evolution2"), Alias("evo2")]
-        public async Task Evolution2(string genus, string species) {
+        [Command("evolution2", RunMode = RunMode.Async), Alias("evo2")]
+        public async Task Evolution2(string speciesName) {
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-
-            if (sp is null)
-                return;
-
-            string image = await AncestryTreeImageRenderer.Save(sp, AncestryTreeGenerationFlags.DescendantsOnly);
-
-            await Context.Channel.SendFileAsync(image);
+            await Evolution2(string.Empty, speciesName);
 
         }
+        [Command("evolution2", RunMode = RunMode.Async), Alias("evo2")]
+        public async Task Evolution2(string genusName, string speciesName) {
 
-        [Command("migration"), Alias("spread")]
-        public async Task Migration(string speciesName) {
-            await Migration("", speciesName);
-        }
-        [Command("migration"), Alias("spread")]
-        public async Task Migration(string genusName, string speciesName) {
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            if (species.IsValid()) {
 
-            if (species is null)
-                return;
+                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.DescendantsOnly);
 
-            ISpeciesZoneInfo[] zones = (await Db.GetZonesAsync(new SpeciesAdapter(species))).OrderBy(x => x.Date).ToArray();
-
-            if (zones.Count() <= 0) {
-
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is not present in any zones.", species.ShortName));
+                await Context.Channel.SendFileAsync(image);
 
             }
-            else {
 
-                // Group zones changes that happened closely together (12 hours).
+        }
 
-                List<List<ISpeciesZoneInfo>> zone_groups = new List<List<ISpeciesZoneInfo>>();
+        [Command("migration", RunMode = RunMode.Async), Alias("spread")]
+        public async Task Migration(string speciesName) {
 
-                DateTimeOffset? last_timestamp = zones.Count() > 0 ? zones.First().Date : default;
+            await Migration(string.Empty, speciesName);
 
-                foreach (ISpeciesZoneInfo zone in zones) {
+        }
+        [Command("migration", RunMode = RunMode.Async), Alias("spread")]
+        public async Task Migration(string genusName, string speciesName) {
 
-                    if (zone_groups.Count() <= 0)
-                        zone_groups.Add(new List<ISpeciesZoneInfo>());
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-                    if (zone_groups.Last().Count() <= 0 || Math.Abs((zone_groups.Last().Last().Date - zone.Date).Value.TotalSeconds) < 60 * 60 * 12)
-                        zone_groups.Last().Add(zone);
-                    else {
+            if (species.IsValid()) {
 
-                        last_timestamp = zone.Date;
-                        zone_groups.Add(new List<ISpeciesZoneInfo> { zone });
+                IEnumerable<ISpeciesZoneInfo> zones = (await Db.GetZonesAsync(species)).OrderBy(x => x.Date);
+
+                if (zones.Count() <= 0) {
+
+                    await ReplyInfoAsync($"**{species.GetShortName()}** is not present in any zones.");
+
+                }
+                else {
+
+                    // Group zones changes that happened closely together (12 hours).
+
+                    List<List<ISpeciesZoneInfo>> zoneGroups = new List<List<ISpeciesZoneInfo>>();
+
+                    DateTimeOffset? lastTimestamp = zones.Count() > 0 ? zones.First().Date : default;
+
+                    foreach (ISpeciesZoneInfo zone in zones) {
+
+                        if (zoneGroups.Count() <= 0)
+                            zoneGroups.Add(new List<ISpeciesZoneInfo>());
+
+                        if (zoneGroups.Last().Count() <= 0 || Math.Abs((zoneGroups.Last().Last().Date - zone.Date).Value.TotalSeconds) < 60 * 60 * 12)
+                            zoneGroups.Last().Add(zone);
+                        else {
+
+                            lastTimestamp = zone.Date;
+                            zoneGroups.Add(new List<ISpeciesZoneInfo> { zone });
+
+                        }
 
                     }
 
+                    StringBuilder result = new StringBuilder();
+
+                    for (int i = 0; i < zoneGroups.Count(); ++i) {
+
+                        if (zoneGroups[i].Count() <= 0)
+                            continue;
+
+                        DateTimeOffset? ts = i == 0 ? species.CreationDate : zoneGroups[i].First().Date;
+
+                        if (!ts.HasValue)
+                            ts = species.CreationDate;
+
+                        result.Append(string.Format("{0} - ", await GetDateStringAsync((DateTimeOffset)ts, DateStringFormat.Short)));
+                        result.Append(i == 0 ? "Started in " : "Spread to ");
+                        result.Append(zoneGroups[i].Count() == 1 ? "Zone " : "Zones ");
+                        result.Append(StringUtilities.ConjunctiveJoin(", ", zoneGroups[i].Select(x => x.Zone.GetShortName())));
+
+                        result.AppendLine();
+
+                    }
+
+                    await ReplyAsync(string.Format("```{0}```", result.ToString()));
+
                 }
-
-
-                StringBuilder result = new StringBuilder();
-
-                for (int i = 0; i < zone_groups.Count(); ++i) {
-
-                    if (zone_groups[i].Count() <= 0)
-                        continue;
-
-                    DateTimeOffset? ts = i == 0 ? DateUtilities.GetDateFromTimestamp(species.Timestamp) : zone_groups[i].First().Date;
-
-                    if (!ts.HasValue)
-                        ts = DateUtilities.GetDateFromTimestamp(species.Timestamp);
-
-                    result.Append(string.Format("{0} - ", await BotUtils.TimestampToDateStringAsync(ts.Value.ToUnixTimeSeconds(), new OfcBotContext(Context, BotConfiguration, Db), TimestampToDateStringFormat.Short)));
-                    result.Append(i == 0 ? "Started in " : "Spread to ");
-                    result.Append(zone_groups[i].Count() == 1 ? "Zone " : "Zones ");
-                    result.Append(StringUtilities.ConjunctiveJoin(", ", zone_groups[i].Select(x => x.Zone.GetShortName())));
-
-                    result.AppendLine();
-
-                }
-
-                await ReplyAsync(string.Format("```{0}```", result.ToString()));
 
             }
 
         }
 
-        [Command("size"), Alias("sz")]
-        public async Task Size(string species) {
-            await Size("", species);
+        [Command("size", RunMode = RunMode.Async), Alias("sz")]
+        public async Task Size(string speciesName) {
+
+            await Size(string.Empty, speciesName);
+
         }
-        [Command("size"), Alias("sz")]
-        public async Task Size(string genusOrSpecies, string speciesOrUnits) {
+        [Command("size", RunMode = RunMode.Async), Alias("sz")]
+        public async Task Size(string arg0, string arg1) {
 
             // This command can be used in a number of ways:
             // <genus> <species>    -> returns size for that species
             // <species> <units>    -> returns size for that species, using the given units
 
-            Species species = null;
+            ISpecies species = null;
             ILengthUnit units = null;
 
             // Attempt to get the specified species, assuming the user passed in <genus> <species>.
 
-            IEnumerable<Species> speciesResults = await BotUtils.GetSpeciesFromDb(genusOrSpecies, speciesOrUnits);
+            IEnumerable<ISpecies> speciesResults = await Db.GetSpeciesAsync(arg0, arg1);
 
             if (speciesResults.Count() > 1)
-                await BotUtils.ReplyValidateSpeciesAsync(Context, speciesResults);
+                await ReplyValidateSpeciesAsync(speciesResults);
             else if (speciesResults.Count() == 1)
                 species = speciesResults.First();
             else if (speciesResults.Count() <= 0) {
 
-                // If we didn't get any species by treating the arguments as <genus> <species>, attempt to get the species by <species> only.         
-                species = await BotUtils.ReplyFindSpeciesAsync(Context, "", genusOrSpecies);
+                // If we didn't get any species by treating the arguments as <genus> <species>, attempt to get the species by <species> only.      
 
-                // If this still fails, there's nothing left to do.
+                species = await GetSpeciesOrReplyAsync(string.Empty, arg0);
 
-                if (species is null)
-                    return;
+                if (species.IsValid()) {
 
-                // Assume the second argument was the desired units.
-                // Make sure the units given are valid.
+                    // Assume the second argument was the desired units.
+                    // Make sure the units given are valid.
 
-                LengthUnit.TryParse(speciesOrUnits, out units);
+                    LengthUnit.TryParse(arg1, out units);
 
-                if (units is null) {
-
-                    await BotUtils.ReplyAsync_Error(Context, string.Format("Invalid units (\"{0}\").", speciesOrUnits));
-
-                    return;
+                    if (units is null)
+                        await ReplyErrorAsync(string.Format("Invalid units (\"{0}\").", arg1));
 
                 }
 
             }
 
-            if (species != null)
-                await Size(species, units);
+            if (species != null && units != null)
+                await ReplySizeAsync(species, units);
 
         }
-        public async Task Size(Species species, string units) {
+        [Command("size", RunMode = RunMode.Async), Alias("sz")]
+        public async Task Size(string genusName, string speciesName, string units) {
 
-            LengthUnit.TryParse(units, out ILengthUnit lengthUnits);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (lengthUnits is null)
-                await BotUtils.ReplyAsync_Error(Context, string.Format("Invalid units (\"{0}\").", units));
-            else
-                await Size(species, lengthUnits);
-
-        }
-        public async Task Size(Species species, ILengthUnit units) {
-
-            // Attempt to get the size of the species.
-
-            SpeciesSizeMatch match = SpeciesSizeMatch.Find(species.Description);
-
-            // Output the result.
-
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.Title = string.Format("Size of {0}", species.FullName);
-            embed.WithDescription(units is null ? match.ToString() : match.ToString(units));
-            embed.WithFooter("Size is determined from species description, and may not be accurate.");
-
-            await ReplyAsync("", false, embed.Build());
-
-        }
-        [Command("size"), Alias("sz")]
-        public async Task Size(string genus, string species, string units) {
-
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
-
-            if (!(species is null))
-                await Size(sp, units);
+            if (species.IsValid())
+                await ReplySizeAsync(species, units);
 
         }
 
-        [Command("taxonomy"), Alias("taxon")]
-        public async Task Taxonomy(string species) {
-            await Taxonomy("", species);
+        [Command("taxonomy", RunMode = RunMode.Async), Alias("taxon")]
+        public async Task Taxonomy(string speciesName) {
+
+            await Taxonomy(string.Empty, speciesName);
+
         }
-        [Command("taxonomy"), Alias("taxon")]
-        public async Task Taxonomy(string genus, string species) {
+        [Command("taxonomy", RunMode = RunMode.Async), Alias("taxon")]
+        public async Task Taxonomy(string genusName, string speciesName) {
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("Taxonomy of {0}", sp.ShortName));
-            embed.WithThumbnailUrl(sp.Picture);
+                Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed {
+                    Title = string.Format("Taxonomy of {0}", species.GetShortName()),
+                    ThumbnailUrl = species.GetPictureUrl()
+                };
 
-            TaxonSet set = await BotUtils.GetFullTaxaFromDb(sp);
+                IDictionary<TaxonRankType, ITaxon> taxonomy = await Db.GetTaxaAsync(species);
 
-            string unknown = "Unknown";
-            string genus_name = set.Genus is null ? unknown : set.Genus.GetName();
-            string family_name = set.Family is null ? unknown : set.Family.GetName();
-            string order_name = set.Order is null ? unknown : set.Order.GetName();
-            string class_name = set.Class is null ? unknown : set.Class.GetName();
-            string phylum_name = set.Phylum is null ? unknown : set.Phylum.GetName();
-            string kingdom_name = set.Kingdom is null ? unknown : set.Kingdom.GetName();
-            string domain_name = set.Domain is null ? unknown : set.Domain.GetName();
+                string unknown = "Unknown";
 
-            embed.AddField("Domain", domain_name, inline: true);
-            embed.AddField("Kingdom", kingdom_name, inline: true);
-            embed.AddField("Phylum", phylum_name, inline: true);
-            embed.AddField("Class", class_name, inline: true);
-            embed.AddField("Order", order_name, inline: true);
-            embed.AddField("Family", family_name, inline: true);
-            embed.AddField("Genus", genus_name, inline: true);
-            embed.AddField("Species", StringUtilities.ToTitleCase(sp.Name), inline: true);
+                string tGenusName = taxonomy.GetOrDefault(TaxonRankType.Genus)?.GetName() ?? unknown;
+                string tFamilyName = taxonomy.GetOrDefault(TaxonRankType.Family)?.GetName() ?? unknown;
+                string tOrderName = taxonomy.GetOrDefault(TaxonRankType.Order)?.GetName() ?? unknown;
+                string tClassName = taxonomy.GetOrDefault(TaxonRankType.Class)?.GetName() ?? unknown;
+                string tPhylumName = taxonomy.GetOrDefault(TaxonRankType.Phylum)?.GetName() ?? unknown;
+                string tKingdomName = taxonomy.GetOrDefault(TaxonRankType.Kingdom)?.GetName() ?? unknown;
+                string tDomainName = taxonomy.GetOrDefault(TaxonRankType.Domain)?.GetName() ?? unknown;
 
-            await ReplyAsync("", false, embed.Build());
+                embed.AddField("Domain", tDomainName, inline: true);
+                embed.AddField("Kingdom", tKingdomName, inline: true);
+                embed.AddField("Phylum", tPhylumName, inline: true);
+                embed.AddField("Class", tClassName, inline: true);
+                embed.AddField("Order", tOrderName, inline: true);
+                embed.AddField("Family", tFamilyName, inline: true);
+                embed.AddField("Genus", tGenusName, inline: true);
+                embed.AddField("Species", species.Name.ToTitle(), inline: true);
+
+                await ReplyAsync(embed);
+
+            }
 
         }
 
         // Private members
 
-        private async Task AddSpeciesToZonesAsync(ISpecies species, string zoneList, string notes, bool onlyShowErrors = false) {
+        private async Task ReplyAddSpeciesToZonesAsync(ISpecies species, string zoneList, string notes, bool onlyShowErrors = false) {
 
             // Get the zones from user input.
 
@@ -1164,6 +1083,73 @@ namespace OurFoodChain.Bot.Modules {
                 await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
             }
+
+        }
+
+        private async Task ReplySetAncestorAsync(ISpecies childSpecies, ISpecies ancestorSpecies) {
+
+            if (childSpecies.IsValid() && ancestorSpecies.IsValid()) {
+
+                if (childSpecies.Id == ancestorSpecies.Id) {
+
+                    await ReplyErrorAsync("A species cannot be its own ancestor.");
+
+                }
+                else {
+
+                    // Check if an ancestor has already been set for this species. If so, update the ancestor, but we'll show a different message later notifying the user of the change.
+
+                    ISpecies existingAncestorSpecies = await Db.GetAncestorAsync(childSpecies);
+
+                    if (existingAncestorSpecies.IsValid() && existingAncestorSpecies.Id == ancestorSpecies.Id) {
+
+                        // If the ancestor has already been set to the species specified, quit.
+
+                        await ReplyWarningAsync($"**{ancestorSpecies.GetShortName()}** has already been set as the ancestor of **{childSpecies.GetShortName()}**.");
+
+                    }
+                    else {
+
+                        await Db.SetAncestorAsync(childSpecies, ancestorSpecies);
+
+                        if (!existingAncestorSpecies.IsValid())
+                            await ReplySuccessAsync($"**{ancestorSpecies.GetShortName()}** has been set as the ancestor of **{childSpecies.GetShortName()}**.");
+                        else
+                            await ReplySuccessAsync($"**{ancestorSpecies.GetShortName()}** has replaced **{existingAncestorSpecies.GetShortName()}** as the ancestor of **{childSpecies.GetShortName()}**.");
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        public async Task ReplySizeAsync(ISpecies species, string units) {
+
+            LengthUnit.TryParse(units, out ILengthUnit lengthUnits);
+
+            if (lengthUnits is null)
+                await ReplyErrorAsync(string.Format("Invalid units (\"{0}\").", units));
+            else
+                await ReplySizeAsync(species, lengthUnits);
+
+        }
+        public async Task ReplySizeAsync(ISpecies species, ILengthUnit units) {
+
+            // Attempt to get the size of the species.
+
+            SpeciesSizeMatch match = SpeciesSizeMatch.Find(species.Description);
+
+            // Output the result.
+
+            Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed {
+                Title = string.Format("Size of {0}", species.GetFullName()),
+                Description = units is null ? match.ToString() : match.ToString(units),
+                Footer = "Size is determined from species description, and may not be accurate."
+            };
+
+            await ReplyAsync(embed);
 
         }
 

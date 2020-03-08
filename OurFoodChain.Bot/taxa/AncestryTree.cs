@@ -1,4 +1,7 @@
 ﻿using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Taxa;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,27 +21,27 @@ namespace OurFoodChain {
 
         public class NodeData {
 
-            public Species Species { get; set; } = null;
+            public ISpecies Species { get; set; } = null;
             public bool IsAncestor { get; set; } = false;
 
         }
 
-        public static async Task<TreeNode<NodeData>> GenerateTreeAsync(Species species, AncestryTreeGenerationFlags flags) {
+        public static async Task<TreeNode<NodeData>> GenerateTreeAsync(SQLiteDatabase database, ISpecies species, AncestryTreeGenerationFlags flags) {
 
             // Start by finding the earliest ancestor of this species.
 
             List<long> ancestor_ids = new List<long>();
 
             if (!flags.HasFlag(AncestryTreeGenerationFlags.DescendantsOnly))
-                ancestor_ids.AddRange(await SpeciesUtils.GetAncestorIdsAsync(species.Id));
+                ancestor_ids.AddRange(await database.GetAncestorIdsAsync(species.Id));
 
-            ancestor_ids.Add(species.Id);
+            ancestor_ids.Add((long)species.Id);
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
             TreeNode<NodeData> root = new TreeNode<NodeData> {
                 Value = new NodeData {
-                    Species = await SpeciesUtils.GetSpeciesAsync(ancestor_ids.First()),
+                    Species = await database.GetSpeciesAsync(ancestor_ids.First()),
                     IsAncestor = true
                 }
             };
@@ -48,14 +51,14 @@ namespace OurFoodChain {
 
             while (queue.Count() > 0) {
 
-                Species[] descendants = await SpeciesUtils.GetDirectDescendantsAsync(queue.First().Value.Species);
+                IEnumerable<ISpecies> descendants = await database.GetDirectDescendantsAsync(queue.First().Value.Species);
 
-                foreach (Species descendant in descendants) {
+                foreach (ISpecies descendant in descendants) {
 
                     TreeNode<NodeData> node = new TreeNode<NodeData> {
                         Value = new NodeData {
                             Species = descendant,
-                            IsAncestor = ancestor_ids.Contains(descendant.Id)
+                            IsAncestor = ancestor_ids.Contains((long)descendant.Id)
                         }
                     };
 

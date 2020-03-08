@@ -1,5 +1,7 @@
 ﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
+using OurFoodChain.Data;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -12,11 +14,11 @@ namespace OurFoodChain {
 
         // Public members
 
-        public static async Task<string> Save(Species species, AncestryTreeGenerationFlags flags) {
+        public static async Task<string> Save(SQLiteDatabase database, ISpecies species, AncestryTreeGenerationFlags flags) {
 
             // Generate the ancestry tree.
 
-            TreeNode<AncestryTree.NodeData> ancestry_tree_root = await AncestryTree.GenerateTreeAsync(species, flags);
+            TreeNode<AncestryTree.NodeData> ancestry_tree_root = await AncestryTree.GenerateTreeAsync(database, species, flags);
             TreeNode<AncestryTreeRendererNodeData> root = ancestry_tree_root.Copy(x => {
                 return new AncestryTreeRendererNodeData {
                     Species = x.Species,
@@ -35,7 +37,7 @@ namespace OurFoodChain {
 
                 root.PostOrderTraverse(node => {
 
-                    SizeF size = GraphicsUtils.MeasureString(node.Value.Species.ShortName, font);
+                    SizeF size = GraphicsUtils.MeasureString(node.Value.Species.GetShortName(), font);
 
                     node.Value.Bounds.Width = size.Width + horizontal_padding;
                     node.Value.Bounds.Height = size.Height;
@@ -81,7 +83,7 @@ namespace OurFoodChain {
                     if (!System.IO.Directory.Exists(out_dir))
                         System.IO.Directory.CreateDirectory(out_dir);
 
-                    string fpath = System.IO.Path.Combine(out_dir, species.ShortName + ".png");
+                    string fpath = System.IO.Path.Combine(out_dir, species.GetShortName() + ".png");
 
                     bmp.Save(fpath);
 
@@ -97,7 +99,7 @@ namespace OurFoodChain {
 
         private class AncestryTreeRendererNodeData {
 
-            public Species Species { get; set; } = null;
+            public ISpecies Species { get; set; } = null;
             public bool IsAncestor { get; set; } = false;
 
             public RectangleF Bounds = new RectangleF();
@@ -109,11 +111,11 @@ namespace OurFoodChain {
             public RectangleF Bounds;
         }
 
-        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<AncestryTreeRendererNodeData> node, Species selectedSpecies, Font font) {
+        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<AncestryTreeRendererNodeData> node, ISpecies selectedSpecies, Font font) {
 
             // Cross-out the species if it's extinct.
 
-            if (node.Value.Species.IsExtinct)
+            if (node.Value.Species.IsExtinct())
                 using (Brush brush = new SolidBrush(Color.White))
                 using (Pen pen = new Pen(brush, 1.0f))
                     gfx.DrawLine(pen,
@@ -123,7 +125,7 @@ namespace OurFoodChain {
             // Draw the name of the species.
 
             using (Brush brush = new SolidBrush(node.Value.Species.Id == selectedSpecies.Id ? Color.Yellow : Color.White))
-                gfx.DrawString(node.Value.Species.ShortName, font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
+                gfx.DrawString(node.Value.Species.GetShortName(), font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
 
             // Draw child nodes.
 

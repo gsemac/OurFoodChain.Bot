@@ -76,6 +76,11 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
+        public static string GetDateString(long timestamp, DateStringFormat format) {
+
+            return GetDateString(GetDateFromTimestamp(timestamp), format);
+
+        }
         public static string GetDateString(DateTimeOffset date, DateStringFormat format) {
 
             switch (format) {

@@ -343,7 +343,7 @@
     <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="users\UserRank.cs" />
-    <Compile Include="Modules\CommandsModule.cs" />
+    <Compile Include="Modules\GeneralModule.cs" />
     <Compile Include="database\Database.cs" />
     <Compile Include="OfcBot.cs" />
     <Compile Include="Program.cs" />

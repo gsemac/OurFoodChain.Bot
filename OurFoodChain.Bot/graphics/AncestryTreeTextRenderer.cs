@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,7 +131,7 @@ namespace OurFoodChain {
         }
         private string _timestampToString(long timestamp) {
 
-            return TimestampFormatter is null ? DateUtils.TimestampToShortDateString(timestamp) : TimestampFormatter(timestamp);
+            return TimestampFormatter is null ? DateUtilities.GetDateString(timestamp, DateStringFormat.Short) : TimestampFormatter(timestamp);
 
         }
 

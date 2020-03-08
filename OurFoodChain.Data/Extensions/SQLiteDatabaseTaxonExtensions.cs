@@ -51,6 +51,46 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task UpdateTaxonAsync(this SQLiteDatabase database, ITaxon taxon) {
+
+            string tableName = GetTableNameForRank(taxon.GetRank());
+
+            if (!string.IsNullOrEmpty(tableName)) {
+
+                string parentColumnName = GetFieldNameForRank(taxon.GetParentRank());
+                string updateParentColumnStr = string.Empty;
+
+                if (!string.IsNullOrEmpty(parentColumnName) && taxon.ParentId.HasValue)
+                    updateParentColumnStr = string.Format(", {0}=$parent_id", parentColumnName);
+
+                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("UPDATE {0} SET name = $name, description = $description, pics = $pics{1}, common_name = $common_name WHERE id = $id",
+                    tableName, updateParentColumnStr))) {
+
+                    cmd.Parameters.AddWithValue("$id", taxon.Id);
+
+                    cmd.Parameters.AddWithValue("$name", taxon.Name.ToLowerInvariant());
+                    cmd.Parameters.AddWithValue("$description", taxon.Description);
+                    cmd.Parameters.AddWithValue("$pics", taxon.GetPictureUrl());
+
+                    // Because this field was added in a database update, it's possible for it to be null rather than the empty string.
+
+                    cmd.Parameters.AddWithValue("$common_name", string.IsNullOrEmpty(taxon.GetCommonName()) ? "" : taxon.GetCommonName().ToLowerInvariant());
+
+                    if (!string.IsNullOrEmpty(parentColumnName) && taxon.ParentId.HasValue) {
+
+                        cmd.Parameters.AddWithValue("$parent_column_name", parentColumnName);
+                        cmd.Parameters.AddWithValue("$parent_id", taxon.ParentId);
+
+                    }
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
+
+        }
+
         public static async Task<ITaxon> GetTaxonAsync(this SQLiteDatabase database, long? id, TaxonRankType rank) {
 
             string tableName = GetTableNameForRank(rank);
@@ -80,24 +120,71 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, string name, TaxonRankType rank) {
+        public static async Task DeleteTaxonAsync(this SQLiteDatabase database, ITaxon taxon) {
 
-            List<ITaxon> taxa = new List<ITaxon>();
-            string tableName = GetTableNameForRank(rank);
+            string tableName = GetTableNameForRank(taxon.GetRank());
+            string subtaxaCommonName = GetTableNameForRank(taxon.GetChildRank());
+            string subtaxaColumnName = GetFieldNameForRank(taxon.GetRank());
 
-            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(name))
-                return Enumerable.Empty<ITaxon>();
+            // Set to NULL any references subtaxa have to this taxon.
+            // Note that this can also happen automatically if the foreign key is set up correctly when creating the database.
 
-            using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name = $name OR common_name = $name", tableName))) {
+            if (!string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(subtaxaColumnName)) {
 
-                cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
+                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("UPDATE {0} SET {1} = NULL WHERE {1} = $id", subtaxaCommonName, subtaxaColumnName))) {
 
-                foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    taxa.Add(CreateTaxonFromDataRow(row, rank));
+                    cmd.Parameters.AddWithValue("$id", taxon.Id);
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
 
             }
 
-            return taxa;
+            // Delete the taxon.
+
+            if (!string.IsNullOrEmpty(tableName)) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("DELETE FROM {0} WHERE id = $id", tableName))) {
+
+                    cmd.Parameters.AddWithValue("$id", taxon.Id);
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
+
+        }
+
+        public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, string name, TaxonRankType rank) {
+
+            if (rank == TaxonRankType.Any) {
+
+                return await database.GetTaxaAsync(name);
+
+            }
+            else {
+
+                List<ITaxon> taxa = new List<ITaxon>();
+
+                string tableName = GetTableNameForRank(rank);
+
+                if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(name))
+                    return Enumerable.Empty<ITaxon>();
+
+                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name = $name OR common_name = $name", tableName))) {
+
+                    cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd))
+                        taxa.Add(CreateTaxonFromDataRow(row, rank));
+
+                }
+
+                return taxa;
+
+            }
 
         }
         public static async Task<IEnumerable<ITaxon>> GetTaxaAsync(this SQLiteDatabase database, string name) {

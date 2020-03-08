@@ -30,9 +30,10 @@ namespace OurFoodChain.Data.Extensions {
 
         public static async Task AddSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, description, genus_id, owner, timestamp, user_id) VALUES($name, $description, $genus_id, $owner, $timestamp, $user_id)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, common_name, description, genus_id, owner, timestamp, user_id) VALUES($name, $common_name, $description, $genus_id, $owner, $timestamp, $user_id)")) {
 
                 cmd.Parameters.AddWithValue("$name", species.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$common_name", species.GetCommonName());
                 cmd.Parameters.AddWithValue("$description", species.Description);
                 cmd.Parameters.AddWithValue("$genus_id", species.ParentId);
                 cmd.Parameters.AddWithValue("$owner", species.Creator.Name);
@@ -43,21 +44,32 @@ namespace OurFoodChain.Data.Extensions {
 
             }
 
+            // Add common names.
+
+            await database.DeleteCommonNamesAsync(species);
+            await database.AddCommonNamesAsync(species);
+
         }
 
         public static async Task UpdateSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name = $name, owner = $owner, user_id = $user_id WHERE id = $species_id")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name = $name, common_name = $common_name, genus_id = $genus_id, owner = $owner, user_id = $user_id WHERE id = $species_id")) {
 
                 cmd.Parameters.AddWithValue("$species_id", species.Id);
-
+                cmd.Parameters.AddWithValue("$common_name", species.GetCommonName());
                 cmd.Parameters.AddWithValue("$name", species.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$genus_id", species.ParentId);
                 cmd.Parameters.AddWithValue("$owner", species.Creator.Name);
                 cmd.Parameters.AddWithValue("$user_id", species.Creator.UserId);
 
                 await database.ExecuteNonQueryAsync(cmd);
 
             }
+
+            // Update common names.
+
+            await database.DeleteCommonNamesAsync(species);
+            await database.AddCommonNamesAsync(species);
 
         }
 
@@ -750,8 +762,14 @@ namespace OurFoodChain.Data.Extensions {
                 CreationDate = DateUtilities.GetDateFromTimestamp((long)row.Field<decimal>("timestamp"))
             };
 
+            List<string> commonNames = new List<string>();
+
             if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))
-                species.CommonNames.Add(row.Field<string>("common_name"));
+                commonNames.Add(row.Field<string>("common_name"));
+
+            commonNames.AddRange(await database.GetCommonNamesAsync(species));
+
+            species.CommonNames.AddRange(commonNames);
 
             if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
                 species.Pictures.Add(new Picture(row.Field<string>("pics")));
@@ -781,6 +799,52 @@ namespace OurFoodChain.Data.Extensions {
                     return null;
 
                 return await database.CreateSpeciesFromDataRowAsync(result, genusInfo);
+
+            }
+
+        }
+
+        private static async Task<IEnumerable<string>> GetCommonNamesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            List<string> results = new List<string>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT name FROM SpeciesCommonNames WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add((row.Field<string>("name") ?? "").Trim().ToTitle());
+
+            }
+
+            return results.OrderBy(n => n)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct();
+
+        }
+        private static async Task DeleteCommonNamesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesCommonNames WHERE species_id = $species_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+        private static async Task AddCommonNamesAsync(this SQLiteDatabase database, ISpecies species) {
+
+            foreach (string commonName in species.CommonNames.Distinct()) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO SpeciesCommonNames(species_id, name) VALUES($species_id, $name)")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
+                    cmd.Parameters.AddWithValue("$name", commonName.ToLowerInvariant());
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
 
             }
 

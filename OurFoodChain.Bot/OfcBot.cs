@@ -56,11 +56,12 @@ namespace OurFoodChain.Bot {
 
             return (await base.ConfigureServicesAsync())
                 .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
-                .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Discord.Services.IPaginatedMessageService, Discord.Services.PaginatedMessageService>()
-                .AddSingleton<OurFoodChain.Services.TrophyScanner>()
+                .AddSingleton<Discord.Services.IResponsiveMessageService, Discord.Services.ResponsiveMessageService>()
                 .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>()
+                .AddSingleton<Services.GotchiBackgroundService>()
+                .AddSingleton<OurFoodChain.Services.TrophyScanner>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }

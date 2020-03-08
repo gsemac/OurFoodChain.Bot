@@ -635,127 +635,6 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        public static async Task ShowSpeciesInfoAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, SQLiteDatabase db, Species species) {
-
-            if (await BotUtils.ReplyValidateSpeciesAsync(context, species)) {
-
-                EmbedBuilder embed = new EmbedBuilder();
-                StringBuilder descriptionBuilder = new StringBuilder();
-
-                string embed_title = species.FullName;
-                Color embed_color = Color.Blue;
-
-                CommonName[] common_names = await SpeciesUtils.GetCommonNamesAsync(species);
-
-                if (common_names.Count() > 0)
-                    embed_title += string.Format(" ({0})", string.Join(", ", (object[])common_names));
-
-                // Show generation only if generations are enabled.
-
-                if (botConfiguration.GenerationsEnabled) {
-
-                    Generation gen = await GenerationUtils.GetGenerationByTimestampAsync(species.Timestamp);
-
-                    embed.AddField("Gen", gen is null ? "???" : gen.Number.ToString(), inline: true);
-
-                }
-
-                embed.AddField("Owner", await SpeciesUtils.GetOwnerOrDefaultAsync(species, context), inline: true);
-
-                IEnumerable<ISpeciesZoneInfo> zone_list = await db.GetZonesAsync(new SpeciesAdapter(species));
-
-                if (zone_list.Count() > 0) {
-
-                    embed_color = DiscordUtils.ConvertColor((await db.GetZoneTypeAsync(zone_list
-                        .GroupBy(x => x.Zone.TypeId)
-                        .OrderBy(x => x.Count())
-                        .Last()
-                        .Key)).Color);
-
-                }
-
-                string zones_value = new SpeciesZoneInfoCollection(zone_list).ToString(SpeciesZoneInfoCollectionToStringOptions.Default, DiscordUtils.MaxFieldLength);
-
-                embed.AddField("Zone(s)", string.IsNullOrEmpty(zones_value) ? "None" : zones_value, inline: true);
-
-                // Check if the species is extinct.
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id=$species_id;")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", species.Id);
-
-                    DataRow row = await Database.GetRowAsync(cmd);
-
-                    if (!(row is null)) {
-
-                        embed_title = "[EXTINCT] " + embed_title;
-                        embed_color = Color.Red;
-
-                        string reason = row.Field<string>("reason");
-                        long timestamp = (long)row.Field<decimal>("timestamp");
-
-                        if (!string.IsNullOrEmpty(reason))
-                            descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(timestamp, new OfcBotContext(context, botConfiguration, db)), reason));
-
-                    }
-
-                }
-
-                descriptionBuilder.Append(species.GetDescriptionOrDefault());
-
-                embed.WithTitle(embed_title);
-                embed.WithThumbnailUrl(species.Picture);
-                embed.WithColor(embed_color);
-
-                if (!string.IsNullOrEmpty(botConfiguration.WikiUrlFormat)) {
-
-                    // Discord automatically encodes certain characters in URIs, which doesn't allow us to update the config via Discord when we have "{0}" in the URL.
-                    // Replace this with the proper string before attempting to call string.Format.
-                    string format = botConfiguration.WikiUrlFormat.Replace("%7B0%7D", "{0}");
-
-                    embed.WithUrl(string.Format(format, Uri.EscapeUriString(GetWikiPageTitleForSpecies(species, common_names))));
-
-                }
-
-                if (embed.Length + descriptionBuilder.Length > DiscordUtils.MaxEmbedLength) {
-
-                    // If the description puts us over the character limit, we'll paginate.
-
-                    int pageLength = DiscordUtils.MaxEmbedLength - embed.Length;
-
-                    List<EmbedBuilder> pages = new List<EmbedBuilder>();
-
-                    foreach (string pageText in new StringPaginator(descriptionBuilder.ToString()) { MaxPageLength = pageLength }) {
-
-                        EmbedBuilder page = new EmbedBuilder();
-
-                        page.WithTitle(embed.Title);
-                        page.WithThumbnailUrl(embed.ThumbnailUrl);
-                        page.WithFields(embed.Fields);
-                        page.WithDescription(pageText);
-
-                        pages.Add(page);
-
-                    }
-
-                    PaginatedMessageBuilder builder = new Bot.PaginatedMessageBuilder(pages);
-                    builder.AddPageNumbers();
-                    builder.SetColor(embed_color);
-
-                    await DiscordUtils.SendMessageAsync(context, builder.Build());
-
-                }
-                else {
-
-                    embed.WithDescription(descriptionBuilder.ToString());
-
-                    await context.Channel.SendMessageAsync("", false, embed.Build());
-
-                }
-
-            }
-
-        }
-
         // Private members
 
         private async Task AddSpeciesToZonesAsync(ISpecies species, string zoneList, string notes, bool onlyShowErrors = false) {
@@ -824,6 +703,7 @@ namespace OurFoodChain.Bot.Modules {
             }
 
         }
+
         private static string GetWikiPageTitleForSpecies(Species species, CommonName[] commonNames) {
 
             // This is the same process as used in SpeciesPageBuilder.BuildTitleAsync.

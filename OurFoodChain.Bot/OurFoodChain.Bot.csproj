@@ -283,7 +283,7 @@
     <Compile Include="Modules\ReviewsModule.cs" />
     <Compile Include="Modules\RoleCommands.cs" />
     <Compile Include="Modules\SpeciesModule.cs" />
-    <Compile Include="Modules\TaxaModule.cs" />
+    <Compile Include="Modules\TaxonModule.cs" />
     <Compile Include="Modules\ZonesModule.cs" />
     <Compile Include="PaginatedMessage.cs" />
     <Compile Include="Attributes\DifficultyLevelAttribute.cs" />

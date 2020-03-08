@@ -4,10 +4,10 @@ using System.Text;
 
 namespace OurFoodChain.Discord.Messaging {
 
-    public interface IMessage {
+    public interface IResponsiveMessageResponse {
 
-        string Text { get; set; }
-        IEmbed Embed { get; set; }
+        IMessage Message { get; }
+        bool Canceled { get; }
 
     }
 

@@ -15,7 +15,6 @@ namespace OurFoodChain.Discord.Messaging {
         public bool Enabled { get; set; } = true;
         public bool PaginationEnabled { get; set; } = true;
         public bool Restricted { get; set; } = false;
-        public bool Blocking { get; set; } = false;
 
         public IMessage CurrentPage => pages[currentPageIndex];
 
@@ -34,6 +33,29 @@ namespace OurFoodChain.Discord.Messaging {
                 reactions.AddRange(callbacks.Keys);
 
                 return reactions.Distinct();
+
+            }
+        }
+
+        public string Text {
+            get => pages.FirstOrDefault()?.Text;
+            set {
+
+                if (pages.Count() <= 0)
+                    pages.Add(new Message());
+
+                pages.First().Text = value;
+
+            }
+        }
+        public IEmbed Embed {
+            get => pages.FirstOrDefault()?.Embed;
+            set {
+
+                if (pages.Count() <= 0)
+                    pages.Add(new Message());
+
+                pages.First().Embed = value;
 
             }
         }

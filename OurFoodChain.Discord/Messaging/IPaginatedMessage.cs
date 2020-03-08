@@ -14,6 +14,7 @@ namespace OurFoodChain.Discord.Messaging {
     }
 
     public interface IPaginatedMessage :
+        IMessage,
         IEnumerable<IMessage> {
 
         bool Enabled { get; set; }

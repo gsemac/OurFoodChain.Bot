@@ -9,6 +9,7 @@ namespace OurFoodChain.Data.Queries {
 
         string Name { get; set; }
         string Value { get; set; }
+        IEnumerable<string> Values { get; }
         bool Invert { get; set; }
 
         Task ApplyAsync(ISearchContext context, ISearchResult result);

@@ -12,15 +12,11 @@ namespace OurFoodChain.Data.Queries {
 
     [SearchModifier("groupby", "group")]
     public class GroupBySearchModifier :
-        ISearchModifier {
+        SearchModifierBase {
 
         // Public members
 
-        public string Name { get; set; }
-        public string Value { get; set; }
-        public bool Invert { get; set; } = false;
-
-        public async Task ApplyAsync(ISearchContext context, ISearchResult result) {
+        public override async Task ApplyAsync(ISearchContext context, ISearchResult result) {
 
             await result.GroupByAsync(async (species) => {
 

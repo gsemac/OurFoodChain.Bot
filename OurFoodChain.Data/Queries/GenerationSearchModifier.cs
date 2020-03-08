@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common.Generations;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
@@ -9,17 +10,13 @@ namespace OurFoodChain.Data.Queries {
 
     [SearchModifier("gen", "generation")]
     public class GenerationSearchModifier :
-        SearchModifierBase {
+        FilterSearchModifierBase {
 
-        public async override Task ApplyAsync(ISearchContext context, ISearchResult result) {
+        public override async Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value) {
 
-            await result.FilterByAsync(async (species) => {
+            IGeneration gen = await context.Database.GetGenerationByDateAsync(species.CreationDate);
 
-                IGeneration gen = await context.Database.GetGenerationByDateAsync(species.CreationDate);
-
-                return gen == null || gen.Number.ToString() != Value;
-
-            }, Invert);
+            return gen == null || gen.Number.ToString() != value;
 
         }
 

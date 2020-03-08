@@ -10,15 +10,11 @@ namespace OurFoodChain.Data.Queries {
 
     [SearchModifier("r", "role")]
     public class RoleSearchModifier :
-     ISearchModifier {
+     SearchModifierBase {
 
         // Public members
 
-        public string Name { get; set; }
-        public string Value { get; set; }
-        public bool Invert { get; set; } = false;
-
-        public async Task ApplyAsync(ISearchContext context, ISearchResult result) {
+        public override async Task ApplyAsync(ISearchContext context, ISearchResult result) {
 
             IEnumerable<string> roleNames = StringUtilities.ParseDelimitedString(Value, ",").Select(role => role.ToLowerInvariant());
 

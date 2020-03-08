@@ -11,15 +11,11 @@ namespace OurFoodChain.Data.Queries {
 
     [SearchModifier("orderby", "sortby", "sort", "ordering")]
     public class OrderBySearchModifier :
-        ISearchModifier {
+        SearchModifierBase {
 
         // Public members
 
-        public string Name { get; set; }
-        public string Value { get; set; }
-        public bool Invert { get; set; } = false;
-
-        public async Task ApplyAsync(ISearchContext context, ISearchResult result) {
+        public override async Task ApplyAsync(ISearchContext context, ISearchResult result) {
 
             switch (ParseOrderBy(Value)) {
 

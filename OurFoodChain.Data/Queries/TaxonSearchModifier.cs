@@ -11,11 +11,11 @@ namespace OurFoodChain.Data.Queries {
 
     [SearchModifier("s", "species", "g", "genus", "f", "family", "o", "order", "c", "class", "p", "phylum", "k", "kingdom", "d", "domain", "t", "taxon")]
     public class TaxonSearchModifier :
-        SearchModifierBase {
+        FilterSearchModifierBase {
 
         // Public members
 
-        public async override Task ApplyAsync(ISearchContext context, ISearchResult result) {
+        public override async Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value) {
 
             TaxonRankType rank = ParseRankType(Name);
 
@@ -23,42 +23,26 @@ namespace OurFoodChain.Data.Queries {
 
                 case TaxonRankType.Species:
 
-                    await result.FilterByAsync(async (species) => await Task.FromResult(!species.Name.Equals(Value, StringComparison.OrdinalIgnoreCase)),
-                        Invert);
-
-                    break;
+                    return await Task.FromResult(!species.Name.Equals(value, StringComparison.OrdinalIgnoreCase));
 
                 case TaxonRankType.Genus:
 
-                    await result.FilterByAsync(async (species) => {
-
-                        if (species.Genus != null)
-                            return await Task.FromResult(!species.Genus.Name.Equals(Value, StringComparison.OrdinalIgnoreCase));
-                        else
-                            return true;
-
-                    }, Invert);
-
-                    break;
+                    if (species.Genus != null)
+                        return await Task.FromResult(!species.Genus.Name.Equals(value, StringComparison.OrdinalIgnoreCase));
+                    else
+                        return true;
 
                 case TaxonRankType.Any:
 
-                    await result.FilterByAsync(async (species) => !(await context.Database.GetTaxaAsync(species)).Values.Any(taxon => taxon.Name.Equals(Value, StringComparison.OrdinalIgnoreCase)),
-                        Invert);
+                    return !(await context.Database.GetTaxaAsync(species)).Values.Any(taxon => taxon.Name.Equals(value, StringComparison.OrdinalIgnoreCase));
 
-                    break;
-
-                default:
-
-                    await result.FilterByAsync(async (species) => {
+                default: {
 
                         ITaxon taxon = (await context.Database.GetTaxaAsync(species)).GetOrDefault(rank);
 
-                        return taxon is null || !taxon.Name.Equals(Value, StringComparison.OrdinalIgnoreCase);
+                        return taxon is null || !taxon.Name.Equals(value, StringComparison.OrdinalIgnoreCase);
 
-                    }, Invert);
-
-                    break;
+                    }
 
             }
 

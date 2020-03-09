@@ -43,7 +43,7 @@ namespace OurFoodChain {
 
             Tree.PreOrderTraverse(x => {
 
-                int length = _timestampToString(x.Value.Species.Timestamp).Length;
+                int length = _timestampToString(DateUtilities.GetTimestampFromDate(x.Value.Species.CreationDate)).Length;
 
                 if (length > maxTimestampLength)
                     maxTimestampLength = length;
@@ -59,8 +59,8 @@ namespace OurFoodChain {
 
                 string line = "";
 
-                line += _timestampToString(x.Value.Species.Timestamp).PadRight(maxTimestampLength);
-                line += " " + (x.Value.Species.IsExtinct ? "*" : "-");
+                line += _timestampToString(DateUtilities.GetTimestampFromDate(x.Value.Species.CreationDate)).PadRight(maxTimestampLength);
+                line += " " + (x.Value.Species.IsExtinct() ? "*" : "-");
 
                 if (DrawLines && x.Parent != null)
                     for (int i = 0; i < x.Depth * 2 - 1; ++i) {
@@ -104,7 +104,7 @@ namespace OurFoodChain {
 
                 }
 
-                line += x.Value.Species.ShortName;
+                line += x.Value.Species.GetShortName();
 
                 lines.Add(line);
 

@@ -24,24 +24,26 @@ namespace OurFoodChain.Discord.Services {
             IBotConfiguration configuration,
             IServiceProvider serviceProvider,
             IHelpService helpService,
+            IResponsiveMessageService responsiveMessageService,
             DiscordSocketClient discordClient,
             CommandService commandService
             ) {
 
-            _configuration = configuration;
-            _serviceProvider = serviceProvider;
-            _helpService = helpService;
-            _discordClient = discordClient;
+            this.configuration = configuration;
+            this.serviceProvider = serviceProvider;
+            this.helpService = helpService;
+            this.responsiveMessageService = responsiveMessageService;
+            this.discordClient = discordClient;
             CommandService = commandService;
 
-            _discordClient.MessageReceived += OnMessageReceivedAsync;
+            this.discordClient.MessageReceived += OnMessageReceivedAsync;
             CommandService.CommandExecuted += OnCommandExecutedAsync;
 
         }
 
         public async Task InitializeAsync(IServiceProvider provider) {
 
-            _serviceProvider = provider;
+            serviceProvider = provider;
 
             await InstallCommandsAsync();
 
@@ -51,7 +53,7 @@ namespace OurFoodChain.Discord.Services {
             foreach (ModuleInfo moduleInfo in CommandService.Modules.ToArray())
                 await CommandService.RemoveModuleAsync(moduleInfo);
 
-            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
+            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), serviceProvider);
 
         }
 
@@ -61,11 +63,17 @@ namespace OurFoodChain.Discord.Services {
 
         protected virtual async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
-            if (rawMessage.Content == _configuration.Prefix)
-                return;
+            bool handled = false;
 
-            if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage))
-                await HandleCommandAsync(rawMessage);
+            if (responsiveMessageService != null)
+                handled = await responsiveMessageService.HandleMessageAsync(rawMessage);
+
+            if (rawMessage.Content != configuration.Prefix && !handled) {
+
+                if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage))
+                    await HandleCommandAsync(rawMessage);
+
+            }
 
         }
         protected async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result) {
@@ -80,9 +88,9 @@ namespace OurFoodChain.Discord.Services {
             IUserMessage message = rawMessage as IUserMessage;
 
             int argumentsIndex = GetCommmandArgumentsStartIndex(message);
-            ICommandContext context = new CommandContext(_discordClient, message);
+            ICommandContext context = new CommandContext(discordClient, message);
 
-            IResult result = await CommandService.ExecuteAsync(context, argumentsIndex, _serviceProvider);
+            IResult result = await CommandService.ExecuteAsync(context, argumentsIndex, serviceProvider);
 
             return result;
 
@@ -102,7 +110,7 @@ namespace OurFoodChain.Discord.Services {
 
                 // If help documentation exists for this command, display it.
 
-                ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(commandName);
+                ICommandHelpInfo commandHelpInfo = await helpService.GetCommandHelpInfoAsync(commandName);
 
                 if (commandHelpInfo != null) {
 
@@ -112,7 +120,7 @@ namespace OurFoodChain.Discord.Services {
                     embed.WithTitle(string.Format("Incorrect use of \"{0}\" command", commandName.ToLower()));
                     embed.WithDescription("❌ " + result.ErrorReason);
                     embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
-                        .Select(e => string.Format("`{0}{1}{2}`", _configuration.Prefix, commandName, e.SkipWords(1)))));
+                        .Select(e => string.Format("`{0}{1}{2}`", configuration.Prefix, commandName, e.SkipWords(1)))));
 
                     await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -131,7 +139,7 @@ namespace OurFoodChain.Discord.Services {
                 if (!string.IsNullOrEmpty(commandName)) {
 
                     string suggestedCommandName = StringUtilities.GetBestMatch(commandName, GetCommandNames());
-                    ICommandHelpInfo commandHelpInfo = await _helpService.GetCommandHelpInfoAsync(suggestedCommandName);
+                    ICommandHelpInfo commandHelpInfo = await helpService.GetCommandHelpInfoAsync(suggestedCommandName);
 
                     await DiscordUtilities.ReplyErrorAsync(context.Channel, string.Format($"Unknown command. Did you mean **{commandHelpInfo.Name}**?"));
 
@@ -188,8 +196,8 @@ namespace OurFoodChain.Discord.Services {
 
             if (rawMessage is IUserMessage message) {
 
-                message.HasStringPrefix(_configuration.Prefix, ref index, StringComparison.InvariantCultureIgnoreCase);
-                message.HasMentionPrefix(_discordClient.CurrentUser, ref index);
+                message.HasStringPrefix(configuration.Prefix, ref index, StringComparison.InvariantCultureIgnoreCase);
+                message.HasMentionPrefix(discordClient.CurrentUser, ref index);
 
             }
 
@@ -212,10 +220,11 @@ namespace OurFoodChain.Discord.Services {
 
         // Private members
 
-        private IServiceProvider _serviceProvider;
-        private readonly IBotConfiguration _configuration;
-        private readonly IHelpService _helpService;
-        private readonly DiscordSocketClient _discordClient;
+        private IServiceProvider serviceProvider;
+        private readonly IBotConfiguration configuration;
+        private readonly IHelpService helpService;
+        private readonly DiscordSocketClient discordClient;
+        private readonly IResponsiveMessageService responsiveMessageService;
 
     }
 

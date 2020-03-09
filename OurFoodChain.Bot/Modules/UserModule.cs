@@ -1,15 +1,28 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Trophies;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurFoodChain.Trophies.Extensions;
+using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Utilities;
 
 namespace OurFoodChain.Modules {
 
     public class UserModule :
         OfcModuleBase {
+
+        // Public members
 
         [Command("profile")]
         public async Task Profile() {
@@ -76,14 +89,14 @@ namespace OurFoodChain.Modules {
 
                 // Put together the user's profile.
 
-                if (BotConfiguration.GenerationsEnabled) {
+                if (Config.GenerationsEnabled) {
 
                     int generationsSinceFirstSubmission = (await GenerationUtils.GetGenerationsAsync()).Where(x => x.EndTimestamp > userInfo.FirstSubmissionTimestamp).Count();
                     double speciesPerGeneration = generationsSinceFirstSubmission <= 0 ? userSpeciesCount : (double)userSpeciesCount / generationsSinceFirstSubmission;
 
                     embed.WithDescription(string.Format("{0} made their first species during **{1}**.\nSince then, they have submitted **{2:0.0}** species per generation.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, BotConfiguration, Db)),
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, Config, Db)),
                         speciesPerGeneration,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -92,7 +105,7 @@ namespace OurFoodChain.Modules {
 
                     embed.WithDescription(string.Format("{0} made their first species on **{1}**.\nSince then, they have submitted **{2:0.0}** species per day.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, BotConfiguration, Db)),
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, Config, Db)),
                         daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -102,7 +115,7 @@ namespace OurFoodChain.Modules {
 
                 embed.AddField("Favorite genus", string.Format("{0} ({1} spp.)", StringUtilities.ToTitleCase(favoriteGenus), favoriteGenusCount), inline: true);
 
-                if (BotConfiguration.TrophiesEnabled) {
+                if (Config.TrophiesEnabled) {
 
                     embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
                         (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())).Count(),
@@ -313,6 +326,28 @@ namespace OurFoodChain.Modules {
                 // The user does not exist in the database.
 
                 await ReplyErrorAsync("No such user exists.");
+
+            }
+
+        }
+
+        // Private members
+
+        private async Task ReplySpeciesAddedByAsync(ICreator creator, string thumbnailUrl, IEnumerable<ISpecies> species) {
+
+            if (species.Count() <= 0) {
+
+                await ReplyInfoAsync($"**{creator}** has not submitted any species yet.");
+
+            }
+            else {
+
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Species owned by {creator} ({species.Count()})", species, options: EmbedPaginationOptions.AddPageNumbers);
+
+                foreach (Discord.Messaging.IEmbed page in pages)
+                    page.ThumbnailUrl = thumbnailUrl;
+
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
             }
 

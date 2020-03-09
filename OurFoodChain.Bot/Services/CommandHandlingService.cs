@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using OurFoodChain.Discord.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +18,12 @@ namespace OurFoodChain.Bot.Services {
         public OurFoodChainBotCommandHandlingService(
             IOfcBotConfiguration configuration,
             IServiceProvider serviceProvider,
-            Discord.Services.IHelpService helpService,
+            IHelpService helpService,
+            IResponsiveMessageService responsiveMessageService,
             DiscordSocketClient discordClient,
             CommandService commandService
             ) :
-            base(configuration, serviceProvider, helpService, discordClient, commandService) {
+            base(configuration, serviceProvider, helpService, responsiveMessageService, discordClient, commandService) {
 
             _configuration = configuration;
 

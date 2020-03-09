@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using IMessage = Discord.IMessage;
 
 namespace OurFoodChain.Discord.Services {
 
@@ -23,9 +24,9 @@ namespace OurFoodChain.Discord.Services {
         public int MaxResponsiveMessages { get; set; } = 50;
         public string CancellationString { get; set; } = "cancel";
 
-        public ResponsiveMessageService(DiscordSocketClient client) {
+        public ResponsiveMessageService() {
 
-            client.MessageReceived += OnMessageReceivedAsync;
+            //client.MessageReceived += OnMessageReceivedAsync;
 
         }
 
@@ -60,23 +61,23 @@ namespace OurFoodChain.Discord.Services {
 
         }
 
-        // Protected members
+        public async Task<bool> HandleMessageAsync(IMessage message) {
 
-        protected async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
+            ResponsiveMessageInfo info = messages.GetOrDefault(message.Author.Id);
 
-            ResponsiveMessageInfo info = messages.GetOrDefault(rawMessage.Author.Id);
+            if (info != null && message.Channel.Id == info.Context.Channel.Id) {
 
-            if (info != null && rawMessage.Channel.Id == info.Context.Channel.Id) {
+                info.Response = new ResponseMessageResponse(new Message(message.Content), info.AllowCancellation && message.Content.Equals(CancellationString, StringComparison.OrdinalIgnoreCase));
 
-                info.Response = new ResponseMessageResponse(new Message(rawMessage.Content), info.AllowCancellation && rawMessage.Content.Equals(CancellationString, StringComparison.OrdinalIgnoreCase));
-
-                RemoveMessageInfo(rawMessage.Author.Id);
+                RemoveMessageInfo(message.Author.Id);
 
                 info.Waiter.Set();
 
+                return await Task.FromResult(true);
+
             }
 
-            await Task.CompletedTask;
+            return await Task.FromResult(false);
 
         }
 

@@ -1066,25 +1066,6 @@ namespace OurFoodChain.Bot.Modules {
             }
 
         }
-        private async Task ReplySpeciesAddedByAsync(ICreator creator, string thumbnailUrl, IEnumerable<ISpecies> species) {
-
-            if (species.Count() <= 0) {
-
-                await ReplyInfoAsync($"**{creator}** has not submitted any species yet.");
-
-            }
-            else {
-
-                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Species owned by {creator} ({species.Count()})", species, options: EmbedPaginationOptions.AddPageNumbers);
-
-                foreach (Discord.Messaging.IEmbed page in pages)
-                    page.ThumbnailUrl = thumbnailUrl;
-
-                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
-
-            }
-
-        }
 
         private async Task ReplySetAncestorAsync(ISpecies childSpecies, ISpecies ancestorSpecies) {
 

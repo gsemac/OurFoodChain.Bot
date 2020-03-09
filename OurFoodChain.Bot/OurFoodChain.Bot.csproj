@@ -273,7 +273,7 @@
     <Compile Include="Modules\BulkModule.cs" />
     <Compile Include="Modules\ConfigurationModule.cs" />
     <Compile Include="Modules\PicturesModule.cs" />
-    <Compile Include="Modules\GenerationsModule.cs" />
+    <Compile Include="Modules\GenerationModule.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\IdeaModule.cs" />
     <Compile Include="Modules\MapModule.cs" />

@@ -31,6 +31,15 @@ namespace OurFoodChain.Data.Extensions {
             return generations;
 
         }
+        public static async Task<IGeneration> GetGenerationAsync(this SQLiteDatabase database, int number) {
+
+            foreach (IGeneration generation in await database.GetGenerationsAsync())
+                if (generation.Number == number)
+                    return generation;
+
+            return null;
+
+        }
         public static async Task<IGeneration> GetGenerationByDateAsync(this SQLiteDatabase database, DateTimeOffset date) {
 
             foreach (Generation generation in await database.GetGenerationsAsync())
@@ -78,6 +87,28 @@ namespace OurFoodChain.Data.Extensions {
             await database.AddGenerationAsync(generation);
 
             return generation;
+
+        }
+        public static async Task<bool> RevertGenerationAsync(this SQLiteDatabase database) {
+
+            IGeneration generation = await database.GetCurrentGenerationAsync();
+
+            if (generation.Number <= 1)
+                return false;
+
+            // Delete the current generation.
+
+            await database.DeleteGenerationAsync(generation);
+
+            generation = await database.GetCurrentGenerationAsync();
+
+            // Update the end timestamp of the previous generation so that it is now the current generation.
+
+            generation.EndDate = DateUtilities.GetDateFromTimestamp(DateUtilities.GetMaxTimestamp());
+
+            await database.UpdateGenerationAsync(generation);
+
+            return true;
 
         }
 
@@ -141,6 +172,17 @@ namespace OurFoodChain.Data.Extensions {
                 await database.ExecuteNonQueryAsync(cmd);
 
             }
+        }
+        private static async Task DeleteGenerationAsync(this SQLiteDatabase database, IGeneration generation) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Period WHERE id = $id")) {
+
+                cmd.Parameters.AddWithValue("$id", generation.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
         }
 
     }

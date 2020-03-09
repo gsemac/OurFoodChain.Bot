@@ -157,6 +157,22 @@ namespace OurFoodChain {
 
         }
 
+        public async Task<ISpeciesAmbiguityResolverResult> ReplyResolveAmbiguityAsync(string arg0, string arg1, string arg2) {
+
+            ISpeciesAmbiguityResolver resolver = new SpeciesAmbiguityResolver(await GetDatabaseAsync());
+            ISpeciesAmbiguityResolverResult result = await resolver.ResolveAsync(arg0, arg1, arg2);
+
+            if (result.First is null && result.Second is null)
+                await ReplyErrorAsync("Unable to unambiguously determine either species.");
+            else if (result.First is null)
+                await ReplyErrorAsync("Unable to unambiguously determine the first species.");
+            else if (result.Second is null)
+                await ReplyErrorAsync("Unable to unambiguously determine the second species.");
+
+            return result;
+
+        }
+
         public async Task<IPaginatedMessage> BuildSpeciesMessageAsync(ISpecies species) {
 
             if (!species.IsValid())
@@ -626,22 +642,6 @@ namespace OurFoodChain {
 
         }
 
-        public async Task<ISpeciesAmbiguityResolverResult> ReplyResolveAmbiguityAsync(string arg0, string arg1, string arg2) {
-
-            ISpeciesAmbiguityResolver resolver = new SpeciesAmbiguityResolver(await GetDatabaseAsync());
-            ISpeciesAmbiguityResolverResult result = await resolver.ResolveAsync(arg0, arg1, arg2);
-
-            if (result.First is null && result.Second is null)
-                await ReplyErrorAsync("Unable to unambiguously determine either species.");
-            else if (result.First is null)
-                await ReplyErrorAsync("Unable to unambiguously determine the first species.");
-            else if (result.Second is null)
-                await ReplyErrorAsync("Unable to unambiguously determine the second species.");
-
-            return result;
-
-        }
-
         public async Task<ICreator> GetCreatorAsync(ICreator creator) {
 
             IUser user = await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, creator);
@@ -660,6 +660,33 @@ namespace OurFoodChain {
             }
 
             return DateUtilities.GetDateString(date, format);
+
+        }
+
+        public async Task<IPaginatedMessage> BuildRecentEventsMessageAsync(DateTimeOffset start, DateTimeOffset end) {
+
+            IEnumerable<ISpecies> newSpecies = (await Db.GetSpeciesAsync(start, end)).OrderBy(species => species.GetShortName());
+            IEnumerable<ISpecies> extinctSpecies = (await Db.GetExtinctSpeciesAsync(start, end)).OrderBy(species => species.GetShortName());
+
+            List<Discord.Messaging.IEmbed> pages = new List<Discord.Messaging.IEmbed>();
+
+            if (newSpecies.Count() > 0)
+                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"New species ({newSpecies.Count()})", newSpecies.Select(species => species.GetFullName())));
+
+            if (newSpecies.Count() > 0)
+                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"Extinctions ({extinctSpecies.Count()})", extinctSpecies.Select(species => species.GetFullName())));
+
+            EmbedUtilities.AddPageNumbers(pages);
+
+            foreach (Discord.Messaging.IEmbed page in pages)
+                page.Title = $"Recent events ({DateUtilities.GetTimeSpanString(end - start)})";
+
+            if (pages.Count() <= 0)
+                pages.Add(new Discord.Messaging.Embed() { Description = "No events" });
+
+            IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(pages);
+
+            return message;
 
         }
 

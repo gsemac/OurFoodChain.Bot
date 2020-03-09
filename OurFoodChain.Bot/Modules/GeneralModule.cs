@@ -23,7 +23,7 @@ using OurFoodChain.Common;
 
 namespace OurFoodChain.Bot.Modules {
 
-    public class CommandsModule :
+    public class GeneralModule :
         OfcModuleBase {
 
         [Command("roll")]

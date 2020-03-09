@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;

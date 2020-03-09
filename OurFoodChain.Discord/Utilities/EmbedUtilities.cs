@@ -350,9 +350,35 @@ namespace OurFoodChain.Discord.Utilities {
 
         }
 
-        // Private members
+        public static void AppendEmbedPages(ICollection<Messaging.IEmbed> existingPages, IEnumerable<Messaging.IEmbed> newPages) {
 
-        private static void AddPageNumbers(IEnumerable<Messaging.IEmbed> pages) {
+            if (existingPages.Count <= 0 || existingPages.Last().Fields.Count() >= 2) {
+
+                // If the last page of the existing range is full, or the range is empty, simply append the pages.
+
+                existingPages.AddRange(newPages);
+
+            }
+            else {
+
+                // If the last page has space, copy the first field to that page, and then create new pages from thereon out.
+
+                IEnumerable<IEmbedField> fields = newPages.SelectMany(p => p.Fields);
+
+                foreach (IEmbedField field in fields) {
+
+                    if (existingPages.Count() <= 0 || existingPages.Last().Fields.Count() >= 2)
+                        existingPages.Add(new Messaging.Embed());
+
+                    existingPages.Last().AddField(field);
+
+                }
+
+            }
+
+        }
+
+        public static void AddPageNumbers(IEnumerable<Messaging.IEmbed> pages) {
 
             int num = 1;
 
@@ -367,6 +393,9 @@ namespace OurFoodChain.Discord.Utilities {
             }
 
         }
+
+        // Private members
+
         private static IEnumerable<IEnumerable<string>> ListToColumns(IEnumerable<string> items, int itemsPerColumn) {
 
             List<List<string>> columns = new List<List<string>>();

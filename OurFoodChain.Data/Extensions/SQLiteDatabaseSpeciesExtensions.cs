@@ -204,6 +204,23 @@ namespace OurFoodChain.Data.Extensions {
             return result;
 
         }
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, DateTimeOffset start, DateTimeOffset end) {
+
+            List<ISpecies> results = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp >= $start_ts AND timestamp < $end_ts")) {
+
+                cmd.Parameters.AddWithValue("$start_ts", DateUtilities.GetTimestampFromDate(start));
+                cmd.Parameters.AddWithValue("$end_ts", DateUtilities.GetTimestampFromDate(end));
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+            }
+
+            return results;
+
+        }
 
         public static async Task<IEnumerable<ISpecies>> GetExtinctSpeciesAsync(this SQLiteDatabase database) {
 
@@ -214,6 +231,23 @@ namespace OurFoodChain.Data.Extensions {
                     results.Add(await database.CreateSpeciesFromDataRowAsync(row));
 
             results.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+            return results;
+
+        }
+        public static async Task<IEnumerable<ISpecies>> GetExtinctSpeciesAsync(this SQLiteDatabase database, DateTimeOffset start, DateTimeOffset end) {
+
+            List<ISpecies> results = new List<ISpecies>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE timestamp >= $start_ts AND timestamp < $end_ts")) {
+
+                cmd.Parameters.AddWithValue("$start_ts", DateUtilities.GetTimestampFromDate(start));
+                cmd.Parameters.AddWithValue("$end_ts", DateUtilities.GetTimestampFromDate(end));
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(await database.GetSpeciesAsync(row.Field<long>("species_id")));
+
+            }
 
             return results;
 

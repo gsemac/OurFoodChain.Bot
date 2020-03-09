@@ -2,12 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace OurFoodChain.Common.Utilities {
 
     public enum DateStringFormat {
         Short,
         Long
+    }
+
+    public enum TimeSpanFormat {
+        Years,
+        Months,
+        Weeks,
+        Days,
+        Hours,
+        Minutes,
+        Seconds,
+        Smallest
     }
 
     public static class DateUtilities {
@@ -73,6 +85,99 @@ namespace OurFoodChain.Common.Utilities {
         public static long GetMaxTimestamp() {
 
             return GetTimestampFromDate(DateTimeOffset.MaxValue);
+
+        }
+
+        public static string GetTimeSpanString(TimeSpan timeSpan, TimeSpanFormat format = TimeSpanFormat.Smallest) {
+
+            int years = timeSpan.Days / 365;
+            int months = timeSpan.Days / 30;
+            int weeks = timeSpan.Days / 7;
+            int days = timeSpan.Days;
+            int hours = timeSpan.Hours;
+            int minutes = timeSpan.Minutes;
+            int seconds = timeSpan.Seconds;
+
+            if (years >= 1 || format == TimeSpanFormat.Years)
+                return string.Format("{0} {1}", years, years == 1 ? "year" : "years");
+
+            if (months >= 1 || format == TimeSpanFormat.Months)
+                return string.Format("{0} {1}", months, months == 1 ? "month" : "months");
+
+            if (weeks >= 1 || format == TimeSpanFormat.Weeks)
+                return string.Format("{0} {1}", weeks, weeks == 1 ? "week" : "weeks");
+
+            if (days >= 1 || format == TimeSpanFormat.Days)
+                return string.Format("{0} {1}", days, days == 1 ? "day" : "days");
+
+            if (hours >= 1 || format == TimeSpanFormat.Hours)
+                return string.Format("{0} {1}", hours, hours == 1 ? "hour" : "hours");
+
+            if (minutes >= 1 || format == TimeSpanFormat.Minutes)
+                return string.Format("{0} {1}", minutes, minutes == 1 ? "minute" : "minutes");
+
+            return string.Format("{0} {1}", seconds, seconds == 1 ? "second" : "seconds");
+
+        }
+        public static bool TryParseTimeSpan(string input, out TimeSpan result) {
+
+            Match m = Regex.Match(input, @"(\d+)(\w*)");
+
+            if (!m.Success || !int.TryParse(m.Groups[1].Value, out int amount))
+                return false;
+
+            switch (m.Groups[2].Value.ToLowerInvariant()) {
+
+                case "s":
+                case "sec":
+                case "secs":
+                case "second":
+                case "seconds":
+                    result = TimeSpan.FromSeconds(amount);
+                    break;
+
+                case "m":
+                case "min":
+                case "mins":
+                case "minute":
+                case "minutes":
+                    result = TimeSpan.FromMinutes(amount);
+                    break;
+
+                case "h":
+                case "hour":
+                case "hours":
+                    result = TimeSpan.FromHours(amount);
+                    break;
+
+                case "d":
+                case "day":
+                case "days":
+                    result = TimeSpan.FromDays(amount);
+                    break;
+
+                case "w":
+                case "week":
+                case "weeks":
+                    result = TimeSpan.FromDays(amount * 7);
+                    break;
+
+                case "mo":
+                case "mos":
+                case "month":
+                case "months":
+                    result = TimeSpan.FromDays(amount * 30);
+                    break;
+
+                case "y":
+                case "year":
+                case "years":
+                    result = TimeSpan.FromDays(amount * 365);
+                    break;
+
+            }
+
+            return result != null;
 
         }
 

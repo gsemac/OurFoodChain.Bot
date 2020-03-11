@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Roles;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
@@ -14,16 +15,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
-
-    [Flags]
-    public enum UserInfoQueryFlags {
-        // If a user ID is provided, only return results that match that user ID.
-        PreferUserIdMatch = 0,
-        // Returns results that match the user ID or the username.
-        MatchEither = 1,
-        Default = PreferUserIdMatch
-    }
-
     public static class SQLiteDatabaseSpeciesExtensions {
 
         // Public members
@@ -221,6 +212,28 @@ namespace OurFoodChain.Data.Extensions {
             return results;
 
         }
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IRole role) {
+
+            // Return all species with the given role.
+
+            List<ISpecies> species = new List<ISpecies>();
+
+            if (role.IsValid()) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM SpeciesRoles WHERE role_id = $role_id) ORDER BY name ASC")) {
+
+                    cmd.Parameters.AddWithValue("$role_id", role.Id);
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd))
+                        species.Add(await database.CreateSpeciesFromDataRowAsync(row));
+
+                }
+
+            }
+
+            return species;
+
+        }
 
         public static async Task<IEnumerable<ISpecies>> GetExtinctSpeciesAsync(this SQLiteDatabase database) {
 
@@ -292,6 +305,13 @@ namespace OurFoodChain.Data.Extensions {
                 return row is null ? null : await database.CreateSpeciesFromDataRowAsync(row);
 
             }
+
+        }
+
+        public static async Task<long> GetSpeciesCountAsync(this SQLiteDatabase database) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species"))
+                return (int)await database.GetScalarAsync<long>(cmd);
 
         }
 
@@ -645,6 +665,32 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task AddRoleAsync(this SQLiteDatabase database, ISpecies species, IRole role) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesRoles(species_id, role_id, notes) VALUES($species_id, $role_id, $notes)")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                cmd.Parameters.AddWithValue("$role_id", role.Id);
+                cmd.Parameters.AddWithValue("$notes", role.Notes);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+        public static async Task RemoveRoleAsync(this SQLiteDatabase database, ISpecies species, IRole role) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesRoles WHERE species_id = $species_id AND role_id = $role_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                cmd.Parameters.AddWithValue("$role_id", role.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+
         public static async Task<IEnumerable<ISpecies>> GetPredatorsAsync(this SQLiteDatabase database, ISpecies species) {
 
             List<ISpecies> result = new List<ISpecies>();
@@ -708,82 +754,6 @@ namespace OurFoodChain.Data.Extensions {
             ISearchResult result = await ApplyPostMatchModifiersAsync(results, context, query);
 
             // Return the result.
-
-            return result;
-
-        }
-
-        public static async Task<ICreator> GetCreatorAsync(this SQLiteDatabase database, string name) {
-
-            return await database.GetCreatorAsync(new Creator(name));
-
-        }
-        public static async Task<ICreator> GetCreatorAsync(this SQLiteDatabase database, ulong? userId) {
-
-            return await database.GetCreatorAsync(new Creator(userId, string.Empty));
-
-        }
-        public static async Task<ICreator> GetCreatorAsync(this SQLiteDatabase database, ICreator creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
-
-            ICreator result = null;
-
-            // Note that we may have a null username or a null user ID.
-            // At least one of them has to be non-null.
-
-            if (!string.IsNullOrEmpty(creator.Name) || creator.UserId.HasValue) {
-
-                // If we've been given a user ID, get all species records where that user is the owner.
-                // If we've just been given a username, we'll go by username instead.
-
-                string query;
-
-                if (flags.HasFlag(UserInfoQueryFlags.MatchEither)) {
-
-                    query = "SELECT owner, user_id, timestamp FROM Species WHERE user_id = $user_id OR owner = $owner";
-
-                }
-                else {
-
-                    if (creator.UserId.HasValue)
-                        query = "SELECT owner, user_id, timestamp FROM Species WHERE user_id = $user_id";
-                    else
-                        query = "SELECT owner, user_id, timestamp FROM Species WHERE owner = $owner COLLATE NOCASE";
-
-                }
-
-                using (SQLiteCommand cmd = new SQLiteCommand(query)) {
-
-                    cmd.Parameters.AddWithValue("$user_id", creator.UserId);
-                    cmd.Parameters.AddWithValue("$owner", creator.Name);
-
-                    IEnumerable<DataRow> rows = await database.GetRowsAsync(cmd);
-
-                    if (rows.Count() > 0) {
-
-                        ulong? userId = rows.Select(row => row.IsNull("user_id") ? null : (ulong?)row.Field<long>("user_id"))
-                            .FirstOrDefault(id => id.HasValue);
-
-                        string username = rows.Select(row => row.IsNull("owner") ? string.Empty : row.Field<string>("owner"))
-                            .FirstOrDefault(name => !string.IsNullOrEmpty(name));
-
-                        if (userId.HasValue || !string.IsNullOrEmpty(username)) {
-
-                            long firstSpeciesTimestamp = rows.Select(row => (long)row.Field<decimal>("timestamp")).OrderBy(timestamp => timestamp).FirstOrDefault();
-                            long lastSpeciesTimestamp = rows.Select(rowx => (long)rowx.Field<decimal>("timestamp")).OrderByDescending(timestamp => timestamp).FirstOrDefault();
-
-                            result = new Creator(userId, username) {
-                                SpeciesCount = rows.Count(),
-                                FirstSpeciesDate = firstSpeciesTimestamp > 0 ? DateUtilities.GetDateFromTimestamp(firstSpeciesTimestamp) : default(DateTimeOffset?),
-                                LastSpeciesDate = lastSpeciesTimestamp > 0 ? DateUtilities.GetDateFromTimestamp(lastSpeciesTimestamp) : default(DateTimeOffset?)
-                            };
-
-                        }
-
-                    }
-
-                }
-
-            }
 
             return result;
 

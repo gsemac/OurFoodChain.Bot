@@ -2,8 +2,12 @@
 using Discord.Commands;
 using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
-using System;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Extensions;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -17,87 +21,82 @@ namespace OurFoodChain.Bot {
         OfcModuleBase {
 
         [Command("addrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task AddRole(string name, string description = "") {
+        public async Task AddRole(string roleName, string description = "") {
 
-            Role role = new Role {
-                name = name,
-                description = description
+            Common.Roles.IRole role = new Common.Roles.Role {
+                Name = roleName,
+                Description = description
             };
 
-            await BotUtils.AddRoleToDb(role);
+            await Db.AddRoleAsync(role);
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Succesfully created the new role **{0}**.", name));
+            await ReplySuccessAsync($"Succesfully created the new role **{roleName.ToTitle()}**.");
 
         }
 
         [Command("+role"), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetRole(string species, string role) {
-            await SetRole("", species, role, "");
+        public async Task SetRole(string speciesName, string roleName) {
+
+            await SetRole(string.Empty, speciesName, roleName, string.Empty);
+
         }
         [Command("+role"), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetRole(string genus, string species, string role, string notes = "") {
+        public async Task SetRole(string genusName, string speciesName, string roleName, string notes = "") {
 
             // Get the species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            // Get the role.
+                // Get the role.
 
-            Role role_info = await BotUtils.GetRoleFromDb(role);
+                Common.Roles.IRole role = await Db.GetRoleAsync(roleName);
 
-            if (!await BotUtils.ReplyAsync_ValidateRole(Context, role_info))
-                return;
+                if (await this.ReplyValidateRoleAsync(role)) {
 
-            // Update the species.
+                    // Update the species.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO SpeciesRoles(species_id, role_id, notes) VALUES($species_id, $role_id, $notes);")) {
+                    role.Notes = notes;
 
-                cmd.Parameters.AddWithValue("$species_id", sp.Id);
-                cmd.Parameters.AddWithValue("$role_id", role_info.id);
-                cmd.Parameters.AddWithValue("$notes", notes);
+                    await Db.AddRoleAsync(species, role);
 
-                await Db.ExecuteNonQueryAsync(cmd);
+                    await ReplySuccessAsync($"{species.GetShortName().ToBold()} has successfully been assigned the role of {role.GetName().ToBold()}.");
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.ShortName, StringUtilities.ToTitleCase(role_info.name)));
+                }
 
             }
 
         }
 
         [Command("-role"), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task RemoveRole(string species, string role) {
-            await RemoveRole("", species, role);
+        public async Task RemoveRole(string speciesName, string roleName) {
+
+            await RemoveRole(string.Empty, speciesName, roleName);
+
         }
         [Command("-role"), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task RemoveRole(string genus, string species, string role) {
+        public async Task RemoveRole(string genusName, string speciesName, string roleName) {
 
             // Get the species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            // Get the role.
+                // Get the role.
 
-            Role role_info = await BotUtils.GetRoleFromDb(role);
+                Common.Roles.IRole role = await Db.GetRoleAsync(roleName);
 
-            if (!await BotUtils.ReplyAsync_ValidateRole(Context, role_info))
-                return;
+                if (await this.ReplyValidateRoleAsync(role)) {
 
-            // Update the species.
+                    // Update the species.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM SpeciesRoles WHERE species_id=$species_id AND role_id=$role_id;")) {
+                    await Db.RemoveRoleAsync(species, role);
 
-                cmd.Parameters.AddWithValue("$species_id", sp.Id);
-                cmd.Parameters.AddWithValue("$role_id", role_info.id);
+                    await ReplySuccessAsync($"Role {role.GetName().ToBold()} has successfully been unassigned from {species.GetShortName().ToBold()}.");
 
-                await Db.ExecuteNonQueryAsync(cmd);
-
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtilities.ToTitleCase(role_info.name), sp.ShortName));
+                }
 
             }
 
@@ -106,17 +105,17 @@ namespace OurFoodChain.Bot {
         [Command("roles"), Alias("role")]
         public async Task Roles() {
 
-            EmbedBuilder embed = new EmbedBuilder();
+            IEnumerable<Common.Roles.IRole> roles = await Db.GetRolesAsync();
 
-            Role[] roles_list = await BotUtils.GetRolesFromDb();
+            Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 
-            embed.WithTitle(string.Format("All roles ({0})", roles_list.Count()));
+            embed.Title = $"All roles ({roles.Count()})";
 
-            foreach (Role role in roles_list) {
+            foreach (Common.Roles.IRole role in roles) {
 
                 long count = 0;
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE species_id NOT IN (SELECT species_id FROM Extinctions) AND role_id = $role_id;")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT count(*) FROM SpeciesRoles WHERE species_id NOT IN (SELECT species_id FROM Extinctions) AND role_id = $role_id")) {
 
                     cmd.Parameters.AddWithValue("$role_id", role.id);
 
@@ -141,7 +140,7 @@ namespace OurFoodChain.Bot {
             // If a role with this name exists, that's what we'll prioritize (users can use the genus + species overload if they need to).
             // If no such role exists, check for a species with this name instead.
 
-            Role role = await BotUtils.GetRoleFromDb(nameOrSpecies);
+            Common.Roles.Role role = await Db.GetRoleAsync(nameOrSpecies);
 
             if (role is null) {
 

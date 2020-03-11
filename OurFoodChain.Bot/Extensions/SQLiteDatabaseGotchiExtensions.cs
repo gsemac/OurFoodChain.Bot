@@ -46,7 +46,7 @@ namespace OurFoodChain.Extensions {
                 cmd.Parameters.AddWithValue("$died_ts", 0);
                 cmd.Parameters.AddWithValue("$evolved_ts", ts);
 
-                await Database.ExecuteNonQuery(cmd);
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -232,7 +232,7 @@ namespace OurFoodChain.Extensions {
                     cmd.Parameters.AddWithValue("$ancestor_id", gotchi.SpeciesId);
                     cmd.Parameters.AddWithValue("$species_id", sp.First().Id);
 
-                    if (await Database.GetScalar<long>(cmd) <= 0)
+                    if (await database.GetScalarAsync<long>(cmd) <= 0)
                         return false;
 
                     gotchi.SpeciesId = (long)sp.First().Id;
@@ -404,7 +404,7 @@ namespace OurFoodChain.Extensions {
                 auto = true
             };
 
-            return await CreateGotchiGifAsync(new GotchiGifCreatorParams[] { p },
+            return await database.CreateGotchiGifAsync(new GotchiGifCreatorParams[] { p },
                 new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFilenameAsync(database, gotchi) });
 
         }
@@ -527,7 +527,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        private static async Task<string> CreateGotchiGifAsync(GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        private static async Task<string> CreateGotchiGifAsync(this SQLiteDatabase database, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
             // Create the temporary directory where the GIF will be saved.
 
@@ -543,7 +543,7 @@ namespace OurFoodChain.Extensions {
 
             foreach (GotchiGifCreatorParams p in gifParams) {
 
-                string gotchiImagePath = await DownloadGotchiImageAsync(p.gotchi);
+                string gotchiImagePath = await database.DownloadGotchiImageAsync(p.gotchi);
 
                 gotchiImagePaths.Add(gotchiImagePath);
                 gotchiImages[p.gotchi.Id] = GraphicsUtils.TryCreateBitmap(gotchiImagePath);
@@ -583,24 +583,24 @@ namespace OurFoodChain.Extensions {
             return outputPath;
 
         }
-        private static async Task<string> DownloadGotchiImageAsync(Gotchi gotchi) {
+        private static async Task<string> DownloadGotchiImageAsync(this SQLiteDatabase database, Gotchi gotchi) {
 
             // Get the species.
 
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
+            ISpecies sp = await database.GetSpeciesAsync(gotchi.SpeciesId);
 
-            if (sp is null)
+            if (!sp.IsValid())
                 return string.Empty;
 
             // Download the gotchi image if possible.
 
             string gotchi_pic = Constants.GotchiImagesDirectory + "default.png";
 
-            if (!string.IsNullOrEmpty(sp.Picture) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.Picture, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
+            if (!string.IsNullOrEmpty(sp.GetPictureUrl()) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.GetPictureUrl(), @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
 
                 string downloads_dir = Constants.TempDirectory + "downloads";
-                string ext = Regex.Match(sp.Picture, @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
-                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.GetMD5(sp.Picture) + ext);
+                string ext = Regex.Match(sp.GetPictureUrl(), @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;
+                string disk_fpath = System.IO.Path.Combine(downloads_dir, StringUtilities.GetMD5(sp.GetPictureUrl()) + ext);
 
                 if (!System.IO.Directory.Exists(downloads_dir))
                     System.IO.Directory.CreateDirectory(downloads_dir);
@@ -609,7 +609,7 @@ namespace OurFoodChain.Extensions {
 
                     if (!System.IO.File.Exists(disk_fpath))
                         using (System.Net.WebClient client = new System.Net.WebClient())
-                            await client.DownloadFileTaskAsync(new Uri(sp.Picture), disk_fpath);
+                            await client.DownloadFileTaskAsync(new Uri(sp.GetPictureUrl()), disk_fpath);
 
                     if (System.IO.File.Exists(disk_fpath))
                         gotchi_pic = disk_fpath;
@@ -619,7 +619,7 @@ namespace OurFoodChain.Extensions {
 
                     // We'll just keep using the default picture if this happens.
 
-                    Console.WriteLine(new LogMessage(LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.Picture, ex.ToString())).ToString());
+                    Console.WriteLine(new LogMessage(LogSeverity.Error, "gotchi", string.Format("Error occurred when loading gotchi image: {0}\n{1}", sp.GetPictureUrl(), ex.ToString())).ToString());
 
                 }
 
@@ -667,25 +667,25 @@ namespace OurFoodChain.Extensions {
 
             for (int i = 0; i < 2; ++i) {
 
-                string name = roots[BotUtils.RandomInteger(roots.Count())];
+                string name = roots[NumberUtilities.GetRandomInteger(roots.Count())];
 
-                if (BotUtils.RandomInteger(2) == 0)
+                if (NumberUtilities.GetRandomInteger(2) == 0)
                     name = name.Substring(0, name.Length - 1); // cut off the last vowel
 
-                if (BotUtils.RandomInteger(2) == 0 && name.Length <= 5)
+                if (NumberUtilities.GetRandomInteger(2) == 0 && name.Length <= 5)
                     name += "-" + name;
 
-                if (BotUtils.RandomInteger(2) == 0 && name.Length > 1 && (name.Last() == 'r' || name.Last() == 't'))
+                if (NumberUtilities.GetRandomInteger(2) == 0 && name.Length > 1 && (name.Last() == 'r' || name.Last() == 't'))
                     name += "y";
 
-                if (BotUtils.RandomInteger(2) == 0)
+                if (NumberUtilities.GetRandomInteger(2) == 0)
                     name = (new string[] { "Mr.", "Sir" }).Random() + " " + name;
 
                 name_options.Add(name);
 
             }
 
-            return name_options.Select(x => StringUtilities.ToTitleCase(x)).ToArray()[BotUtils.RandomInteger(name_options.Count())];
+            return name_options.Select(x => StringUtilities.ToTitleCase(x)).ToArray()[NumberUtilities.GetRandomInteger(name_options.Count())];
 
         }
 

@@ -479,14 +479,14 @@ namespace OurFoodChain.Bot.Modules {
 
                 if (trade_request_is_valid) {
 
-                    if (!await GotchiUtils.ValidateTradeRequestAsync(Context, trade_request))
+                    if (!await GotchiUtils.ValidateTradeRequestAsync(Context, Db, trade_request))
                         await ReplyInfoAsync("The trade request has expired, or is invalid.");
 
                     else {
 
                         // The trade is valid, so perform the trade.
 
-                        await GotchiUtils.ExecuteTradeRequestAsync(Context, trade_request);
+                        await GotchiUtils.ExecuteTradeRequestAsync(Context, Db, trade_request);
 
                         await ReplySuccessAsync(string.Format("**{0}** successfully traded gotchis with **{1}**. Take good care of them!",
                             Context.User.Username,
@@ -536,7 +536,7 @@ namespace OurFoodChain.Bot.Modules {
                 GotchiTradeRequest trade_request = GotchiUtils.GetTradeRequest(gotchi);
                 bool trade_request_is_valid = !(trade_request is null);
 
-                if (trade_request_is_valid && await GotchiUtils.ValidateTradeRequestAsync(Context, trade_request)) {
+                if (trade_request_is_valid && await GotchiUtils.ValidateTradeRequestAsync(Context, Db, trade_request)) {
 
                     await ReplyAsync(string.Format("{0}, **{1}** has denied your trade request.",
                         (await Context.Guild.GetUserAsync(trade_request.OfferedGotchi.OwnerId)).Mention,
@@ -641,7 +641,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Submit the trade request.
 
-                switch (await GotchiUtils.MakeTradeRequestAsync(Context, gotchi, partnerGotchi)) {
+                switch (await GotchiUtils.MakeTradeRequestAsync(Context, Db, gotchi, partnerGotchi)) {
 
                     case GotchiTradeRequestResult.Success:
 
@@ -731,7 +731,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // The user can afford the item, so purchase it and add it to their inventory.
 
-                    await GotchiUtils.AddItemToInventoryAsync(userInfo.UserId, item, count);
+                    await Db.AddItemToInventoryAsync(userInfo.UserId, item, count);
 
                     // Update the user.
 
@@ -765,7 +765,7 @@ namespace OurFoodChain.Bot.Modules {
 
             IUser user = Context.User;
             GotchiUserInfo userInfo = await Db.GetUserInfoAsync(user.ToCreator());
-            GotchiInventory inventory = await GotchiUtils.GetInventoryAsync(user.Id);
+            GotchiInventory inventory = await Db.GetInventoryAsync(user.Id);
 
             List<string> lines = new List<string>();
 
@@ -801,7 +801,7 @@ namespace OurFoodChain.Bot.Modules {
             IUser user = Context.User;
 
             Gotchi gotchi = await Db.GetGotchiAsync(user.ToCreator());
-            GotchiInventory inventory = await GotchiUtils.GetInventoryAsync(user.Id);
+            GotchiInventory inventory = await Db.GetInventoryAsync(user.Id);
             GotchiInventoryItem item = null;
 
             if (int.TryParse(itemIdentifier, out int itemIndex))
@@ -821,9 +821,9 @@ namespace OurFoodChain.Bot.Modules {
                                 if (desiredEvo.Equals("cancel", StringComparison.OrdinalIgnoreCase))
                                     return;
 
-                                if (await this.ReplyValidateGotchiAsync(gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desiredEvo)) {
+                                if (await this.ReplyValidateGotchiAsync(gotchi) && await Db.EvolveAndUpdateGotchiAsync(gotchi, desiredEvo)) {
 
-                                    await GotchiUtils.AddItemToInventoryAsync(user.Id, item.Item, -1);
+                                    await Db.AddItemToInventoryAsync(user.Id, item.Item, -1);
 
                                     await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
                                         (await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId)).ShortName));
@@ -874,7 +874,7 @@ namespace OurFoodChain.Bot.Modules {
 
                                 }
 
-                                await GotchiUtils.AddItemToInventoryAsync(user.Id, item.Item, -1);
+                                await Db.AddItemToInventoryAsync(user.Id, item.Item, -1);
 
                                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** woke up! Its sleep schedule has been reset.",
                                     StringUtilities.ToTitleCase(gotchi.Name)));

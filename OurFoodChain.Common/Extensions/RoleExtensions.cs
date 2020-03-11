@@ -21,6 +21,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static string GetName(this IRole role) {
+
+            return role.Name.ToTitle();
+
+        }
+
         public static bool IsValid(this IRole role) {
 
             return role != null && role.Id.HasValue && role.Id >= 0;

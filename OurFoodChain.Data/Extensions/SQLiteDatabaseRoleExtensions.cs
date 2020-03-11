@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Common.Roles;
+﻿using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Roles;
 using OurFoodChain.Common.Taxa;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,19 @@ namespace OurFoodChain.Data.Extensions {
     public static class SQLiteDatabaseRoleExtensions {
 
         // Public members
+
+        public static async Task AddRoleAsync(this SQLiteDatabase database, IRole role) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Roles(name, description) VALUES($name, $description)")) {
+
+                cmd.Parameters.AddWithValue("$name", role.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$description", role.Description);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
 
         public static async Task<IEnumerable<IRole>> GetRolesAsync(this SQLiteDatabase database) {
 
@@ -71,6 +85,28 @@ namespace OurFoodChain.Data.Extensions {
         public static async Task<IEnumerable<IRole>> GetRolesAsync(this SQLiteDatabase database, ISpecies species) {
 
             return await database.GetRolesAsync(species.Id);
+
+        }
+
+        public static async Task<IRole> GetRoleAsync(this SQLiteDatabase database, string roleName) {
+
+            // Allow for querying using the plural of the role (e.g., "producers").
+
+            string pluralRoleName = roleName.TrimEnd('s');
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Roles WHERE name = $name OR name = $plural")) {
+
+                cmd.Parameters.AddWithValue("$name", roleName.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$plural", pluralRoleName.ToLowerInvariant());
+
+                DataRow row = await database.GetRowAsync(cmd);
+
+                if (row != null)
+                    return CreateRoleFromDataRow(row);
+
+            }
+
+            return null;
 
         }
 

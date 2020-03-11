@@ -94,20 +94,7 @@ namespace OurFoodChain {
             return DateTime.TryParseExact(dateString, DATE_FORMAT, null, System.Globalization.DateTimeStyles.None, out dateTime);
 
         }
-        public static Period FromDataRow(DataRow row) {
-
-            Period result = new Period {
-                id = row.Field<long>("id"),
-                name = row.Field<string>("name"),
-                start_ts = row.Field<string>("start_ts"),
-                end_ts = row.Field<string>("end_ts"),
-                description = row.Field<string>("description")
-            };
-
-            return result;
-
-        }
-
+        
         private const string DEFAULT_DESCRIPTION = BotUtils.DEFAULT_DESCRIPTION;
 
         private long _parseTimestamp(string timestamp) {

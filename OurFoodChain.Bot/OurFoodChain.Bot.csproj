@@ -263,6 +263,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="Extensions\GotchiExtensions.cs" />
+    <Compile Include="Extensions\OfcModuleBaseGotchiExtensions.cs" />
+    <Compile Include="Extensions\SQLiteDatabaseGotchiExtensions.cs" />
+    <Compile Include="Gotchis\GotchiUtilities.cs" />
     <Compile Include="IOfcBotContext.cs" />
     <Compile Include="Modules\UserModule.cs" />
     <Compile Include="OfcBotContext.cs" />
@@ -351,7 +355,6 @@
     <Compile Include="Utilities\BotUtils.cs" />
     <Compile Include="Taxa\CommonName.cs" />
     <Compile Include="Utilities\DateUtils.cs" />
-    <Compile Include="Utilities\IoUtils.cs" />
     <Compile Include="MultiPartMessage.cs" />
     <Compile Include="reviews\ReviewCache.cs" />
     <Compile Include="reviews\ReviewChannelInfo.cs" />

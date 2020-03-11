@@ -11,9 +11,12 @@ namespace OurFoodChain.Gotchis {
 
         // Public methods
 
-        public GotchiUserInfo(ulong userId) {
+        public GotchiUserInfo(ulong? userId) {
 
-            UserId = userId;
+            if (!userId.HasValue)
+                throw new ArgumentNullException(nameof(userId));
+
+            UserId = userId.Value;
 
         }
 

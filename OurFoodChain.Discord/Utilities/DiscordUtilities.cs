@@ -3,6 +3,7 @@ using Discord.Commands;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using OurFoodChain.Discord.Extensions;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Utilities {
+
+    public enum FileUploadOptions {
+        None = 0,
+        DeleteFileAfterUpload = 1
+    }
 
     public static class DiscordUtilities {
 
@@ -68,6 +74,19 @@ namespace OurFoodChain.Discord.Utilities {
                     return user;
 
             return null;
+
+        }
+
+        public static async Task<string> UploadFileAsync(IMessageChannel channel, string filePath, FileUploadOptions options = FileUploadOptions.None) {
+
+            IUserMessage result = await channel.SendFileAsync(filePath);
+
+            string url = result.Attachments.Skip(1).FirstOrDefault()?.Url;
+
+            if (!string.IsNullOrEmpty(url) && options.HasFlag(FileUploadOptions.DeleteFileAfterUpload))
+                IOUtilities.TryDeleteFile(filePath);
+
+            return url;
 
         }
 

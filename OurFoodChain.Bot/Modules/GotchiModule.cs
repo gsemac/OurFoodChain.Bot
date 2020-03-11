@@ -1,9 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using OurFoodChain.Common.Extensions;
-using OurFoodChain.Gotchis;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Commands;
+using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Extensions;
+using OurFoodChain.Gotchis;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,44 +16,35 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OurFoodChain.Data;
-using OurFoodChain.Discord.Utilities;
-using OurFoodChain.Discord.Extensions;
-using OurFoodChain.Discord.Commands;
 
 namespace OurFoodChain.Bot.Modules {
 
     [Group("gotchi")]
     public class GotchiModule :
-     ModuleBase {
+     OfcModuleBase {
 
-        public IOfcBotConfiguration BotConfiguration { get; set; }
-        public Discord.Services.ICommandHandlingService CommandHandlingService { get; set; }
-        public IServiceProvider ServiceProvider { get; set; }
-        public DiscordSocketClient DiscordClient { get; set; }
-        public Discord.Services.IHelpService HelpService { get; set; }
-        public SQLiteDatabase Db { get; set; }
+        // Public members
 
         [Command]
         public async Task Gotchi() {
 
             // Get this user's primary Gotchi.
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
+            if (!await this.ReplyValidateGotchiAsync(gotchi))
                 return;
 
             // Create the gotchi GIF.
 
-            string gifUrl = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(Context, BotConfiguration, DiscordClient, Db, gotchi);
+            string gifUrl = await this.ReplyUploadGotchiGifAsync(gotchi);
 
             if (string.IsNullOrEmpty(gifUrl))
                 return;
 
             // Get the gotchi's species.
 
-            Species species = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
+            ISpecies species = await Db.GetSpeciesAsync(gotchi.SpeciesId);
 
             // Pick status text.
 
@@ -61,7 +57,7 @@ namespace OurFoodChain.Bot.Modules {
                     break;
 
                 case GotchiState.Evolved:
-                    status = "Congratulations, {0} " + string.Format("evolved into {0}!", species.ShortName);
+                    status = "Congratulations, {0} " + string.Format("evolved into {0}!", species.GetShortName());
                     break;
 
                 case GotchiState.Sleeping:
@@ -89,18 +85,18 @@ namespace OurFoodChain.Bot.Modules {
 
             // Update the viewed timestamp.
 
-            await GotchiUtils.SetViewedTimestampAsync(gotchi, DateUtilities.GetCurrentTimestampUtc());
+            await Db.SetViewedTimestampAsync(gotchi, DateUtilities.GetCurrentTimestampUtc());
 
             // Send the message.
 
             EmbedBuilder embed = new EmbedBuilder();
 
-            embed.WithTitle(string.Format("{0}'s \"{1}\"", Context.User.Username, StringUtilities.ToTitleCase(gotchi.Name)));
-            embed.WithDescription(string.Format("{0}, age {1}", species.ShortName, gotchi.Age));
+            embed.WithTitle(string.Format("{0}'s \"{1}\"", Context.User.Username, gotchi.Name.ToTitle()));
+            embed.WithDescription(string.Format("{0}, age {1}", species.GetShortName(), gotchi.Age));
             embed.WithImageUrl(gifUrl);
             embed.WithFooter(string.Format(status, StringUtilities.ToTitleCase(gotchi.Name)));
 
-            await ReplyAsync("", false, embed.Build());
+            await ReplyAsync(embed: embed.Build());
 
         }
 
@@ -109,41 +105,41 @@ namespace OurFoodChain.Bot.Modules {
 
             // Select a random base species (no ancestor) for the user to start with.
 
-            Species[] baseSpecies = await SpeciesUtils.GetBaseSpeciesAsync();
+            IEnumerable<ISpecies> baseSpecies = await Db.GetBaseSpeciesAsync();
 
-            if (baseSpecies.Length > 0)
-                await _getGotchiAsync(Context, baseSpecies.Random());
+            if (baseSpecies.Count() > 0)
+                await GetGotchiAsync(baseSpecies.Random());
             else
-                await BotUtils.ReplyAsync_Error(Context, "There are currently no species available.");
+                await ReplyErrorAsync("There are currently no species available.");
 
         }
         [Command("get")]
-        public async Task Get(string species) {
-            await Get("", species);
+        public async Task Get(string speciesName) {
+
+            await Get(string.Empty, speciesName);
+
         }
         [Command("get")]
-        public async Task Get(string genus, string species) {
+        public async Task Get(string genusName, string speciesName) {
 
             // Get the species that the user specified.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
-
-            await _getGotchiAsync(Context, sp);
+            if (species.IsValid())
+                await GetGotchiAsync(species);
 
         }
 
         [Command("release")]
         public async Task Release() {
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (GotchiUtils.ValidateGotchi(gotchi))
-                await _releaseGotchiAsync(Context, gotchi);
+            if (gotchi.IsValid())
+                await ReleaseGotchiAsync(gotchi);
             else
-                await BotUtils.ReplyAsync_Error(Context, "You do not have a gotchi to release.");
+                await ReplyErrorAsync("You do not have a gotchi to release.");
 
         }
         [Command("release")]
@@ -151,77 +147,59 @@ namespace OurFoodChain.Bot.Modules {
 
             // Find the Gotchi with the given name.
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User.Id, name);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.Id, name);
 
-            if (gotchi is null)
-                await BotUtils.ReplyAsync_Error(Context, string.Format("No Gotchi with the name \"{0}\" exists.", name));
+            if (gotchi.IsValid())
+                await ReleaseGotchiAsync(gotchi);
             else
-                await _releaseGotchiAsync(Context, gotchi);
+                await ReplyErrorAsync(string.Format("No Gotchi with the name \"{0}\" exists.", name));
 
         }
 
         [Command("name")]
         public async Task Name(string name) {
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
-                return;
+            if (await this.ReplyValidateGotchiAsync(gotchi)) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET name = $name WHERE owner_id = $owner_id AND id = $id")) {
+                await Db.SetGotchiNameAsync(gotchi, name);
 
-                cmd.Parameters.AddWithValue("$name", name.ToLower());
-                cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
-                cmd.Parameters.AddWithValue("$id", gotchi.Id);
-
-                await Db.ExecuteNonQueryAsync(cmd);
+                await ReplySuccessAsync(string.Format("Sucessfully set {0}'s name to **{1}**.", StringUtilities.ToTitleCase(gotchi.Name), StringUtilities.ToTitleCase(name)));
 
             }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Sucessfully set {0}'s name to **{1}**.", StringUtilities.ToTitleCase(gotchi.Name), StringUtilities.ToTitleCase(name)));
 
         }
 
         [Command("feed")]
         public async Task Feed() {
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
-                return;
+            if (await this.ReplyValidateGotchiAsync(gotchi)) {
 
-            if (!gotchi.IsAlive) {
+                if (!gotchi.IsAlive) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("You went to feed **{0}**, but it looks like it's too late...", StringUtilities.ToTitleCase(gotchi.Name)));
+                    await ReplyInfoAsync(string.Format("You went to feed **{0}**, but it looks like it's too late...", StringUtilities.ToTitleCase(gotchi.Name)));
 
-                return;
+                }
+                else if (gotchi.IsSleeping) {
 
-            }
-            else if (gotchi.IsSleeping) {
+                    await ReplyInfoAsync(string.Format("Shhh, do not disturb! **{0}** is currently asleep. Try feeding them again later.", StringUtilities.ToTitleCase(gotchi.Name)));
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("Shhh, do not disturb! **{0}** is currently asleep. Try feeding them again later.", StringUtilities.ToTitleCase(gotchi.Name)));
+                }
+                else {
 
-                return;
+                    await Db.FeedGotchisAsync(Global.GotchiContext, Context.User.Id);
 
-            }
+                    if (await Db.GetGotchiCountAsync(Context.User.ToCreator()) > 1)
+                        await ReplySuccessAsync("Fed everyone some delicious Suka-Flakes™!");
+                    else
+                        await ReplySuccessAsync(string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtilities.ToTitleCase(gotchi.Name)));
 
-            // Although we only display the state of the primary Gotchi at the moment, update the feed time for all Gotchis owned by this user.
-            // Only Gotchis that are still alive (i.e. have been fed recently enough) get their timestamp updated.
-
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET fed_ts = $fed_ts WHERE owner_id = $owner_id AND fed_ts >= $min_ts;")) {
-
-                cmd.Parameters.AddWithValue("$fed_ts", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                cmd.Parameters.AddWithValue("$owner_id", Context.User.Id);
-                cmd.Parameters.AddWithValue("$min_ts", GotchiUtils.MinimumFedTimestamp());
-
-                await Db.ExecuteNonQueryAsync(cmd);
+                }
 
             }
-
-            if (await GotchiUtils.GetGotchiCountAsync(Context.User) > 1)
-                await BotUtils.ReplyAsync_Success(Context, "Fed everyone some delicious Suka-Flakes™!");
-            else
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Fed **{0}** some delicious Suka-Flakes™!", StringUtilities.ToTitleCase(gotchi.Name)));
 
         }
 
@@ -230,44 +208,44 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get this user's gotchi.
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
-                return;
+            if (await this.ReplyValidateGotchiAsync(gotchi)) {
 
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
+                ISpecies sp = await Db.GetSpeciesAsync(gotchi.SpeciesId);
 
-            if (!await BotUtils.ReplyValidateSpeciesAsync(Context, sp))
-                return;
+                if (sp.IsValid()) {
 
-            // Calculate stats for this gotchi.
-            // If the user is currently in battle, show their battle stats instead.
+                    // Calculate stats for this gotchi.
+                    // If the user is currently in battle, show their battle stats instead.
 
-            GotchiStats stats;
+                    GotchiStats stats;
 
-            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
+                    GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
 
-            if (!(battle_state is null))
-                stats = battle_state.GetGotchiStats(gotchi);
-            else
-                stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
+                    if (!(battle_state is null))
+                        stats = battle_state.GetGotchiStats(gotchi);
+                    else
+                        stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
 
-            // Create the embed.
+                    // Create the embed.
 
-            EmbedBuilder stats_page = new EmbedBuilder();
+                    EmbedBuilder stats_page = new EmbedBuilder();
 
-            stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.ShortName, gotchi.Age));
-            stats_page.WithThumbnailUrl(sp.Picture);
-            stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
+                    stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
+                    stats_page.WithThumbnailUrl(sp.GetPictureUrl());
+                    stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
-            stats_page.AddField("❤ Hit points", stats.Hp, inline: true);
-            stats_page.AddField("💥 Attack", stats.Atk, inline: true);
-            stats_page.AddField("🛡 Defense", stats.Def, inline: true);
-            stats_page.AddField("💨 Speed", stats.Spd, inline: true);
+                    stats_page.AddField("❤ Hit points", stats.Hp, inline: true);
+                    stats_page.AddField("💥 Attack", stats.Atk, inline: true);
+                    stats_page.AddField("🛡 Defense", stats.Def, inline: true);
+                    stats_page.AddField("💨 Speed", stats.Spd, inline: true);
 
-            await ReplyAsync("", false, stats_page.Build());
+                    await ReplyAsync(embed: stats_page.Build());
 
+                }
 
+            }
 
         }
 
@@ -276,44 +254,46 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get this user's gotchi.
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
-                return;
+            if (await this.ReplyValidateGotchiAsync(gotchi)) {
 
-            Species sp = await BotUtils.GetSpeciesFromDb(gotchi.SpeciesId);
+                ISpecies sp = await Db.GetSpeciesAsync(gotchi.SpeciesId);
 
-            if (!await BotUtils.ReplyValidateSpeciesAsync(Context, sp))
-                return;
+                if (sp.IsValid()) {
 
-            // Get moveset for this gotchi.
-            // If the user is currently in battle, get their moveset from the battle state instead.
+                    // Get moveset for this gotchi.
+                    // If the user is currently in battle, get their moveset from the battle state instead.
 
-            GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
-            GotchiMoveSet set = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi);
-            GotchiMoveSet battle_set = battle_state?.GetGotchiMoveset(gotchi);
+                    GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
+                    GotchiMoveSet set = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi);
+                    GotchiMoveSet battle_set = battle_state?.GetGotchiMoveset(gotchi);
 
-            // Create the embed.
+                    // Create the embed.
 
-            EmbedBuilder set_page = new EmbedBuilder();
-            GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
+                    EmbedBuilder set_page = new EmbedBuilder();
+                    GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
 
-            set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.ShortName, gotchi.Age));
-            set_page.WithThumbnailUrl(sp.Picture);
-            set_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
+                    set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
+                    set_page.WithThumbnailUrl(sp.GetPictureUrl());
+                    set_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
-            int move_index = 1;
+                    int move_index = 1;
 
-            foreach (GotchiMove move in set.Moves)
-                set_page.AddField(string.Format(
-                    "Move {0}: **{1}** ({2}/{3} PP)",
-                    move_index++,
-                    move.Name,
-                    battle_set is null ? move.PP : battle_set.GetMove(move.Name).PP,
-                    move.PP
-                    ), move.Description);
+                    foreach (GotchiMove move in set.Moves)
+                        set_page.AddField(string.Format(
+                            "Move {0}: **{1}** ({2}/{3} PP)",
+                            move_index++,
+                            move.Name,
+                            battle_set is null ? move.PP : battle_set.GetMove(move.Name).PP,
+                            move.PP
+                            ), move.Description);
 
-            await ReplyAsync("", false, set_page.Build());
+                    await ReplyAsync(embed: set_page.Build());
+
+                }
+
+            }
 
         }
 
@@ -324,7 +304,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (!(user is null) && user.Id == Context.User.Id) {
 
-                await BotUtils.ReplyAsync_Error(Context, "You cannot challenge yourself.");
+                await ReplyErrorAsync("You cannot challenge yourself.");
 
                 return;
 
@@ -332,7 +312,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get this user's gotchi.
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
             if (!await _replyValidateChallengerGotchiForBattleAsync(Context, gotchi))
                 return;
@@ -344,7 +324,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (!(user is null)) {
 
-                opposing_gotchi = await GotchiUtils.GetGotchiAsync(user);
+                opposing_gotchi = await Db.GetGotchiAsync(user.ToCreator());
 
                 if (!await _replyValidateOpponentGotchiForBattleAsync(Context, opposing_gotchi))
                     return;
@@ -363,7 +343,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Challenge the user to a battle.
 
-            await GotchiBattleState.RegisterBattleAsync(Context, BotConfiguration, DiscordClient, Db, gotchi, opposing_gotchi);
+            await GotchiBattleState.RegisterBattleAsync(Context, Config, DiscordClient, Db, gotchi, opposing_gotchi);
 
             if (!(user is null)) {
 
@@ -373,7 +353,7 @@ namespace OurFoodChain.Bot.Modules {
                 await ReplyAsync(string.Format("{0}, **{1}** is challenging you to a battle! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their challenge.",
                     user.Mention,
                     Context.User.Username,
-                    BotConfiguration.Prefix));
+                    Config.Prefix));
 
             }
 
@@ -384,9 +364,9 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get this user's gotchi.
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+            Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi))
+            if (!await this.ReplyValidateGotchiAsync(gotchi))
                 return;
 
             if (Global.GotchiContext.Config.TrainingLimit > 0 && Global.GotchiContext.Config.TrainingCooldown > 0) {
@@ -428,7 +408,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     long minutes_left = Global.GotchiContext.Config.TrainingCooldown - minutes_elapsed;
 
-                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
+                    await ReplyInfoAsync(string.Format("**{0}** is feeling tired from all the training... Try again in {1} minute{2}.",
                         StringUtilities.ToTitleCase(gotchi.Name),
                         minutes_left <= 1 ? "a" : minutes_left.ToString(),
                         minutes_left > 1 ? "s" : ""));
@@ -493,14 +473,14 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Get the trade that the user is involved with (if applicable).
 
-                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+                Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
                 GotchiTradeRequest trade_request = GotchiUtils.GetTradeRequest(gotchi);
                 bool trade_request_is_valid = !(trade_request is null);
 
                 if (trade_request_is_valid) {
 
                     if (!await GotchiUtils.ValidateTradeRequestAsync(Context, trade_request))
-                        await BotUtils.ReplyAsync_Info(Context, "The trade request has expired, or is invalid.");
+                        await ReplyInfoAsync("The trade request has expired, or is invalid.");
 
                     else {
 
@@ -508,7 +488,7 @@ namespace OurFoodChain.Bot.Modules {
 
                         await GotchiUtils.ExecuteTradeRequestAsync(Context, trade_request);
 
-                        await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** successfully traded gotchis with **{1}**. Take good care of them!",
+                        await ReplySuccessAsync(string.Format("**{0}** successfully traded gotchis with **{1}**. Take good care of them!",
                             Context.User.Username,
                             (await Context.Guild.GetUserAsync(trade_request.OfferedGotchi.OwnerId)).Username));
 
@@ -521,7 +501,7 @@ namespace OurFoodChain.Bot.Modules {
             }
 
             // The user has no open requests.
-            await BotUtils.ReplyAsync_Info(Context, "You have no open requests to respond to.");
+            await ReplyInfoAsync("You have no open requests to respond to.");
 
         }
 
@@ -552,7 +532,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Get the trade that the user is involved with (if applicable).
 
-                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
+                Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
                 GotchiTradeRequest trade_request = GotchiUtils.GetTradeRequest(gotchi);
                 bool trade_request_is_valid = !(trade_request is null);
 
@@ -569,7 +549,7 @@ namespace OurFoodChain.Bot.Modules {
             }
 
             // The user has no open requests.
-            await BotUtils.ReplyAsync_Info(Context, "You have no open requests to respond to.");
+            await ReplyInfoAsync("You have no open requests to respond to.");
 
         }
 
@@ -584,7 +564,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (state is null || (!state.IsBattlingCpu() && (await state.GetOtherPlayerAsync(Context, Context.User.Id)) is null)) {
 
-                await BotUtils.ReplyAsync_Error(Context, "You have not been challenged to a battle.");
+                await ReplyErrorAsync("You have not been challenged to a battle.");
 
                 return;
 
@@ -594,7 +574,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (!state.accepted) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has not accepted your challenge yet.",
+                await ReplyInfoAsync(string.Format("**{0}** has not accepted your challenge yet.",
                     await state.GetPlayer2UsernameAsync(Context)));
 
                 return;
@@ -614,14 +594,14 @@ namespace OurFoodChain.Bot.Modules {
             GotchiBattleState state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
 
             if (!await _validateGotchiBattleState(Context, state))
-                await BotUtils.ReplyAsync_Error(Context, "You are not currently in battle.");
+                await ReplyErrorAsync("You are not currently in battle.");
 
             else {
 
                 // Deregister the battle state.
                 GotchiBattleState.DeregisterBattle(Context.User.Id);
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has forfeited the battle.", Context.User.Username));
+                await ReplyInfoAsync(string.Format("**{0}** has forfeited the battle.", Context.User.Username));
 
             }
 
@@ -632,7 +612,7 @@ namespace OurFoodChain.Bot.Modules {
 
             IEnumerable<ICommandHelpInfo> helpInfos = await HelpService.GetCommandHelpInfoAsync(Context);
 
-            await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfos, BotConfiguration, "gotchi").ToDiscordEmbed());
+            await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfos, Config, "gotchi").ToDiscordEmbed());
 
         }
         [Command("help"), Alias("h")]
@@ -640,7 +620,7 @@ namespace OurFoodChain.Bot.Modules {
 
             ICommandHelpInfo helpInfo = await HelpService.GetCommandHelpInfoAsync("gotchi " + commandName.Trim());
 
-            await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfo, BotConfiguration).ToDiscordEmbed());
+            await ReplyAsync(embed: EmbedUtilities.BuildCommandHelpInfoEmbed(helpInfo, Config).ToDiscordEmbed());
 
         }
 
@@ -656,8 +636,8 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User);
-                Gotchi partnerGotchi = await GotchiUtils.GetGotchiAsync(user);
+                Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
+                Gotchi partnerGotchi = await Db.GetGotchiAsync(user.ToCreator());
 
                 // Submit the trade request.
 
@@ -668,20 +648,20 @@ namespace OurFoodChain.Bot.Modules {
                         await ReplyAsync(string.Format("{0}, **{1}** wants to trade gotchis with you! Use `{2}gotchi accept` or `{2}gotchi deny` to respond to their trade request.",
                             user.Mention,
                             Context.User.Username,
-                            BotConfiguration.Prefix));
+                            Config.Prefix));
 
                         break;
 
                     case GotchiTradeRequestResult.RequestPending:
 
-                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** currently has another pending trade request. Please try again later.",
+                        await ReplyInfoAsync(string.Format("**{0}** currently has another pending trade request. Please try again later.",
                             user.Username));
 
                         break;
 
                     case GotchiTradeRequestResult.Invalid:
 
-                        await BotUtils.ReplyAsync_Info(Context, "Trade request is invalid.");
+                        await ReplyInfoAsync("Trade request is invalid.");
 
                         break;
 
@@ -694,7 +674,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("shop")]
         public async Task Shop() {
 
-            GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
+            GotchiUserInfo user_data = await Db.GetUserInfoAsync(Context.User.ToCreator());
 
             // List all gotchi items available for sale.
 
@@ -726,7 +706,7 @@ namespace OurFoodChain.Bot.Modules {
             embed.AddPages(EmbedUtils.FieldsToEmbedPages(item_fields));
             embed.SetTitle("🛒 Gotchi Shop");
             embed.SetDescription(string.Format("Welcome to the Gotchi Shop! Purchase an item with `{0}gotchi buy <item>`.",
-               BotConfiguration.Prefix));
+               Config.Prefix));
             embed.SetFooter(string.Format("You currently have {0:n0}G.", user_data.G));
             embed.SetColor(Color.LightOrange);
             embed.AddPageNumbers();
@@ -739,7 +719,7 @@ namespace OurFoodChain.Bot.Modules {
         public async Task Buy(string itemIdentifier, long count = 1) {
 
             GotchiItem item = await GotchiUtils.GetGotchiItemAsync(itemIdentifier);
-            GotchiUserInfo userInfo = await GotchiUtils.GetUserInfoAsync(Context.User);
+            GotchiUserInfo userInfo = await Db.GetUserInfoAsync(Context.User.ToCreator());
 
             // Calculate the price of the item.
 
@@ -760,7 +740,7 @@ namespace OurFoodChain.Bot.Modules {
                     if (item.Id == (int)GotchiItemId.TankExpansion)
                         userInfo.GotchiLimit += count;
 
-                    await GotchiUtils.UpdateUserInfoAsync(userInfo);
+                    await Db.UpdateUserInfoAsync(userInfo);
 
                     await BotUtils.ReplyAsync_Success(Context,
                         string.Format("Successfully added **{0}**{1} to {2}'s inventory.", item.Name, count == 1 ? "" : "×" + count, Context.User.Username));
@@ -784,7 +764,7 @@ namespace OurFoodChain.Bot.Modules {
         public async Task Inventory() {
 
             IUser user = Context.User;
-            GotchiUserInfo userInfo = await GotchiUtils.GetUserInfoAsync(user);
+            GotchiUserInfo userInfo = await Db.GetUserInfoAsync(user.ToCreator());
             GotchiInventory inventory = await GotchiUtils.GetInventoryAsync(user.Id);
 
             List<string> lines = new List<string>();
@@ -820,7 +800,7 @@ namespace OurFoodChain.Bot.Modules {
 
             IUser user = Context.User;
 
-            Gotchi gotchi = await GotchiUtils.GetGotchiAsync(user);
+            Gotchi gotchi = await Db.GetGotchiAsync(user.ToCreator());
             GotchiInventory inventory = await GotchiUtils.GetInventoryAsync(user.Id);
             GotchiInventoryItem item = null;
 
@@ -841,7 +821,7 @@ namespace OurFoodChain.Bot.Modules {
                                 if (desiredEvo.Equals("cancel", StringComparison.OrdinalIgnoreCase))
                                     return;
 
-                                if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desiredEvo)) {
+                                if (await this.ReplyValidateGotchiAsync(gotchi) && await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi, desiredEvo)) {
 
                                     await GotchiUtils.AddItemToInventoryAsync(user.Id, item.Item, -1);
 
@@ -881,7 +861,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     case GotchiItemId.AlarmClock: {
 
-                            if (await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, gotchi) && gotchi.IsSleeping) {
+                            if (await this.ReplyValidateGotchiAsync(gotchi) && gotchi.IsSleeping) {
 
                                 gotchi.BornTimestamp -= gotchi.HoursOfSleepLeft() * 60 * 60;
 
@@ -924,9 +904,9 @@ namespace OurFoodChain.Bot.Modules {
 
             // List all Gotchis belonging to the current user.
 
-            if (await GotchiUtils.GetGotchiCountAsync(Context.User) <= 0) {
+            if (await Db.GetGotchiCountAsync(Context.User.ToCreator()) <= 0) {
 
-                await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, null);
+                await this.ReplyValidateGotchiAsync(null);
 
             }
             else {
@@ -934,7 +914,7 @@ namespace OurFoodChain.Bot.Modules {
                 List<string> gotchi_list = new List<string>();
                 int index = 1;
 
-                foreach (Gotchi i in await GotchiUtils.GetGotchisAsync(Context.User.Id)) {
+                foreach (Gotchi i in await Db.GetGotchisAsync(Context.User.Id)) {
 
                     gotchi_list.Add(string.Format("{0}. **{1}** ({2}), Lv. {3}",
                         index,
@@ -946,7 +926,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 }
 
-                GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
+                GotchiUserInfo user_data = await Db.GetUserInfoAsync(Context.User.ToCreator());
 
                 Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
                 embed.AddPages(EmbedUtils.ListToEmbedPages(gotchi_list, fieldName: string.Format("{0}'s Gotchis ({1}/{2})",
@@ -965,9 +945,9 @@ namespace OurFoodChain.Bot.Modules {
 
             // Set the user's primary gotchi.
 
-            if (await GotchiUtils.GetGotchiCountAsync(Context.User) <= 0) {
+            if (await Db.GetGotchiCountAsync(Context.User.ToCreator()) <= 0) {
 
-                await GotchiUtils.ValidateUserGotchiAndReplyAsync(Context, null);
+                await this.ReplyValidateGotchiAsync(null);
 
                 return;
 
@@ -978,13 +958,13 @@ namespace OurFoodChain.Bot.Modules {
 
             if (StringUtilities.IsNumeric(nameOrIndex)) {
 
-                Gotchi[] gotchis = await GotchiUtils.GetGotchisAsync(Context.User.Id);
-                long index = long.Parse(nameOrIndex) - 1;
+                IEnumerable<Gotchi> gotchis = await Db.GetGotchisAsync(Context.User.Id);
+                int index = int.Parse(nameOrIndex) - 1;
 
-                if (index >= 0 && index < gotchis.Length) {
+                if (index >= 0 && index < gotchis.Count()) {
 
-                    gotchi_id = gotchis[index].Id;
-                    name = gotchis[index].Name;
+                    gotchi_id = gotchis.ElementAt(index).Id;
+                    name = gotchis.ElementAt(index).Name;
 
                 }
 
@@ -992,7 +972,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (gotchi_id == OurFoodChain.Gotchis.Gotchi.NullGotchiId) {
 
-                Gotchi gotchi = await GotchiUtils.GetGotchiAsync(Context.User.Id, nameOrIndex.ToLower());
+                Gotchi gotchi = await Db.GetGotchiAsync(Context.User.Id, nameOrIndex.ToLower());
 
                 if (!(gotchi is null)) {
 
@@ -1010,11 +990,11 @@ namespace OurFoodChain.Bot.Modules {
             }
             else {
 
-                GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(Context.User);
+                GotchiUserInfo user_data = await Db.GetUserInfoAsync(Context.User.ToCreator());
 
                 user_data.PrimaryGotchiId = gotchi_id;
 
-                await GotchiUtils.UpdateUserInfoAsync(user_data);
+                await Db.UpdateUserInfoAsync(user_data);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set primary Gotchi to **{0}**.", StringUtilities.ToTitleCase(name)));
 
@@ -1098,7 +1078,9 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        private static async Task<bool> _validateGotchiBattleState(ICommandContext context, GotchiBattleState battleState) {
+        // Private members
+
+        private async Task<bool> _validateGotchiBattleState(ICommandContext context, GotchiBattleState battleState) {
 
             if (battleState is null)
                 return false;
@@ -1114,9 +1096,9 @@ namespace OurFoodChain.Bot.Modules {
             return true;
 
         }
-        private static async Task<bool> _replyValidateChallengerGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
+        private async Task<bool> _replyValidateChallengerGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
 
-            if (!await GotchiUtils.ValidateUserGotchiAndReplyAsync(context, gotchi))
+            if (!await this.ReplyValidateGotchiAsync(gotchi))
                 return false;
 
             if (!gotchi.IsAlive) {
@@ -1130,9 +1112,9 @@ namespace OurFoodChain.Bot.Modules {
             return true;
 
         }
-        private static async Task<bool> _replyValidateOpponentGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
+        private async Task<bool> _replyValidateOpponentGotchiForBattleAsync(ICommandContext context, Gotchi gotchi) {
 
-            if (!GotchiUtils.ValidateGotchi(gotchi)) {
+            if (!gotchi.IsValid()) {
 
                 await BotUtils.ReplyAsync_Info(context, "Your opponent doesn't have a gotchi yet.");
 
@@ -1151,7 +1133,7 @@ namespace OurFoodChain.Bot.Modules {
             return true;
 
         }
-        private static async Task<bool> _replyVerifyChallengerAvailableForBattleAsync(ICommandContext context) {
+        private async Task<bool> _replyVerifyChallengerAvailableForBattleAsync(ICommandContext context) {
 
             GotchiBattleState state = GotchiBattleState.GetBattleStateByUserId(context.User.Id);
 
@@ -1201,79 +1183,78 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        private static async Task _getGotchiAsync(ICommandContext context, Species species) {
+        private async Task GetGotchiAsync(ISpecies species) {
 
             // The species must be a base species (e.g., doesn't evolve from anything).
 
-            if (!await SpeciesUtils.IsBaseSpeciesAsync(species)) {
+            if (await Db.IsBaseSpeciesAsync(species)) {
 
-                await BotUtils.ReplyAsync_Error(context, "You must start with a base species (i.e. a species with no ancestor).");
+                // If the user has already reached their gotchi limit, don't allow them to get any more.
 
-                return;
+                GotchiUserInfo user_data = await Db.GetUserInfoAsync(Context.User.ToCreator());
+                long gotchi_count = await Db.GetGotchiCountAsync(Context.User.ToCreator());
 
-            }
+                if (gotchi_count >= user_data.GotchiLimit) {
 
-            // If the user has already reached their gotchi limit, don't allow them to get any more.
+                    // If the user's primary Gotchi is dead, remove it to be replaced. Otherwise, the new Gotchi cannot be added.
 
-            GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(context.User);
-            long gotchi_count = await GotchiUtils.GetGotchiCountAsync(context.User);
+                    Gotchi primary_gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
 
-            if (gotchi_count >= user_data.GotchiLimit) {
+                    if (!primary_gotchi.IsAlive)
+                        await Db.DeleteGotchiAsync(primary_gotchi.Id);
 
-                // If the user's primary Gotchi is dead, remove it to be replaced. Otherwise, the new Gotchi cannot be added.
+                    else {
 
-                Gotchi primary_gotchi = await GotchiUtils.GetGotchiAsync(context.User);
+                        await ReplyErrorAsync("You don't have room for any more Gotchis!\n\nYou will need to release one of your Gotchis, or expand your Gotchi tank. See the `gotchi release` and `gotchi shop` commands for more details.");
 
-                if (!primary_gotchi.IsAlive)
-                    await GotchiUtils.DeleteGotchiAsync(primary_gotchi.Id);
+                        return;
 
-                else {
-
-                    await BotUtils.ReplyAsync_Error(context, "You don't have room for any more Gotchis!\n\nYou will need to release one of your Gotchis, or expand your Gotchi tank. See the `gotchi release` and `gotchi shop` commands for more details.");
-
-                    return;
+                    }
 
                 }
 
+                // Create a gotchi for this user.
+
+                await Db.AddGotchiAsync(Context.User.ToCreator(), species);
+
+                await ReplySuccessAsync(string.Format("All right **{0}**, take care of your new **{1}**!", Context.User.Username, species.GetShortName()));
+
+            }
+            else {
+
+                await ReplyErrorAsync("You must start with a base species (i.e. a species with no ancestor).");
+
             }
 
-            // Create a gotchi for this user.
-            await GotchiUtils.AddGotchiAsync(context.User, species);
-
-            await BotUtils.ReplyAsync_Success(context, string.Format("All right **{0}**, take care of your new **{1}**!", context.User.Username, species.ShortName));
-
-
         }
-        private static async Task _releaseGotchiAsync(ICommandContext context, Gotchi gotchi) {
+        private async Task ReleaseGotchiAsync(Gotchi gotchi) {
 
-            if (gotchi != null) {
+            if (gotchi.IsValid()) {
 
-                PaginatedMessageBuilder message = new PaginatedMessageBuilder {
-                    Message = string.Format("Are you sure you want to release **{0}**?", gotchi.Name),
-                    Restricted = true,
-                    Callback = async args => {
-
-                        if (args.ReactionAdded && args.ReactionType == PaginatedMessageReaction.Yes) {
-
-                            // Delete the Gotchi from the database.
-                            await GotchiUtils.DeleteGotchiAsync(gotchi.Id);
-
-                            // Show confirmation message.
-
-                            if (!gotchi.IsAlive)
-                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
-                            else
-                                await BotUtils.ReplyAsync_Success(context, string.Format("**{0}** was successfully released. Take care, **{0}**!", StringUtilities.ToTitleCase(gotchi.Name)));
-
-
-                        }
-
-                    }
+                Discord.Messaging.IPaginatedMessage message = new Discord.Messaging.PaginatedMessage($"Are you sure you want to release **{gotchi.Name.ToTitle()}**?") {
+                    Restricted = true
                 };
 
-                message.AddReaction(Bot.PaginatedMessageReaction.Yes);
+                message.AddReaction(Discord.Messaging.PaginatedMessageReactionType.Yes, async (args) => {
 
-                await Bot.DiscordUtils.SendMessageAsync(context, message.Build());
+                    if (args.Reaction == Discord.Messaging.PaginatedMessageReactionType.Yes) {
+
+                        // Delete the Gotchi from the database.
+
+                        await Db.DeleteGotchiAsync(gotchi.Id);
+
+                        // Show confirmation message.
+
+                        if (!gotchi.IsAlive)
+                            await ReplySuccessAsync(string.Format("**{0}**'s corpse was successfully flushed. Rest in peace, **{0}**!", gotchi.Name.ToTitle()));
+                        else
+                            await ReplySuccessAsync(string.Format("**{0}** was successfully released. Take care, **{0}**!", gotchi.Name.ToTitle()));
+
+                    }
+
+                });
+
+                await ReplyAsync(message);
 
             }
 

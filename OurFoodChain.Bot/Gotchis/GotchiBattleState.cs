@@ -7,6 +7,7 @@ using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -765,7 +766,7 @@ namespace OurFoodChain.Gotchis {
 
             if (species_list.Count() > 0) {
 
-                player2.Gotchi = await GotchiUtils.GenerateGotchiAsync(database, new GotchiGenerationParameters {
+                player2.Gotchi = await database.GenerateGotchiAsync(new GotchiGenerationParameters {
                     Base = player1.Gotchi.Gotchi,
                     Species = species_list[BotUtils.RandomInteger(species_list.Count())],
                     MinLevel = player1.Gotchi.Stats.Level - 3,
@@ -832,7 +833,7 @@ namespace OurFoodChain.Gotchis {
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", winner.Gotchi.Gotchi.Name, winner.Gotchi.Stats.Level));
 
                 if (((winner.Gotchi.Stats.Level - winner_levels) / 10) < (winner.Gotchi.Stats.Level / 10))
-                    if (await GotchiUtils.EvolveAndUpdateGotchiAsync(winner.Gotchi.Gotchi)) {
+                    if (await database.EvolveAndUpdateGotchiAsync(winner.Gotchi.Gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(winner.Gotchi.Gotchi.SpeciesId);
 
@@ -842,11 +843,11 @@ namespace OurFoodChain.Gotchis {
 
                 // Update the winner's G.
 
-                GotchiUserInfo user_data = await GotchiUtils.GetUserInfoAsync(winner.Gotchi.Gotchi.OwnerId);
+                GotchiUserInfo user_data = await database.GetUserInfoAsync(winner.Gotchi.Gotchi.OwnerId);
 
                 user_data.G += winner_g;
 
-                await GotchiUtils.UpdateUserInfoAsync(user_data);
+                await database.UpdateUserInfoAsync(user_data);
 
                 sb.AppendLine();
 
@@ -863,7 +864,7 @@ namespace OurFoodChain.Gotchis {
                     sb.AppendLine(string.Format("🆙 **{0}** leveled up to level **{1}**!", loser.Gotchi.Gotchi.Name, loser.Gotchi.Stats.Level));
 
                 if (((loser.Gotchi.Stats.Level - loser_levels) / 10) < (loser.Gotchi.Stats.Level / 10))
-                    if (await GotchiUtils.EvolveAndUpdateGotchiAsync(loser.Gotchi.Gotchi)) {
+                    if (await database.EvolveAndUpdateGotchiAsync(loser.Gotchi.Gotchi)) {
 
                         Species sp = await BotUtils.GetSpeciesFromDb(loser.Gotchi.Gotchi.SpeciesId);
 

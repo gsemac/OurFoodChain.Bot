@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using OurFoodChain.Bot;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
@@ -32,6 +33,8 @@ namespace OurFoodChain {
         public IResponsiveMessageService ResponsiveMessageService { get; set; }
         public IOfcBotConfiguration Config { get; set; }
         public Services.TrophyScanner TrophyScanner { get; set; }
+        public DiscordSocketClient DiscordClient { get; set; }
+        public IHelpService HelpService { get; set; }
 
         public SQLiteDatabase Db => GetDatabaseAsync().Result;
         public SearchContext SearchContext => new SearchContext(Context, Db);

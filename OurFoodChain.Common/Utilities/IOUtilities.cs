@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Common.Utilities {
 
-    static class IoUtils {
+    public static class IOUtilities {
 
         public static bool TryDeleteFile(string filePath) {
 

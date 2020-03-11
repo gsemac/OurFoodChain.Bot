@@ -25,7 +25,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Data", "OurFoo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Debug", "OurFoodChain.Debug\OurFoodChain.Debug.csproj", "{57AAD8BE-E84F-4A99-8BB3-F6131F7FE64B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Trophies", "OurFoodChain.Trophies\OurFoodChain.Trophies.csproj", "{BD426B2E-C9E4-4E76-9F04-AE0666052131}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Trophies", "OurFoodChain.Trophies\OurFoodChain.Trophies.csproj", "{BD426B2E-C9E4-4E76-9F04-AE0666052131}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Gotchis", "OurFoodChain.Gotchis\OurFoodChain.Gotchis.csproj", "{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{BD426B2E-C9E4-4E76-9F04-AE0666052131}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD426B2E-C9E4-4E76-9F04-AE0666052131}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD426B2E-C9E4-4E76-9F04-AE0666052131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -83,6 +89,7 @@ Global
 		{3A9FFD0B-954C-4D9B-8784-D595CE65E236} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
 		{57AAD8BE-E84F-4A99-8BB3-F6131F7FE64B} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
 		{BD426B2E-C9E4-4E76-9F04-AE0666052131} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
+		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C34FBF8-4A80-4981-9067-5148B43D4D55}

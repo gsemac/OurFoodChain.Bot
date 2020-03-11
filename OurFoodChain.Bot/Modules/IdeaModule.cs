@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public class IdeaModule :
-        ModuleBase {
+        OfcModuleBase {
 
         // Public members
 
@@ -81,8 +81,7 @@ namespace OurFoodChain.Bot {
             List<string> ideas = new List<string>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors) AND id NOT IN (SELECT ancestor_id FROM Ancestors) AND id NOT IN (SELECT species_id FROM Extinctions)"))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in table.Rows)
+                foreach (DataRow row in await Db.GetRowsAsync(cmd))
                     ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", (await SpeciesUtils.SpeciesFromDataRow(row)).ShortName));
 
             return ideas.ToArray();
@@ -100,8 +99,7 @@ namespace OurFoodChain.Bot {
 	            id NOT IN (SELECT species_id FROM Predates)";
 
             using (SQLiteCommand cmd = new SQLiteCommand(query))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in table.Rows) {
+                foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
                     Species species = await SpeciesUtils.SpeciesFromDataRow(row);
 
@@ -122,8 +120,7 @@ namespace OurFoodChain.Bot {
 	            NOT EXISTS(SELECT * FROM SpeciesRoles WHERE role_id = role_id1 AND species_id IN (SELECT species_id FROM SpeciesZones WHERE zone_id = zone_id1));";
 
             using (SQLiteCommand cmd = new SQLiteCommand(query))
-            using (DataTable table = await Database.GetRowsAsync(cmd))
-                foreach (DataRow row in table.Rows) {
+                foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
                     string zone_name = row.Field<string>("zone_name");
                     string role_name = row.Field<string>("role_name");

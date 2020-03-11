@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public class RecentCommands :
-        ModuleBase {
+        OfcModuleBase {
 
         [Command("recent")]
         public async Task Recent() {
@@ -37,7 +37,7 @@ namespace OurFoodChain.Bot {
 
         }
 
-        public static async Task<Bot.PaginatedMessageBuilder> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
+        public async Task<Bot.PaginatedMessageBuilder> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
             // Get all species created within the given timespan.
 
@@ -54,9 +54,8 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$start_ts", startTimestamp);
                 cmd.Parameters.AddWithValue("$end_ts", endTimestamp);
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        new_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
+                foreach (DataRow row in await Db.GetRowsAsync(cmd))
+                    new_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -71,9 +70,8 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$start_ts", startTimestamp);
                 cmd.Parameters.AddWithValue("$end_ts", endTimestamp);
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
+                foreach (DataRow row in await Db.GetRowsAsync(cmd))
+                    extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
 
             }
 
@@ -119,7 +117,7 @@ namespace OurFoodChain.Bot {
             return embed;
 
         }
-        public static async Task ShowRecentEventsAsync(ICommandContext context, long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
+        public async Task ShowRecentEventsAsync(ICommandContext context, long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
             Bot.PaginatedMessageBuilder embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
 

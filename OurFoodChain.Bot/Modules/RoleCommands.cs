@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public class RoleCommands :
-        ModuleBase {
+        OfcModuleBase {
 
         [Command("addrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddRole(string name, string description = "") {
@@ -59,7 +59,7 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
                 cmd.Parameters.AddWithValue("$notes", notes);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been assigned the role of **{1}**.", sp.ShortName, StringUtilities.ToTitleCase(role_info.name)));
 
@@ -95,7 +95,7 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$species_id", sp.Id);
                 cmd.Parameters.AddWithValue("$role_id", role_info.id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
                 await BotUtils.ReplyAsync_Success(Context, string.Format("Role **{0}** has successfully been unassigned from **{1}**.", StringUtilities.ToTitleCase(role_info.name), sp.ShortName));
 
@@ -120,7 +120,7 @@ namespace OurFoodChain.Bot {
 
                     cmd.Parameters.AddWithValue("$role_id", role.id);
 
-                    count = (await Database.GetRowAsync(cmd)).Field<long>("count(*)");
+                    count = (await Db.GetRowAsync(cmd)).Field<long>("count(*)");
 
                 }
 
@@ -243,7 +243,7 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$name", role.name);
                 cmd.Parameters.AddWithValue("$description", description);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 

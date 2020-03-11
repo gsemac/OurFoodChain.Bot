@@ -24,9 +24,8 @@ namespace OurFoodChain {
 
                 cmd.Parameters.AddWithValue("$species_id", species.Id);
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        common_names.Add(new CommonName(row.Field<string>("name")));
+                foreach (DataRow row in await Db.GetRowsAsync(cmd))
+                    common_names.Add(new CommonName(row.Field<string>("name")));
 
             }
 

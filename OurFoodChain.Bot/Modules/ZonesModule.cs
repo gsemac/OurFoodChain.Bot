@@ -264,7 +264,7 @@ namespace OurFoodChain.Bot.Modules {
                 cmd.Parameters.AddWithValue("$pics", imageUrl);
                 cmd.Parameters.AddWithValue("$id", z.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -289,7 +289,7 @@ namespace OurFoodChain.Bot.Modules {
                 cmd.Parameters.AddWithValue("$description", description);
                 cmd.Parameters.AddWithValue("$id", zone.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 

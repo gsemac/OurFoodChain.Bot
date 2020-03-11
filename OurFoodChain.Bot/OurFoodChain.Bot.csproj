@@ -324,8 +324,6 @@
     <Compile Include="graphics\AncestryTreeImageRenderer.cs" />
     <Compile Include="graphics\AncestryTreeTextRenderer.cs" />
     <Compile Include="graphics\GraphicsUtils.cs" />
-    <Compile Include="periods\Generation.cs" />
-    <Compile Include="periods\GenerationUtils.cs" />
     <Compile Include="Taxa\AncestryTree.cs" />
     <Compile Include="Taxa\ExtinctionInfo.cs" />
     <Compile Include="Gotchis\GotchiBattleState.cs" />
@@ -348,7 +346,6 @@
     <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="users\UserRank.cs" />
     <Compile Include="Modules\GeneralModule.cs" />
-    <Compile Include="database\Database.cs" />
     <Compile Include="OfcBot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

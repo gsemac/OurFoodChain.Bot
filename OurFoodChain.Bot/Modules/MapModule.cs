@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot.Modules {
 
     public class MapModule :
-         ModuleBase {
+         OfcModuleBase {
 
         private const string MAP_GALLERY_NAME = "map";
 
@@ -102,7 +102,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 cmd.Parameters.AddWithValue("$name", MAP_GALLERY_NAME);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -114,7 +114,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -130,7 +130,7 @@ namespace OurFoodChain.Bot.Modules {
                 cmd.Parameters.AddWithValue("$name", "primary");
                 cmd.Parameters.AddWithValue("$artist", Context.User.Username);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -148,7 +148,7 @@ namespace OurFoodChain.Bot.Modules {
                     cmd.Parameters.AddWithValue("$name", "labeled");
                     cmd.Parameters.AddWithValue("$artist", Context.User.Username);
 
-                    await Database.ExecuteNonQuery(cmd);
+                    await Db.ExecuteNonQueryAsync(cmd);
 
                 }
 

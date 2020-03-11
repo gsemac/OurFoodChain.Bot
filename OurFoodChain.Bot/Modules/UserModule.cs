@@ -41,7 +41,7 @@ namespace OurFoodChain.Modules {
             // Get basic information about the user.
             // This will return null if the user hasn't been seen before.
 
-            UserInfo userInfo = await UserUtils.GetUserInfoAsync(user.Username, user.Id, UserInfoQueryFlags.MatchEither);
+            ICreator userInfo = await Db.GetCreatorAsync(user.Username, user.Id, UserInfoQueryFlags.MatchEither);
 
             if (userInfo is null) {
 
@@ -91,12 +91,12 @@ namespace OurFoodChain.Modules {
 
                 if (Config.GenerationsEnabled) {
 
-                    int generationsSinceFirstSubmission = (await GenerationUtils.GetGenerationsAsync()).Where(x => x.EndTimestamp > userInfo.FirstSubmissionTimestamp).Count();
+                    int generationsSinceFirstSubmission = (await Db.GetGenerationsAsync()).Where(x => x.EndDate > userInfo.FirstSpeciesDate).Count();
                     double speciesPerGeneration = generationsSinceFirstSubmission <= 0 ? userSpeciesCount : (double)userSpeciesCount / generationsSinceFirstSubmission;
 
                     embed.WithDescription(string.Format("{0} made their first species during **{1}**.\nSince then, they have submitted **{2:0.0}** species per generation.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, Config, Db)),
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSpeciesDate, new OfcBotContext(Context, Config, Db)),
                         speciesPerGeneration,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -105,7 +105,7 @@ namespace OurFoodChain.Modules {
 
                     embed.WithDescription(string.Format("{0} made their first species on **{1}**.\nSince then, they have submitted **{2:0.0}** species per day.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSubmissionTimestamp, new OfcBotContext(Context, Config, Db)),
+                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSpeciesDate, new OfcBotContext(Context, Config, Db)),
                         daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -234,30 +234,26 @@ namespace OurFoodChain.Modules {
 
                 cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
 
-                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+                foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                    foreach (DataRow row in rows.Rows) {
+                    Species sp = await SpeciesUtils.SpeciesFromDataRow(row);
+                    long fav_count = 0;
 
-                        Species sp = await SpeciesUtils.SpeciesFromDataRow(row);
-                        long fav_count = 0;
+                    // Get the number of times this species has been favorited.
 
-                        // Get the number of times this species has been favorited.
+                    using (SQLiteCommand cmd2 = new SQLiteCommand("SELECT COUNT(*) FROM Favorites WHERE species_id = $species_id;")) {
 
-                        using (SQLiteCommand cmd2 = new SQLiteCommand("SELECT COUNT(*) FROM Favorites WHERE species_id = $species_id;")) {
+                        cmd2.Parameters.AddWithValue("$species_id", sp.Id);
 
-                            cmd2.Parameters.AddWithValue("$species_id", sp.Id);
-
-                            fav_count = await Database.GetScalar<long>(cmd2);
-
-                        }
-
-                        lines.Add(sp.ShortName + (fav_count > 1 ? string.Format(" (+{0})", fav_count) : ""));
+                        fav_count = await Db.GetScalarAsync<long>(cmd2);
 
                     }
 
-                    lines.Sort();
+                    lines.Add(sp.ShortName + (fav_count > 1 ? string.Format(" (+{0})", fav_count) : ""));
 
                 }
+
+                lines.Sort();
 
             }
 

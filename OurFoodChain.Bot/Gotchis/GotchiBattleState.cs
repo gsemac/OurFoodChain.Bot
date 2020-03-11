@@ -882,7 +882,7 @@ namespace OurFoodChain.Gotchis {
                 cmd.Parameters.AddWithValue("$level", DBNull.Value);
                 cmd.Parameters.AddWithValue("$exp", player1.Gotchi.Stats.Experience);
 
-                await Database.ExecuteNonQuery(cmd);
+                await database.ExecuteNonQueryAsync(cmd);
 
             }
 
@@ -894,7 +894,7 @@ namespace OurFoodChain.Gotchis {
                     cmd.Parameters.AddWithValue("$level", DBNull.Value);
                     cmd.Parameters.AddWithValue("$exp", player2.Gotchi.Stats.Experience);
 
-                    await Database.ExecuteNonQuery(cmd);
+                    await database.ExecuteNonQueryAsync(cmd);
 
                 }
 

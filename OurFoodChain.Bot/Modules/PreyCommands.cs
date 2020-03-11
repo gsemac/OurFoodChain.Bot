@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
     public class PreyCommands :
-        ModuleBase {
+        OfcModuleBase {
 
         // Public members
 
@@ -157,36 +157,34 @@ namespace OurFoodChain.Bot {
 
                 cmd.Parameters.AddWithValue("$eats_id", sp.Id);
 
-                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+                IEnumerable<DataRow> rows = await Db.GetRowsAsync(cmd);
 
-                    if (rows.Rows.Count <= 0)
-                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has no extant natural predators.", sp.ShortName));
-                    else {
+                if (rows.Count() <= 0)
+                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has no extant natural predators.", sp.ShortName));
+                else {
 
-                        List<string> lines = new List<string>();
+                    List<string> lines = new List<string>();
 
-                        foreach (DataRow row in rows.Rows) {
+                    foreach (DataRow row in rows) {
 
-                            Species s = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
-                            string notes = row.Field<string>("notes");
+                        Species s = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
+                        string notes = row.Field<string>("notes");
 
-                            string line_text = s.ShortName;
+                        string line_text = s.ShortName;
 
-                            if (!string.IsNullOrEmpty(notes))
-                                line_text += string.Format(" ({0})", notes.ToLower());
+                        if (!string.IsNullOrEmpty(notes))
+                            line_text += string.Format(" ({0})", notes.ToLower());
 
-                            lines.Add(s.IsExtinct ? string.Format("~~{0}~~", line_text) : line_text);
-
-                        }
-
-                        lines.Sort();
-
-                        embed.WithTitle(string.Format("Predators of {0} ({1})", sp.ShortName, lines.Count()));
-                        embed.WithDescription(string.Join(Environment.NewLine, lines));
-
-                        await ReplyAsync("", false, embed.Build());
+                        lines.Add(s.IsExtinct ? string.Format("~~{0}~~", line_text) : line_text);
 
                     }
+
+                    lines.Sort();
+
+                    embed.WithTitle(string.Format("Predators of {0} ({1})", sp.ShortName, lines.Count()));
+                    embed.WithDescription(string.Join(Environment.NewLine, lines));
+
+                    await ReplyAsync("", false, embed.Build());
 
                 }
 
@@ -216,47 +214,45 @@ namespace OurFoodChain.Bot {
 
                 cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
-                using (DataTable rows = await Database.GetRowsAsync(cmd)) {
+                IEnumerable<DataRow> rows = await Db.GetRowsAsync(cmd);
 
-                    if (rows.Rows.Count <= 0)
-                        await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not prey upon any other species.", sp.ShortName));
-                    else {
+                if (rows.Count() <= 0)
+                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not prey upon any other species.", sp.ShortName));
+                else {
 
-                        List<Tuple<Species, string>> prey_list = new List<Tuple<Species, string>>();
+                    List<Tuple<Species, string>> prey_list = new List<Tuple<Species, string>>();
 
-                        foreach (DataRow row in rows.Rows) {
+                    foreach (DataRow row in rows) {
 
-                            prey_list.Add(new Tuple<Species, string>(
-                                await BotUtils.GetSpeciesFromDb(row.Field<long>("eats_id")),
-                                row.Field<string>("notes")));
-
-                        }
-
-                        prey_list.Sort((lhs, rhs) => lhs.Item1.ShortName.CompareTo(rhs.Item1.ShortName));
-
-                        List<string> lines = new List<string>();
-
-                        foreach (Tuple<Species, string> prey in prey_list) {
-
-                            string line = prey.Item1.IsExtinct ? BotUtils.Strikeout(prey.Item1.ShortName) : prey.Item1.ShortName;
-
-                            if (!string.IsNullOrEmpty(prey.Item2))
-                                line += (string.Format(" ({0})", prey.Item2.ToLower()));
-
-                            lines.Add(line);
-
-                        }
-
-                        PaginatedMessageBuilder embed = new PaginatedMessageBuilder();
-
-                        embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
-
-                        embed.SetTitle(string.Format("Species preyed upon by {0} ({1})", sp.ShortName, prey_list.Count()));
-                        embed.AddPageNumbers();
-
-                        await DiscordUtils.SendMessageAsync(Context, embed.Build());
+                        prey_list.Add(new Tuple<Species, string>(
+                            await BotUtils.GetSpeciesFromDb(row.Field<long>("eats_id")),
+                            row.Field<string>("notes")));
 
                     }
+
+                    prey_list.Sort((lhs, rhs) => lhs.Item1.ShortName.CompareTo(rhs.Item1.ShortName));
+
+                    List<string> lines = new List<string>();
+
+                    foreach (Tuple<Species, string> prey in prey_list) {
+
+                        string line = prey.Item1.IsExtinct ? BotUtils.Strikeout(prey.Item1.ShortName) : prey.Item1.ShortName;
+
+                        if (!string.IsNullOrEmpty(prey.Item2))
+                            line += (string.Format(" ({0})", prey.Item2.ToLower()));
+
+                        lines.Add(line);
+
+                    }
+
+                    PaginatedMessageBuilder embed = new PaginatedMessageBuilder();
+
+                    embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
+
+                    embed.SetTitle(string.Format("Species preyed upon by {0} ({1})", sp.ShortName, prey_list.Count()));
+                    embed.AddPageNumbers();
+
+                    await DiscordUtils.SendMessageAsync(Context, embed.Build());
 
                 }
 
@@ -317,7 +313,7 @@ namespace OurFoodChain.Bot {
                     cmd.Parameters.AddWithValue("$eats_id", prey.Id);
                     cmd.Parameters.AddWithValue("$notes", notes);
 
-                    await Database.ExecuteNonQuery(cmd);
+                    await Db.ExecuteNonQueryAsync(cmd);
 
                 }
 
@@ -350,7 +346,7 @@ namespace OurFoodChain.Bot {
                     cmd.Parameters.AddWithValue("$species_id", predatorSpecies.Id);
                     cmd.Parameters.AddWithValue("$eats_id", preySpecies.Id);
 
-                    await Database.ExecuteNonQuery(cmd);
+                    await Db.ExecuteNonQueryAsync(cmd);
 
                 }
 

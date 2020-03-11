@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot {
 
     public class PeriodCommands :
-        ModuleBase {
+        OfcModuleBase {
 
         [Command("periods")]
         public async Task Periods() {
@@ -67,9 +67,8 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$start_ts", period.GetStartTimestamp());
                 cmd.Parameters.AddWithValue("$end_ts", period.GetEndTimestamp());
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        born_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
+                foreach (DataRow row in await Db.GetRowsAsync(cmd))
+                    born_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -82,9 +81,8 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$start_ts", period.GetStartTimestamp());
                 cmd.Parameters.AddWithValue("$end_ts", period.GetEndTimestamp());
 
-                using (DataTable table = await Database.GetRowsAsync(cmd))
-                    foreach (DataRow row in table.Rows)
-                        died_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
+                foreach (DataRow row in await Db.GetRowsAsync(cmd))
+                    died_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
 
             }
 
@@ -156,7 +154,7 @@ namespace OurFoodChain.Bot {
 
                             cmd.Parameters.AddWithValue("$end_ts", start_ts.ToString());
 
-                            await Database.ExecuteNonQuery(cmd);
+                            await Db.ExecuteNonQueryAsync(cmd);
 
                         }
 
@@ -170,7 +168,7 @@ namespace OurFoodChain.Bot {
                         cmd.Parameters.AddWithValue("$start_ts", start_ts.ToString()); // Period can't start with "now", but can use the "now" timestamp
                         cmd.Parameters.AddWithValue("$end_ts", endDate == "now" ? "now" : end_ts.ToString());
 
-                        await Database.ExecuteNonQuery(cmd);
+                        await Db.ExecuteNonQueryAsync(cmd);
 
                     }
 
@@ -200,7 +198,7 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$id", period.id);
                 cmd.Parameters.AddWithValue("$description", description);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 

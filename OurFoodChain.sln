@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Trophies", "Ou
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Gotchis", "OurFoodChain.Gotchis\OurFoodChain.Gotchis.csproj", "{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Wiki", "OurFoodChain.Wiki\OurFoodChain.Wiki.csproj", "{51098E65-2CD8-4295-8BBF-403F7D97311A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51098E65-2CD8-4295-8BBF-403F7D97311A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51098E65-2CD8-4295-8BBF-403F7D97311A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51098E65-2CD8-4295-8BBF-403F7D97311A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51098E65-2CD8-4295-8BBF-403F7D97311A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -90,6 +96,7 @@ Global
 		{57AAD8BE-E84F-4A99-8BB3-F6131F7FE64B} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
 		{BD426B2E-C9E4-4E76-9F04-AE0666052131} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
 		{1456FC2C-3AE3-42FF-A0CF-BC3558327E09} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
+		{51098E65-2CD8-4295-8BBF-403F7D97311A} = {721AB7CC-0FF9-4E5E-9625-378D3046AE76}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C34FBF8-4A80-4981-9067-5148B43D4D55}

@@ -1134,34 +1134,6 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        private static string GetWikiPageTitleForSpecies(Species species, CommonName[] commonNames) {
-
-            // This is the same process as used in SpeciesPageBuilder.BuildTitleAsync.
-            // #todo Instead of being copy-pasted, this process should be in its own function used by both classes.
-
-            string title = string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(species.CommonName))
-                title = species.CommonName;
-            else {
-
-                if (commonNames.Count() > 0)
-                    title = commonNames.First().Value;
-                else
-                    title = species.FullName;
-
-            }
-
-            if (string.IsNullOrWhiteSpace(title))
-                title = species.FullName;
-
-            if (!string.IsNullOrEmpty(title))
-                title = title.Trim();
-
-            return title;
-
-        }
-
     }
 
 }

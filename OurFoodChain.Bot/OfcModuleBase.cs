@@ -14,6 +14,7 @@ using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Services;
 using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Wiki.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -240,9 +241,9 @@ namespace OurFoodChain {
                 // Discord automatically encodes certain characters in URIs, which doesn't allow us to update the config via Discord when we have "{0}" in the URL.
                 // Replace this with the proper string before attempting to call string.Format.
 
-                // string format = botContext.Configuration.WikiUrlFormat.Replace("%7B0%7D", "{0}");
+                string format = Config.WikiUrlFormat.Replace("%7B0%7D", "{0}");
 
-                // embed.Url = string.Format(format, Uri.EscapeUriString(GetWikiPageTitleForSpecies(species, common_names)));
+                embed.Url = string.Format(format, Uri.EscapeUriString(WikiUtilities.GetWikiPageTitle(species)));
 
             }
 

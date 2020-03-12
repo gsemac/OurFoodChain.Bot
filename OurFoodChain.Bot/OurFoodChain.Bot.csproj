@@ -642,6 +642,10 @@
       <Project>{bd426b2e-c9e4-4e76-9f04-ae0666052131}</Project>
       <Name>OurFoodChain.Trophies</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Wiki\OurFoodChain.Wiki.csproj">
+      <Project>{51098E65-2CD8-4295-8BBF-403F7D97311A}</Project>
+      <Name>OurFoodChain.Wiki</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

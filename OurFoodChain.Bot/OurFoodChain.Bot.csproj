@@ -324,9 +324,9 @@
     <Compile Include="Utilities\DiscordUtils.cs" />
     <Compile Include="Gotchis\GotchiType.cs" />
     <Compile Include="Gotchis\GotchiTypeRegistry.cs" />
-    <Compile Include="graphics\AncestryTreeImageRenderer.cs" />
-    <Compile Include="graphics\AncestryTreeTextRenderer.cs" />
-    <Compile Include="graphics\GraphicsUtils.cs" />
+    <Compile Include="Drawing\AncestryTreeImageRenderer.cs" />
+    <Compile Include="Drawing\AncestryTreeTextRenderer.cs" />
+    <Compile Include="Drawing\GraphicsUtils.cs" />
     <Compile Include="Taxa\AncestryTree.cs" />
     <Compile Include="Taxa\ExtinctionInfo.cs" />
     <Compile Include="Gotchis\GotchiBattleState.cs" />
@@ -340,11 +340,11 @@
     <Compile Include="Gotchis\GotchiBattleStatus.cs" />
     <Compile Include="Gotchis\GotchiUserInfo.cs" />
     <Compile Include="Gotchis\GotchiUtils.cs" />
-    <Compile Include="periods\Period.cs" />
+    <Compile Include="Periods\Period.cs" />
     <Compile Include="Taxa\Relationship.cs" />
     <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />
-    <Compile Include="users\UserRank.cs" />
+    <Compile Include="Users\UserRank.cs" />
     <Compile Include="Modules\GeneralModule.cs" />
     <Compile Include="OfcBot.cs" />
     <Compile Include="Program.cs" />
@@ -353,12 +353,12 @@
     <Compile Include="Taxa\CommonName.cs" />
     <Compile Include="Utilities\DateUtils.cs" />
     <Compile Include="MultiPartMessage.cs" />
-    <Compile Include="reviews\ReviewCache.cs" />
-    <Compile Include="reviews\ReviewChannelInfo.cs" />
-    <Compile Include="reviews\ReviewInfo.cs" />
+    <Compile Include="Reviews\ReviewCache.cs" />
+    <Compile Include="Reviews\ReviewChannelInfo.cs" />
+    <Compile Include="Reviews\ReviewInfo.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
     <Compile Include="PaginatedMessageBuilder.cs" />
-    <Compile Include="users\UserInfo.cs" />
+    <Compile Include="Users\UserInfo.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
   </ItemGroup>
   <ItemGroup>

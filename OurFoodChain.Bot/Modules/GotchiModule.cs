@@ -226,7 +226,7 @@ namespace OurFoodChain.Bot.Modules {
                     if (!(battle_state is null))
                         stats = battle_state.GetGotchiStats(gotchi);
                     else
-                        stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
+                        stats = await new GotchiStatsCalculator(Db, Global.GotchiContext).GetStatsAsync(gotchi);
 
                     // Create the embed.
 
@@ -266,13 +266,13 @@ namespace OurFoodChain.Bot.Modules {
                     // If the user is currently in battle, get their moveset from the battle state instead.
 
                     GotchiBattleState battle_state = GotchiBattleState.GetBattleStateByUserId(Context.User.Id);
-                    GotchiMoveSet set = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi);
+                    GotchiMoveSet set = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(Db, gotchi);
                     GotchiMoveSet battle_set = battle_state?.GetGotchiMoveset(gotchi);
 
                     // Create the embed.
 
                     EmbedBuilder set_page = new EmbedBuilder();
-                    GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi);
+                    GotchiStats stats = await new GotchiStatsCalculator(Db, Global.GotchiContext).GetStatsAsync(gotchi);
 
                     set_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
                     set_page.WithThumbnailUrl(sp.GetPictureUrl());
@@ -826,7 +826,7 @@ namespace OurFoodChain.Bot.Modules {
                                     await Db.AddItemToInventoryAsync(user.Id, item.Item, -1);
 
                                     await BotUtils.ReplyAsync_Success(Context, string.Format("Congratulations, your Gotchi has evolved into **{0}**!",
-                                        (await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId)).ShortName));
+                                        (await Db.GetSpeciesAsync(gotchi.SpeciesId)).GetShortName()));
 
                                 }
                                 else
@@ -919,7 +919,7 @@ namespace OurFoodChain.Bot.Modules {
                     gotchi_list.Add(string.Format("{0}. **{1}** ({2}), Lv. {3}",
                         index,
                         StringUtilities.ToTitleCase(i.Name),
-                        (await BotUtils.GetSpeciesFromDb(i.SpeciesId)).ShortName,
+                        (await Db.GetSpeciesAsync(i.SpeciesId)).GetShortName(),
                         GotchiExperienceCalculator.GetLevel(ExperienceGroup.Default, i)));
 
                     ++index;
@@ -1009,18 +1009,18 @@ namespace OurFoodChain.Bot.Modules {
         [Command("dex")]
         public async Task Dex(string genusName, string speciesName) {
 
-            Species species = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (species != null) {
+            if (species.IsValid()) {
 
                 Gotchi gotchi = new Gotchi() {
                     SpeciesId = species.Id,
                     Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.Default, 100)
                 };
 
-                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi);
-                GotchiMove[] moves = await Global.GotchiContext.MoveRegistry.GetLearnSetAsync(gotchi);
-                GotchiStats stats = await new GotchiStatsCalculator(Global.GotchiContext).GetBaseStatsAsync(gotchi);
+                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(Db, gotchi);
+                IEnumerable<GotchiMove> moves = await Global.GotchiContext.MoveRegistry.GetLearnSetAsync(Db, gotchi);
+                GotchiStats stats = await new GotchiStatsCalculator(Db, Global.GotchiContext).GetBaseStatsAsync(gotchi);
 
                 // Create the stats page.
 
@@ -1033,9 +1033,9 @@ namespace OurFoodChain.Bot.Modules {
                 descriptionBuilder.AppendLine("\u200B");
 
                 EmbedBuilder statsPageBuilder = new EmbedBuilder {
-                    Title = string.Format("{0} (#{1}) — Overview", species.ShortName, species.Id),
+                    Title = string.Format("{0} (#{1}) — Overview", species.GetShortName(), species.Id),
                     Description = descriptionBuilder.ToString(),
-                    ImageUrl = species.Picture
+                    ImageUrl = species.GetPictureUrl()
                 };
 
                 statsPageBuilder.AddField("❤ Base HP", stats.MaxHp, inline: true);
@@ -1064,7 +1064,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 message.AddPages(EmbedUtils.FieldsToEmbedPages(moveFields).Select(p => {
 
-                    p.Title = string.Format("{0} (#{1}) — Learnset", species.ShortName, species.Id);
+                    p.Title = string.Format("{0} (#{1}) — Learnset", species.GetShortName(), species.Id);
 
                     return p;
 

@@ -16,11 +16,7 @@ using OurFoodChain.Common.Utilities;
 namespace OurFoodChain.Bot.Modules {
 
     public class TrophyModule :
-        ModuleBase {
-
-        public IOfcBotConfiguration BotConfiguration { get; set; }
-        public OurFoodChain.Services.TrophyScanner TrophyScanner { get; set; }
-        public SQLiteDatabase Db { get; set; }
+        OfcModuleBase {
 
         [Command("trophies"), Alias("achievements")]
         public async Task Trophies(IUser user = null) {
@@ -39,7 +35,7 @@ namespace OurFoodChain.Bot.Modules {
 
             StringBuilder description_builder = new StringBuilder();
 
-            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", BotConfiguration.Prefix));
+            description_builder.AppendLine(string.Format("See a list of all available trophies with `{0}trophylist`.", Config.Prefix));
 
             foreach (IUnlockedTrophyInfo info in unlocked) {
 
@@ -86,7 +82,7 @@ namespace OurFoodChain.Bot.Modules {
                     embed = new EmbedBuilder();
                     embed.WithTitle(string.Format("All Trophies ({0})", TrophyScanner.GetTrophies().Count()));
                     embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).",
-                        BotConfiguration.Prefix,
+                        Config.Prefix,
                         trophy_list.First().Name));
                     embed.WithFooter(string.Format("Page {0} of {1}", current_page, total_pages));
                     embed.WithColor(new Color(255, 204, 77));
@@ -241,10 +237,10 @@ namespace OurFoodChain.Bot.Modules {
 
             if (user is null)
                 user = (IGuildUser)Context.User;
-            else if (!await BotUtils.ReplyHasPrivilegeAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator)) // Mod privileges are required to scan someone else's trophies
+            else if (!await ReplyValidatePrivilegeAsync(PrivilegeLevel.ServerModerator)) // Mod privileges are required to scan someone else's trophies
                 return;
 
-            if (BotConfiguration.TrophiesEnabled)
+            if (Config.TrophiesEnabled)
                 await TrophyScanner.EnqueueAsync(new Creator(user.Id, user.Username), Context, scanImmediately: true);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added user **{0}** to the trophy scanner queue.", user.Username));

@@ -16,6 +16,8 @@ namespace OurFoodChain.Common {
         string Species { get; }
         bool IsAbbreviated { get; }
 
+        string ToString(BinomialNameFormat format);
+
     }
 
 }

@@ -1,20 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
-using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
-using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
-using OurFoodChain.Discord.Utilities;
-using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {

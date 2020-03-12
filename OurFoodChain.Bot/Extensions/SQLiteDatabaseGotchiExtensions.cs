@@ -311,17 +311,17 @@ namespace OurFoodChain.Extensions {
 
                 result.Gotchi.Experience = GotchiExperienceCalculator.ExperienceToLevel(result.Stats.ExperienceGroup, NumberUtilities.GetRandomInteger(parameters.MinLevel, parameters.MaxLevel + 1));
 
-                result.Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(result.Gotchi);
+                result.Stats = await new GotchiStatsCalculator(database, Global.GotchiContext).GetStatsAsync(result.Gotchi);
 
             }
 
             // Generate moveset (if applicable).
 
             if (parameters.GenerateMoveset)
-                result.Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(result.Gotchi);
+                result.Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(database, result.Gotchi);
 
             // Generate types.
-            result.Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(result.Gotchi);
+            result.Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(database, result.Gotchi);
 
             // Generate a name for the gotchi.
 

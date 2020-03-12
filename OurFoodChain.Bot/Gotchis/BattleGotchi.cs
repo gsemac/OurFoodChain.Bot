@@ -1,4 +1,5 @@
 ﻿using MoonSharp.Interpreter;
+using OurFoodChain.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,13 +31,13 @@ namespace OurFoodChain.Gotchis {
             }
         }
 
-        public bool TestRequirements(GotchiRequirements requirements) {
+        public bool TestRequirements(SQLiteDatabase database, GotchiRequirements requirements) {
 
-            return new GotchiRequirementsChecker { Requires = requirements }.CheckAsync(Gotchi).Result;
+            return new GotchiRequirementsChecker(database) { Requires = requirements }.CheckAsync(Gotchi).Result;
 
         }
 
-        public void ResetStats() {
+        public void ResetStats(SQLiteDatabase database) {
 
             if (Context is null)
                 throw new Exception("Context is null");
@@ -46,7 +47,7 @@ namespace OurFoodChain.Gotchis {
             int hp = Stats?.Hp ?? 1;
             int maxHp = Stats?.MaxHp ?? 1;
 
-            Stats = new GotchiStatsCalculator(Context).GetStatsAsync(Gotchi).Result;
+            Stats = new GotchiStatsCalculator(database, Context).GetStatsAsync(Gotchi).Result;
 
             if (Stats != null) {
 

@@ -108,7 +108,7 @@ namespace OurFoodChain.Gotchis {
             try {
 
                 // Get the types assigned to this gotchi.
-                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi);
+                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(database, gotchi);
 
                 // Compare each type using the type pattern provided.
                 // #todo Types can also have aliases (AliasPattern). For now, we'll just try to match against the type pattern as well.

@@ -178,8 +178,8 @@
     <Reference Include="System.Globalization.Calendars, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Globalization.Calendars.4.3.0\lib\net46\System.Globalization.Calendars.dll</HintPath>
     </Reference>
-    <Reference Include="System.Interactive.Async, Version=4.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Interactive.Async.4.0.0\lib\net461\System.Interactive.Async.dll</HintPath>
+    <Reference Include="System.Interactive.Async, Version=3.2.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Interactive.Async.3.2.0\lib\net46\System.Interactive.Async.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
@@ -284,10 +284,10 @@
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\IdeaModule.cs" />
     <Compile Include="Modules\MapModule.cs" />
-    <Compile Include="Modules\PeriodCommands.cs" />
+    <Compile Include="Modules\PeriodModule.cs" />
     <Compile Include="Modules\PreyModule.cs" />
-    <Compile Include="Modules\RecentCommands.cs" />
-    <Compile Include="Modules\RelationshipCommands.cs" />
+    <Compile Include="Modules\RecentModule.cs" />
+    <Compile Include="Modules\RelationshipModule.cs" />
     <Compile Include="Modules\ReviewsModule.cs" />
     <Compile Include="Modules\RoleModule.cs" />
     <Compile Include="Modules\SpeciesModule.cs" />

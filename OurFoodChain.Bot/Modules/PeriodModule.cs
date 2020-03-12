@@ -1,6 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Extensions;
+using OurFoodChain.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,13 +14,13 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class PeriodCommands :
+    public class PeriodModule :
         OfcModuleBase {
 
         [Command("periods")]
         public async Task Periods() {
 
-            Period[] periods = await BotUtils.GetPeriodsFromDb();
+            IEnumerable<Period> periods = await Db.GetPeriodsAsync();
             StringBuilder description_builder = new StringBuilder();
 
             EmbedBuilder embed = new EmbedBuilder();
@@ -46,7 +49,7 @@ namespace OurFoodChain.Bot {
 
             // Get period from the database.
 
-            Period period = await BotUtils.GetPeriodFromDb(name);
+            Period period = await Db.GetPeriodAsync(name);
 
             if (!await BotUtils.ReplyAsync_ValidatePeriod(Context, period))
                 return;
@@ -60,31 +63,15 @@ namespace OurFoodChain.Bot {
 
             // Get all species that were born during this time period.
 
-            List<Species> born_species = new List<Species>();
+            List<ISpecies> born_species = new List<ISpecies>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp > $start_ts AND timestamp <= $end_ts;")) {
-
-                cmd.Parameters.AddWithValue("$start_ts", period.GetStartTimestamp());
-                cmd.Parameters.AddWithValue("$end_ts", period.GetEndTimestamp());
-
-                foreach (DataRow row in await Db.GetRowsAsync(cmd))
-                    born_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
-
-            }
+            born_species.AddRange(await Db.GetSpeciesAsync(DateUtilities.GetDateFromTimestamp(period.GetStartTimestamp()), DateUtilities.GetDateFromTimestamp(period.GetEndTimestamp())));
 
             // Get all species that went extinct during this time period.
 
-            List<Species> died_species = new List<Species>();
+            List<ISpecies> died_species = new List<ISpecies>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Extinctions WHERE timestamp > $start_ts AND timestamp <= $end_ts);")) {
-
-                cmd.Parameters.AddWithValue("$start_ts", period.GetStartTimestamp());
-                cmd.Parameters.AddWithValue("$end_ts", period.GetEndTimestamp());
-
-                foreach (DataRow row in await Db.GetRowsAsync(cmd))
-                    died_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
-
-            }
+            died_species.AddRange(await Db.GetExtinctSpeciesAsync(DateUtilities.GetDateFromTimestamp(period.GetStartTimestamp()), DateUtilities.GetDateFromTimestamp(period.GetEndTimestamp())));
 
             // Create the embed pages.
 
@@ -121,7 +108,7 @@ namespace OurFoodChain.Bot {
 
             // Make sure we don't already have a period with the same name.
 
-            Period p = await BotUtils.GetPeriodFromDb(name);
+            Period p = await Db.GetPeriodAsync(name);
 
             if (!(p is null)) {
 
@@ -188,7 +175,7 @@ namespace OurFoodChain.Bot {
 
             // Make sure that the given period exists.
 
-            Period period = await BotUtils.GetPeriodFromDb(name);
+            Period period = await Db.GetPeriodAsync(name);
 
             if (!await BotUtils.ReplyAsync_ValidatePeriod(Context, period))
                 return;

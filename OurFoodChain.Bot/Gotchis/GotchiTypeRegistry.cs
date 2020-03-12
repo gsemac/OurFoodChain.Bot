@@ -1,5 +1,6 @@
 ﻿using Discord;
 using MoonSharp.Interpreter;
+using OurFoodChain.Data;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -75,12 +76,12 @@ namespace OurFoodChain.Gotchis {
             return null;
 
         }
-        public async Task<GotchiType[]> GetTypesAsync(Gotchi gotchi) {
+        public async Task<GotchiType[]> GetTypesAsync(SQLiteDatabase database, Gotchi gotchi) {
 
             List<GotchiType> types = new List<GotchiType>();
 
             foreach (GotchiType type in await GetTypesAsync())
-                if (await new GotchiRequirementsChecker { Requires = type.Requires }.CheckAsync(gotchi))
+                if (await new GotchiRequirementsChecker(database) { Requires = type.Requires }.CheckAsync(gotchi))
                     types.Add(type);
 
             return types.ToArray();

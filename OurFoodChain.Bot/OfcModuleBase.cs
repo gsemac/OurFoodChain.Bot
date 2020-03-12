@@ -687,17 +687,26 @@ namespace OurFoodChain {
             return user?.ToCreator() ?? creator;
 
         }
-        public async Task<string> GetDateStringAsync(DateTimeOffset date, DateStringFormat format) {
+        public async Task<string> GetDateStringAsync(DateTimeOffset? date, DateStringFormat format = DateStringFormat.Long) {
 
-            if (Config.GenerationsEnabled) {
+            if (date.HasValue) {
 
-                IGeneration gen = await Db.GetGenerationByDateAsync(date);
+                if (Config.GenerationsEnabled) {
 
-                return gen is null ? "Gen ???" : gen.Name;
+                    IGeneration gen = await Db.GetGenerationByDateAsync(date.Value);
+
+                    return gen is null ? "Gen ???" : gen.Name;
+
+                }
+
+                return DateUtilities.GetDateString(date.Value, format);
 
             }
+            else {
 
-            return DateUtilities.GetDateString(date, format);
+                return "???";
+
+            }
 
         }
 

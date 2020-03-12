@@ -1,25 +1,6 @@
-﻿using Discord;
-using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
-using OurFoodChain.Adapters;
-using OurFoodChain.Bot.Attributes;
-using OurFoodChain.Common.Collections;
-using OurFoodChain.Common.Extensions;
-using OurFoodChain.Common.Taxa;
+﻿using Discord.Commands;
 using OurFoodChain.Common.Utilities;
-using OurFoodChain.Common.Zones;
-using OurFoodChain.Data;
-using OurFoodChain.Data.Extensions;
-using OurFoodChain.Trophies;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using OurFoodChain.Trophies.Extensions;
-using OurFoodChain.Common;
 
 namespace OurFoodChain.Bot.Modules {
 

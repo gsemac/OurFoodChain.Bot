@@ -1,12 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using OurFoodChain.Adapters;
 using OurFoodChain.Bot;
-using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Generations;
-using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
@@ -14,11 +10,7 @@ using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {

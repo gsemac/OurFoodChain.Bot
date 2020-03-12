@@ -166,16 +166,16 @@ namespace OurFoodChain.Bot.Modules {
                         //role_page.WithThumbnailUrl(zone.pics);
                         role_page.WithColor(color);
 
-                        Dictionary<string, List<Species>> roles_map = new Dictionary<string, List<Species>>();
+                        Dictionary<string, List<ISpecies>> roles_map = new Dictionary<string, List<ISpecies>>();
 
-                        foreach (Species sp in species_list) {
+                        foreach (ISpecies sp in species_list) {
 
-                            Role[] roles_list = await SpeciesUtils.GetRolesAsync(sp);
+                            IEnumerable<Common.Roles.IRole> roles_list = await Db.GetRolesAsync(sp);
 
                             if (roles_list.Count() <= 0) {
 
                                 if (!roles_map.ContainsKey("no role"))
-                                    roles_map["no role"] = new List<Species>();
+                                    roles_map["no role"] = new List<ISpecies>();
 
                                 roles_map["no role"].Add(sp);
 
@@ -183,12 +183,12 @@ namespace OurFoodChain.Bot.Modules {
 
                             }
 
-                            foreach (Role role in roles_list) {
+                            foreach (Common.Roles.IRole role in roles_list) {
 
-                                if (!roles_map.ContainsKey(role.name))
-                                    roles_map[role.name] = new List<Species>();
+                                if (!roles_map.ContainsKey(role.GetName()))
+                                    roles_map[role.GetName()] = new List<ISpecies>();
 
-                                roles_map[role.name].Add(sp);
+                                roles_map[role.GetName()].Add(sp);
 
                             }
 
@@ -196,8 +196,8 @@ namespace OurFoodChain.Bot.Modules {
 
                         // Sort the list of species belonging to each role.
 
-                        foreach (List<Species> i in roles_map.Values)
-                            i.Sort((lhs, rhs) => lhs.ShortName.CompareTo(rhs.ShortName));
+                        foreach (List<ISpecies> i in roles_map.Values)
+                            i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 
                         // Create a sorted list of keys so that the roles are in order.
 
@@ -209,7 +209,7 @@ namespace OurFoodChain.Bot.Modules {
                             StringBuilder lines = new StringBuilder();
 
                             foreach (Species j in roles_map[i])
-                                lines.AppendLine(j.ShortName);
+                                lines.AppendLine(j.GetShortName());
 
                             role_page.AddField(string.Format("{0}s ({1})", StringUtilities.ToTitleCase(i), roles_map[i].Count()), lines.ToString(), inline: true);
 

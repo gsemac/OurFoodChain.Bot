@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using OurFoodChain.Trophies.Extensions;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Extensions;
 
 namespace OurFoodChain.Modules {
 
@@ -41,7 +42,7 @@ namespace OurFoodChain.Modules {
             // Get basic information about the user.
             // This will return null if the user hasn't been seen before.
 
-            ICreator userInfo = await Db.GetCreatorAsync(user.Username, user.Id, UserInfoQueryFlags.MatchEither);
+            ICreator userInfo = await Db.GetCreatorAsync(user.ToCreator(), UserInfoQueryFlags.MatchEither);
 
             if (userInfo is null) {
 
@@ -51,14 +52,14 @@ namespace OurFoodChain.Modules {
             else {
 
                 long daysSinceFirstSubmission = (DateUtilities.GetCurrentTimestampUtc() - userInfo.FirstSubmissionTimestamp) / 60 / 60 / 24;
-                UserRank userRank = await UserUtils.GetRankAsync(userInfo, UserInfoQueryFlags.MatchEither);
+                UserRank userRank = await Db.GetRankAsync(userInfo, UserInfoQueryFlags.MatchEither);
 
                 // Get the user's most active genus.
 
-                Species[] userSpecies = await UserUtils.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchEither);
+                IEnumerable<ISpecies> userSpecies = await Db.GetSpeciesAsync(userInfo, UserInfoQueryFlags.MatchEither);
 
                 IGrouping<string, string> favoriteGenusGrouping = userSpecies
-                    .Select(x => x.GenusName)
+                    .Select(x => x.Genus.GetName())
                     .GroupBy(x => x)
                     .OrderByDescending(x => x.Count())
                     .FirstOrDefault();
@@ -67,7 +68,7 @@ namespace OurFoodChain.Modules {
                 int favoriteGenusCount = favoriteGenusGrouping is null ? 0 : favoriteGenusGrouping.Count();
 
                 int userSpeciesCount = userSpecies.Count();
-                int speciesCount = await SpeciesUtils.GetSpeciesCount();
+                int speciesCount = (int)await Db.GetSpeciesCountAsync();
 
                 // Get the user's rarest trophy.
 
@@ -96,7 +97,7 @@ namespace OurFoodChain.Modules {
 
                     embed.WithDescription(string.Format("{0} made their first species during **{1}**.\nSince then, they have submitted **{2:0.0}** species per generation.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSpeciesDate, new OfcBotContext(Context, Config, Db)),
+                        await GetDateStringAsync(userInfo.FirstSpeciesDate),
                         speciesPerGeneration,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -105,7 +106,7 @@ namespace OurFoodChain.Modules {
 
                     embed.WithDescription(string.Format("{0} made their first species on **{1}**.\nSince then, they have submitted **{2:0.0}** species per day.\n\nTheir submissions make up **{3:0.0}%** of all species.",
                         user.Username,
-                        await BotUtils.TimestampToDateStringAsync(userInfo.FirstSpeciesDate, new OfcBotContext(Context, Config, Db)),
+                        await GetDateStringAsync(userInfo.FirstSpeciesDate),
                         daysSinceFirstSubmission == 0 ? userSpeciesCount : (double)userSpeciesCount / daysSinceFirstSubmission,
                         (double)userSpeciesCount / speciesCount * 100.0));
 
@@ -133,7 +134,7 @@ namespace OurFoodChain.Modules {
         [Command("leaderboard")]
         public async Task Leaderboard() {
 
-            UserRank[] userRanks = await UserUtils.GetRanksAsync();
+            IEnumerable<UserRank> userRanks = await Db.GetRanksAsync();
 
             List<string> lines = new List<string>();
 
@@ -174,9 +175,9 @@ namespace OurFoodChain.Modules {
 
             // Get the requested species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies sp = await GetSpeciesOrReplyAsync(genus, species);
 
-            if (sp is null)
+            if (!sp.IsValid())
                 return;
 
             // Add this species to the user's favorites list.
@@ -186,11 +187,11 @@ namespace OurFoodChain.Modules {
                 cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
                 cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added **{0}** to **{1}**'s favorites list.", sp.ShortName, Context.User.Username));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added **{0}** to **{1}**'s favorites list.", sp.GetShortName(), Context.User.Username));
 
         }
         [Command("-fav")]
@@ -204,9 +205,9 @@ namespace OurFoodChain.Modules {
 
             // Get the requested species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies sp = await GetSpeciesOrReplyAsync(genus, species);
 
-            if (sp is null)
+            if (!sp.IsValid())
                 return;
 
             // Remove this species from the user's favorites list.
@@ -216,11 +217,11 @@ namespace OurFoodChain.Modules {
                 cmd.Parameters.AddWithValue("$user_id", Context.User.Id);
                 cmd.Parameters.AddWithValue("$species_id", sp.Id);
 
-                await Database.ExecuteNonQuery(cmd);
+                await Db.ExecuteNonQueryAsync(cmd);
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed **{0}** from **{1}**'s favorites list.", sp.ShortName, Context.User.Username));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully removed **{0}** from **{1}**'s favorites list.", sp.GetShortName(), Context.User.Username));
 
         }
         [Command("favs"), Alias("fav", "favorites", "favourites")]
@@ -249,7 +250,7 @@ namespace OurFoodChain.Modules {
 
                     }
 
-                    lines.Add(sp.ShortName + (fav_count > 1 ? string.Format(" (+{0})", fav_count) : ""));
+                    lines.Add(sp.GetShortName() + (fav_count > 1 ? string.Format(" (+{0})", fav_count) : ""));
 
                 }
 

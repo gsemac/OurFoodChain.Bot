@@ -1,5 +1,6 @@
 ﻿using Discord;
 using MoonSharp.Interpreter;
+using OurFoodChain.Data;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -59,7 +60,7 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public async Task<GotchiMove[]> GetLearnSetAsync(Gotchi gotchi) {
+        public async Task<IEnumerable<GotchiMove>> GetLearnSetAsync(SQLiteDatabase database, Gotchi gotchi) {
 
             List<GotchiMove> moves = new List<GotchiMove>();
 
@@ -71,15 +72,15 @@ namespace OurFoodChain.Gotchis {
             //    moves.Add(universalMove);
 
             foreach (GotchiMove move in Registry.Values)
-                if (await new GotchiRequirementsChecker { Requires = move.Requires }.CheckAsync(gotchi))
+                if (await new GotchiRequirementsChecker(database) { Requires = move.Requires }.CheckAsync(gotchi))
                     moves.Add(move.Clone());
 
-            return moves.ToArray();
+            return moves;
 
         }
-        public async Task<GotchiMoveSet> GetMoveSetAsync(Gotchi gotchi) {
+        public async Task<GotchiMoveSet> GetMoveSetAsync(SQLiteDatabase database, Gotchi gotchi) {
 
-            GotchiMove[] learnSet = await GetLearnSetAsync(gotchi);
+            IEnumerable<GotchiMove> learnSet = await GetLearnSetAsync(database, gotchi);
 
             GotchiMoveSet set = new GotchiMoveSet();
 

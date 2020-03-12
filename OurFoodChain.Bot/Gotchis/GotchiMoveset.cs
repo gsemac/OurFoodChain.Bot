@@ -1,4 +1,5 @@
 ﻿using MoonSharp.Interpreter;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -84,7 +85,7 @@ namespace OurFoodChain.Gotchis {
                     options.Add(move);
 
             if (options.Count() > 0)
-                return options[BotUtils.RandomInteger(options.Count())];
+                return options[NumberUtilities.GetRandomInteger(options.Count())];
             else
                 return null;
 

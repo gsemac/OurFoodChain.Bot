@@ -93,7 +93,7 @@ namespace OurFoodChain {
             Match m = Regex.Match(messageContent.Trim(), @"^[^\s]+\s+[^\s]+", RegexOptions.Multiline);
 
             if (m.Success && !string.IsNullOrWhiteSpace(m.Value))
-                return SpeciesUtils.FormatSpeciesName(m.Value, BinomialNameFormat.Abbreviated);
+                return BinomialName.Parse(m.Value).ToString(BinomialNameFormat.Abbreviated);
 
             return string.Empty;
 

@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class RecentCommands :
+    public class RecentModule :
         OfcModuleBase {
 
         [Command("recent")]
@@ -41,7 +43,7 @@ namespace OurFoodChain.Bot {
 
             // Get all species created within the given timespan.
 
-            List<Species> new_species = new List<Species>();
+            List<ISpecies> new_species = new List<ISpecies>();
             TimeAmount time_amount = new TimeAmount(endTimestamp - startTimestamp, TimeUnits.Seconds);
 
             if (timeUnit != 0)
@@ -49,21 +51,13 @@ namespace OurFoodChain.Bot {
             else
                 time_amount = time_amount.Reduce();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE timestamp >= $start_ts AND timestamp < $end_ts")) {
-
-                cmd.Parameters.AddWithValue("$start_ts", startTimestamp);
-                cmd.Parameters.AddWithValue("$end_ts", endTimestamp);
-
-                foreach (DataRow row in await Db.GetRowsAsync(cmd))
-                    new_species.Add(await SpeciesUtils.SpeciesFromDataRow(row));
-
-            }
+            new_species.AddRange(await Db.GetSpeciesAsync(DateUtilities.GetDateFromTimestamp(startTimestamp), DateUtilities.GetDateFromTimestamp(endTimestamp)));
 
             new_species.Sort();
 
             // Get all extinctions that occurred recently.
 
-            List<Species> extinct_species = new List<Species>();
+            List<ISpecies> extinct_species = new List<ISpecies>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE timestamp >= $start_ts AND timestamp < $end_ts")) {
 
@@ -71,7 +65,7 @@ namespace OurFoodChain.Bot {
                 cmd.Parameters.AddWithValue("$end_ts", endTimestamp);
 
                 foreach (DataRow row in await Db.GetRowsAsync(cmd))
-                    extinct_species.Add(await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id")));
+                    extinct_species.Add(await Db.GetSpeciesAsync(row.Field<long>("species_id")));
 
             }
 
@@ -85,8 +79,8 @@ namespace OurFoodChain.Bot {
 
             if (new_species.Count() > 0) {
 
-                foreach (Species sp in new_species)
-                    field_lines.Add(sp.FullName);
+                foreach (ISpecies sp in new_species)
+                    field_lines.Add(sp.GetFullName());
 
                 EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
 
@@ -96,8 +90,8 @@ namespace OurFoodChain.Bot {
 
             if (extinct_species.Count() > 0) {
 
-                foreach (Species sp in extinct_species)
-                    field_lines.Add(sp.FullName);
+                foreach (ISpecies sp in extinct_species)
+                    field_lines.Add(sp.GetFullName());
 
                 EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
 

@@ -27,7 +27,7 @@ namespace OurFoodChain.Gotchis {
         public static readonly long HoursPerDay = 24;
 
         public long Id { get; set; } = NullGotchiId;
-        public long SpeciesId { get; set; } = Species.NullId;
+        public long? SpeciesId { get; set; } 
         public string Name {
             get {
                 return StringUtilities.ToTitleCase(_name, TitleOptions.CapitalizeRomanNumerals);

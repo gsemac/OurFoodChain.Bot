@@ -1,4 +1,5 @@
 ﻿using MoonSharp.Interpreter;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,7 +77,7 @@ namespace OurFoodChain.Gotchis {
 
             // Randomize the damage between 0.85x and 100x
 
-            damage *= BotUtils.RandomInteger(85, 100) / 100.0;
+            damage *= NumberUtilities.GetRandomInteger(85, 100) / 100.0;
 
             // Apply STAB
 

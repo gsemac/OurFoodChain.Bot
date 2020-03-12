@@ -1,4 +1,5 @@
 ﻿using MoonSharp.Interpreter;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -111,8 +112,8 @@ namespace OurFoodChain.Gotchis {
             }
 
             script.Globals["Console"] = (Action<string>)((string x) => Console.WriteLine(x));
-            script.Globals["Rand"] = (Func<int, int, int>)((int min, int max) => BotUtils.RandomInteger(min, max));
-            script.Globals["Chance"] = (Func<int, bool>)((int chance) => BotUtils.RandomInteger(0, chance) == 0);
+            script.Globals["Rand"] = (Func<int, int, int>)((int min, int max) => NumberUtilities.GetRandomInteger(min, max));
+            script.Globals["Chance"] = (Func<int, bool>)((int chance) => NumberUtilities.GetRandomInteger(0, chance) == 0);
             script.Globals["Min"] = (Func<int, int, int>)((int a, int b) => Math.Min(a, b));
             script.Globals["Max"] = (Func<int, int, int>)((int a, int b) => Math.Max(a, b));
             script.Globals["Swap"] = (Action<object, object>)((object a, object b) => Utils.Swap(ref a, ref b));

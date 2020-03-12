@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Collections;
@@ -17,7 +16,6 @@ using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;

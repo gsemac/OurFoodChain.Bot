@@ -1,7 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
 
-    public class RelationshipCommands :
+    public class RelationshipModule :
         OfcModuleBase {
 
         [Command("relationships"), Alias("relations")]
@@ -58,9 +61,9 @@ namespace OurFoodChain.Bot {
 
             // Get the species from the DB.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies sp = await GetSpeciesOrReplyAsync(genus, species);
 
-            if (sp is null)
+            if (!sp.IsValid())
                 return;
 
             // Get relationships and build the embed.
@@ -76,7 +79,7 @@ namespace OurFoodChain.Bot {
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
                     long other_species_id = row.Field<long>("species2_id");
-                    Species other_species = await BotUtils.GetSpeciesFromDb(other_species_id);
+                    ISpecies other_species = await Db.GetSpeciesAsync(other_species_id);
                     Relationship relationship = Relationship.FromDataRow(row);
 
                     if (other_species is null)
@@ -85,7 +88,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey(relationship.BeneficiaryName(plural: true)))
                         items[relationship.BeneficiaryName(plural: true)] = new List<string>();
 
-                    items[relationship.BeneficiaryName(plural: true)].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
+                    items[relationship.BeneficiaryName(plural: true)].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
 
                 }
 
@@ -100,7 +103,7 @@ namespace OurFoodChain.Bot {
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
                     long other_species_id = row.Field<long>("species1_id");
-                    Species other_species = await BotUtils.GetSpeciesFromDb(other_species_id);
+                    ISpecies other_species = await Db.GetSpeciesAsync(other_species_id);
                     Relationship relationship = Relationship.FromDataRow(row);
 
                     if (other_species is null)
@@ -109,7 +112,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey(relationship.BenefactorName(plural: true)))
                         items[relationship.BenefactorName(plural: true)] = new List<string>();
 
-                    items[relationship.BenefactorName(plural: true)].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
+                    items[relationship.BenefactorName(plural: true)].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
 
                 }
 
@@ -124,7 +127,7 @@ namespace OurFoodChain.Bot {
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
                     long other_species_id = row.Field<long>("eats_id");
-                    Species other_species = await BotUtils.GetSpeciesFromDb(other_species_id);
+                    ISpecies other_species = await Db.GetSpeciesAsync(other_species_id);
 
                     if (other_species is null)
                         continue;
@@ -132,7 +135,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey("prey"))
                         items["prey"] = new List<string>();
 
-                    items["prey"].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
+                    items["prey"].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
 
                 }
 
@@ -145,7 +148,7 @@ namespace OurFoodChain.Bot {
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
                     long other_species_id = row.Field<long>("species_id");
-                    Species other_species = await BotUtils.GetSpeciesFromDb(other_species_id);
+                    ISpecies other_species = await Db.GetSpeciesAsync(other_species_id);
 
                     if (other_species is null)
                         continue;
@@ -153,7 +156,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey("predators"))
                         items["predators"] = new List<string>();
 
-                    items["predators"].Add(other_species.IsExtinct ? string.Format("~~{0}~~", other_species.ShortName) : other_species.ShortName);
+                    items["predators"].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
 
                 }
 
@@ -163,7 +166,7 @@ namespace OurFoodChain.Bot {
 
             if (items.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not have any relationships with other species.", sp.ShortName));
+                await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not have any relationships with other species.", sp.GetShortName()));
 
                 return;
 
@@ -184,7 +187,7 @@ namespace OurFoodChain.Bot {
 
             }
 
-            embed.WithTitle(string.Format("Relationships involving {0} ({1})", sp.ShortName, relationship_count));
+            embed.WithTitle(string.Format("Relationships involving {0} ({1})", sp.GetShortName(), relationship_count));
 
             await ReplyAsync("", false, embed.Build());
 
@@ -242,14 +245,14 @@ namespace OurFoodChain.Bot {
 
             // Get the species from the DB.
 
-            Species sp1 = await BotUtils.ReplyFindSpeciesAsync(Context, genus1, species1);
+            ISpecies sp1 = await GetSpeciesOrReplyAsync(genus1, species1);
 
-            if (sp1 is null)
+            if (!sp1.IsValid())
                 return;
 
-            Species sp2 = await BotUtils.ReplyFindSpeciesAsync(Context, genus2, species2);
+            ISpecies sp2 = await GetSpeciesOrReplyAsync(genus2, species2);
 
-            if (sp2 is null)
+            if (!sp2.IsValid())
                 return;
 
             if (sp1.Id == sp2.Id) {
@@ -273,9 +276,9 @@ namespace OurFoodChain.Bot {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** has successfully been set as a {1} of **{2}**.",
-                sp2.ShortName,
+                sp2.GetShortName(),
                 relation.BeneficiaryName(),
-                sp1.ShortName));
+                sp1.GetShortName()));
 
         }
         [Command("-relationship"), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -297,14 +300,14 @@ namespace OurFoodChain.Bot {
 
             // Get the species from the DB.
 
-            Species sp1 = await BotUtils.ReplyFindSpeciesAsync(Context, genus1, species1);
+            ISpecies sp1 = await GetSpeciesOrReplyAsync(genus1, species1);
 
-            if (sp1 is null)
+            if (!sp1.IsValid())
                 return;
 
-            Species sp2 = await BotUtils.ReplyFindSpeciesAsync(Context, genus2, species2);
+            ISpecies sp2 = await GetSpeciesOrReplyAsync(genus2, species2);
 
-            if (sp2 is null)
+            if (!sp2.IsValid())
                 return;
 
             // Check if the requested relationship exists.
@@ -317,7 +320,7 @@ namespace OurFoodChain.Bot {
 
                 if (await Db.GetScalarAsync<long>(cmd) <= 0) {
 
-                    await BotUtils.ReplyAsync_Error(Context, string.Format("No such relationship exists between **{0}** and **{1}**.", sp1.ShortName, sp2.ShortName));
+                    await BotUtils.ReplyAsync_Error(Context, string.Format("No such relationship exists between **{0}** and **{1}**.", sp1.GetShortName(), sp2.GetShortName()));
 
                     return;
 
@@ -337,7 +340,7 @@ namespace OurFoodChain.Bot {
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** and **{1}** no longer have a {2} relationship.", sp1.ShortName, sp2.ShortName, relation.DescriptorName()));
+            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** and **{1}** no longer have a {2} relationship.", sp1.GetShortName(), sp2.GetShortName(), relation.DescriptorName()));
 
         }
 

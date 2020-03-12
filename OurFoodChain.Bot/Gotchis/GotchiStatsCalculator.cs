@@ -1,4 +1,7 @@
-﻿using System;
+﻿using OurFoodChain.Common.Taxa;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -15,9 +18,10 @@ namespace OurFoodChain.Gotchis {
 
         public GotchiContext Context { get; private set; }
 
-        public GotchiStatsCalculator(GotchiContext gotchiContext) {
+        public GotchiStatsCalculator(SQLiteDatabase database, GotchiContext gotchiContext) {
 
             Context = gotchiContext;
+            this.database = database;
 
         }
 
@@ -27,7 +31,7 @@ namespace OurFoodChain.Gotchis {
 
             int denominator = 0;
 
-            GotchiType[] gotchiTypes = await Context.TypeRegistry.GetTypesAsync(gotchi);
+            GotchiType[] gotchiTypes = await Context.TypeRegistry.GetTypesAsync(database, gotchi);
 
             if (gotchiTypes.Count() > 0) {
 
@@ -42,7 +46,7 @@ namespace OurFoodChain.Gotchis {
 
             }
 
-            long[] ancestor_ids = await SpeciesUtils.GetAncestorIdsAsync(gotchi.SpeciesId);
+            long[] ancestor_ids = (await database.GetAncestorIdsAsync(gotchi.SpeciesId)).ToArray();
 
             // Factor in the base stats of this species' ancestor (which will, in turn, factor in all other ancestors).
 
@@ -116,6 +120,10 @@ namespace OurFoodChain.Gotchis {
 
         }
 
+        // Private members
+
+        private readonly SQLiteDatabase database;
+
         private static int _calculateHp(int baseStat, int iv, int ev, int level) {
 
             return (int)((Math.Floor(((2.0 * baseStat) + iv + (ev / 4.0)) * level) / 100.0) + level + 10.0);
@@ -127,9 +135,9 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        private static async Task _calculateDescriptionBasedBaseStats(Gotchi gotchi, GotchiStats stats) {
+        private async Task _calculateDescriptionBasedBaseStats(Gotchi gotchi, GotchiStats stats) {
 
-            Species species = await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId);
+            ISpecies species = await database.GetSpeciesAsync(gotchi.SpeciesId);
 
             int weight = 20;
 

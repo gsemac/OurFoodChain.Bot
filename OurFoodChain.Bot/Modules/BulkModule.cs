@@ -1,18 +1,13 @@
 ﻿using Discord.Commands;
-using OurFoodChain.Adapters;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Zones;
-using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
 using OurFoodChain.Discord.Messaging;
-using OurFoodChain.Discord.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot.Modules {

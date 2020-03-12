@@ -3,7 +3,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 using MoonSharp.Interpreter;
 using OurFoodChain.Bot;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
@@ -265,9 +267,9 @@ namespace OurFoodChain.Gotchis {
                 player1 = new PlayerState {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi1,
-                        Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi1),
-                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi1),
-                        Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi1)
+                        Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(database, gotchi1),
+                        Stats = await new GotchiStatsCalculator(database, Global.GotchiContext).GetStatsAsync(gotchi1),
+                        Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(database, gotchi1)
                     }
                 }
 
@@ -280,9 +282,9 @@ namespace OurFoodChain.Gotchis {
                 state.player2 = new PlayerState {
                     Gotchi = new BattleGotchi {
                         Gotchi = gotchi2,
-                        Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(gotchi2),
-                        Stats = await new GotchiStatsCalculator(Global.GotchiContext).GetStatsAsync(gotchi2),
-                        Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(gotchi2)
+                        Moves = await Global.GotchiContext.MoveRegistry.GetMoveSetAsync(database, gotchi2),
+                        Stats = await new GotchiStatsCalculator(database, Global.GotchiContext).GetStatsAsync(gotchi2),
+                        Types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(database, gotchi2)
                     }
                 };
 
@@ -432,11 +434,11 @@ namespace OurFoodChain.Gotchis {
 
                     // Check if this was a critical hit, or if the move missed.
 
-                    bool is_hit = user.SelectedMove.IgnoreAccuracy || (BotUtils.RandomInteger(0, 20 + 1) < 20 * user.SelectedMove.Accuracy * Math.Max(0.1, user.Gotchi.Stats.Acc - target.Gotchi.Stats.Eva));
+                    bool is_hit = user.SelectedMove.IgnoreAccuracy || (NumberUtilities.GetRandomInteger(0, 20 + 1) < 20 * user.SelectedMove.Accuracy * Math.Max(0.1, user.Gotchi.Stats.Acc - target.Gotchi.Stats.Eva));
                     args.IsCritical =
                         !user.SelectedMove.IgnoreCritical &&
-                        (BotUtils.RandomInteger(0, (int)(10 / user.SelectedMove.CriticalRate)) == 0 ||
-                        (await SpeciesUtils.GetPreyAsync(user.Gotchi.Gotchi.SpeciesId)).Any(x => x.Prey.Id == target.Gotchi.Gotchi.Id));
+                        (NumberUtilities.GetRandomInteger(0, (int)(10 / user.SelectedMove.CriticalRate)) == 0 ||
+                        (await database.GetPreyAsync(user.Gotchi.Gotchi.SpeciesId)).Any(x => x.Species.Id == target.Gotchi.Gotchi.Id));
 
                     if (is_hit) {
 
@@ -768,7 +770,7 @@ namespace OurFoodChain.Gotchis {
 
                 player2.Gotchi = await database.GenerateGotchiAsync(new GotchiGenerationParameters {
                     Base = player1.Gotchi.Gotchi,
-                    Species = species_list[BotUtils.RandomInteger(species_list.Count())],
+                    Species = species_list[NumberUtilities.GetRandomInteger(species_list.Count())],
                     MinLevel = player1.Gotchi.Stats.Level - 3,
                     MaxLevel = player1.Gotchi.Stats.Level + 3,
                     GenerateMoveset = true,
@@ -822,7 +824,7 @@ namespace OurFoodChain.Gotchis {
 
                 double winner_exp = winner.Gotchi.Gotchi.Id == player1.Gotchi.Gotchi.Id ? exp1 : exp2;
                 long winner_levels = winner.Gotchi.Gotchi.Id == player1.Gotchi.Gotchi.Id ? levels1 : levels2;
-                long winner_g = (long)Math.Round(loser.Gotchi.Stats.Level * (BotUtils.RandomInteger(150, 200) / 100.0));
+                long winner_g = (long)Math.Round(loser.Gotchi.Stats.Level * (NumberUtilities.GetRandomInteger(150, 200) / 100.0));
 
                 sb.AppendLine(string.Format("🏆 **{0}** won the battle! Earned **{1} EXP** and **{2}G**.",
                     winner.Gotchi.Gotchi.Name,
@@ -835,9 +837,9 @@ namespace OurFoodChain.Gotchis {
                 if (((winner.Gotchi.Stats.Level - winner_levels) / 10) < (winner.Gotchi.Stats.Level / 10))
                     if (await database.EvolveAndUpdateGotchiAsync(winner.Gotchi.Gotchi)) {
 
-                        Species sp = await BotUtils.GetSpeciesFromDb(winner.Gotchi.Gotchi.SpeciesId);
+                        ISpecies sp = await database.GetSpeciesAsync(winner.Gotchi.Gotchi.SpeciesId);
 
-                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", winner.Gotchi.Gotchi.Name, sp.ShortName));
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", winner.Gotchi.Gotchi.Name, sp.GetShortName()));
 
                     }
 
@@ -866,9 +868,9 @@ namespace OurFoodChain.Gotchis {
                 if (((loser.Gotchi.Stats.Level - loser_levels) / 10) < (loser.Gotchi.Stats.Level / 10))
                     if (await database.EvolveAndUpdateGotchiAsync(loser.Gotchi.Gotchi)) {
 
-                        Species sp = await BotUtils.GetSpeciesFromDb(loser.Gotchi.Gotchi.SpeciesId);
+                        ISpecies sp = await database.GetSpeciesAsync(loser.Gotchi.Gotchi.SpeciesId);
 
-                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", loser.Gotchi.Gotchi.Name, sp.ShortName));
+                        sb.AppendLine(string.Format("🚩 Congratulations, **{0}** evolved into **{1}**!", loser.Gotchi.Gotchi.Name, sp.GetShortName()));
 
                     }
 
@@ -936,7 +938,7 @@ namespace OurFoodChain.Gotchis {
             }
             else {
 
-                if (BotUtils.RandomInteger(0, 2) == 0) {
+                if (NumberUtilities.GetRandomInteger(0, 2) == 0) {
                     first = player1;
                     second = player2;
                 }

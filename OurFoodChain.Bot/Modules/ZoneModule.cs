@@ -6,6 +6,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Utilities;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -87,13 +88,13 @@ namespace OurFoodChain.Bot.Modules {
         [Command("zone"), Alias("z", "zones")]
         public async Task Zone(string arg0 = "") {
 
-            IZoneType zone_type = await Db.GetZoneTypeAsync(arg0);
+            IZoneType zoneType = await Db.GetZoneTypeAsync(arg0);
 
-            if (string.IsNullOrEmpty(arg0) || zone_type.IsValid()) {
+            if (string.IsNullOrEmpty(arg0) || zoneType.IsValid()) {
 
                 // Display all zones, or, if the user passed in a valid zone type, all zones of that type.
 
-                IEnumerable<IZone> zones = await Db.GetZonesAsync(zone_type);
+                IEnumerable<IZone> zones = await Db.GetZonesAsync(zoneType);
 
                 if (zones.Count() > 0) {
 
@@ -106,18 +107,24 @@ namespace OurFoodChain.Bot.Modules {
 
                     // Build paginated message.
 
-                    IEnumerable<Discord.Messaging.IEmbed> pages = await BotUtils.ZonesToEmbedPagesAsync(embedTitle.Length + embedDescription.Length, zones, Db);
+                    IEnumerable<IEmbed> pages = await BotUtils.ZonesToEmbedPagesAsync(embedTitle.Length + embedDescription.Length, zones, Db);
 
-                    if (zone_type.IsValid())
-                        foreach (Discord.Messaging.IEmbed page in pages)
-                            page.Color = zone_type.Color;
+                    IPaginatedMessage message = new PaginatedMessage();
 
-                    await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+                    message.AddPages(pages);
+
+                    message.SetTitle(embedTitle);
+                    message.SetDescription(embedDescription);
+
+                    if (zoneType.IsValid())
+                        message.SetColor(zoneType.Color);
+
+                    await ReplyAsync(message);
 
                 }
                 else {
 
-                    await BotUtils.ReplyAsync_Info(Context, "No zones have been added yet.");
+                    await ReplyInfoAsync("No zones have been added yet.");
 
                 }
 
@@ -125,6 +132,8 @@ namespace OurFoodChain.Bot.Modules {
 
             }
             else {
+
+                // Assume that the user passed in a zone name.
 
                 IZone zone = await Db.GetZoneAsync(arg0);
 

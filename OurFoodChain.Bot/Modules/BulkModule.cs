@@ -5,6 +5,7 @@ using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Data.Queries;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using System;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace OurFoodChain.Bot.Modules {
                             // Move the species into the given zone.
 
                             if (bulkOperation.Arguments.Count() != 1)
-                                throw new Exception(string.Format("This operation requires {0} argument(s), but was given {1}.", 1, bulkOperation.Arguments.Count()));
+                                throw new Exception(string.Format("This operation requires **{0}** argument(s), but was given **{1}**.", 1, bulkOperation.Arguments.Count()));
 
                             string zoneName = bulkOperation.Arguments.First();
                             IZone zone = await Db.GetZoneAsync(zoneName);
@@ -52,11 +53,8 @@ namespace OurFoodChain.Bot.Modules {
 
                                 message.AddReaction(PaginatedMessageReactionType.Yes, async (args) => {
 
-                                    await ReplyInfoAsync("Performing the requested operation.");
-
                                     foreach (ISpecies species in await queryResult.GetResultsAsync()) {
 
-                                        //await SpeciesUtils.RemoveZonesAsync(species, (await SpeciesUtils.GetZonesAsync(species)).Select(z => z.Zone));
                                         await Db.AddZonesAsync(species, new IZone[] { zone });
 
                                     }
@@ -74,7 +72,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     default:
 
-                        await ReplyErrorAsync(string.Format("Unknown operation \"{0}\".", bulkOperation.OperationName));
+                        await ReplyErrorAsync($"Unknown operation {bulkOperation.OperationName.ToBold()}.");
 
                         break;
 

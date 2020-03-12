@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot", "OurFoodChain.Bot\OurFoodChain.Bot.csproj", "{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Wiki", "OurFoodChain.Wiki\OurFoodChain.Wiki.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.WikiBot", "OurFoodChain.WikiBot\OurFoodChain.WikiBot.csproj", "{FBFC575F-C02A-485E-AB50-487805FDBC54}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Bot.Tests", "OurFoodChain.Bot.Tests\OurFoodChain.Bot.Tests.csproj", "{9D3DEB5F-8587-47A9-B8B6-A8BA7C04CFAE}"
 EndProject
@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Debug", "OurFo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Trophies", "OurFoodChain.Trophies\OurFoodChain.Trophies.csproj", "{BD426B2E-C9E4-4E76-9F04-AE0666052131}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurFoodChain.Gotchis", "OurFoodChain.Gotchis\OurFoodChain.Gotchis.csproj", "{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OurFoodChain.Gotchis", "OurFoodChain.Gotchis\OurFoodChain.Gotchis.csproj", "{1456FC2C-3AE3-42FF-A0CF-BC3558327E09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -833,9 +833,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        // Private members
-
-        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        public static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             long genusId = row.Field<long>("genus_id");
 
@@ -861,6 +859,9 @@ namespace OurFoodChain.Data.Extensions {
             return await database.CreateSpeciesFromDataRowAsync(row, genus);
 
         }
+
+        // Private members
+
         private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             ISpecies species = new Species {

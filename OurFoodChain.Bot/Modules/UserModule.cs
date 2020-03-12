@@ -237,7 +237,7 @@ namespace OurFoodChain.Modules {
 
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                    Species sp = await SpeciesUtils.SpeciesFromDataRow(row);
+                    ISpecies sp = await Db.CreateSpeciesFromDataRowAsync(row);
                     long fav_count = 0;
 
                     // Get the number of times this species has been favorited.

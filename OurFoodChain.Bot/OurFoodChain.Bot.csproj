@@ -359,9 +359,7 @@
     <Compile Include="reviews\ReviewInfo.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
     <Compile Include="PaginatedMessageBuilder.cs" />
-    <Compile Include="Adapters\SpeciesAdapter.cs" />
     <Compile Include="users\UserInfo.cs" />
-    <Compile Include="Adapters\TaxonAdapter.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
     <Compile Include="Utilities\Utils.cs" />
   </ItemGroup>

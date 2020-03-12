@@ -1,7 +1,9 @@
-﻿using System;
+﻿using OurFoodChain.Common.Roles;
+using OurFoodChain.Common.Taxa;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -9,7 +11,15 @@ namespace OurFoodChain.Gotchis {
 
     public class GotchiRequirementsChecker {
 
+        // Public members
+
         public GotchiRequirements Requires { get; set; } = new GotchiRequirements();
+
+        public GotchiRequirementsChecker(SQLiteDatabase database) {
+
+            this.database = database;
+
+        }
 
         public async Task<bool> CheckAsync(Gotchi gotchi) {
 
@@ -44,7 +54,7 @@ namespace OurFoodChain.Gotchis {
             if (!string.IsNullOrEmpty(requirements.TypePattern) && !await _checkTypesAsync(gotchi, requirements))
                 return false;
 
-            Species species = await SpeciesUtils.GetSpeciesAsync(gotchi.SpeciesId);
+            ISpecies species = await database.GetSpeciesAsync(gotchi.SpeciesId);
 
             if (!string.IsNullOrEmpty(requirements.DescriptionPattern) && !_checkDescription(species, requirements))
                 return false;
@@ -53,11 +63,15 @@ namespace OurFoodChain.Gotchis {
 
         }
 
+        // Private members
+
+        private readonly SQLiteDatabase database;
+
         private async Task<bool> _checkRolesAsync(Gotchi gotchi, GotchiRequirements requirements) {
 
             try {
 
-                Role[] roles = await SpeciesUtils.GetRolesAsync(gotchi.SpeciesId);
+                IEnumerable<IRole> roles = await database.GetRolesAsync(gotchi.SpeciesId);
 
                 foreach (Role role in roles)
                     if (Regex.IsMatch(role.Name, requirements.RolePattern, RegexOptions.IgnoreCase))
@@ -69,7 +83,7 @@ namespace OurFoodChain.Gotchis {
             return false;
 
         }
-        private bool _checkDescription(Species species, GotchiRequirements requirements) {
+        private bool _checkDescription(ISpecies species, GotchiRequirements requirements) {
 
             try {
 

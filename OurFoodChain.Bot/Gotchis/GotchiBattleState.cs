@@ -10,6 +10,7 @@ using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Extensions;
+using OurFoodChain.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -49,11 +50,12 @@ namespace OurFoodChain.Gotchis {
         public int turnCount = 0;
         public string battleText = "";
 
-        public GotchiBattleState(IOfcBotConfiguration botConfiguration, DiscordSocketClient discordClient, SQLiteDatabase database) {
+        public GotchiBattleState(IOfcBotConfiguration botConfiguration, DiscordSocketClient discordClient, SQLiteDatabase database, GotchiService gotchiService) {
 
             _botConfiguration = botConfiguration;
             _discordClient = discordClient;
             this.database = database;
+            this.gotchiService = gotchiService;
 
         }
 
@@ -256,11 +258,11 @@ namespace OurFoodChain.Gotchis {
 
         }
 
-        public static async Task RegisterBattleAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient discordClient, SQLiteDatabase database, Gotchi gotchi1, Gotchi gotchi2) {
+        public static async Task RegisterBattleAsync(ICommandContext context, IOfcBotConfiguration botConfiguration, DiscordSocketClient discordClient, SQLiteDatabase database, GotchiService gotchiService, Gotchi gotchi1, Gotchi gotchi2) {
 
             // Initialize the battle state.
 
-            GotchiBattleState state = new GotchiBattleState(botConfiguration, discordClient, database) {
+            GotchiBattleState state = new GotchiBattleState(botConfiguration, discordClient, database, gotchiService) {
 
                 // Initialize Player 1 (which must be a human player).
 
@@ -373,8 +375,8 @@ namespace OurFoodChain.Gotchis {
                 auto = false
             };
 
-            gif_url = await GotchiUtils.GenerateAndUploadGotchiGifAndReplyAsync(context, state._botConfiguration, state._discordClient, new GotchiGifCreatorParams[] { p1, p2 }, new GotchiGifCreatorExtraParams {
-                backgroundFileName = await GotchiUtils.GetGotchiBackgroundFileNameAsync(state.database, state.player2.Gotchi.Gotchi, "home_battle.png"),
+            gif_url = await state.gotchiService.CreateGifAsync(context, new GotchiGifCreatorParams[] { p1, p2 }, new GotchiGifCreatorExtraParams {
+                backgroundFileName = await state.database.GetGotchiBackgroundFilenameAsync(state.player2.Gotchi.Gotchi, "home_battle.png"),
                 overlay = (Graphics gfx) => {
 
                     // Draw health bars.
@@ -408,6 +410,7 @@ namespace OurFoodChain.Gotchis {
         private readonly IOfcBotConfiguration _botConfiguration;
         private readonly DiscordSocketClient _discordClient;
         private readonly SQLiteDatabase database;
+        private readonly GotchiService gotchiService;
 
         private async Task _useMoveOnAsync(ICommandContext context, PlayerState user, PlayerState target) {
 

@@ -62,6 +62,8 @@ namespace OurFoodChain.Bot {
                 .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>()
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<OurFoodChain.Services.TrophyScanner>()
+                .AddSingleton<GotchiService>()
+                .AddSingleton<FileUploadService>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
 
         }

@@ -14,6 +14,7 @@ using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Services;
 using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Services;
 using OurFoodChain.Wiki.Utilities;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain {
 
-    public class OfcModuleBase :
+    public abstract class OfcModuleBase :
         ModuleBase {
 
         // Public members
@@ -36,6 +37,7 @@ namespace OurFoodChain {
         public Services.TrophyScanner TrophyScanner { get; set; }
         public DiscordSocketClient DiscordClient { get; set; }
         public IHelpService HelpService { get; set; }
+        public GotchiService GotchiService { get; set; }
 
         public SQLiteDatabase Db => GetDatabaseAsync().Result;
         public SearchContext SearchContext => new SearchContext(Context, Db);

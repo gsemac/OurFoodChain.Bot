@@ -405,7 +405,7 @@ namespace OurFoodChain.Extensions {
             };
 
             return await database.CreateGotchiGifAsync(new GotchiGifCreatorParams[] { p },
-                new GotchiGifCreatorExtraParams { backgroundFileName = await GetGotchiBackgroundFilenameAsync(database, gotchi) });
+                new GotchiGifCreatorExtraParams { backgroundFileName = await database.GetGotchiBackgroundFilenameAsync(gotchi) });
 
         }
 
@@ -527,7 +527,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        private static async Task<string> CreateGotchiGifAsync(this SQLiteDatabase database, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        public static async Task<string> CreateGotchiGifAsync(this SQLiteDatabase database, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
             // Create the temporary directory where the GIF will be saved.
 
@@ -628,7 +628,7 @@ namespace OurFoodChain.Extensions {
             return gotchi_pic;
 
         }
-        private static async Task<string> GetGotchiBackgroundFilenameAsync(SQLiteDatabase database, Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
+        public static async Task<string> GetGotchiBackgroundFilenameAsync(this SQLiteDatabase database, Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
 
             // Returns a background image based on the gotchi passed in (i.e., corresponding to the zone it resides in).
 

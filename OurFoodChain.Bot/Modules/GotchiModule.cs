@@ -343,7 +343,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Challenge the user to a battle.
 
-            await GotchiBattleState.RegisterBattleAsync(Context, Config, DiscordClient, Db, gotchi, opposing_gotchi);
+            await GotchiBattleState.RegisterBattleAsync(Context, Config, DiscordClient, Db, GotchiService, gotchi, opposing_gotchi);
 
             if (!(user is null)) {
 

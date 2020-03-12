@@ -300,6 +300,7 @@
     <Compile Include="Services\CommandHandlingService.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="Gotchis\BattleGotchi.cs" />
+    <Compile Include="Services\FileUploadService.cs" />
     <Compile Include="Services\GotchiBackgroundService.cs" />
     <Compile Include="Gotchis\GotchiConfig.cs" />
     <Compile Include="Gotchis\GotchiContext.cs" />
@@ -318,6 +319,7 @@
     <Compile Include="Gotchis\GotchiStatusRegistry.cs" />
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
+    <Compile Include="Services\GotchiService.cs" />
     <Compile Include="Services\TrophyScanner.cs" />
     <Compile Include="Taxa\BulkOperation.cs" />
     <Compile Include="Taxa\IBulkOperation.cs" />

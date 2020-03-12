@@ -17,7 +17,7 @@ namespace OurFoodChain.Data.Queries {
             // Filters out all species that do not prey upon the given species.
 
             ISpecies preySpecies = (await context.Database.GetSpeciesAsync(Value)).FirstOrDefault();
-            IEnumerable<ISpecies> predatorSpecies = preySpecies != null ? await context.Database.GetPredatorsAsync(preySpecies) : Enumerable.Empty<ISpecies>();
+            IEnumerable<ISpecies> predatorSpecies = preySpecies != null ? (await context.Database.GetPredatorsAsync(preySpecies)).Select(info => info.Species) : Enumerable.Empty<ISpecies>();
 
             await result.FilterByAsync(async (species) => await Task.FromResult(!predatorSpecies.Any(predator => predator.Id == species.Id)), Invert);
 

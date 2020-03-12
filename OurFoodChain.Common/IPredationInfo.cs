@@ -5,9 +5,9 @@ using System.Text;
 
 namespace OurFoodChain.Common {
 
-    public interface IPreyInfo {
+    public interface IPredationInfo {
 
-        ISpecies Prey { get; set; }
+        ISpecies Species { get; set; }
         string Notes { get; set; }
 
     }

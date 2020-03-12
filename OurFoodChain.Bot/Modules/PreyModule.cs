@@ -1,11 +1,12 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -166,7 +167,9 @@ namespace OurFoodChain.Bot {
 
             if (species.IsValid()) {
 
-                IEnumerable<ISpecies> predatorSpecies = (await Db.GetPredatorsAsync(species)).Where(s => !s.IsExtinct());
+                IEnumerable<IPredationInfo> predatorSpecies = (await Db.GetPredatorsAsync(species))
+                    .Where(info => !info.Species.IsExtinct())
+                    .OrderBy(info => info.Species.GetShortName());
 
                 if (predatorSpecies.Count() > 0) {
 
@@ -174,32 +177,21 @@ namespace OurFoodChain.Bot {
 
                     List<string> lines = new List<string>();
 
-                    foreach(ISpecies sp in predatorSpecies) {
+                    foreach (IPredationInfo info in predatorSpecies) {
 
-                        // ...
+                        string lineText = info.Species.IsExtinct() ? info.Species.GetShortName().ToStrikethrough() : info.Species.GetShortName();
 
-                    }
+                        if (!string.IsNullOrEmpty(info.Notes))
+                            lineText += string.Format(" ({0})", info.Notes.ToLowerInvariant());
 
-                    foreach (DataRow row in rows) {
-
-                        ISpecies species = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
-                        string notes = row.Field<string>("notes");
-
-                        string line_text = s.ShortName;
-
-                        if (!string.IsNullOrEmpty(notes))
-                            line_text += string.Format(" ({0})", notes.ToLower());
-
-                        lines.Add(s.IsExtinct ? string.Format("~~{0}~~", line_text) : line_text);
+                        lines.Add(lineText);
 
                     }
 
-                    lines.Sort();
+                    embed.Title = string.Format("Predators of {0} ({1})", species.GetShortName(), lines.Count());
+                    embed.Description = string.Join(Environment.NewLine, lines);
 
-                    embed.WithTitle(string.Format("Predators of {0} ({1})", sp.ShortName, lines.Count()));
-                    embed.WithDescription(string.Join(Environment.NewLine, lines));
-
-                    await ReplyAsync("", false, embed.Build());
+                    await ReplyAsync(embed);
 
                 }
                 else {

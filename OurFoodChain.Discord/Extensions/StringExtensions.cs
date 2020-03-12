@@ -11,6 +11,11 @@ namespace OurFoodChain.Discord.Extensions {
             return string.Format("**{0}**", input);
 
         }
+        public static string ToStrikethrough(this string input) {
+
+            return string.Format("~~{0}~~", input);
+
+        }
         public static string FromLink(this string input, string url) {
 
             return string.Format("[{0}]({1})", input, url);

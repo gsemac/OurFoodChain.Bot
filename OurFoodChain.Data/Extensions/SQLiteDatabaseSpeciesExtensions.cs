@@ -728,44 +728,55 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IEnumerable<ISpecies>> GetPredatorsAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task<IEnumerable<IPredationInfo>> GetPredatorsAsync(this SQLiteDatabase database, ISpecies species) {
 
-            List<ISpecies> result = new List<ISpecies>();
+            List<IPredationInfo> result = new List<IPredationInfo>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id IN (SELECT species_id FROM Predates WHERE eats_id = $species_id)")) {
+            if (species.IsValid()) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM (SELECT * FROM Species WHERE id IN (SELECT species_id FROM Predates WHERE eats_id = $species_id)) INNER JOIN Predates WHERE eats_id = $species_id AND species_id = id")) {
 
-                foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    result.Add(await database.CreateSpeciesFromDataRowAsync(row));
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd)) {
+
+                        result.Add(new PredationInfo {
+                            Species = await database.CreateSpeciesFromDataRowAsync(row),
+                            Notes = row.Field<string>("notes")
+                        });
+
+                    }
+
+                }
 
             }
 
-            return result.ToArray();
+            return result;
 
         }
-        public static async Task<IEnumerable<IPreyInfo>> GetPreyAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task<IEnumerable<IPredationInfo>> GetPreyAsync(this SQLiteDatabase database, ISpecies species) {
 
             return await database.GetPreyAsync(species.Id);
 
         }
-        public static async Task<IEnumerable<IPreyInfo>> GetPreyAsync(this SQLiteDatabase database, long? speciesId) {
+        public static async Task<IEnumerable<IPredationInfo>> GetPreyAsync(this SQLiteDatabase database, long? speciesId) {
 
-            if (!speciesId.HasValue)
-                return Enumerable.Empty<IPreyInfo>();
+            List<IPredationInfo> result = new List<IPredationInfo>();
 
-            List<IPreyInfo> result = new List<IPreyInfo>();
+            if (speciesId.HasValue) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM (SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)) INNER JOIN Predates WHERE eats_id = id AND species_id = $species_id;")) {
+                using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM (SELECT * FROM Species WHERE id IN (SELECT eats_id FROM Predates WHERE species_id = $species_id)) INNER JOIN Predates WHERE eats_id = id AND species_id = $species_id")) {
 
-                cmd.Parameters.AddWithValue("$species_id", speciesId);
+                    cmd.Parameters.AddWithValue("$species_id", speciesId);
 
-                foreach (DataRow row in await database.GetRowsAsync(cmd)) {
+                    foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
-                    result.Add(new PreyInfo {
-                        Prey = await database.CreateSpeciesFromDataRowAsync(row),
-                        Notes = row.Field<string>("notes")
-                    });
+                        result.Add(new PredationInfo {
+                            Species = await database.CreateSpeciesFromDataRowAsync(row),
+                            Notes = row.Field<string>("notes")
+                        });
+
+                    }
 
                 }
 

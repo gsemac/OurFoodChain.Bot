@@ -5,10 +5,10 @@ using System.Text;
 
 namespace OurFoodChain.Common {
 
-    public class PreyInfo :
-        IPreyInfo {
+    public class PredationInfo :
+        IPredationInfo {
 
-        public ISpecies Prey { get; set; }
+        public ISpecies Species { get; set; }
         public string Notes { get; set; }
 
     }

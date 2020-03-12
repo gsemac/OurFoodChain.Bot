@@ -15,21 +15,25 @@ namespace OurFoodChain.Bot.Modules {
     public class ConfigurationModule :
         OfcModuleBase {
 
-        public Discord.Services.ICommandService CommandHandlingService { get; set; }
+        public Discord.Services.ICommandService CommandService { get; set; }
 
         [Command("set"), RequirePrivilege(PrivilegeLevel.BotAdmin)]
         public async Task Set(string key, string value) {
 
-            if (Config.SetProperty(key, value))
-                await DiscordUtilities.ReplySuccessAsync(Context.Channel,
-                    string.Format("Successfully set **{0}** to **{1}**.", key, value));
-            else
-                await DiscordUtilities.ReplyErrorAsync(Context.Channel,
-                    string.Format("No setting with the name **{0}** exists.", key));
+            if (Config.SetProperty(key, value)) {
+
+                await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully set **{0}** to **{1}**.", key, value));
+
+            }
+            else {
+
+                await DiscordUtilities.ReplyErrorAsync(Context.Channel, string.Format("No setting with the name **{0}** exists.", key));
+
+            }
 
             // Reload commands (the commands available are dependent on configuration settings).
 
-            await CommandHandlingService.InstallCommandsAsync();
+            await CommandService.InstallCommandsAsync();
 
             // Update the bot's "Playing" status.
 
@@ -44,8 +48,7 @@ namespace OurFoodChain.Bot.Modules {
 
             Config.Save(configFilename);
 
-            await DiscordUtilities.ReplySuccessAsync(Context.Channel,
-                string.Format("Successfully saved config to **{0}**.", configFilename));
+            await DiscordUtilities.ReplySuccessAsync(Context.Channel, string.Format("Successfully saved config to **{0}**.", configFilename));
 
         }
 

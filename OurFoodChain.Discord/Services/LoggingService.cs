@@ -14,7 +14,7 @@ namespace OurFoodChain.Discord.Services {
 
         // Public members
 
-        public LoggingService(DiscordSocketClient discordClient, CommandService commands, ILoggerFactory loggerFactory) {
+        public LoggingService(DiscordSocketClient discordClient, global::Discord.Commands.CommandService commands, ILoggerFactory loggerFactory) {
 
             _loggerFactory = loggerFactory;
 

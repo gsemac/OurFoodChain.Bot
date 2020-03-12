@@ -15,18 +15,18 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
 
-    public class CommandHandlingService :
-        ICommandHandlingService {
+    public class CommandService :
+        ICommandService {
 
         // Public members
 
-        public CommandHandlingService(
+        public CommandService(
             IBotConfiguration configuration,
             IServiceProvider serviceProvider,
             IHelpService helpService,
             IResponsiveMessageService responsiveMessageService,
             DiscordSocketClient discordClient,
-            CommandService commandService
+            global::Discord.Commands.CommandService commandService
             ) {
 
             this.configuration = configuration;
@@ -34,10 +34,10 @@ namespace OurFoodChain.Discord.Services {
             this.helpService = helpService;
             this.responsiveMessageService = responsiveMessageService;
             this.discordClient = discordClient;
-            CommandService = commandService;
+            DiscordCommandService = commandService;
 
             this.discordClient.MessageReceived += OnMessageReceivedAsync;
-            CommandService.CommandExecuted += OnCommandExecutedAsync;
+            DiscordCommandService.CommandExecuted += OnCommandExecutedAsync;
 
         }
 
@@ -50,16 +50,16 @@ namespace OurFoodChain.Discord.Services {
         }
         public virtual async Task InstallCommandsAsync() {
 
-            foreach (ModuleInfo moduleInfo in CommandService.Modules.ToArray())
-                await CommandService.RemoveModuleAsync(moduleInfo);
+            foreach (ModuleInfo moduleInfo in DiscordCommandService.Modules.ToArray())
+                await DiscordCommandService.RemoveModuleAsync(moduleInfo);
 
-            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), serviceProvider);
+            await DiscordCommandService.AddModulesAsync(Assembly.GetEntryAssembly(), serviceProvider);
 
         }
 
         // Protected members
 
-        protected CommandService CommandService { get; private set; }
+        protected global::Discord.Commands.CommandService DiscordCommandService { get; private set; }
 
         protected virtual async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
@@ -90,7 +90,7 @@ namespace OurFoodChain.Discord.Services {
             int argumentsIndex = GetCommmandArgumentsStartIndex(message);
             ICommandContext context = new CommandContext(discordClient, message);
 
-            IResult result = await CommandService.ExecuteAsync(context, argumentsIndex, serviceProvider);
+            IResult result = await DiscordCommandService.ExecuteAsync(context, argumentsIndex, serviceProvider);
 
             return result;
 
@@ -186,7 +186,7 @@ namespace OurFoodChain.Discord.Services {
         }
         protected IEnumerable<string> GetCommandNames() {
 
-            return CommandService.Commands
+            return DiscordCommandService.Commands
                .SelectMany(c => new string[] { c.Name }.Union(c.Aliases));
 
         }

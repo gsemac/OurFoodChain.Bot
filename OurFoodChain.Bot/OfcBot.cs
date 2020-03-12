@@ -56,7 +56,7 @@ namespace OurFoodChain.Bot {
 
             return (await base.ConfigureServicesAsync())
                 .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
-                .AddSingleton<Discord.Services.ICommandHandlingService, Services.OurFoodChainBotCommandHandlingService>()
+                .AddSingleton<Discord.Services.ICommandService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Discord.Services.IPaginatedMessageService, Discord.Services.PaginatedMessageService>()
                 .AddSingleton<Discord.Services.IResponsiveMessageService, Discord.Services.ResponsiveMessageService>()
                 .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>()

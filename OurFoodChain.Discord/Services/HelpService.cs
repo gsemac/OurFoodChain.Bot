@@ -18,7 +18,7 @@ namespace OurFoodChain.Discord.Services {
         public HelpService(
             IBotConfiguration botConfiguration,
             IServiceProvider serviceProvider,
-            CommandService commandService
+            global::Discord.Commands.CommandService commandService
             ) {
 
             _botConfiguration = botConfiguration;
@@ -131,7 +131,7 @@ namespace OurFoodChain.Discord.Services {
 
         private readonly IBotConfiguration _botConfiguration;
         private readonly IServiceProvider _serviceProvider;
-        private readonly CommandService _commandService;
+        private readonly global::Discord.Commands.CommandService _commandService;
 
         private string GetFullCommandName(CommandInfo commandInfo) {
 

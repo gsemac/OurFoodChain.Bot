@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot.Services {
 
     public class OurFoodChainBotCommandHandlingService :
-        Discord.Services.CommandHandlingService {
+        Discord.Services.CommandService {
 
         // Public members
 
@@ -21,7 +21,7 @@ namespace OurFoodChain.Bot.Services {
             IHelpService helpService,
             IResponsiveMessageService responsiveMessageService,
             DiscordSocketClient discordClient,
-            CommandService commandService
+            global::Discord.Commands.CommandService commandService
             ) :
             base(configuration, serviceProvider, helpService, responsiveMessageService, discordClient, commandService) {
 
@@ -34,10 +34,10 @@ namespace OurFoodChain.Bot.Services {
             await base.InstallCommandsAsync();
 
             if (!_configuration.TrophiesEnabled)
-                await CommandService.RemoveModuleAsync<Modules.TrophyModule>();
+                await DiscordCommandService.RemoveModuleAsync<Modules.TrophyModule>();
 
             if (!_configuration.GotchisEnabled)
-                await CommandService.RemoveModuleAsync<Modules.GotchiModule>();
+                await DiscordCommandService.RemoveModuleAsync<Modules.GotchiModule>();
 
         }
 

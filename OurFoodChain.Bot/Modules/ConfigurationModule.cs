@@ -15,7 +15,7 @@ namespace OurFoodChain.Bot.Modules {
     public class ConfigurationModule :
         OfcModuleBase {
 
-        public Discord.Services.ICommandHandlingService CommandHandlingService { get; set; }
+        public Discord.Services.ICommandService CommandHandlingService { get; set; }
 
         [Command("set"), RequirePrivilege(PrivilegeLevel.BotAdmin)]
         public async Task Set(string key, string value) {

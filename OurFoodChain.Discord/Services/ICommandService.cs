@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
 
-    public interface ICommandHandlingService {
+    public interface ICommandService {
 
         Task InitializeAsync(IServiceProvider provider);
         Task InstallCommandsAsync();

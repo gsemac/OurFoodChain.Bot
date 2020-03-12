@@ -73,12 +73,12 @@ namespace OurFoodChain.Discord.Bots {
 
             services
                 .AddSingleton(Client)
-                .AddSingleton<CommandService>()
+                .AddSingleton<global::Discord.Commands.CommandService>()
                 .AddSingleton(Configuration);
 
             // Commands
 
-            services.TryAddSingleton<ICommandHandlingService, CommandHandlingService>();
+            services.TryAddSingleton<ICommandService, Services.CommandService>();
             services.TryAddSingleton<IHelpService, HelpService>();
 
             // Logging
@@ -94,7 +94,7 @@ namespace OurFoodChain.Discord.Bots {
 
             serviceProvider.GetRequiredService<ILoggingService>(); // instantiate the logging service
 
-            await serviceProvider.GetRequiredService<ICommandHandlingService>().InitializeAsync(serviceProvider);
+            await serviceProvider.GetRequiredService<ICommandService>().InitializeAsync(serviceProvider);
 
         }
 

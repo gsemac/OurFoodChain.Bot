@@ -19,6 +19,11 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
+        public enum GetSpeciesOptions {
+            None = 0,
+            Basic = 1
+        }
+
         public static async Task AddSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Species(name, common_name, description, genus_id, owner, timestamp, user_id) VALUES($name, $common_name, $description, $genus_id, $owner, $timestamp, $user_id)")) {
@@ -212,7 +217,7 @@ namespace OurFoodChain.Data.Extensions {
             return results;
 
         }
-        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IRole role) {
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IRole role, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             // Return all species with the given role.
 
@@ -225,7 +230,7 @@ namespace OurFoodChain.Data.Extensions {
                     cmd.Parameters.AddWithValue("$role_id", role.Id);
 
                     foreach (DataRow row in await database.GetRowsAsync(cmd))
-                        species.Add(await database.CreateSpeciesFromDataRowAsync(row));
+                        species.Add(await database.CreateSpeciesFromDataRowAsync(row, options));
 
                 }
 
@@ -311,7 +316,26 @@ namespace OurFoodChain.Data.Extensions {
         public static async Task<long> GetSpeciesCountAsync(this SQLiteDatabase database) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Species"))
-                return (int)await database.GetScalarAsync<long>(cmd);
+                return await database.GetScalarAsync<long>(cmd);
+
+        }
+        public static async Task<long> GetSpeciesCountAsync(this SQLiteDatabase database, IRole role) {
+
+            long count = 0;
+
+            if (role.IsValid()) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM SpeciesRoles WHERE species_id NOT IN (SELECT species_id FROM Extinctions) AND role_id = $role_id")) {
+
+                    cmd.Parameters.AddWithValue("$role_id", role.Id);
+
+                    count = await database.GetScalarAsync<long>(cmd);
+
+                }
+
+            }
+
+            return count;
 
         }
 
@@ -761,15 +785,33 @@ namespace OurFoodChain.Data.Extensions {
 
         // Private members
 
-        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row) {
+        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             long genusId = row.Field<long>("genus_id");
-            ITaxon genus = await database.GetTaxonAsync(genusId, TaxonRankType.Genus);
+
+            ITaxon genus;
+
+            if (options.HasFlag(GetSpeciesOptions.Basic)) {
+
+                // Get basic genus information.
+
+                genus = new Taxon(TaxonRankType.Genus, string.Empty) {
+                    Id = genusId
+                };
+
+            }
+            else {
+
+                // Get full genus information.
+
+                genus = await database.GetTaxonAsync(genusId, TaxonRankType.Genus);
+
+            }
 
             return await database.CreateSpeciesFromDataRowAsync(row, genus);
 
         }
-        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus) {
+        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             ISpecies species = new Species {
                 Id = row.Field<long>("id"),
@@ -787,7 +829,8 @@ namespace OurFoodChain.Data.Extensions {
             if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))
                 commonNames.Add(row.Field<string>("common_name"));
 
-            commonNames.AddRange(await database.GetCommonNamesAsync(species));
+            if (!options.HasFlag(GetSpeciesOptions.Basic))
+                commonNames.AddRange(await database.GetCommonNamesAsync(species));
 
             species.CommonNames.AddRange(commonNames);
 

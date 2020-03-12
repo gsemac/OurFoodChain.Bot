@@ -110,6 +110,24 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task UpdateRoleAsync(this SQLiteDatabase database, IRole role) {
+
+            if (role.IsValid()) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Roles SET name = $name, description = $description WHERE id = $id")) {
+
+                    cmd.Parameters.AddWithValue("$id", role.Id);
+                    cmd.Parameters.AddWithValue("$name", role.Name.ToLowerInvariant());
+                    cmd.Parameters.AddWithValue("$description", role.Description);
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
+
+        }
+
         // Private members
 
         private static IRole CreateRoleFromDataRow(DataRow row) {

@@ -265,7 +265,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Extensions\GotchiExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseGotchiExtensions.cs" />
-    <Compile Include="Extensions\OfcModuleRoleExtensions.cs" />
+    <Compile Include="Extensions\OfcModuleBaseRoleExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabaseGotchiExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabasePeriodExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabaseUserExtensions.cs" />
@@ -289,7 +289,7 @@
     <Compile Include="Modules\RecentCommands.cs" />
     <Compile Include="Modules\RelationshipCommands.cs" />
     <Compile Include="Modules\ReviewsModule.cs" />
-    <Compile Include="Modules\RoleCommands.cs" />
+    <Compile Include="Modules\RoleModule.cs" />
     <Compile Include="Modules\SpeciesModule.cs" />
     <Compile Include="Modules\TaxonModule.cs" />
     <Compile Include="Modules\ZonesModule.cs" />

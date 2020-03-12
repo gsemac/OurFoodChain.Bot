@@ -1,33 +1,45 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
-    public class PreyCommands :
+
+    public class PreyModule :
         OfcModuleBase {
 
         // Public members
 
-        public IOfcBotConfiguration BotConfiguration { get; set; }
-
-        [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
+        [Command("+prey"), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPrey(string speciesName, string preySpeciesName) {
 
-            if (_isSpeciesList(preySpeciesName))
+            if (IsSpeciesList(preySpeciesName)) {
+
                 // The user has specified multiple prey items in a list.
-                await _addPrey(string.Empty, speciesName, _splitSpeciesList(preySpeciesName), string.Empty);
-            else
+
+                await ReplyAddPreyAsync(string.Empty, speciesName, SplitSpeciesList(preySpeciesName), string.Empty);
+
+            }
+            else {
+
                 // The user has provided a single prey item.
+
                 await AddPrey(string.Empty, speciesName, string.Empty, preySpeciesName);
+
+            }
+
         }
-        [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
+        [Command("+prey"), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPrey(string arg0, string arg1, string arg2) {
 
             // We have the following possibilities, which we will check for in-order:
@@ -37,36 +49,40 @@ namespace OurFoodChain.Bot {
 
             // If the user provided a prey list, it's easier to determine what they meant-- Check for that first.
 
-            if (_isSpeciesList(arg1))
+            if (IsSpeciesList(arg1)) {
+
                 // <speciesName> <preyList> <notes>
-                await _addPrey(string.Empty, arg0, _splitSpeciesList(arg1), arg2);
+
+                await ReplyAddPreyAsync(string.Empty, arg0, SplitSpeciesList(arg1), arg2);
+
+            }
             else {
 
-                Species species = null, preySpecies = null;
+                ISpecies species = null, preySpecies = null;
                 string notes = string.Empty;
 
                 // <genusName> <speciesName> <preyList>
 
-                species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0, arg1);
+                species = await Db.GetUniqueSpeciesAsync(arg0, arg1);
 
-                if (species != null && _isSpeciesList(arg2)) {
+                if (species.IsValid() && IsSpeciesList(arg2)) {
 
-                    await _addPrey(arg0, arg1, _splitSpeciesList(arg2), string.Empty);
+                    await ReplyAddPreyAsync(arg0, arg1, SplitSpeciesList(arg2), string.Empty);
 
                 }
                 else {
 
                     // <genusName> <speciesName> <preySpeciesName>
 
-                    preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg2);
+                    preySpecies = species is null ? null : await Db.GetUniqueSpeciesAsync(arg2);
                     notes = string.Empty;
 
                     if (species is null || preySpecies is null) {
 
                         // <speciesName> <preyGenusName> <preySpeciesName>
 
-                        species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0);
-                        preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg1, arg2);
+                        species = await Db.GetUniqueSpeciesAsync(arg0);
+                        preySpecies = species is null ? null : await Db.GetUniqueSpeciesAsync(arg1, arg2);
                         notes = string.Empty;
 
                     }
@@ -75,99 +91,98 @@ namespace OurFoodChain.Bot {
 
                         // <speciesName> <preySpeciesName> <Notes>
 
-                        species = await SpeciesUtils.GetUniqueSpeciesAsync(arg0);
-                        preySpecies = species is null ? null : await SpeciesUtils.GetUniqueSpeciesAsync(arg1);
+                        species = await Db.GetUniqueSpeciesAsync(arg0);
+                        preySpecies = species is null ? null : await Db.GetUniqueSpeciesAsync(arg1);
                         notes = arg2;
 
                     }
 
                     if (species is null)
-                        await BotUtils.ReplyAsync_Error(Context, "The given species does not exist.");
+                        await ReplyErrorAsync("The given species does not exist.");
                     else if (preySpecies is null)
-                        await BotUtils.ReplyAsync_Error(Context, "The given prey species does not exist.");
+                        await ReplyErrorAsync("The given prey species does not exist.");
                     else
-                        await _addPrey(species, new Species[] { preySpecies }, notes);
+                        await ReplyAddPreyAsync(species, new ISpecies[] { preySpecies }, notes);
 
                 }
 
             }
 
         }
-        [Command("+prey"), Alias("setprey", "seteats", "setpredates")]
+        [Command("+prey"), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPrey(string genusName, string speciesName, string preyGenusName, string preySpeciesName, string notes = "") {
 
-            Species[] species_list = await SpeciesUtils.GetSpeciesAsync(genusName, speciesName);
-            Species[] prey_list = await SpeciesUtils.GetSpeciesAsync(preyGenusName, preySpeciesName);
+            ISpecies predatorSpecies = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies preySpecies = predatorSpecies.IsValid() ? await GetSpeciesOrReplyAsync(genusName, speciesName) : null;
 
-            if (species_list.Count() <= 0)
-                await BotUtils.ReplyAsync_SpeciesSuggestions(Context, genusName, speciesName);
-            else if (prey_list.Count() <= 0)
-                await BotUtils.ReplyAsync_SpeciesSuggestions(Context, preyGenusName, preySpeciesName);
-            else if (!await BotUtils.ReplyValidateSpeciesAsync(Context, species_list) || !await BotUtils.ReplyValidateSpeciesAsync(Context, prey_list))
-                return;
-            else
-                await _addPrey(species_list[0], prey_list, notes);
+            if (predatorSpecies.IsValid() && preySpecies.IsValid())
+                await ReplyAddPreyAsync(predatorSpecies, new ISpecies[] { preySpecies }, notes);
 
         }
 
-        [Command("-prey")]
+        [Command("-prey"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemovePrey(string speciesName, string preySpeciesName) {
+
             await RemovePrey(string.Empty, speciesName, string.Empty, preySpeciesName);
+
         }
-        [Command("-prey")]
+        [Command("-prey"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemovePrey(string arg0, string arg1, string arg2) {
 
             // We have the following possibilities:
             // <genusName> <speciesName> <preySpeciesName>
             // <speciesName> <preyGenusName> <preySpeciesName>
 
-            Resolve3ArgumentFindSpeciesAmbiguityResult result = await BotUtils.ReplyResolve3ArgumentSpeciesQueryAmbiguityAsync(Context, arg0, arg1, arg2);
+            ISpeciesAmbiguityResolverResult result = await ReplyResolveAmbiguityAsync(arg0, arg1, arg2);
 
-            if (result.Case != Resolve3ArgumentFindSpeciesAmbiguityCase.Unknown)
-                await _removePrey(result.Species1, result.Species2);
+            if (result.Success)
+                await ReplyRemovePreyAsync(result.First, result.Second);
 
         }
-        [Command("-prey")]
+        [Command("-prey"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemovePrey(string genusName, string speciesName, string preyGenusName, string preySpeciesName) {
 
-            Species predator = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
-            Species prey = predator is null ? null : await BotUtils.ReplyFindSpeciesAsync(Context, preyGenusName, preySpeciesName);
+            ISpecies predatorSpecies = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies preySpecies = predatorSpecies.IsValid() ? await GetSpeciesOrReplyAsync(genusName, speciesName) : null;
 
-            await _removePrey(predator, prey);
+            if (predatorSpecies.IsValid() && preySpecies.IsValid())
+                await ReplyRemovePreyAsync(predatorSpecies, preySpecies);
 
         }
 
         [Command("predates"), Alias("eats", "pred", "predators")]
-        public async Task Predates(string genus, string species = "") {
+        public async Task Predates(string genusName, string speciesName = "") {
 
             // If the species parameter was not provided, assume the user only provided the species.
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
+
+            if (string.IsNullOrEmpty(speciesName)) {
+
+                speciesName = genusName;
+                genusName = string.Empty;
+
             }
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            EmbedBuilder embed = new EmbedBuilder();
+                IEnumerable<ISpecies> predatorSpecies = (await Db.GetPredatorsAsync(species)).Where(s => !s.IsExtinct());
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE eats_id=$eats_id AND species_id NOT IN (SELECT species_id FROM Extinctions);")) {
+                if (predatorSpecies.Count() > 0) {
 
-                cmd.Parameters.AddWithValue("$eats_id", sp.Id);
-
-                IEnumerable<DataRow> rows = await Db.GetRowsAsync(cmd);
-
-                if (rows.Count() <= 0)
-                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** has no extant natural predators.", sp.ShortName));
-                else {
+                    Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 
                     List<string> lines = new List<string>();
 
+                    foreach(ISpecies sp in predatorSpecies) {
+
+                        // ...
+
+                    }
+
                     foreach (DataRow row in rows) {
 
-                        Species s = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
+                        ISpecies species = await BotUtils.GetSpeciesFromDb(row.Field<long>("species_id"));
                         string notes = row.Field<string>("notes");
 
                         string line_text = s.ShortName;
@@ -187,23 +202,28 @@ namespace OurFoodChain.Bot {
                     await ReplyAsync("", false, embed.Build());
 
                 }
+                else {
+
+                    await ReplyInfoAsync(string.Format("**{0}** has no extant natural predators.", species.GetShortName()));
+
+                }
 
             }
 
         }
 
         [Command("prey")]
-        public async Task Prey(string genus, string species = "") {
+        public async Task Prey(string genusName, string speciesName = "") {
 
             // If no species argument was provided, assume the user omitted the genus.
-            if (string.IsNullOrEmpty(species)) {
-                species = genus;
-                genus = string.Empty;
+            if (string.IsNullOrEmpty(speciesName)) {
+                speciesName = genusName;
+                genusName = string.Empty;
             }
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genus, species);
+            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
 
             if (sp is null)
                 return;
@@ -260,50 +280,50 @@ namespace OurFoodChain.Bot {
 
         }
 
-        // Private methods
+        // Private members
 
-        private bool _isSpeciesList(string input) {
-            return _splitSpeciesList(input).Count() > 1;
+        private bool IsSpeciesList(string input) {
+
+            return SplitSpeciesList(input).Count() > 1;
+
         }
-        private string[] _splitSpeciesList(string input) {
+        private IEnumerable<string> SplitSpeciesList(string input) {
+
             return input.Split(',', '/', '\\');
+
         }
 
-        private async Task _addPrey(string genusName, string speciesName, string[] preySpeciesNames, string notes) {
+        private async Task ReplyAddPreyAsync(string genusName, string speciesName, IEnumerable<string> preySpeciesNames, string notes) {
 
-            Species predator = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies predator = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (predator != null) {
+            if (predator.IsValid()) {
 
-                List<Species> prey_list = new List<Species>();
-                List<string> failed_prey = new List<string>();
+                List<ISpecies> preyList = new List<ISpecies>();
+                List<string> failedPrey = new List<string>();
 
-                foreach (string prey_species_name in preySpeciesNames) {
+                foreach (string preySpeciesName in preySpeciesNames) {
 
-                    Species prey = await SpeciesUtils.GetUniqueSpeciesAsync(prey_species_name);
+                    ISpecies prey = await Db.GetUniqueSpeciesAsync(preySpeciesName);
 
                     if (prey is null)
-                        failed_prey.Add(prey_species_name);
+                        failedPrey.Add(preySpeciesName);
                     else
-                        prey_list.Add(prey);
+                        preyList.Add(prey);
 
                 }
 
-                if (failed_prey.Count() > 0)
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("The following species could not be determined: {0}.",
-                       StringUtilities.ConjunctiveJoin(", ", failed_prey.Select(x => string.Format("**{0}**", StringUtilities.ToTitleCase(x))).ToArray())));
+                if (failedPrey.Count() > 0)
+                    await ReplyWarningAsync(string.Format("The following species could not be determined: {0}.",
+                       StringUtilities.ConjunctiveJoin(", ", failedPrey.Select(x => string.Format("**{0}**", StringUtilities.ToTitleCase(x))).ToArray())));
 
-                if (prey_list.Count() > 0)
-                    await _addPrey(predator, prey_list.ToArray(), notes);
+                if (preyList.Count() > 0)
+                    await ReplyAddPreyAsync(predator, preyList.ToArray(), notes);
 
             }
 
         }
-        private async Task _addPrey(Species species, Species[] preySpecies, string notes) {
-
-            // Ensure that the user has necessary privileges.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator, species))
-                return;
+        private async Task ReplyAddPreyAsync(ISpecies species, IEnumerable<ISpecies> preySpecies, string notes) {
 
             foreach (Species prey in preySpecies) {
 
@@ -326,7 +346,7 @@ namespace OurFoodChain.Bot {
 
         }
 
-        private async Task _removePrey(Species predatorSpecies, Species preySpecies) {
+        private async Task ReplyRemovePreyAsync(ISpecies predatorSpecies, ISpecies preySpecies) {
 
             if (predatorSpecies is null || preySpecies is null)
                 return;

@@ -285,7 +285,7 @@
     <Compile Include="Modules\IdeaModule.cs" />
     <Compile Include="Modules\MapModule.cs" />
     <Compile Include="Modules\PeriodCommands.cs" />
-    <Compile Include="Modules\PreyCommands.cs" />
+    <Compile Include="Modules\PreyModule.cs" />
     <Compile Include="Modules\RecentCommands.cs" />
     <Compile Include="Modules\RelationshipCommands.cs" />
     <Compile Include="Modules\ReviewsModule.cs" />

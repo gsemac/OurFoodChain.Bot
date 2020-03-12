@@ -240,6 +240,19 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<ISpecies> GetUniqueSpeciesAsync(this SQLiteDatabase database, string speciesName) {
+
+            return await database.GetUniqueSpeciesAsync(string.Empty, speciesName);
+
+        }
+        public static async Task<ISpecies> GetUniqueSpeciesAsync(this SQLiteDatabase database, string genusName, string speciesName) {
+
+            IEnumerable<ISpecies> species = await database.GetSpeciesAsync(genusName, speciesName);
+
+            return species.Count() == 1 ? species.First() : null;
+
+        }
+
         public static async Task<IEnumerable<ISpecies>> GetExtinctSpeciesAsync(this SQLiteDatabase database) {
 
             List<ISpecies> results = new List<ISpecies>();

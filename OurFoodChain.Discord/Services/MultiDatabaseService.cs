@@ -1,6 +1,7 @@
 ﻿using Discord;
 using OurFoodChain.Data;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +17,9 @@ namespace OurFoodChain.Discord.Services {
 
             // Each guild should have access to their own database, saved inside of their guild folder.
 
-            return await GetDatabaseAsync(GetDatabasePathForGuild(serverId));
+            string databaseFilePath = GetDatabasePathForGuild(serverId);
+
+            return await GetDatabaseAsync(databaseFilePath);
 
         }
         public async override Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId) {

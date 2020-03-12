@@ -93,6 +93,30 @@ namespace OurFoodChain.Discord.Services {
             }
 
         }
+        protected async Task BackupDatabaseAsync(string databaseFilePath) {
+
+            if (System.IO.File.Exists(databaseFilePath)) {
+
+                string databaseDirectoryPath = System.IO.Path.GetDirectoryName(databaseFilePath);
+                string backupDirectoryPath = System.IO.Path.Combine(databaseDirectoryPath, "backups");
+
+                if (!System.IO.Directory.Exists(backupDirectoryPath))
+                    System.IO.Directory.CreateDirectory(backupDirectoryPath);
+
+                string backupFilename = string.Format("{0}-{1}", DateUtilities.GetCurrentTimestamp(), System.IO.Path.GetFileName(databaseFilePath));
+                string backupFilePath = System.IO.Path.Combine(backupDirectoryPath, backupFilename);
+
+                await OnLogAsync(Debug.LogSeverity.Info, "Creating database backup: " + backupFilePath);
+
+                System.IO.Directory.CreateDirectory("backups");
+
+                System.IO.File.Copy(databaseFilePath, backupFilePath);
+
+            }
+
+            await Task.CompletedTask;
+
+        }
 
         // Private members
 

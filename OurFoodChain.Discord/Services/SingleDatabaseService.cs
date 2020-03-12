@@ -17,7 +17,7 @@ namespace OurFoodChain.Discord.Services {
 
         public override async Task InitializeAsync() {
 
-            await BackupDatabaseAsync();
+            await BackupDatabaseAsync(DatabaseFilePath);
 
             await GetDatabaseAsync(0); // initialize the database by accessing it
 
@@ -34,27 +34,6 @@ namespace OurFoodChain.Discord.Services {
         public override async Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId) {
 
             await UploadDatabaseBackupAsync(channel, DatabaseFilePath);
-
-        }
-
-        // Private members
-
-        private async Task BackupDatabaseAsync() {
-
-            if (System.IO.File.Exists(DatabaseFilePath)) {
-
-                string backupFilename = string.Format("{0}-{1}", DateUtilities.GetCurrentTimestamp(), System.IO.Path.GetFileName(DatabaseFilePath));
-                string backupFilePath = System.IO.Path.Combine("backups", backupFilename);
-
-                await OnLogAsync(Debug.LogSeverity.Info, "Creating database backup: " + backupFilePath);
-
-                System.IO.Directory.CreateDirectory("backups");
-
-                System.IO.File.Copy(DatabaseFilePath, backupFilePath);
-
-            }
-
-            await Task.CompletedTask;
 
         }
 

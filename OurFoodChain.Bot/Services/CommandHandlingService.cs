@@ -45,9 +45,6 @@ namespace OurFoodChain.Bot.Services {
 
         protected override async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
-            if (await DiscordUtils.HandleMultiPartMessageResponseAsync(rawMessage))
-                return;
-
             await base.OnMessageReceivedAsync(rawMessage);
 
         }

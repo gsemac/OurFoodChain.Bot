@@ -158,45 +158,6 @@ namespace OurFoodChain.Bot {
 
         }
 
-        public static async Task SendMessageAsync(ICommandContext context, MultiPartMessage message, string text = "") {
-
-            if (multiPartMessages.TryAdd(context.User.Id, message)) {
-
-                message.Timestamp = DateUtilities.GetCurrentTimestampUtc();
-
-                await context.Channel.SendMessageAsync(string.IsNullOrEmpty(text) ? message.Text : text);
-
-            }
-
-        }
-        public static async Task<bool> HandleMultiPartMessageResponseAsync(SocketMessage message) {
-
-            // If there is no multistage command in progress for the given user, do nothing.
-            if (!multiPartMessages.ContainsKey(message.Author.Id))
-                return false;
-
-            // If we can't retrieve the multistage command data for this user, do nothing.
-            if (!multiPartMessages.TryGetValue(message.Author.Id, out MultiPartMessage command))
-                return false;
-
-            // The response to a multistage command must occur in the same channel as the original command.
-            if (message.Channel.Id != command.Context.Channel.Id)
-                return false;
-
-            string message_content = message.Content;
-
-            if (command.AllowCancel && message_content.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-                await BotUtils.ReplyAsync_Info(command.Context, "The command has been canceled.");
-            else if (!(command.Callback is null))
-                await command.Callback(new MultiPartMessageCallbackArgs(command, message_content));
-
-            // Remove the multistage command data now that we've handled it. 
-            multiPartMessages.TryRemove(message.Author.Id, out _);
-
-            return true;
-
-        }
-
         public static Color ConvertColor(System.Drawing.Color color) {
             return new Color(color.R, color.G, color.B);
         }
@@ -221,7 +182,6 @@ namespace OurFoodChain.Bot {
         // Private members
 
         private static Dictionary<ulong, PaginatedMessage> paginatedMessages = new Dictionary<ulong, PaginatedMessage>();
-        private static ConcurrentDictionary<ulong, MultiPartMessage> multiPartMessages = new ConcurrentDictionary<ulong, MultiPartMessage>();
 
     }
 

@@ -353,7 +353,6 @@
     <Compile Include="Utilities\BotUtils.cs" />
     <Compile Include="Taxa\CommonName.cs" />
     <Compile Include="Utilities\DateUtils.cs" />
-    <Compile Include="MultiPartMessage.cs" />
     <Compile Include="Reviews\ReviewCache.cs" />
     <Compile Include="Reviews\ReviewChannelInfo.cs" />
     <Compile Include="Reviews\ReviewInfo.cs" />

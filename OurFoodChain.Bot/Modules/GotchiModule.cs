@@ -837,14 +837,10 @@ namespace OurFoodChain.Bot.Modules {
 
                                 // Allow the user to pick the species their gotchi evolves into.
 
-                                Bot.MultiPartMessage message = new Bot.MultiPartMessage(Context) {
-                                    Callback = async (args) => {
-                                        await doUseItem(args.ResponseContent);
-                                    }
-                                };
+                                Discord.Messaging.IResponsiveMessageResponse response = await ResponsiveMessageService.GetResponseAsync(Context, new Discord.Messaging.Message("Reply with the name of the desired species."));
 
-                                await Bot.DiscordUtils.SendMessageAsync(Context, message,
-                                    string.Format("Reply with the name of the desired species, or \"cancel\"."));
+                                if (!response.Canceled)
+                                    await doUseItem(response.Message.Text);
 
                             }
                             else {

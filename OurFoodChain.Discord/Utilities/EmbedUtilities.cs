@@ -278,7 +278,7 @@ namespace OurFoodChain.Discord.Utilities {
 
             }
 
-            if (currentPage.Fields.Count() > 0 || currentPage.Description.Length > 0)
+            if (currentPage.Fields.Count() > 0 || currentPage.Description?.Length > 0)
                 pages.Add(currentPage);
 
             if (columnsPerPage == 1)

@@ -733,7 +733,7 @@ namespace OurFoodChain {
             if (pages.Count() <= 0)
                 pages.Add(new Discord.Messaging.Embed() { Description = "No events" });
 
-            IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(pages);
+            IPaginatedMessage message = new PaginatedMessage(pages);
 
             return message;
 

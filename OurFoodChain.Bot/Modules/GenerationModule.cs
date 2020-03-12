@@ -7,6 +7,7 @@ using OurFoodChain.Discord.Messaging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using OurFoodChain.Discord.Extensions;
 
 namespace OurFoodChain.Bot {
 
@@ -63,8 +64,7 @@ namespace OurFoodChain.Bot {
 
             string timeSpanString = DateUtilities.GetTimestampFromDate(generation.EndDate) == DateUtilities.GetMaxTimestamp() ? "Current" : DateUtilities.GetTimeSpanString(span) + " ago";
 
-            foreach (IEmbed page in message.Select(page => page.Embed))
-                page.Title = string.Format("{0} ({1})", generation.Name, timeSpanString);
+            message.SetTitle(string.Format("{0} ({1})", generation.Name, timeSpanString));
 
             return message;
 

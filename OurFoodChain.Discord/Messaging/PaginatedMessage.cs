@@ -28,8 +28,8 @@ namespace OurFoodChain.Discord.Messaging {
 
                 if (pages.Count() > 1) {
 
-                    reactions.Add(GetEmoji(PaginatedMessageReactionType.Next));
                     reactions.Add(GetEmoji(PaginatedMessageReactionType.Previous));
+                    reactions.Add(GetEmoji(PaginatedMessageReactionType.Next));
 
                 }
 
@@ -71,7 +71,7 @@ namespace OurFoodChain.Discord.Messaging {
 
         public async Task ForwardAsync() {
 
-            if (++currentPageIndex > pages.Count())
+            if (++currentPageIndex >= pages.Count())
                 currentPageIndex = 0;
 
             await Task.CompletedTask;
@@ -79,7 +79,7 @@ namespace OurFoodChain.Discord.Messaging {
         }
         public async Task BackAsync() {
 
-            if (--currentPageIndex <= 0)
+            if (--currentPageIndex < 0)
                 currentPageIndex = Math.Max(0, pages.Count() - 1); ;
 
             await Task.CompletedTask;
@@ -151,10 +151,10 @@ namespace OurFoodChain.Discord.Messaging {
 
                     int originalPageIndex = currentPageIndex;
 
-                    if (args.Reaction == PaginatedMessageReactionType.Next && ++currentPageIndex > pages.Count())
-                        currentPageIndex = 0;
-                    else if (args.Reaction == PaginatedMessageReactionType.Previous && --currentPageIndex <= 0)
-                        currentPageIndex = Math.Max(0, pages.Count() - 1);
+                    if (args.Reaction == PaginatedMessageReactionType.Next)
+                        await ForwardAsync();
+                    else if (args.Reaction == PaginatedMessageReactionType.Previous)
+                        await BackAsync();
 
                     if (currentPageIndex != originalPageIndex)
                         setCurrentPage = null;

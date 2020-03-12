@@ -21,9 +21,14 @@ namespace OurFoodChain.Discord.Messaging {
         bool PaginationEnabled { get; set; }
         bool Restricted { get; set; }
 
-        IMessage CurrentPage { get; }
+        IMessage CurrentPage { get; set; }
 
         IEnumerable<string> Reactions { get; }
+
+        void AddPage(IMessage message);
+
+        Task ForwardAsync();
+        Task BackAsync();
 
         PaginatedMessageReactionType GetReactionType(string emoji);
 

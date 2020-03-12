@@ -51,113 +51,6 @@ namespace OurFoodChain.Bot {
 
         }
 
-        public static async Task SendMessageAsync(ICommandContext context, PaginatedMessage message, string defaultMessage = "", bool respondToSenderOnly = false) {
-
-            // If the message does not have any pages and does not have a message, quit.
-
-            if (message.Pages.Count() <= 0 && string.IsNullOrEmpty(message.Message)) {
-
-                if (!string.IsNullOrEmpty(defaultMessage))
-                    await BotUtils.ReplyAsync_Info(context, defaultMessage);
-
-                return;
-
-            }
-
-            message.Context = context;
-            message.RespondToSenderOnly = respondToSenderOnly;
-
-            IUserMessage msg = await context.Channel.SendMessageAsync(message.Message, false, message.Pages.Count() > 0 ? message.Pages[0] : null);
-
-            // Only add reactions if there's more than one page.
-
-            if (message.Pages.Count() > 1 || !(message.ReactionCallback is null)) {
-
-                if (message.Pages.Count() > 1 && !string.IsNullOrEmpty(message.PrevEmoji))
-                    await msg.AddReactionAsync(new Emoji(message.PrevEmoji));
-
-                if (message.Pages.Count() > 1 && !string.IsNullOrEmpty(message.NextEmoji))
-                    await msg.AddReactionAsync(new Emoji(message.NextEmoji));
-
-                if (!string.IsNullOrEmpty(message.ToggleEmoji))
-                    await msg.AddReactionAsync(new Emoji(message.ToggleEmoji));
-
-                paginatedMessages.Add(msg.Id, message);
-
-            }
-
-            // If there are now over the maximum number of paginated messages, delete an old one.
-
-            while (paginatedMessages.Count > MaxPaginatedMessages) {
-
-                ulong oldest_message_id = paginatedMessages.Keys.Min();
-
-                paginatedMessages.Remove(oldest_message_id);
-
-            }
-
-        }
-        public static async Task HandlePaginatedMessageReactionAsync(Cacheable<IUserMessage, ulong> cached, DiscordSocketClient discordClient, ISocketMessageChannel channel, SocketReaction reaction, bool added) {
-
-            // If this reaction wasn't performed on a paginated message, quit.
-
-            if (!paginatedMessages.ContainsKey(reaction.MessageId))
-                return;
-
-            // If the reaction was added by the bot, quit.
-
-            if (reaction.UserId == discordClient.CurrentUser.Id)
-                return;
-
-            // Get the paginated message data.
-
-            PaginatedMessage message = paginatedMessages[reaction.MessageId];
-
-            if (!message.Enabled)
-                return;
-
-            // Ignore the reaction if it's not from the sender and we only accept reactions from the sender.
-
-            if (message.RespondToSenderOnly && reaction.UserId != message.Context.User.Id)
-                return;
-
-            string emote = reaction.Emote.Name;
-            int index_prev = message.PageIndex;
-            bool pagination_enabled = message.PaginationEnabled;
-
-            message.ReactionCallback?.Invoke(new Bot.PaginatedMessageReactionCallbackArgs {
-                DiscordMessage = await cached.DownloadAsync(),
-                PaginatedMessage = message,
-                ReactionAdded = added,
-                Reaction = emote
-            });
-
-            if (message.Pages is null || message.Pages.Count() <= 0)
-                return;
-
-            if (!pagination_enabled || !message.PaginationEnabled)
-                return;
-
-            if (emote == message.NextEmoji || (emote == message.ToggleEmoji && added)) {
-
-                if (++message.PageIndex >= message.Pages.Count())
-                    message.PageIndex = 0;
-
-            }
-            else if (emote == message.PrevEmoji || (emote == message.ToggleEmoji && !added)) {
-
-                if (message.PageIndex <= 0)
-                    message.PageIndex = Math.Max(0, message.Pages.Count() - 1);
-                else
-                    --message.PageIndex;
-
-            }
-
-            if (index_prev != message.PageIndex)
-                await cached.DownloadAsync().Result.ModifyAsync(msg => msg.Embed = message.Pages[message.PageIndex]);
-
-        }
-
         public static Color ConvertColor(System.Drawing.Color color) {
             return new Color(color.R, color.G, color.B);
         }
@@ -180,8 +73,6 @@ namespace OurFoodChain.Bot {
         }
 
         // Private members
-
-        private static Dictionary<ulong, PaginatedMessage> paginatedMessages = new Dictionary<ulong, PaginatedMessage>();
 
     }
 

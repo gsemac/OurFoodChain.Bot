@@ -5,6 +5,8 @@ using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -52,37 +54,36 @@ namespace OurFoodChain.Bot.Modules {
             string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", StringUtilities.ToTitleCase(worldName));
             string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
 
-            Bot.PaginatedMessage paginatedMessage = new Bot.PaginatedMessage();
+            IPaginatedMessage paginatedMessage = new PaginatedMessage();
 
             // Add the first page (primary image without zone labels).
 
-            paginatedMessage.Pages.Add(new EmbedBuilder {
+            paginatedMessage.AddPage(new Discord.Messaging.Embed {
                 Title = title,
                 ImageUrl = primary.Url,
-                Footer = new EmbedFooterBuilder { Text = footer }
-            }.Build());
+                Footer = footer
+            });
 
             // A second page (with zone labels) is only included in the case an image has been provided.
 
-            if (!(labeled is null)) {
+            if (labeled != null) {
 
-                paginatedMessage.Pages.Add(new EmbedBuilder {
+                paginatedMessage.AddPage(new Discord.Messaging.Embed {
                     Title = title,
                     ImageUrl = labeled.Url,
-                    Footer = new EmbedFooterBuilder().WithText(footer)
-                }.Build());
+                    Footer = footer
+                });
 
             }
 
             // Send the embed.
 
-            paginatedMessage.PrevEmoji = string.Empty;
-            paginatedMessage.NextEmoji = string.Empty;
+            paginatedMessage.PaginationEnabled = false;
 
-            if (paginatedMessage.Pages.Count > 1)
-                paginatedMessage.ToggleEmoji = "🇿";
+            if (paginatedMessage.Count() > 1)
+                paginatedMessage.AddReaction("🇿", async (args) => await args.Message.ForwardAsync());
 
-            await Bot.DiscordUtils.SendMessageAsync(Context, paginatedMessage);
+            await ReplyAsync(paginatedMessage);
 
         }
 

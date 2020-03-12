@@ -16,7 +16,10 @@ namespace OurFoodChain.Discord.Messaging {
         public bool PaginationEnabled { get; set; } = true;
         public bool Restricted { get; set; } = false;
 
-        public IMessage CurrentPage => pages[currentPageIndex];
+        public IMessage CurrentPage {
+            get => setCurrentPage is null ? pages[currentPageIndex] : setCurrentPage;
+            set => setCurrentPage = value;
+        }
 
         public IEnumerable<string> Reactions {
             get {
@@ -60,6 +63,30 @@ namespace OurFoodChain.Discord.Messaging {
             }
         }
 
+        public void AddPage(IMessage message) {
+
+            pages.Add(message);
+
+        }
+
+        public async Task ForwardAsync() {
+
+            if (++currentPageIndex > pages.Count())
+                currentPageIndex = 0;
+
+            await Task.CompletedTask;
+
+        }
+        public async Task BackAsync() {
+
+            if (--currentPageIndex <= 0)
+                currentPageIndex = Math.Max(0, pages.Count() - 1); ;
+
+            await Task.CompletedTask;
+
+        }
+
+        public PaginatedMessage() { }
         public PaginatedMessage(IEnumerable<IMessage> pages) {
 
             this.pages.AddRange(pages);
@@ -122,10 +149,15 @@ namespace OurFoodChain.Discord.Messaging {
 
                 if (PaginationEnabled) {
 
+                    int originalPageIndex = currentPageIndex;
+
                     if (args.Reaction == PaginatedMessageReactionType.Next && ++currentPageIndex > pages.Count())
                         currentPageIndex = 0;
                     else if (args.Reaction == PaginatedMessageReactionType.Previous && --currentPageIndex <= 0)
-                        currentPageIndex = Math.Max(0, pages.Count() - 1); ;
+                        currentPageIndex = Math.Max(0, pages.Count() - 1);
+
+                    if (currentPageIndex != originalPageIndex)
+                        setCurrentPage = null;
 
                 }
 
@@ -152,6 +184,7 @@ namespace OurFoodChain.Discord.Messaging {
         private readonly List<IMessage> pages = new List<IMessage>();
         private readonly Dictionary<string, Func<IPaginatedMessageReactionArgs, Task>> callbacks = new Dictionary<string, Func<IPaginatedMessageReactionArgs, Task>>();
         private int currentPageIndex = 0;
+        private IMessage setCurrentPage = null; // can be set by callbacks
 
         private string GetEmoji(PaginatedMessageReactionType reactionType) {
 

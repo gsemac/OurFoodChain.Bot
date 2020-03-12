@@ -15,6 +15,7 @@ namespace OurFoodChain.Discord.Messaging {
 
         public int Length => (int)(Name?.Length + Value?.Length);
 
+        public EmbedField() { }
         public EmbedField(string name, object value) {
 
             this.Name = name;

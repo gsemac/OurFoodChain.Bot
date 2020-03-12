@@ -7,6 +7,7 @@ using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Messaging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -292,7 +293,7 @@ namespace OurFoodChain.Bot {
                     foreach (ISpecies species in await Db.GetSpeciesAsync(taxon))
                         pictures.AddRange(await Db.GetPicturesAsync(species));
 
-                    await ShowGalleryAsync(Context, taxon.GetName(), pictures);
+                    await ShowGalleryAsync(taxon.GetName(), pictures);
 
                 }
 
@@ -319,53 +320,53 @@ namespace OurFoodChain.Bot {
 
         }
 
-        public static async Task ShowGalleryAsync(ICommandContext context, string galleryName, IEnumerable<IPicture> pictures) {
+        // Private members
 
-            // If there were no images for this query, show a message and quit.
+        public async Task ShowGalleryAsync(string galleryName, IEnumerable<IPicture> pictures) {
 
             if (pictures.Count() <= 0) {
 
-                await BotUtils.ReplyAsync_Info(context, string.Format("**{0}** does not have any pictures.", galleryName));
+                // If there were no images for this query, show a message and quit.
+
+                await ReplyInfoAsync($"{galleryName.ToTitle().ToBold()} does not have any pictures.");
 
             }
             else {
 
                 // Display a paginated image gallery.
 
-                Bot.PaginatedMessage message = new Bot.PaginatedMessage();
+                IPaginatedMessage message = new PaginatedMessage();
+
                 int index = 1;
 
                 foreach (Picture p in pictures) {
 
-                    EmbedBuilder embed = new EmbedBuilder();
+                    Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 
                     string title = string.Format("Pictures of {0} ({1} of {2})", galleryName, index, pictures.Count());
                     string footer = string.Format("\"{0}\" by {1} — {2}", p.Name, p.Artist, p.Caption);
 
-                    embed.WithTitle(title);
-                    embed.WithImageUrl(p.Url);
-                    embed.WithDescription(p.Description);
-                    embed.WithFooter(footer);
+                    embed.Title = title;
+                    embed.ImageUrl = p.Url;
+                    embed.Description = p.Description;
+                    embed.Footer = footer;
 
-                    message.Pages.Add(embed.Build());
+                    message.AddPage(embed);
 
                     ++index;
 
                 }
 
-                await Bot.DiscordUtils.SendMessageAsync(context, message);
+                await ReplyAsync(message);
 
             }
 
         }
-
-        // Private members
-
         private async Task ShowGalleryAsync(ISpecies species) {
 
             IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(species);
 
-            await ShowGalleryAsync(Context, species.GetShortName(), pictures);
+            await ShowGalleryAsync(species.GetShortName(), pictures);
 
         }
 

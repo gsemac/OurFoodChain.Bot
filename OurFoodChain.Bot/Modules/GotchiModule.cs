@@ -6,6 +6,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Commands;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Extensions;
 using OurFoodChain.Gotchis;
@@ -681,7 +682,7 @@ namespace OurFoodChain.Bot.Modules {
             // Generate a field for each item.
 
             GotchiItem[] items = await GotchiUtils.GetGotchiItemsAsync();
-            List<EmbedFieldBuilder> item_fields = new List<EmbedFieldBuilder>();
+            List<IEmbedField> item_fields = new List<IEmbedField>();
 
             foreach (GotchiItem item in items) {
 
@@ -692,7 +693,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Build the field.
 
-                item_fields.Add(new EmbedFieldBuilder {
+                item_fields.Add(new Discord.Messaging.EmbedField {
                     Name = string.Format("{0}. {1} {2} — {3}", item.Id, item.Icon, item.Name, item.Price <= 0 ? "Not Available" : (item.Price.ToString("n0") + "G")),
                     Value = item.Description
                 });
@@ -701,17 +702,16 @@ namespace OurFoodChain.Bot.Modules {
 
             // Create the embed.
 
-            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
+            IPaginatedMessage embed = new PaginatedMessage();
 
-            embed.AddPages(EmbedUtils.FieldsToEmbedPages(item_fields));
+            embed.AddFields(item_fields);
             embed.SetTitle("🛒 Gotchi Shop");
-            embed.SetDescription(string.Format("Welcome to the Gotchi Shop! Purchase an item with `{0}gotchi buy <item>`.",
-               Config.Prefix));
+            embed.SetDescription($"Welcome to the Gotchi Shop! Purchase an item with `{Config.Prefix}gotchi buy <item>`.");
             embed.SetFooter(string.Format("You currently have {0:n0}G.", user_data.G));
             embed.SetColor(Color.LightOrange);
             embed.AddPageNumbers();
 
-            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+            await ReplyAsync(embed);
 
         }
 
@@ -780,18 +780,17 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
-                Title = string.Format("{0}'s inventory", user.Username)
-            };
+            IPaginatedMessage embed = new PaginatedMessage();
 
-            embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
+            embed.AddLines(lines);
+            embed.SetTitle($"{user.Username}'s inventory");
             embed.SetFooter(string.Format("You currently have {0:n0}G.", userInfo.G));
             embed.AddPageNumbers();
 
             if (lines.Count <= 0)
                 embed.SetDescription("Your inventory is empty.");
 
-            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+            await ReplyAsync(embed);
 
         }
 
@@ -924,13 +923,11 @@ namespace OurFoodChain.Bot.Modules {
 
                 GotchiUserInfo user_data = await Db.GetUserInfoAsync(Context.User.ToCreator());
 
-                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
-                embed.AddPages(EmbedUtils.ListToEmbedPages(gotchi_list, fieldName: string.Format("{0}'s Gotchis ({1}/{2})",
-                    Context.User.Username,
-                    gotchi_list.Count,
-                    user_data.GotchiLimit)));
+                IPaginatedMessage embed = new PaginatedMessage();
 
-                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                embed.AddLines($"{Context.User.Username}'s Gotchis ({gotchi_list.Count}/{user_data.GotchiLimit})", gotchi_list);
+
+                await ReplyAsync(embed);
 
             }
 
@@ -1028,7 +1025,7 @@ namespace OurFoodChain.Bot.Modules {
                 descriptionBuilder.AppendLine(string.Format("*{0}*", StringUtilities.GetFirstSentence(species.Description)));
                 descriptionBuilder.AppendLine("\u200B");
 
-                EmbedBuilder statsPageBuilder = new EmbedBuilder {
+                Discord.Messaging.IEmbed statsPageBuilder = new Discord.Messaging.Embed {
                     Title = string.Format("{0} (#{1}) — Overview", species.GetShortName(), species.Id),
                     Description = descriptionBuilder.ToString(),
                     ImageUrl = species.GetPictureUrl()
@@ -1041,11 +1038,11 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Create the learnset pages.
 
-                List<EmbedFieldBuilder> moveFields = new List<EmbedFieldBuilder>();
+                List<IEmbedField> moveFields = new List<IEmbedField>();
 
                 foreach (GotchiMove move in moves.OrderBy(m => m.Requires.MinimumLevelValue)) {
 
-                    EmbedFieldBuilder field = new EmbedFieldBuilder {
+                    IEmbedField field = new Discord.Messaging.EmbedField {
                         Name = string.Format("{0}. **{1}** ({2} PP)", moveFields.Count + 1, move.Name, move.PP),
                         Value = move.Description
                     };
@@ -1054,21 +1051,16 @@ namespace OurFoodChain.Bot.Modules {
 
                 }
 
-                PaginatedMessageBuilder message = new PaginatedMessageBuilder {
-                    statsPageBuilder
-                };
+                IPaginatedMessage message = new PaginatedMessage();
 
-                message.AddPages(EmbedUtils.FieldsToEmbedPages(moveFields).Select(p => {
+                message.AddPage(statsPageBuilder);
+                message.AddFields(moveFields);
 
-                    p.Title = string.Format("{0} (#{1}) — Learnset", species.GetShortName(), species.Id);
-
-                    return p;
-
-                }));
+                message.SetTitle(string.Format("{0} (#{1}) — Learnset", species.GetShortName(), species.Id));
 
                 message.AddPageNumbers();
 
-                await DiscordUtils.SendMessageAsync(Context, message.Build());
+                await ReplyAsync(message);
 
             }
 

@@ -293,7 +293,6 @@
     <Compile Include="Modules\SpeciesModule.cs" />
     <Compile Include="Modules\TaxonModule.cs" />
     <Compile Include="Modules\ZonesModule.cs" />
-    <Compile Include="PaginatedMessage.cs" />
     <Compile Include="Attributes\DifficultyLevelAttribute.cs" />
     <Compile Include="Attributes\RequiredConfigSettingEnabledAttribute.cs" />
     <Compile Include="OfcBotConfiguration.cs" />
@@ -357,7 +356,6 @@
     <Compile Include="Reviews\ReviewChannelInfo.cs" />
     <Compile Include="Reviews\ReviewInfo.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
-    <Compile Include="PaginatedMessageBuilder.cs" />
     <Compile Include="Users\UserInfo.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
   </ItemGroup>

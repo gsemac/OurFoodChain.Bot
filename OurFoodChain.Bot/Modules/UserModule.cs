@@ -17,6 +17,7 @@ using OurFoodChain.Trophies.Extensions;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Extensions;
+using OurFoodChain.Discord.Messaging;
 
 namespace OurFoodChain.Modules {
 
@@ -153,14 +154,14 @@ namespace OurFoodChain.Modules {
 
             // Create the embed.
 
-            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
-            embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
-            embed.SetTitle(string.Format("🏆 Leaderboard ({0})", lines.Count));
-            embed.SetColor(255, 204, 77);
-            embed.AddPageNumbers();
+            IPaginatedMessage message = new PaginatedMessage();
 
-            // Send the embed.
-            await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+            message.AddLines(lines);
+            message.SetTitle($"🏆 Leaderboard ({lines.Count()})");
+            message.SetColor(255, 204, 77);
+            message.AddPageNumbers();
+
+            await ReplyAsync(message);
 
         }
 
@@ -267,12 +268,14 @@ namespace OurFoodChain.Modules {
             }
             else {
 
-                Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder(EmbedUtils.LinesToEmbedPages(lines));
-                embed.SetTitle(string.Format("⭐ Species favorited by {0} ({1})", Context.User.Username, lines.Count()));
-                embed.SetThumbnailUrl(Context.User.GetAvatarUrl(size: 32));
-                embed.AddPageNumbers();
+                IPaginatedMessage message = new PaginatedMessage();
 
-                await Bot.DiscordUtils.SendMessageAsync(Context, embed.Build());
+                message.AddLines(lines);
+                message.SetTitle($"⭐ Species favorited by {Context.User.Username} ({lines.Count()})");
+                message.SetThumbnailUrl(Context.User.GetAvatarUrl(size: 32));
+                message.AddPageNumbers();
+
+                await ReplyAsync(message);
 
             }
 

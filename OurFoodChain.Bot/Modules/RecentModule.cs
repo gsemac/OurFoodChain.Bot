@@ -4,6 +4,7 @@ using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -31,7 +32,7 @@ namespace OurFoodChain.Bot {
                 long start_ts = DateUtilities.GetCurrentTimestampUtc() - time_amount.ToUnixTimeSeconds();
                 long end_ts = DateUtilities.GetCurrentTimestampUtc();
 
-                await ShowRecentEventsAsync(Context, start_ts, end_ts, timeUnit: time_amount.Unit);
+                await ShowRecentEventsAsync(start_ts, end_ts, timeUnit: time_amount.Unit);
 
             }
             else
@@ -39,7 +40,7 @@ namespace OurFoodChain.Bot {
 
         }
 
-        public async Task<Bot.PaginatedMessageBuilder> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
+        public async Task<Discord.Messaging.IPaginatedMessage> BuildRecentEventsEmbedAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
             // Get all species created within the given timespan.
 
@@ -73,8 +74,7 @@ namespace OurFoodChain.Bot {
 
             // Build embed.
 
-            Bot.PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder();
-            List<EmbedBuilder> pages = new List<EmbedBuilder>();
+            List<Discord.Messaging.IEmbed> pages = new List<Discord.Messaging.IEmbed>();
             List<string> field_lines = new List<string>();
 
             if (new_species.Count() > 0) {
@@ -82,7 +82,7 @@ namespace OurFoodChain.Bot {
                 foreach (ISpecies sp in new_species)
                     field_lines.Add(sp.GetFullName());
 
-                EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("New species ({0})", new_species.Count()));
+                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages(string.Format("New species ({0})", new_species.Count()), field_lines));
 
                 field_lines.Clear();
 
@@ -93,29 +93,31 @@ namespace OurFoodChain.Bot {
                 foreach (ISpecies sp in extinct_species)
                     field_lines.Add(sp.GetFullName());
 
-                EmbedUtils.AddLongFieldToEmbedPages(pages, field_lines, fieldName: string.Format("Extinctions ({0})", extinct_species.Count()));
+                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages(string.Format("Extinctions ({0})", extinct_species.Count()), field_lines));
 
                 field_lines.Clear();
 
             }
 
-            embed.AddPages(pages);
+            foreach (Discord.Messaging.IEmbed page in pages) {
 
-            embed.SetTitle(string.Format("Recent events ({0})", time_amount.ToString()));
-            embed.SetFooter(string.Empty); // remove page numbers added automatically
-            embed.AddPageNumbers();
+                page.Title = string.Format("Recent events ({0})", time_amount.ToString());
 
-            if (embed.FieldCount <= 0)
-                embed.SetDescription("No events");
+                if (page.Fields.Count() <= 0)
+                    page.Description = "No events";
 
-            return embed;
+            }
+
+            EmbedUtilities.AddPageNumbers(pages);
+
+            return new Discord.Messaging.PaginatedMessage(pages);
 
         }
-        public async Task ShowRecentEventsAsync(ICommandContext context, long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
+        public async Task ShowRecentEventsAsync(long startTimestamp, long endTimestamp, TimeUnits timeUnit = 0) {
 
-            Bot.PaginatedMessageBuilder embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
+            Discord.Messaging.IPaginatedMessage embed = await BuildRecentEventsEmbedAsync(startTimestamp, endTimestamp, timeUnit);
 
-            await Bot.DiscordUtils.SendMessageAsync(context, embed.Build());
+            await ReplyAsync(embed);
 
         }
 

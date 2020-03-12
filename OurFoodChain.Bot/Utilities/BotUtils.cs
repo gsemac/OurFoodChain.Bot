@@ -135,11 +135,11 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task ZonesToEmbedPagesAsync(PaginatedMessageBuilder embed, IEnumerable<IZone> zones, SQLiteDatabase database, bool showIcon = true) {
+        public static async Task<IEnumerable<Discord.Messaging.IEmbed>> ZonesToEmbedPagesAsync(int existingLength, IEnumerable<IZone> zones, SQLiteDatabase database, bool showIcon = true) {
 
             List<string> lines = new List<string>();
             int zones_per_page = 20;
-            int max_line_length = Math.Min(showIcon ? 78 : 80, (DiscordUtils.MaxEmbedLength - embed.Length) / zones_per_page);
+            int max_line_length = Math.Min(showIcon ? 78 : 80, (DiscordUtils.MaxEmbedLength - existingLength) / zones_per_page);
 
             foreach (IZone zone in zones) {
 
@@ -154,7 +154,7 @@ namespace OurFoodChain {
 
             }
 
-            embed.AddPages(EmbedUtils.LinesToEmbedPages(lines, 20));
+            return EmbedUtilities.CreateEmbedPages(string.Empty, lines, itemsPerPage: 20, options: EmbedPaginationOptions.AddPageNumbers);
 
         }
 

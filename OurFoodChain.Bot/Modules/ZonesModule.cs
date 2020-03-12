@@ -1,13 +1,12 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
-using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
-using System;
+using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Utilities;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
@@ -17,59 +16,67 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot.Modules {
 
     public class ZonesModule :
-        ModuleBase {
-
-        public IOfcBotConfiguration BotConfiguration { get; set; }
-        public SQLiteDatabase Db { get; set; }
+        OfcModuleBase {
 
         [Command("addzone"), Alias("addz"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task AddZone(string name, string type = "", string description = "") {
+        public async Task AddZone(string zoneName, string arg1 = "", string arg2 = "") {
 
-            if (string.IsNullOrEmpty(name)) {
+            // Cases:
+            // 1. <zoneName>
+            // 2. <zoneName> <zoneTypeName>
+            // 3. <zoneName> <zoneTypeName> <description>
+            // 4. <zoneName> <description>
 
-                await BotUtils.ReplyAsync_Error(Context, "Zone name cannot be empty.");
+            string zoneTypeName = arg1;
+            string description = arg2;
+
+            if (string.IsNullOrEmpty(zoneName)) {
+
+                // The user must specify a non-empty zone name.
+
+                await ReplyErrorAsync("Zone name cannot be empty.");
 
             }
             else {
 
-                // Allow the user to specify zones with numbers (e.g., "1") or single letters (e.g., "A").
+                // Allow the user to specify zones with numbers (e.g. "1") or single letters (e.g. "A").
                 // Otherwise, the name is taken as-is.
-                name = ZoneUtilities.GetFullName(name).ToLowerInvariant();
 
-                // If an invalid type was provided, assume the user meant it as a description instead.
-                // i.e., "addzone <name> <description>"
+                zoneName = ZoneUtilities.GetFullName(zoneName).ToLowerInvariant();
 
-                IZoneType zone_type = await Db.GetZoneTypeAsync(type);
+                IZoneType zoneType = await Db.GetZoneTypeAsync(arg1);
 
-                if (!zone_type.IsValid()) {
+                if (!zoneType.IsValid()) {
 
-                    description = type;
+                    // If an invalid type was provided, assume the user meant it as a description instead (4).
 
-                    // Attempt to determine the zone type automatically if one wasn't provided.
-                    // Currently, this is only possible if users are using the default zone types (i.e. "aquatic" and "terrestrial").
+                    description = zoneTypeName;
 
-                    zone_type = await Db.GetDefaultZoneTypeAsync(name);
+                    // Attempt to determine the zone type automatically based on the zome name.
+                    // This is currently only possible for default zones ("aquatic" or "terrestrial").
+
+                    zoneType = await Db.GetDefaultZoneTypeAsync(zoneName);
 
                 }
 
-                if (await Db.GetZoneAsync(name) != null) {
+                if (await Db.GetZoneAsync(zoneName) != null) {
 
                     // Don't attempt to create the zone if it already exists.
 
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone named \"{0}\" already exists.", ZoneUtilities.GetFullName(name)));
+                    await ReplyWarningAsync($"A zone named {ZoneUtilities.GetFullName(zoneName).ToBold()} already exists.");
 
                 }
                 else {
 
+                    // Add the new zone.
+
                     await Db.AddZoneAsync(new Zone {
-                        Name = name,
+                        Name = zoneName,
                         Description = description,
-                        TypeId = zone_type.Id
+                        TypeId = zoneType.Id
                     });
 
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new {0} zone, **{1}**.",
-                        zone_type.Name.ToLowerInvariant(),
-                        ZoneUtilities.GetFullName(name)));
+                    await ReplySuccessAsync($"Successfully created new {zoneType.Name.ToLowerInvariant()} zone, {ZoneUtilities.GetFullName(zoneName).ToBold()}.");
 
                 }
 
@@ -92,22 +99,20 @@ namespace OurFoodChain.Bot.Modules {
 
                     // We need to make sure that even if the "short" description is actually long, we can show n zones per page.
 
-                    PaginatedMessageBuilder embed = new PaginatedMessageBuilder {
-                        Title = StringUtilities.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count())),
-                        Description = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
-                            BotConfiguration.Prefix,
-                            zones.First().GetShortName().Contains(" ") ? string.Format("\"{0}\"", zones.First().GetShortName().ToLowerInvariant()) : zones.First().GetShortName().ToLowerInvariant())
-                    };
+                    string embedTitle = StringUtilities.ToTitleCase(string.Format("{0} zones ({1})", string.IsNullOrEmpty(arg0) ? "All" : arg0, zones.Count()));
+                    string embedDescription = string.Format("For detailed zone information, use `{0}zone <zone>` (e.g. `{0}zone {1}`).\n\n",
+                        Config.Prefix,
+                        zones.First().GetShortName().Contains(" ") ? string.Format("\"{0}\"", zones.First().GetShortName().ToLowerInvariant()) : zones.First().GetShortName().ToLowerInvariant());
 
                     // Build paginated message.
 
-                    await BotUtils.ZonesToEmbedPagesAsync(embed, zones, Db);
-                    embed.AddPageNumbers();
+                    IEnumerable<Discord.Messaging.IEmbed> pages = await BotUtils.ZonesToEmbedPagesAsync(embedTitle.Length + embedDescription.Length, zones, Db);
 
                     if (zone_type.IsValid())
-                        embed.SetColor(DiscordUtils.ConvertColor(zone_type.Color));
+                        foreach (Discord.Messaging.IEmbed page in pages)
+                            page.Color = zone_type.Color;
 
-                    await DiscordUtils.SendMessageAsync(Context, embed.Build());
+                    await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
                 }
                 else {
@@ -125,12 +130,12 @@ namespace OurFoodChain.Bot.Modules {
 
                 if (await BotUtils.ReplyValidateZoneAsync(Context, zone)) {
 
-                    List<Embed> pages = new List<Embed>();
+                    List<Discord.Messaging.IEmbed> pages = new List<Discord.Messaging.IEmbed>();
 
                     IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId) ?? new ZoneType();
                     string title = string.Format("{0} {1}", type.Icon, zone.GetFullName());
                     string description = zone.GetDescriptionOrDefault();
-                    Color color = DiscordUtils.ConvertColor(type.Color);
+                    System.Drawing.Color color = type.Color;
 
                     // Get all species living in this zone.
 
@@ -141,30 +146,34 @@ namespace OurFoodChain.Bot.Modules {
                     // Starting building a paginated message.
                     // The message will have a paginated species list, and a toggle button to display the species sorted by role.
 
-                    List<EmbedBuilder> embed_pages = EmbedUtils.SpeciesListToEmbedPages(species_list, fieldName: (string.Format("Extant species in this zone ({0}):", species_list.Count())));
-                    PaginatedMessageBuilder paginated = new PaginatedMessageBuilder(embed_pages);
+                    List<Discord.Messaging.IEmbed> embed_pages =
+                        new List<Discord.Messaging.IEmbed>(EmbedUtilities.CreateEmbedPages(string.Format("Extant species in this zone ({0}):", species_list.Count()), species_list, options: EmbedPaginationOptions.AddPageNumbers));
 
                     if (embed_pages.Count() <= 0)
-                        embed_pages.Add(new EmbedBuilder());
+                        embed_pages.Add(new Discord.Messaging.Embed());
 
                     // Add title, decription, etc., to all pages.
 
-                    paginated.SetTitle(title);
-                    paginated.SetDescription(description);
-                    paginated.SetThumbnailUrl(zone.Pictures.FirstOrDefault()?.Url);
-                    paginated.SetColor(color);
+                    foreach (Discord.Messaging.IEmbed page in pages) {
+
+                        page.Title = title;
+                        page.Description = description;
+                        page.ThumbnailUrl = zone.Pictures.FirstOrDefault()?.Url;
+                        page.Color = color;
+
+                    }
 
                     // This page will have species organized by role.
                     // Only bother with the role page if species actually exist in this zone.
 
                     if (species_list.Count() > 0) {
 
-                        EmbedBuilder role_page = new EmbedBuilder();
+                        Discord.Messaging.IEmbed role_page = new Discord.Messaging.Embed();
 
-                        role_page.WithTitle(title);
-                        role_page.WithDescription(description);
+                        role_page.Title = title;
+                        role_page.Description = description;
                         //role_page.WithThumbnailUrl(zone.pics);
-                        role_page.WithColor(color);
+                        role_page.Color = color;
 
                         Dictionary<string, List<ISpecies>> roles_map = new Dictionary<string, List<ISpecies>>();
 
@@ -217,24 +226,25 @@ namespace OurFoodChain.Bot.Modules {
 
                         // Add the page to the builder.
 
-                        paginated.AddReaction("🇷");
-                        paginated.SetCallback(async (args) => {
+                        Discord.Messaging.IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(pages);
 
-                            if (args.Reaction != "🇷")
+                        message.AddReaction("🇷", async (args) => {
+
+                            if (args.Emoji != "🇷")
                                 return;
 
-                            args.PaginatedMessage.PaginationEnabled = !args.ReactionAdded;
+                            args.Message.PaginationEnabled = !args.ReactionAdded;
 
                             if (args.ReactionAdded)
-                                await args.DiscordMessage.ModifyAsync(msg => msg.Embed = role_page.Build());
+                                args.Message.CurrentPage = new Discord.Messaging.Message() { Embed = role_page };
                             else
-                                await args.DiscordMessage.ModifyAsync(msg => msg.Embed = args.PaginatedMessage.Pages[args.PaginatedMessage.PageIndex]);
+                                args.Message.CurrentPage = null;
 
                         });
 
-                    }
+                        await ReplyAsync(message);
 
-                    await Bot.DiscordUtils.SendMessageAsync(Context, paginated.Build());
+                    }
 
                 }
 
@@ -322,16 +332,15 @@ namespace OurFoodChain.Bot.Modules {
 
                 IEnumerable<IZone> zones = await Db.GetZonesAsync(type);
 
-                PaginatedMessageBuilder embed = new Bot.PaginatedMessageBuilder {
-                    Title = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count()),
-                    Description = type.Description + "\n\n",
-                    Color = DiscordUtils.ConvertColor(type.Color)
-                };
+                string embedTitle = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count());
+                string embedDescription = type.Description + "\n\n";
+                System.Drawing.Color embedColor = type.Color;
 
-                await BotUtils.ZonesToEmbedPagesAsync(embed, zones, Db, showIcon: false);
-                embed.AddPageNumbers();
+                IEnumerable<Discord.Messaging.IEmbed> pages = await BotUtils.ZonesToEmbedPagesAsync(embedTitle.Length + embedDescription.Length, zones, Db, showIcon: false);
 
-                await DiscordUtils.SendMessageAsync(Context, embed.Build());
+                EmbedUtilities.AddPageNumbers(pages);
+
+                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
 
             }
             else

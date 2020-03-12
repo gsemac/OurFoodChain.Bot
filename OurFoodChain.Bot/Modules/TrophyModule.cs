@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using OurFoodChain.Trophies.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Discord.Messaging;
+using OurFoodChain.Discord.Extensions;
 
 namespace OurFoodChain.Bot.Modules {
 
@@ -68,8 +70,8 @@ namespace OurFoodChain.Bot.Modules {
             int current_page = 0;
             int current_page_trophy_count = 0;
 
-            Bot.PaginatedMessage message = new Bot.PaginatedMessage();
-            EmbedBuilder embed = null;
+            IPaginatedMessage message = new PaginatedMessage();
+            Discord.Messaging.IEmbed embed = null;
 
             IEnumerable<ITrophy> trophy_list = TrophyScanner.GetTrophies();
 
@@ -79,13 +81,12 @@ namespace OurFoodChain.Bot.Modules {
 
                     ++current_page;
 
-                    embed = new EmbedBuilder();
-                    embed.WithTitle(string.Format("All Trophies ({0})", TrophyScanner.GetTrophies().Count()));
-                    embed.WithDescription(string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).",
-                        Config.Prefix,
-                        trophy_list.First().Name));
-                    embed.WithFooter(string.Format("Page {0} of {1}", current_page, total_pages));
-                    embed.WithColor(new Color(255, 204, 77));
+                    embed = new Discord.Messaging.Embed();
+
+                    embed.Title = string.Format("All Trophies ({0})", TrophyScanner.GetTrophies().Count());
+                    embed.Description = string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).", Config.Prefix, trophy_list.First().Name);
+                    embed.Footer = string.Format("Page {0} of {1}", current_page, total_pages);
+                    embed.Color = new Color(255, 204, 77).ToSystemDrawingColor();
 
                 }
 
@@ -115,7 +116,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 if (current_page_trophy_count >= trophies_per_page) {
 
-                    message.Pages.Add(embed.Build());
+                    message.AddPage(embed);
 
                     current_page_trophy_count = 0;
 
@@ -124,10 +125,11 @@ namespace OurFoodChain.Bot.Modules {
             }
 
             // Add the last embed to the message.
-            if (!(embed is null))
-                message.Pages.Add(embed.Build());
 
-            await Bot.DiscordUtils.SendMessageAsync(Context, message);
+            if (embed != null)
+                message.AddPage(embed);
+
+            await ReplyAsync(message);
 
         }
 

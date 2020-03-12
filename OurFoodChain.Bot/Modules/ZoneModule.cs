@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot.Modules {
 
-    public class ZonesModule :
+    public class ZoneModule :
         OfcModuleBase {
 
         [Command("addzone"), Alias("addz"), RequirePrivilege(PrivilegeLevel.ServerModerator)]

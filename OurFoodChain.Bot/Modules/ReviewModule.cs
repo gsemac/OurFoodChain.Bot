@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot.Modules {
 
-    public class ReviewsModule :
+    public class ReviewModule :
         OfcModuleBase {
 
         [Command("reviews"), Alias("review")]

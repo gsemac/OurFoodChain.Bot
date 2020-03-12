@@ -288,11 +288,11 @@
     <Compile Include="Modules\PreyModule.cs" />
     <Compile Include="Modules\RecentModule.cs" />
     <Compile Include="Modules\RelationshipModule.cs" />
-    <Compile Include="Modules\ReviewsModule.cs" />
+    <Compile Include="Modules\ReviewModule.cs" />
     <Compile Include="Modules\RoleModule.cs" />
     <Compile Include="Modules\SpeciesModule.cs" />
     <Compile Include="Modules\TaxonModule.cs" />
-    <Compile Include="Modules\ZonesModule.cs" />
+    <Compile Include="Modules\ZoneModule.cs" />
     <Compile Include="Attributes\DifficultyLevelAttribute.cs" />
     <Compile Include="Attributes\RequiredConfigSettingEnabledAttribute.cs" />
     <Compile Include="OfcBotConfiguration.cs" />
@@ -553,6 +553,7 @@
   <ItemGroup>
     <Content Include="data\updates\update025.sql" />
     <Content Include="data\updates\update026.sql" />
+    <Content Include="data\updates\update027.sql" />
     <None Include="data\help\addzonetype.json" />
     <Content Include="data\updates\update001.sql" />
     <Content Include="data\updates\update010.sql" />

@@ -7,10 +7,10 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -47,7 +47,7 @@ namespace OurFoodChain {
                 string message = "No such zone exists.";
 
                 if (!string.IsNullOrEmpty(zoneName))
-                    message = string.Format("Zone \"{0}\" does not exist.", zoneName);
+                    message = $"Zone {zoneName.ToTitle().ToBold()} does not exist.";
 
                 await DiscordUtilities.ReplyErrorAsync(context.Channel, message);
 

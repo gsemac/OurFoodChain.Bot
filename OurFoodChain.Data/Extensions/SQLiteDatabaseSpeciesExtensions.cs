@@ -786,6 +786,32 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task AddPreyAsync(this SQLiteDatabase database, ISpecies predatorSpecies, ISpecies preySpecies, string notes = "") {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Predates(species_id, eats_id, notes) VALUES($species_id, $eats_id, $notes)")) {
+
+                cmd.Parameters.AddWithValue("$species_id", predatorSpecies.Id);
+                cmd.Parameters.AddWithValue("$eats_id", preySpecies.Id);
+                cmd.Parameters.AddWithValue("$notes", notes);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+        public static async Task RemovePreyAsync(this SQLiteDatabase database, ISpecies predatorSpecies, ISpecies preySpecies) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Predates WHERE species_id = $species_id AND eats_id = $eats_id")) {
+
+                cmd.Parameters.AddWithValue("$species_id", predatorSpecies.Id);
+                cmd.Parameters.AddWithValue("$eats_id", preySpecies.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+
         public static async Task<ISearchResult> GetSearchResultsAsync(this SQLiteDatabase database, ISearchContext context, ISearchQuery query) {
 
             List<ISpecies> results = new List<ISpecies>();

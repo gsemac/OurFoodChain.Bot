@@ -7,6 +7,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -208,63 +209,55 @@ namespace OurFoodChain.Bot {
         public async Task Prey(string genusName, string speciesName = "") {
 
             // If no species argument was provided, assume the user omitted the genus.
+
             if (string.IsNullOrEmpty(speciesName)) {
+
                 speciesName = genusName;
                 genusName = string.Empty;
+
             }
 
             // Get the specified species.
 
-            Species sp = await BotUtils.ReplyFindSpeciesAsync(Context, genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (sp is null)
-                return;
+            if (species.IsValid()) {
 
-            // Get the preyed-upon species.
+                // Get the preyed-upon species.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Predates WHERE species_id=$species_id;")) {
+                IEnumerable<IPredationInfo> preySpecies = (await Db.GetPreyAsync(species))
+                    .Where(info => !info.Species.IsExtinct())
+                    .OrderBy(info => info.Species.GetShortName());
 
-                cmd.Parameters.AddWithValue("$species_id", sp.Id);
-
-                IEnumerable<DataRow> rows = await Db.GetRowsAsync(cmd);
-
-                if (rows.Count() <= 0)
-                    await BotUtils.ReplyAsync_Info(Context, string.Format("**{0}** does not prey upon any other species.", sp.ShortName));
-                else {
-
-                    List<Tuple<Species, string>> prey_list = new List<Tuple<Species, string>>();
-
-                    foreach (DataRow row in rows) {
-
-                        prey_list.Add(new Tuple<Species, string>(
-                            await BotUtils.GetSpeciesFromDb(row.Field<long>("eats_id")),
-                            row.Field<string>("notes")));
-
-                    }
-
-                    prey_list.Sort((lhs, rhs) => lhs.Item1.ShortName.CompareTo(rhs.Item1.ShortName));
+                if (preySpecies.Count() > 0) {
 
                     List<string> lines = new List<string>();
 
-                    foreach (Tuple<Species, string> prey in prey_list) {
+                    foreach (IPredationInfo preyInfo in preySpecies) {
 
-                        string line = prey.Item1.IsExtinct ? BotUtils.Strikeout(prey.Item1.ShortName) : prey.Item1.ShortName;
+                        string line = preyInfo.Species.IsExtinct() ? preyInfo.Species.GetShortName().ToStrikethrough() : preyInfo.Species.GetShortName();
 
-                        if (!string.IsNullOrEmpty(prey.Item2))
-                            line += (string.Format(" ({0})", prey.Item2.ToLower()));
+                        if (!string.IsNullOrEmpty(preyInfo.Notes))
+                            line += (string.Format(" ({0})", preyInfo.Notes.ToLowerInvariant()));
 
                         lines.Add(line);
 
                     }
 
-                    PaginatedMessageBuilder embed = new PaginatedMessageBuilder();
+                    IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, options: EmbedPaginationOptions.AddPageNumbers);
 
-                    embed.AddPages(EmbedUtils.LinesToEmbedPages(lines));
+                    foreach (Discord.Messaging.IEmbed page in pages) {
 
-                    embed.SetTitle(string.Format("Species preyed upon by {0} ({1})", sp.ShortName, prey_list.Count()));
-                    embed.AddPageNumbers();
+                        page.Title = string.Format("Species preyed upon by {0} ({1})", species.GetShortName(), preySpecies.Count());
 
-                    await DiscordUtils.SendMessageAsync(Context, embed.Build());
+                    }
+
+                    await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+
+                }
+                else {
+
+                    await ReplyInfoAsync(string.Format("**{0}** does not prey upon any other species.", species.GetShortName()));
 
                 }
 
@@ -317,61 +310,38 @@ namespace OurFoodChain.Bot {
         }
         private async Task ReplyAddPreyAsync(ISpecies species, IEnumerable<ISpecies> preySpecies, string notes) {
 
-            foreach (Species prey in preySpecies) {
+            foreach (ISpecies prey in preySpecies)
+                await Db.AddPreyAsync(species, prey, notes);
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Predates(species_id, eats_id, notes) VALUES($species_id, $eats_id, $notes)")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", species.Id);
-                    cmd.Parameters.AddWithValue("$eats_id", prey.Id);
-                    cmd.Parameters.AddWithValue("$notes", notes);
-
-                    await Db.ExecuteNonQueryAsync(cmd);
-
-                }
-
-            }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** now preys upon {1}.",
-                species.ShortName,
-                StringUtilities.ConjunctiveJoin(", ", preySpecies.Select(x => string.Format("**{0}**", x.ShortName)).ToArray())
+            await ReplySuccessAsync(string.Format("**{0}** now preys upon {1}.",
+                species.GetShortName(),
+                StringUtilities.ConjunctiveJoin(", ", preySpecies.Select(x => string.Format("**{0}**", x.GetShortName())).ToArray())
                 ));
 
         }
 
         private async Task ReplyRemovePreyAsync(ISpecies predatorSpecies, ISpecies preySpecies) {
 
-            if (predatorSpecies is null || preySpecies is null)
-                return;
+            if (predatorSpecies.IsValid() && preySpecies.IsValid()) {
 
-            // Remove the relationship.
+                IEnumerable<IPredationInfo> existingPrey = await Db.GetPreyAsync(predatorSpecies);
 
-            // Ensure that the user has necessary privileges to use this command.
-            if (!await BotUtils.ReplyHasPrivilegeOrOwnershipAsync(Context, BotConfiguration, PrivilegeLevel.ServerModerator, predatorSpecies))
-                return;
+                if (existingPrey.Any(info => info.Species.Id == preySpecies.Id)) {
 
-            PreyInfo[] existing_prey = await SpeciesUtils.GetPreyAsync(predatorSpecies);
+                    await Db.RemovePreyAsync(predatorSpecies, preySpecies);
 
-            if (existing_prey.Any(x => x.Prey.Id == preySpecies.Id)) {
-
-                using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Predates WHERE species_id = $species_id AND eats_id = $eats_id")) {
-
-                    cmd.Parameters.AddWithValue("$species_id", predatorSpecies.Id);
-                    cmd.Parameters.AddWithValue("$eats_id", preySpecies.Id);
-
-                    await Db.ExecuteNonQueryAsync(cmd);
+                    await ReplySuccessAsync(string.Format("**{0}** no longer preys upon **{1}**.",
+                        predatorSpecies.GetShortName(),
+                        preySpecies.GetShortName()));
 
                 }
+                else {
 
-                await BotUtils.ReplyAsync_Success(Context, string.Format("**{0}** no longer preys upon **{1}**.",
-                    predatorSpecies.ShortName,
-                    preySpecies.ShortName));
+                    await ReplySuccessAsync(string.Format("**{0}** does not prey upon **{1}**.",
+                       predatorSpecies.GetShortName(),
+                       preySpecies.GetShortName()));
 
-            }
-            else {
-
-                await BotUtils.ReplyAsync_Warning(Context, string.Format("**{0}** does not prey upon **{1}**.",
-                   predatorSpecies.ShortName,
-                   preySpecies.ShortName));
+                }
 
             }
 

@@ -71,11 +71,19 @@ namespace OurFoodChain.Discord.Bots {
 
         private PropertyInfo GetPropertyByJsonPropertyAttribute(string jsonPropertyName) {
 
-            return GetType().GetProperties().FirstOrDefault(p => {
+            // Underscores are ignored when resolving properties.
 
-                JsonPropertyAttribute attribute = Attribute.GetCustomAttribute(p, typeof(JsonPropertyAttribute)) as JsonPropertyAttribute;
+            jsonPropertyName = jsonPropertyName.Replace("_", string.Empty);
 
-                return attribute != null && string.Equals(attribute.PropertyName, jsonPropertyName, StringComparison.OrdinalIgnoreCase);
+            return GetType().GetProperties().FirstOrDefault(property => {
+
+                JsonPropertyAttribute attribute = Attribute.GetCustomAttribute(property, typeof(JsonPropertyAttribute)) as JsonPropertyAttribute;
+
+                string attributePropertyName = attribute?.PropertyName;
+                string propertyName = property.Name;
+
+                return string.Equals(attributePropertyName, jsonPropertyName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(propertyName, jsonPropertyName, StringComparison.OrdinalIgnoreCase);
 
             });
 

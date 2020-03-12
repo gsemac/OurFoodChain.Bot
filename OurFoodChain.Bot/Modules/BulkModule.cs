@@ -46,7 +46,7 @@ namespace OurFoodChain.Bot.Modules {
 
                             if (await BotUtils.ReplyValidateZoneAsync(Context, zone, zoneName)) {
 
-                                IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.GetFullName())) {
+                                IPaginatedMessage message = new PaginatedMessage(string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.GetFullName())) {
                                     Restricted = true
                                 };
 

@@ -342,7 +342,6 @@
     <Compile Include="Gotchis\GotchiUtils.cs" />
     <Compile Include="periods\Period.cs" />
     <Compile Include="Taxa\Relationship.cs" />
-    <Compile Include="roles\Role.cs" />
     <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="users\UserRank.cs" />
@@ -361,7 +360,6 @@
     <Compile Include="PaginatedMessageBuilder.cs" />
     <Compile Include="users\UserInfo.cs" />
     <Compile Include="Utilities\TimeAmount.cs" />
-    <Compile Include="Utilities\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

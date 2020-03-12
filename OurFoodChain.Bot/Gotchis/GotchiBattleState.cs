@@ -668,7 +668,7 @@ namespace OurFoodChain.Gotchis {
             battleText = sb.ToString();
 
         }
-        private double _getWeaknessMultiplier(string moveRole, Role[] target_roles) {
+        private double _getWeaknessMultiplier(string moveRole, IEnumerable<Common.Roles.IRole> target_roles) {
 
             double mult = 1.0;
 
@@ -679,31 +679,31 @@ namespace OurFoodChain.Gotchis {
              base-consumer -> producer
              */
 
-            foreach (Role role in target_roles) {
+            foreach (Common.Roles.IRole role in target_roles) {
 
                 switch (moveRole.ToLower()) {
 
                     case "parasite":
-                        if (role.name.ToLower() == "predator" || role.name.ToLower() == "base-consumer")
+                        if (role.GetName().ToLower() == "predator" || role.GetName().ToLower() == "base-consumer")
                             mult *= 1.2;
                         break;
 
                     case "decomposer":
                     case "scavenger":
                     case "detritvore":
-                        if (role.name.ToLower() == "producer")
+                        if (role.GetName().ToLower() == "producer")
                             mult *= 1.2;
                         break;
 
                     case "predator":
-                        if (role.name.ToLower() == "predator" || role.name.ToLower() == "base-consumer")
+                        if (role.GetName().ToLower() == "predator" || role.GetName().ToLower() == "base-consumer")
                             mult *= 1.2;
-                        else if (role.name.ToLower() == "producer")
+                        else if (role.GetName().ToLower() == "producer")
                             mult *= 0.8;
                         break;
 
                     case "base-consumer":
-                        if (role.name.ToLower() == "producer")
+                        if (role.GetName().ToLower() == "producer")
                             mult *= 1.2;
                         break;
 

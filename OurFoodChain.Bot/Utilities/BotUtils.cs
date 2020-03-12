@@ -27,9 +27,9 @@ namespace OurFoodChain {
 
         }
 
-        public static async Task<bool> ReplyAsync_ValidateRole(ICommandContext context, Role role) {
+        public static async Task<bool> ReplyAsync_ValidateRole(ICommandContext context, Common.Roles.IRole role) {
 
-            if (role is null || role.id <= 0) {
+            if (role is null || role.Id <= 0) {
 
                 await context.Channel.SendMessageAsync("No such role exists.");
 

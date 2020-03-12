@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace OurFoodChain {
+namespace OurFoodChain.Common.Utilities {
 
-    public class Utils {
+    public static class GeneralUtilities {
 
         public static void Swap<T>(ref T lhs, ref T rhs) {
 
@@ -18,7 +16,6 @@ namespace OurFoodChain {
             rhs = temp;
 
         }
-
 
     }
 

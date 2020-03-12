@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Data;
+﻿using OurFoodChain.Common;
+using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
@@ -54,10 +55,10 @@ namespace OurFoodChain.Extensions {
             return result.ToArray();
 
         }
-        public static async Task<UserRank> GetRankAsync(this SQLiteDatabase database, UserInfo userInfo, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
+        public static async Task<UserRank> GetRankAsync(this SQLiteDatabase database, ICreator creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
 
             return (await database.GetRanksAsync())
-                .Where(x => x.User.Id == userInfo.Id || ((flags.HasFlag(UserInfoQueryFlags.MatchEither) || x.User.Id == UserInfo.NullId) && x.User.Username == userInfo.Username))
+                .Where(x => x.User.Id == creator.UserId || ((flags.HasFlag(UserInfoQueryFlags.MatchEither) || x.User.Id == UserInfo.NullId) && x.User.Username == creator.Name))
                 .FirstOrDefault();
 
         }

@@ -50,6 +50,40 @@ namespace OurFoodChain {
         public async Task ReplyErrorAsync(string message) => await DiscordUtilities.ReplyErrorAsync(Context.Channel, message);
         public async Task ReplySuccessAsync(string message) => await DiscordUtilities.ReplySuccessAsync(Context.Channel, message);
 
+        // Privilege replies
+
+        public async Task<bool> ReplyValidatePrivilegeAsync(PrivilegeLevel level, ISpecies species = null) {
+
+            if (species.IsValid() && Context.User.Id == species.Creator?.UserId)
+                return true;
+
+            if (Config.HasPrivilegeLevel(Context.User, level))
+                return true;
+
+            string privilegeName = "";
+
+            switch (level) {
+
+                case PrivilegeLevel.BotAdmin:
+                    privilegeName = "Bot Admin";
+                    break;
+
+                case PrivilegeLevel.ServerAdmin:
+                    privilegeName = "Admin";
+                    break;
+
+                case PrivilegeLevel.ServerModerator:
+                    privilegeName = "Moderator";
+                    break;
+
+            }
+
+            await ReplyErrorAsync($"You must have {privilegeName.ToTitle().ToBold()} privileges to use this command.");
+
+            return false;
+
+        }
+
         // Service replies
 
         public async Task ReplyAsync(IPaginatedMessage message) => await PaginatedMessageService.SendMessageAsync(Context, message);

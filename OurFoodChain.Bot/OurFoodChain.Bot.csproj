@@ -279,7 +279,7 @@
     <Compile Include="Modules\AdminModule.cs" />
     <Compile Include="Modules\BulkModule.cs" />
     <Compile Include="Modules\ConfigurationModule.cs" />
-    <Compile Include="Modules\PicturesModule.cs" />
+    <Compile Include="Modules\PictureModule.cs" />
     <Compile Include="Modules\GenerationModule.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\IdeaModule.cs" />
@@ -343,7 +343,6 @@
     <Compile Include="periods\Period.cs" />
     <Compile Include="Taxa\Relationship.cs" />
     <Compile Include="roles\Role.cs" />
-    <Compile Include="Taxa\PreyInfo.cs" />
     <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="users\UserRank.cs" />

@@ -9,14 +9,12 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Bot.Modules {
 
     public class ReviewsModule :
-        ModuleBase {
-
-        public IOfcBotConfiguration BotConfiguration { get; set; }
+        OfcModuleBase {
 
         [Command("reviews"), Alias("review")]
         public async Task Reviews() {
 
-            ReviewChannelInfo[] channel_info_array = ReviewChannelInfo.FromArray(BotConfiguration.ReviewChannels);
+            ReviewChannelInfo[] channel_info_array = ReviewChannelInfo.FromArray(Config.ReviewChannels);
 
             if (channel_info_array.Count() <= 0) {
 

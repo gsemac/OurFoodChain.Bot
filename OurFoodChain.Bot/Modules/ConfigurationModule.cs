@@ -13,16 +13,14 @@ namespace OurFoodChain.Bot.Modules {
 
     [Group("config")]
     public class ConfigurationModule :
-        ModuleBase {
+        OfcModuleBase {
 
-        public IOfcBotConfiguration BotConfiguration { get; set; }
         public Discord.Services.ICommandHandlingService CommandHandlingService { get; set; }
-        public DiscordSocketClient DiscordClient { get; set; }
 
         [Command("set"), RequirePrivilege(PrivilegeLevel.BotAdmin)]
         public async Task Set(string key, string value) {
 
-            if (BotConfiguration.SetProperty(key, value))
+            if (Config.SetProperty(key, value))
                 await DiscordUtilities.ReplySuccessAsync(Context.Channel,
                     string.Format("Successfully set **{0}** to **{1}**.", key, value));
             else
@@ -35,7 +33,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Update the bot's "Playing" status.
 
-            await DiscordClient.SetGameAsync(BotConfiguration.Playing);
+            await DiscordClient.SetGameAsync(Config.Playing);
 
         }
 
@@ -44,7 +42,7 @@ namespace OurFoodChain.Bot.Modules {
 
             string configFilename = "config.json";
 
-            BotConfiguration.Save(configFilename);
+            Config.Save(configFilename);
 
             await DiscordUtilities.ReplySuccessAsync(Context.Channel,
                 string.Format("Successfully saved config to **{0}**.", configFilename));

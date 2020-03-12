@@ -343,7 +343,6 @@
     <Compile Include="periods\Period.cs" />
     <Compile Include="Taxa\Relationship.cs" />
     <Compile Include="roles\Role.cs" />
-    <Compile Include="Taxa\Species.cs" />
     <Compile Include="Taxa\PreyInfo.cs" />
     <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />

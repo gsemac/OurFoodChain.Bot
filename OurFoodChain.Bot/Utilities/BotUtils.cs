@@ -71,14 +71,6 @@ namespace OurFoodChain {
             return true;
 
         }
-        public static bool ValidateTaxa(Taxon[] taxa) {
-
-            if (taxa is null || taxa.Count() != 1)
-                return false;
-
-            return true;
-
-        }
         public static async Task<bool> ReplyIsImageUrlValidAsync(ICommandContext context, string imageUrl) {
 
             if (!StringUtilities.IsImageUrl(imageUrl)) {

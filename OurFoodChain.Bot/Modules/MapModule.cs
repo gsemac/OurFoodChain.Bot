@@ -19,9 +19,6 @@ namespace OurFoodChain.Bot.Modules {
 
         private const string MAP_GALLERY_NAME = "map";
 
-        public IOfcBotConfiguration Config { get; set; }
-        public SQLiteDatabase Db { get; set; }
-
         [Command("map")]
         public async Task Map() {
 

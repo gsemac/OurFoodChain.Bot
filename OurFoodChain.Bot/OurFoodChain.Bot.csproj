@@ -342,7 +342,6 @@
     <Compile Include="Gotchis\GotchiUtils.cs" />
     <Compile Include="Periods\Period.cs" />
     <Compile Include="Taxa\Relationship.cs" />
-    <Compile Include="Taxa\Taxon.cs" />
     <Compile Include="Modules\TrophyModule.cs" />
     <Compile Include="Users\UserRank.cs" />
     <Compile Include="Modules\GeneralModule.cs" />

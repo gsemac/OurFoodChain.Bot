@@ -1,4 +1,6 @@
-﻿using OurFoodChain.Gotchis;
+﻿using OurFoodChain.Data;
+using OurFoodChain.Extensions;
+using OurFoodChain.Gotchis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +16,10 @@ namespace OurFoodChain.Bot.Services {
 
         public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
 
-        public GotchiBackgroundService(IOfcBotConfiguration botConfiguration) {
+        public GotchiBackgroundService(IOfcBotConfiguration botConfiguration, SQLiteDatabase database) {
 
             this.botConfiguration = botConfiguration;
+            this.database = database;
 
         }
 
@@ -53,6 +56,7 @@ namespace OurFoodChain.Bot.Services {
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private readonly IOfcBotConfiguration botConfiguration;
+        private readonly SQLiteDatabase database;
 
         private async Task DoBackgroundLoopAsync() {
 
@@ -60,7 +64,7 @@ namespace OurFoodChain.Bot.Services {
 
             if (botConfiguration.GotchisEnabled) {
 
-                foreach (IGrouping<ulong, Gotchi> userGotchis in (await GotchiUtils.GetGotchisAsync()).GroupBy(g => g.OwnerId)) {
+                foreach (IGrouping<ulong, Gotchi> userGotchis in (await database.GetGotchisAsync()).GroupBy(g => g.OwnerId)) {
 
                     await DoAutoFeederAsync(userGotchis.Key, userGotchis);
                     await DoEvolveAsync(userGotchis.Key, userGotchis);
@@ -77,7 +81,7 @@ namespace OurFoodChain.Bot.Services {
             foreach (Gotchi gotchi in userGotchis) {
 
                 if (gotchi.CanEvolve)
-                    await GotchiUtils.EvolveAndUpdateGotchiAsync(gotchi);
+                    await database.EvolveAndUpdateGotchiAsync(gotchi);
 
             }
 
@@ -86,9 +90,9 @@ namespace OurFoodChain.Bot.Services {
 
             // Auto-feeder
 
-            if ((await GotchiUtils.GetItemFromInventoryAsync(userId, GotchiItemId.AutoFeeder)).Count > 0) {
+            if ((await database.GetItemFromInventoryAsync(userId, GotchiItemId.AutoFeeder)).Count > 0) {
 
-                GotchiUserInfo userInfo = await GotchiUtils.GetUserInfoAsync(userId);
+                GotchiUserInfo userInfo = await database.GetUserInfoAsync(userId);
                 const int costPerFeeding = 5;
 
                 if (userInfo != null && userInfo.G >= costPerFeeding) {
@@ -97,11 +101,11 @@ namespace OurFoodChain.Bot.Services {
 
                     if (gotchisFed > 0) {
 
-                        await GotchiUtils.FeedGotchisAsync(userId);
+                        await database.FeedGotchisAsync(Global.GotchiContext, userId);
 
                         userInfo.G = Math.Max(0, userInfo.G - (costPerFeeding * gotchisFed));
 
-                        await GotchiUtils.UpdateUserInfoAsync(userInfo);
+                        await database.UpdateUserInfoAsync(userInfo);
 
                     }
 

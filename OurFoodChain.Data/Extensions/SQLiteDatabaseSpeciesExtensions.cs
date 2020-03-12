@@ -888,7 +888,7 @@ namespace OurFoodChain.Data.Extensions {
             if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
                 species.Pictures.Add(new Picture(row.Field<string>("pics")));
 
-            species.Status = await database.GetConservationStatusAsync(species);
+            species.Status = await database.GetConservationStatusAsync(species) ?? new ConservationStatus();
 
             return species;
 
@@ -966,23 +966,27 @@ namespace OurFoodChain.Data.Extensions {
 
         private static async Task<IConservationStatus> GetConservationStatusAsync(this SQLiteDatabase database, ISpecies species) {
 
-            IConservationStatus result = new ConservationStatus();
+            IConservationStatus result = null;
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
+            if (species.IsValid()) {
 
-                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Extinctions WHERE species_id = $species_id")) {
 
-                DataRow row = await database.GetRowAsync(cmd);
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
 
-                if (row != null) {
+                    DataRow row = await database.GetRowAsync(cmd);
 
-                    string reason = row.Field<string>("reason");
-                    long timestamp = (long)row.Field<decimal>("timestamp");
+                    if (row != null) {
 
-                    result = new ConservationStatus() {
-                        ExtinctionDate = DateUtilities.GetDateFromTimestamp(timestamp),
-                        ExtinctionReason = reason
-                    };
+                        string reason = row.Field<string>("reason");
+                        long timestamp = (long)row.Field<decimal>("timestamp");
+
+                        result = new ConservationStatus() {
+                            ExtinctionDate = DateUtilities.GetDateFromTimestamp(timestamp),
+                            ExtinctionReason = reason
+                        };
+
+                    }
 
                 }
 

@@ -1,17 +1,14 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
-using OurFoodChain.Common.Utilities;
-using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -582,9 +579,20 @@ namespace OurFoodChain.Bot.Modules {
             }
             else if (species.IsValid()) {
 
-                species.CommonNames.Add(commonName);
+                if (species.CommonNames.Any(name => name.Equals(commonName, StringComparison.OrdinalIgnoreCase))) {
 
-                await ReplySuccessAsync($"**{species.GetShortName()}** is now commonly known as the **{species.GetCommonName().ToTitle()}**.");
+                    await ReplyWarningAsync($"{species.GetShortName().ToBold()} is already known as the {species.CommonNames.Last().ToTitle().ToBold()}.");
+
+                }
+                else {
+
+                    species.CommonNames.Add(commonName);
+
+                    await Db.UpdateSpeciesAsync(species);
+
+                    await ReplySuccessAsync($"{species.GetShortName().ToBold()} is now commonly known as the {species.CommonNames.Last().ToTitle().ToBold()}.");
+
+                }
 
             }
 
@@ -607,7 +615,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // The species does not have the given common name.
 
-                    await ReplyWarningAsync($"The common name **{commonName.ToTitle()}** has already been removed.");
+                    await ReplyWarningAsync($"{species.GetShortName().ToBold()} does not have the common name {commonName.ToTitle().ToBold()}.");
 
                 }
                 else {

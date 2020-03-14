@@ -883,7 +883,7 @@ namespace OurFoodChain.Data.Extensions {
             if (!options.HasFlag(GetSpeciesOptions.Basic))
                 commonNames.AddRange(await database.GetCommonNamesAsync(species));
 
-            species.CommonNames.AddRange(commonNames);
+            species.CommonNames.AddRange(commonNames.Distinct());
 
             if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
                 species.Pictures.Add(new Picture(row.Field<string>("pics")));

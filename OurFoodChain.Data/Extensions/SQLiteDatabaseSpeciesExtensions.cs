@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
@@ -883,7 +882,7 @@ namespace OurFoodChain.Data.Extensions {
             if (!options.HasFlag(GetSpeciesOptions.Basic))
                 commonNames.AddRange(await database.GetCommonNamesAsync(species));
 
-            species.CommonNames.AddRange(commonNames.Distinct());
+            species.CommonNames.AddRange(commonNames.Distinct(StringComparer.OrdinalIgnoreCase));
 
             if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
                 species.Pictures.Add(new Picture(row.Field<string>("pics")));

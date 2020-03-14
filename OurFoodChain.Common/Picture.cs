@@ -24,8 +24,7 @@ namespace OurFoodChain.Common {
                 }
                 else if (!string.IsNullOrEmpty(Url)) {
 
-                    return System.IO.Path.GetFileNameWithoutExtension(Url.Before("?"))
-                        .Replace('_', ' ');
+                    return Uri.UnescapeDataString(System.IO.Path.GetFileNameWithoutExtension(Url.Before("?")).Replace('_', ' '));
 
                 }
                 else

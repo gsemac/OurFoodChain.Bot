@@ -27,6 +27,7 @@ namespace OurFoodChain.Discord.Messaging {
                 int length = (int)(
                     Title?.Length +
                     Url?.Length +
+                    ImageUrl?.Length +
                     ThumbnailUrl?.Length +
                     Description?.Length + 
                     Footer?.Length

@@ -339,7 +339,7 @@ namespace OurFoodChain.Bot {
 
                 int index = 1;
 
-                foreach (Picture p in pictures) {
+                foreach (IPicture p in pictures) {
 
                     Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 

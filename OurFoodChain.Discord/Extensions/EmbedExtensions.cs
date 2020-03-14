@@ -12,6 +12,7 @@ namespace OurFoodChain.Discord.Extensions {
             EmbedBuilder embedBuilder = new EmbedBuilder();
 
             embedBuilder.WithTitle(embed.Title);
+            embedBuilder.WithImageUrl(embed.ImageUrl);
             embedBuilder.WithThumbnailUrl(embed.ThumbnailUrl);
             embedBuilder.WithDescription(embed.Description);
             embedBuilder.WithFooter(embed.Footer);

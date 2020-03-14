@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Color = Discord.Color;
 
 namespace OurFoodChain {
 
@@ -243,9 +244,6 @@ namespace OurFoodChain {
 
             IEnumerable<ISpeciesZoneInfo> speciesZoneList = await Db.GetZonesAsync(species);
 
-            if (speciesZoneList.Count() > 0)
-                embed.Color = (await Db.GetZoneTypeAsync(speciesZoneList.GroupBy(x => x.Zone.TypeId).OrderBy(x => x.Count()).Last().Key)).Color;
-
             string zonesFieldValue = speciesZoneList.ToString(ZoneListToStringOptions.Default, DiscordUtilities.MaxFieldLength);
 
             embed.AddField("Zone(s)", string.IsNullOrEmpty(zonesFieldValue) ? "None" : zonesFieldValue, inline: true);
@@ -254,10 +252,9 @@ namespace OurFoodChain {
 
             StringBuilder descriptionBuilder = new StringBuilder();
 
-            if (species.Status.IsExinct) {
+            if (species.IsExtinct()) {
 
                 embed.Title = "[EXTINCT] " + embed.Title;
-                embed.Color = System.Drawing.Color.Red;
 
                 if (!string.IsNullOrEmpty(species.Status.ExtinctionReason))
                     descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(DateUtilities.GetTimestampFromDate((DateTimeOffset)species.Status.ExtinctionDate), BotContext), species.Status.ExtinctionReason));
@@ -287,6 +284,12 @@ namespace OurFoodChain {
 
             IEnumerable<Discord.Messaging.IEmbed> embedPages = EmbedUtilities.CreateEmbedPages(embed, EmbedPaginationOptions.AddPageNumbers);
             IPaginatedMessage paginatedMessage = new PaginatedMessage(embedPages);
+
+            if (speciesZoneList.Count() > 0)
+                paginatedMessage.SetColor((await Db.GetZoneTypeAsync(speciesZoneList.GroupBy(x => x.Zone.TypeId).OrderBy(x => x.Count()).Last().Key)).Color);
+
+            if (species.IsExtinct())
+                paginatedMessage.SetColor(Color.Red);
 
             return paginatedMessage;
 

@@ -202,7 +202,10 @@ namespace OurFoodChain.Discord.Utilities {
                     Messaging.IEmbed page = new Messaging.Embed {
                         Title = embed.Title,
                         ThumbnailUrl = embed.ThumbnailUrl,
-                        Description = pageDescription
+                        Description = pageDescription,
+                        Color = embed.Color,
+                        Footer = embed.Footer,
+                        Url = embed.Url
                     };
 
                     foreach (IEmbedField field in embed.Fields)

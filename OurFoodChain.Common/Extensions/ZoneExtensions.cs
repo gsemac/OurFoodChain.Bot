@@ -10,8 +10,9 @@ namespace OurFoodChain.Common.Extensions {
 
     public enum ZoneListToStringOptions {
         None = 0,
-        DoNotCollapseRanges = 1,
-        DoNotGroupComments = 2
+        CollapseRanges = 1,
+        GroupIdenticalComments = 2,
+        Default = CollapseRanges | GroupIdenticalComments
     }
 
     public static class ZoneExtensions {
@@ -47,7 +48,7 @@ namespace OurFoodChain.Common.Extensions {
 
             string resultString = string.Empty;
 
-            if (!options.HasFlag(ZoneListToStringOptions.DoNotGroupComments)) {
+            if (options.HasFlag(ZoneListToStringOptions.GroupIdenticalComments)) {
 
                 // We'll group zone lists according to those that have identical comments.
                 // Ex: "A, B, C (notes); D, E (other notes)
@@ -66,7 +67,7 @@ namespace OurFoodChain.Common.Extensions {
 
                         string zonesString = string.Join(", ", zonesArray);
 
-                        if (options.HasFlag(SpeciesZoneInfoCollectionToStringOptions.CollapseRanges))
+                        if (options.HasFlag(ZoneListToStringOptions.CollapseRanges))
                             zonesString = StringUtilities.CollapseAlphanumericList(zonesString);
 
                         if (string.IsNullOrEmpty(keyValuePair.Key))
@@ -90,7 +91,7 @@ namespace OurFoodChain.Common.Extensions {
 
                 string zonesString = string.Join(", ", zonesList);
 
-                if (options.HasFlag(SpeciesZoneInfoCollectionToStringOptions.CollapseRanges))
+                if (options.HasFlag(ZoneListToStringOptions.CollapseRanges))
                     zonesString = StringUtilities.CollapseAlphanumericList(zonesString);
 
                 resultString = zonesString;

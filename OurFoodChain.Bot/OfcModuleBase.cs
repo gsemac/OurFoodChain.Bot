@@ -246,7 +246,7 @@ namespace OurFoodChain {
             if (speciesZoneList.Count() > 0)
                 embed.Color = (await Db.GetZoneTypeAsync(speciesZoneList.GroupBy(x => x.Zone.TypeId).OrderBy(x => x.Count()).Last().Key)).Color;
 
-            string zonesFieldValue = speciesZoneList.ToString(ZoneListToStringOptions.None, DiscordUtilities.MaxFieldLength);
+            string zonesFieldValue = speciesZoneList.ToString(ZoneListToStringOptions.Default, DiscordUtilities.MaxFieldLength);
 
             embed.AddField("Zone(s)", string.IsNullOrEmpty(zonesFieldValue) ? "None" : zonesFieldValue, inline: true);
 
@@ -286,7 +286,7 @@ namespace OurFoodChain {
             // Create embed pages.
 
             IEnumerable<Discord.Messaging.IEmbed> embedPages = EmbedUtilities.CreateEmbedPages(embed, EmbedPaginationOptions.AddPageNumbers);
-            IPaginatedMessage paginatedMessage = new Discord.Messaging.PaginatedMessage(embedPages);
+            IPaginatedMessage paginatedMessage = new PaginatedMessage(embedPages);
 
             return paginatedMessage;
 

@@ -157,7 +157,7 @@ namespace OurFoodChain {
 
             if (matchingSpecies.Count() <= 0) {
 
-                await ReplyNoSuchTaxonExistsAsync(null);
+                await ReplyNoSuchTaxonExistsAsync(string.Empty, null);
 
             }
             else if (matchingSpecies.Count() > 1) {
@@ -193,7 +193,7 @@ namespace OurFoodChain {
 
             }
 
-            return await ReplyNoSuchTaxonExistsAsync(suggestion) as ISpecies;
+            return await ReplyNoSuchTaxonExistsAsync(BinomialName.Parse(genusName, speciesName).ToString(), suggestion) as ISpecies;
 
         }
 
@@ -397,7 +397,7 @@ namespace OurFoodChain {
 
                 // No taxa exist in the list.
 
-                await ReplyNoSuchTaxonExistsAsync(null);
+                await ReplyNoSuchTaxonExistsAsync(string.Empty, null);
 
             }
 
@@ -440,15 +440,18 @@ namespace OurFoodChain {
 
             }
 
-            return await ReplyNoSuchTaxonExistsAsync(suggestion);
+            return await ReplyNoSuchTaxonExistsAsync(taxonName, suggestion);
 
         }
 
-        public async Task<ITaxon> ReplyNoSuchTaxonExistsAsync(ITaxon suggestion) {
+        public async Task<ITaxon> ReplyNoSuchTaxonExistsAsync(string input, ITaxon suggestion) {
 
             StringBuilder sb = new StringBuilder();
 
-            sb.Append($"No such {suggestion.GetRank().GetName()} exists.");
+            if (string.IsNullOrWhiteSpace(input))
+                sb.Append($"No such {suggestion.GetRank().GetName()} exists.");
+            else
+                sb.Append($"No {suggestion.GetRank().GetName()} named {input.ToBold()} exists.");
 
             if (suggestion != null) {
 
@@ -458,7 +461,7 @@ namespace OurFoodChain {
 
             }
 
-            IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(sb.ToString()) {
+            IPaginatedMessage message = new PaginatedMessage(sb.ToString()) {
                 Restricted = true
             };
 

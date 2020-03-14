@@ -19,13 +19,13 @@ namespace OurFoodChain.Bot {
 
         // Public members
 
-        [Command("setpic"), Alias("setspeciespic", "setspic")]
+        [Command("setpic", RunMode = RunMode.Async), Alias("setspeciespic", "setspic")]
         public async Task SetPic(string speciesName, string imageUrl) {
 
             await SetPic(string.Empty, speciesName, imageUrl);
 
         }
-        [Command("setpic"), Alias("setspeciespic", "setspic")]
+        [Command("setpic", RunMode = RunMode.Async), Alias("setspeciespic", "setspic")]
         public async Task SetPic(string genusName, string speciesName, string imageUrl) {
 
             // Updates the default picture for the given species.
@@ -53,13 +53,13 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("+pic")]
-        public async Task PlusPic(string species, string imageUrl) {
+        [Command("+pic", RunMode = RunMode.Async)]
+        public async Task PlusPic(string speciesName, string imageUrl) {
 
-            await PlusPic(string.Empty, species, imageUrl, string.Empty);
+            await PlusPic(string.Empty, speciesName, imageUrl, string.Empty);
 
         }
-        [Command("+pic")]
+        [Command("+pic", RunMode = RunMode.Async)]
         public async Task PlusPic(string arg0, string arg1, string arg2) {
 
             // This command can be used in the following ways:
@@ -94,7 +94,7 @@ namespace OurFoodChain.Bot {
             await PlusPic(genus, species, url, description);
 
         }
-        [Command("+pic")]
+        [Command("+pic", RunMode = RunMode.Async)]
         public async Task PlusPic(string genusName, string speciesName, string imageUrl, string description) {
 
             // Get the species.
@@ -135,25 +135,25 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-pic", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string speciesName) {
 
             await MinusPic(string.Empty, speciesName);
 
         }
-        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-pic", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string genusName, string speciesName) {
 
             await MinusPic(genusName, speciesName, 1);
 
         }
-        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-pic", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string speciesName, int pictureIndex) {
 
             await MinusPic(string.Empty, speciesName, pictureIndex);
 
         }
-        [Command("-pic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-pic", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusPic(string genusName, string speciesName, int pictureIndex) {
 
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
@@ -182,25 +182,25 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, int pictureIndex, string artist) {
 
             await SetArtist(string.Empty, speciesName, pictureIndex, artist);
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, string artist) {
 
             await SetArtist(string.Empty, speciesName, 1, artist);
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, string artist) {
 
             await SetArtist(genusName, speciesName, 1, artist);
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, int pictureIndex, string artist) {
 
             // Decrease the picture index by 1 (since users are expected to use the indices as shown by the "gallery" command, which begin at 1).
@@ -232,32 +232,32 @@ namespace OurFoodChain.Bot {
             }
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, int pictureIndex, IUser user) {
 
             await SetArtist(string.Empty, speciesName, pictureIndex, user);
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string speciesName, IUser user) {
 
             await SetArtist(string.Empty, speciesName, user);
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, IUser user) {
 
             await SetArtist(genusName, speciesName, 1, user);
 
         }
-        [Command("setartist"), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("setartist", RunMode = RunMode.Async), Alias("setcredit"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetArtist(string genusName, string speciesName, int pictureIndex, IUser user) {
 
             await SetArtist(genusName, speciesName, pictureIndex, user.Username);
 
         }
 
-        [Command("gallery"), Alias("pic", "pics", "picture", "pictures", "image", "images")]
+        [Command("gallery", RunMode = RunMode.Async), Alias("pic", "pics", "picture", "pictures", "image", "images")]
         public async Task Gallery(string arg0) {
 
             // Possible cases:
@@ -310,7 +310,7 @@ namespace OurFoodChain.Bot {
             }
 
         }
-        [Command("gallery"), Alias("pic", "pics", "picture", "pictures", "image", "images")]
+        [Command("gallery", RunMode = RunMode.Async), Alias("pic", "pics", "picture", "pictures", "image", "images")]
         public async Task Gallery(string genusName, string speciesName) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);

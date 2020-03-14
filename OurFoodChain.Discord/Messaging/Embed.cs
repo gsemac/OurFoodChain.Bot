@@ -24,14 +24,14 @@ namespace OurFoodChain.Discord.Messaging {
         public int Length {
             get {
 
-                int length = (int)(
-                    Title?.Length +
-                    Url?.Length +
-                    ImageUrl?.Length +
-                    ThumbnailUrl?.Length +
-                    Description?.Length + 
-                    Footer?.Length
-                    ?? 0);
+                int length = 0;
+
+                length += Title?.Length ?? 0;
+                length += Url?.Length ?? 0;
+                length += ImageUrl?.Length ?? 0;
+                length += ThumbnailUrl?.Length ?? 0;
+                length += Description?.Length ?? 0;
+                length += Footer?.Length ?? 0;
 
                 length += Fields.Sum(f => f.Length);
 

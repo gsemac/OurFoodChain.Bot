@@ -927,7 +927,7 @@ namespace OurFoodChain.Data.Extensions {
                 cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    results.Add((row.Field<string>("name") ?? "").Trim().ToTitle());
+                    results.Add((row.Field<string>("name") ?? "").Trim());
 
             }
 

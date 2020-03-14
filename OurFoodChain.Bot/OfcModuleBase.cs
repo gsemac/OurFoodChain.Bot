@@ -223,7 +223,7 @@ namespace OurFoodChain {
             };
 
             if (species.CommonNames.Count() > 0)
-                embed.Title += string.Format(" ({0})", string.Join(", ", species.CommonNames));
+                embed.Title += string.Format(" ({0})", string.Join(", ", species.CommonNames.Select(name => name.ToTitle())));
 
             if (Config.GenerationsEnabled) {
 

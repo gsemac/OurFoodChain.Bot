@@ -92,19 +92,15 @@ namespace OurFoodChain.Bot {
 
             // Initialize trophy service(s).
 
-            if (Configuration.TrophiesEnabled) {
+            ITrophyService trophyService = serviceProvider.GetService<ITrophyService>();
+            ITrophyScanner trophyScanner = serviceProvider.GetService<ITrophyScanner>();
 
-                ITrophyService trophyService = serviceProvider.GetService<ITrophyService>();
-                ITrophyScanner trophyScanner = serviceProvider.GetService<ITrophyScanner>();
+            trophyService.Log += OnLogAsync;
+            trophyScanner.Log += OnLogAsync;
 
-                trophyService.Log += OnLogAsync;
-                trophyScanner.Log += OnLogAsync;
+            trophyScanner.TrophyUnlocked += TrophyUnlockedAsync;
 
-                trophyScanner.TrophyUnlocked += TrophyUnlockedAsync;
-
-                await trophyService.RegisterTrophiesAsync();
-
-            }
+            await trophyService.RegisterTrophiesAsync();
 
         }
 

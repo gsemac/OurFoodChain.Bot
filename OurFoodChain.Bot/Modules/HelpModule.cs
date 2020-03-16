@@ -19,7 +19,6 @@ namespace OurFoodChain.Bot.Modules {
         // Public members
 
         public Discord.Services.ICommandService CommandHandlingService { get; set; }
-        public IServiceProvider ServiceProvider { get; set; }
 
         [Command("help"), Alias("h")]
         public async Task Help() {

@@ -13,6 +13,7 @@ using OurFoodChain.Data.Queries;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -231,8 +232,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // Add the user to the trophy scanner queue in case their species earned them any new trophies.
 
-                    if (Config.TrophiesEnabled)
-                        await TrophyScanner.EnqueueAsync(Context.User.ToCreator(), Context);
+                    await this.ScanTrophiesAsync(Context.User.ToCreator());
 
                     await ReplySuccessAsync($"Successfully created new species, **{species.GetFullName()}**.");
 
@@ -420,8 +420,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Add the new owner to the trophy scanner queue in case their species earned them any new trophies.
 
-                if (Config.TrophiesEnabled)
-                    await TrophyScanner.EnqueueAsync(user.ToCreator(), Context);
+                await this.ScanTrophiesAsync(user.ToCreator());
 
                 await ReplySuccessAsync($"**{species.GetShortName()}** is now owned by **{species.Creator}**.");
 

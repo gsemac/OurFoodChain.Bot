@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.1.1" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.1.1" />
+    <PackageReference Include="Discord.Net.Core" Version="2.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OurFoodChain.Common\OurFoodChain.Common.csproj" />
     <ProjectReference Include="..\OurFoodChain.Data\OurFoodChain.Data.csproj" />
     <ProjectReference Include="..\OurFoodChain.Debug\OurFoodChain.Debug.csproj" />

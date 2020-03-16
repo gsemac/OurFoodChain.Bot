@@ -19,20 +19,20 @@ namespace OurFoodChain.Trophies {
         // Public members
 
         public event Func<ILogMessage, Task> Log;
-        public event Func<IUnlockedTrophyInfo, Task> TrophyUnlocked;
+        public event Func<TrophyUnlockedArgs, Task> TrophyUnlocked;
 
         public int ScanDelay => 60 * 5; // 5 minutes
 
-        public async Task<bool> EnqueueAsync(ICreator creator, bool scanImmediately = false) {
+        public async Task<bool> EnqueueAsync(ITrophyScannerContext context, bool scanImmediately = false) {
 
             // If the user already exists in the queue, don't add them again.
 
-            if (creator.UserId.HasValue && !queue.Any(item => item.Creator.UserId == creator.UserId)) {
+            if (context.Creator.UserId.HasValue && !queue.Any(item => item.Context.Creator.UserId == context.Creator.UserId)) {
 
                 // Add the user to the scanner queue.
 
                 queue.Enqueue(new QueueItem {
-                    Creator = creator,
+                    Context = context,
                     DateAdded = scanImmediately ? DateTimeOffset.MinValue : DateUtilities.GetCurrentDate()
                 });
 
@@ -48,72 +48,18 @@ namespace OurFoodChain.Trophies {
 
         }
 
-        public IEnumerable<ITrophy> GetTrophies() {
-
-            return trophies;
-
-        }
-        public async Task RegisterTrophiesAsync(RegisterTrophiesOptions options = RegisterTrophiesOptions.None) {
-
-            // Register all trophies in the assembly.
-
-            await OnLogAsync(LogSeverity.Info, "Registering trophies");
-
-            Assembly currentAssembly = Assembly.GetExecutingAssembly();
-
-            IEnumerable<Type> trophyTypes = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => options.HasFlag(RegisterTrophiesOptions.RegisterDefaultTrophies) || assembly != currentAssembly)
-                .SelectMany(assembly => assembly.GetTypes())
-                .Where(type => !type.IsAbstract && typeof(ITrophy).IsAssignableFrom(type))
-                .Where(type => type.GetConstructor(Type.EmptyTypes) != null);
-
-            foreach (Type type in trophyTypes) {
-
-                ITrophy instance = (ITrophy)Activator.CreateInstance(type);
-
-                trophies.Add(instance);
-
-            }
-
-            if (options.HasFlag(RegisterTrophiesOptions.RegisterDefaultTrophies)) {
-
-                trophies.Add(new Trophy("To Infinity And Beyond", "Own a species that spreads to another zone."));
-                trophies.Add(new Trophy("A New World", "Create a species that spreads across an ocean body."));
-                trophies.Add(new Trophy("One To Rule Them All", "Create a species that turns into an apex predator."));
-                trophies.Add(new Trophy("I Am Selection", "Create a species that is the direct cause of another species extinction."));
-
-                trophies.Add(new Trophy("Colonization", "Be the first to create a eusocial species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Let There Be Light", "Be the first to create a species that makes light.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Master Of The Skies", "Be the first to create a species capable of flight.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Did You Hear That?", "Be the first to make a species that makes noise.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Double Trouble", "Be the first to make a species with two legs.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Can We Keep It?", "Be the first to create a species with fur.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Turn On The AC!", "Be the first to create a warm-blooded species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Do You See What I See?", "Be the first to create a species with developed eyes.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-                trophies.Add(new Trophy("Imposter", "Be the first to create a species that mimics another species.", TrophyFlags.Hidden | TrophyFlags.OneTime));
-
-            }
-
-            await OnLogAsync(LogSeverity.Info, string.Format("Registered {0} trophies", trophies.Count()));
-
-        }
-        public void RegisterTrophy(ITrophy trophy) {
-
-            trophies.Add(trophy);
-
-        }
-
         // Protected members
 
-        protected TrophyScannerBase(SQLiteDatabase database) {
+        protected TrophyScannerBase(ITrophyService trophyService) {
 
-            this.database = database;
+            this.trophyService = trophyService;
 
         }
 
         protected async Task OnLogAsync(ILogMessage logMessage) {
 
-            await Log?.Invoke(logMessage);
+            if (Log != null)
+                await Log(logMessage);
 
         }
         protected async Task OnLogAsync(LogSeverity severity, string message) {
@@ -121,9 +67,10 @@ namespace OurFoodChain.Trophies {
             await OnLogAsync(new LogMessage(severity, "Trophies", message));
 
         }
-        protected async Task OnTrophyUnlockedAsync(IUnlockedTrophyInfo info) {
+        protected async Task OnTrophyUnlockedAsync(TrophyUnlockedArgs info) {
 
-            await TrophyUnlocked?.Invoke(info);
+            if (TrophyUnlocked != null)
+                await TrophyUnlocked(info);
 
         }
 
@@ -131,13 +78,12 @@ namespace OurFoodChain.Trophies {
 
         private class QueueItem {
 
-            public ICreator Creator { get; set; }
+            public ITrophyScannerContext Context { get; set; }
             public DateTimeOffset DateAdded { get; set; }
 
         }
 
-        private readonly SQLiteDatabase database;
-        private readonly List<ITrophy> trophies = new List<ITrophy>();
+        private readonly ITrophyService trophyService;
         private readonly ConcurrentQueue<QueueItem> queue = new ConcurrentQueue<QueueItem>();
         private bool scannerIsActive = false;
 
@@ -184,7 +130,7 @@ namespace OurFoodChain.Trophies {
 
             // Get the trophies the user has already unlocked so we don't pop trophies that have already been popped.
 
-            IEnumerable<IUnlockedTrophyInfo> alreadyUnlocked = await database.GetUnlockedTrophiesAsync(item.Creator, GetTrophies());
+            IEnumerable<IUnlockedTrophyInfo> alreadyUnlocked = await item.Context.Database.GetUnlockedTrophiesAsync(item.Context.Creator, trophyService.GetTrophies());
             HashSet<string> alreadyUnlockedIdentifiers = new HashSet<string>();
 
             foreach (UnlockedTrophyInfo info in alreadyUnlocked)
@@ -192,31 +138,28 @@ namespace OurFoodChain.Trophies {
 
             // Check for new trophies that the user has just unlocked.
 
-            ICheckTrophyContext context = new CheckTrophyContext(database, item.Creator);
-
-            foreach (ITrophy trophy in GetTrophies())
+            foreach (ITrophy trophy in trophyService.GetTrophies())
 
                 try {
 
-                    if (!alreadyUnlockedIdentifiers.Contains(trophy.Identifier) && await trophy.CheckTrophyAsync(context)) {
+                    if (!alreadyUnlockedIdentifiers.Contains(trophy.Identifier) && await trophy.CheckTrophyAsync(item.Context)) {
 
                         // Insert new trophy into the database.
 
-                        await database.UnlockTrophyAsync(item.Creator, trophy);
+                        await item.Context.Database.UnlockTrophyAsync(item.Context.Creator, trophy);
 
                         // Pop the new trophy.
 
-                        await OnTrophyUnlockedAsync(new UnlockedTrophyInfo(item.Creator, trophy));
+                        await OnTrophyUnlockedAsync(new TrophyUnlockedArgs(item.Context, new UnlockedTrophyInfo(item.Context.Creator, trophy)));
 
                     }
 
                 }
-                // If an error occurs when checking a trophy, we'll just move on to the next one.
                 catch (Exception ex) {
 
-                    await OnLogAsync(LogSeverity.Error, string.Format("Exception occured while checking \"{0}\" trophy: {1}",
-                        trophy.Name,
-                        ex.ToString()));
+                    // If an error occurs when checking a trophy, we'll just move on to the next one.
+
+                    await OnLogAsync(LogSeverity.Error, $"Exception occured while checking \"{trophy.Name}\" trophy: {ex.ToString()}");
 
                 }
 

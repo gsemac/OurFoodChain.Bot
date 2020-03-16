@@ -16,7 +16,7 @@ namespace OurFoodChain.Trophies.DefaultTrophies {
             base("Scrap That", "Create an evolution to your own species.") {
         }
 
-        public async override Task<bool> CheckTrophyAsync(ICheckTrophyContext context) {
+        public async override Task<bool> CheckTrophyAsync(ITrophyScannerContext context) {
 
             if (context.Creator.UserId.HasValue) {
 

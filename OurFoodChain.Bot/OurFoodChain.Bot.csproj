@@ -266,6 +266,7 @@
     <Compile Include="Extensions\GotchiExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseGotchiExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseRoleExtensions.cs" />
+    <Compile Include="Extensions\OfcModuleBaseTrophyExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabaseGotchiExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabasePeriodExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabaseUserExtensions.cs" />
@@ -319,7 +320,6 @@
     <Compile Include="Gotchis\GotchiTradeRequest.cs" />
     <Compile Include="Attributes\RequirePrivilegeAttribute.cs" />
     <Compile Include="Services\GotchiService.cs" />
-    <Compile Include="Services\TrophyScanner.cs" />
     <Compile Include="Taxa\BulkOperation.cs" />
     <Compile Include="Taxa\IBulkOperation.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />

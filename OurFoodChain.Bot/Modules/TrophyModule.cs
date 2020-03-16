@@ -14,6 +14,7 @@ using OurFoodChain.Trophies.Extensions;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Extensions;
 
 namespace OurFoodChain.Bot.Modules {
 
@@ -27,12 +28,12 @@ namespace OurFoodChain.Bot.Modules {
                 user = Context.User;
 
             ICreator creator = new Creator(user.Id, user.Username);
-            IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(creator, TrophyScanner.GetTrophies())).ToArray();
+            IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(creator, TrophyService.GetTrophies())).ToArray();
 
             Array.Sort(unlocked, (x, y) => x.DateUnlocked.CompareTo(y.DateUnlocked));
 
             EmbedBuilder embed = new EmbedBuilder();
-            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.#}%)", user.Username, await Db.GetTrophyCompletionRateAsync(creator, TrophyScanner.GetTrophies())));
+            embed.WithTitle(string.Format("{0}'s Trophies ({1:0.#}%)", user.Username, await Db.GetTrophyCompletionRateAsync(creator, TrophyService.GetTrophies())));
             embed.WithColor(new Color(255, 204, 77));
 
             StringBuilder description_builder = new StringBuilder();
@@ -64,7 +65,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("trophylist"), Alias("achievementlist")]
         public async Task TrophyList() {
 
-            int total_trophies = TrophyScanner.GetTrophies().Count();
+            int total_trophies = TrophyService.GetTrophies().Count();
             int trophies_per_page = 8;
             int total_pages = (int)Math.Ceiling((float)total_trophies / trophies_per_page);
             int current_page = 0;
@@ -73,7 +74,7 @@ namespace OurFoodChain.Bot.Modules {
             IPaginatedMessage message = new PaginatedMessage();
             Discord.Messaging.IEmbed embed = null;
 
-            IEnumerable<ITrophy> trophy_list = TrophyScanner.GetTrophies();
+            IEnumerable<ITrophy> trophy_list = TrophyService.GetTrophies();
 
             foreach (ITrophy trophy in trophy_list) {
 
@@ -83,7 +84,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     embed = new Discord.Messaging.Embed();
 
-                    embed.Title = string.Format("All Trophies ({0})", TrophyScanner.GetTrophies().Count());
+                    embed.Title = string.Format("All Trophies ({0})", TrophyService.GetTrophies().Count());
                     embed.Description = string.Format("For more details about a trophy, use `?trophy <name>` (e.g. `{0}trophy \"{1}\"`).", Config.Prefix, trophy_list.First().Name);
                     embed.Footer = string.Format("Page {0} of {1}", current_page, total_pages);
                     embed.Color = new Color(255, 204, 77).ToSystemDrawingColor();
@@ -138,7 +139,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Find the trophy with this name.
 
-            ITrophy trophy = TrophyScanner.GetTrophies()
+            ITrophy trophy = TrophyService.GetTrophies()
                 .Where(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
                 .FirstOrDefault();
 
@@ -215,7 +216,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("awardtrophy"), Alias("award", "awardachievement"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AwardTrophy(IGuildUser user, string trophyName) {
 
-            ITrophy trophy = TrophyScanner.GetTrophies()
+            ITrophy trophy = TrophyService.GetTrophies()
                 .Where(t => t.Name.Equals(trophyName, StringComparison.OrdinalIgnoreCase))
                 .FirstOrDefault();
 
@@ -234,16 +235,13 @@ namespace OurFoodChain.Bot.Modules {
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", trophy.Name, user.Mention));
 
         }
-        [Command("scantrophies"), Alias("trophyscan")]
+        [Command("scantrophies"), Alias("trophyscan"), RequirePrivilege(PrivilegeLevel.ServerModerator), RequireConfigSettingEnabled("trophies_enabled")]
         public async Task ScanTrophies(IGuildUser user = null) {
 
             if (user is null)
                 user = (IGuildUser)Context.User;
-            else if (!await ReplyValidatePrivilegeAsync(PrivilegeLevel.ServerModerator)) // Mod privileges are required to scan someone else's trophies
-                return;
 
-            if (Config.TrophiesEnabled)
-                await TrophyScanner.EnqueueAsync(new Creator(user.Id, user.Username), Context, scanImmediately: true);
+            await this.ScanTrophiesAsync(user.ToCreator(), true);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully added user **{0}** to the trophy scanner queue.", user.Username));
 

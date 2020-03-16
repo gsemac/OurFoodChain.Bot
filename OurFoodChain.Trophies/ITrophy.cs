@@ -20,7 +20,7 @@ namespace OurFoodChain.Trophies {
 
         string Identifier { get; }
 
-        Task<bool> CheckTrophyAsync(ICheckTrophyContext context);
+        Task<bool> CheckTrophyAsync(ITrophyScannerContext context);
 
     }
 

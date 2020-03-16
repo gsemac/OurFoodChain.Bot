@@ -18,7 +18,7 @@ namespace OurFoodChain.Trophies.DefaultTrophies {
             base("Natural Selection", "Have a species you own go extinct.") {
         }
 
-        public async override Task<bool> CheckTrophyAsync(ICheckTrophyContext context) {
+        public async override Task<bool> CheckTrophyAsync(ITrophyScannerContext context) {
 
             IEnumerable<ISpecies> ownedSpecies = await context.Database.GetSpeciesAsync(context.Creator);
 

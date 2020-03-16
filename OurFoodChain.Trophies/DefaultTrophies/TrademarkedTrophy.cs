@@ -16,7 +16,7 @@ namespace OurFoodChain.Trophies.DefaultTrophies {
             base("Trademarked", "Create a new genus.") {
         }
 
-        public async override Task<bool> CheckTrophyAsync(ICheckTrophyContext context) {
+        public async override Task<bool> CheckTrophyAsync(ITrophyScannerContext context) {
 
             if (context.Creator.UserId.HasValue) {
 

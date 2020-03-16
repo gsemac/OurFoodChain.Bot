@@ -3,7 +3,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using OurFoodChain.Common;
 using OurFoodChain.Discord.Bots;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Services;
 using OurFoodChain.Trophies;
 using System;
@@ -61,7 +63,8 @@ namespace OurFoodChain.Bot {
                 .AddSingleton<Discord.Services.IResponsiveMessageService, Discord.Services.ResponsiveMessageService>()
                 .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>()
                 .AddSingleton<Services.GotchiBackgroundService>()
-                .AddSingleton<OurFoodChain.Services.TrophyScanner>()
+                .AddSingleton<ITrophyService, TrophyService>()
+                .AddSingleton<ITrophyScanner, TrophyScanner>()
                 .AddSingleton<GotchiService>()
                 .AddSingleton<FileUploadService>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
@@ -71,7 +74,11 @@ namespace OurFoodChain.Bot {
 
             await base.InitializeServicesAsync(serviceProvider);
 
+            // Initialize gotchi service(s).
+
             await serviceProvider.GetService<Services.GotchiBackgroundService>().InitializeAsync();
+
+            // Initialize database service(s).
 
             Discord.Services.IDatabaseService databaseService = serviceProvider.GetService<Discord.Services.IDatabaseService>();
 
@@ -83,13 +90,19 @@ namespace OurFoodChain.Bot {
 
             }
 
+            // Initialize trophy service(s).
+
             if (Configuration.TrophiesEnabled) {
 
-                ITrophyScanner trophyScanner = serviceProvider.GetService<OurFoodChain.Services.TrophyScanner>();
+                ITrophyService trophyService = serviceProvider.GetService<ITrophyService>();
+                ITrophyScanner trophyScanner = serviceProvider.GetService<ITrophyScanner>();
 
+                trophyService.Log += OnLogAsync;
                 trophyScanner.Log += OnLogAsync;
 
-                await trophyScanner.RegisterTrophiesAsync(RegisterTrophiesOptions.RegisterDefaultTrophies);
+                trophyScanner.TrophyUnlocked += TrophyUnlockedAsync;
+
+                await trophyService.RegisterTrophiesAsync();
 
             }
 
@@ -178,6 +191,26 @@ namespace OurFoodChain.Bot {
                     }
 
                 }
+
+            }
+
+        }
+        private async Task TrophyUnlockedAsync(TrophyUnlockedArgs args) {
+
+            ICommandContext commandContext = args.Context.CommandContext;
+            ICreator creator = args.Context.Creator;
+            ITrophy trophy = args.TrophyInfo.Trophy;
+
+            if (commandContext != null) {
+
+                Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed {
+                    Title = "🏆 Trophy unlocked!",
+                    Description = string.Format("Congratulations {0}! You've earned the **{1}** trophy.", (await commandContext.Guild.GetUserAsync(creator.UserId.Value)).Mention, trophy.Name),
+                    Footer = trophy.Description,
+                    Color = System.Drawing.Color.FromArgb(255, 204, 77)
+                };
+
+                await commandContext.Channel.SendMessageAsync(embed: embed.ToDiscordEmbed());
 
             }
 

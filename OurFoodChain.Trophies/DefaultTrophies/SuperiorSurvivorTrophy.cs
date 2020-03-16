@@ -18,7 +18,7 @@ namespace OurFoodChain.Trophies.DefaultTrophies {
             base("Superior Survivor", "Have a species you own survive an extinction event.") {
         }
 
-        public async override Task<bool> CheckTrophyAsync(ICheckTrophyContext context) {
+        public async override Task<bool> CheckTrophyAsync(ITrophyScannerContext context) {
 
             // The minimum number of simultaneous extinctions to be considered an "exinction event"
             long extinction_threshold = 5;

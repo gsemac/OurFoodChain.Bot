@@ -8,8 +8,8 @@ namespace OurFoodChain.Trophies {
     public class TrophyScanner :
         TrophyScannerBase {
 
-        public TrophyScanner(SQLiteDatabase database) :
-            base(database) {
+        public TrophyScanner(ITrophyService trophyService) :
+            base(trophyService) {
         }
 
     }

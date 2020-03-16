@@ -21,7 +21,7 @@ namespace OurFoodChain.Trophies {
 
         public string Identifier => GetIdentifier();
 
-        public virtual async Task<bool> CheckTrophyAsync(ICheckTrophyContext context) {
+        public virtual async Task<bool> CheckTrophyAsync(ITrophyScannerContext context) {
 
             return await Task.FromResult(false);
 

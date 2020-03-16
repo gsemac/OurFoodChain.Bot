@@ -26,7 +26,7 @@ namespace OurFoodChain.Trophies.DefaultTrophies.BaseTrophies {
 
         }
 
-        public async override Task<bool> CheckTrophyAsync(ICheckTrophyContext context) {
+        public async override Task<bool> CheckTrophyAsync(ITrophyScannerContext context) {
 
             // Check if the user has any species with these roles.
 

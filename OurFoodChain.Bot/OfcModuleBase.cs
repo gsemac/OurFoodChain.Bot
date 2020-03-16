@@ -15,6 +15,7 @@ using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Services;
 using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Services;
+using OurFoodChain.Trophies;
 using OurFoodChain.Wiki.Utilities;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,8 @@ namespace OurFoodChain {
         public IPaginatedMessageService PaginatedMessageService { get; set; }
         public IResponsiveMessageService ResponsiveMessageService { get; set; }
         public IOfcBotConfiguration Config { get; set; }
-        public Services.TrophyScanner TrophyScanner { get; set; }
+        public ITrophyService TrophyService { get; set; }
+        public ITrophyScanner TrophyScanner { get; set; }
         public DiscordSocketClient DiscordClient { get; set; }
         public IHelpService HelpService { get; set; }
         public GotchiService GotchiService { get; set; }

@@ -75,13 +75,13 @@ namespace OurFoodChain.Modules {
 
                 string rarest_trophy = "N/A";
 
-                IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())).ToArray();
+                IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyService.GetTrophies())).ToArray();
 
                 if (unlocked.Count() > 0) {
 
                     Array.Sort(unlocked, (lhs, rhs) => lhs.TimesUnlocked.CompareTo(rhs.TimesUnlocked));
 
-                    ITrophy trophy = TrophyScanner.GetTrophies()
+                    ITrophy trophy = TrophyService.GetTrophies()
                         .Where(t => t.Identifier.Equals(unlocked[0].Trophy.Identifier))
                         .FirstOrDefault();
 
@@ -120,8 +120,8 @@ namespace OurFoodChain.Modules {
                 if (Config.TrophiesEnabled) {
 
                     embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
-                        (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())).Count(),
-                        await Db.GetTrophyCompletionRateAsync(new Creator(user.Id, user.Username), TrophyScanner.GetTrophies())), inline: true);
+                        (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyService.GetTrophies())).Count(),
+                        await Db.GetTrophyCompletionRateAsync(new Creator(user.Id, user.Username), TrophyService.GetTrophies())), inline: true);
 
                     embed.AddField("Rarest trophy", rarest_trophy, inline: true);
 

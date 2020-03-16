@@ -34,8 +34,10 @@ namespace OurFoodChain.Extensions {
             if (!string.IsNullOrEmpty(filePath))
                 uploadUrl = await moduleBase.ReplyUploadFileToScratchChannelAsync(filePath);
 
-            if (string.IsNullOrEmpty(uploadUrl))
-                await moduleBase.ReplyErrorAsync("Failed to generate gotchi image.");
+            if (string.IsNullOrEmpty(filePath))
+                await moduleBase.ReplyErrorAsync("The gotchi image could not be created.");
+            else if (string.IsNullOrEmpty(uploadUrl))
+                await moduleBase.ReplyErrorAsync("The gotchi image could not be uploaded.");
 
             return uploadUrl;
 

@@ -81,7 +81,7 @@ namespace OurFoodChain.Discord.Utilities {
 
             IUserMessage result = await channel.SendFileAsync(filePath);
 
-            string url = result.Attachments.Skip(1).FirstOrDefault()?.Url;
+            string url = result.Attachments.FirstOrDefault()?.Url;
 
             if (!string.IsNullOrEmpty(url) && options.HasFlag(FileUploadOptions.DeleteFileAfterUpload))
                 IOUtilities.TryDeleteFile(filePath);

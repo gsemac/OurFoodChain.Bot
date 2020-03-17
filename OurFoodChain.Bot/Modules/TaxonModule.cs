@@ -787,8 +787,14 @@ namespace OurFoodChain.Bot.Modules {
 
                 ITaxon taxon = await ReplyValidateTaxaAsync(taxa);
 
-                if (taxon.IsValid())
-                    await ReplySetTaxonCommonNameAsync(taxon, commonName);
+                if (taxon.IsValid()) {
+
+                    if (taxon.GetRank() == TaxonRankType.Species)
+                        await SetSpeciesCommonName(taxonName, commonName); // species are handled differently
+                    else
+                        await ReplySetTaxonCommonNameAsync(taxon, commonName);
+
+                }
 
             }
 
@@ -930,7 +936,16 @@ namespace OurFoodChain.Bot.Modules {
 
                 await Db.UpdateTaxonAsync(taxon);
 
-                await ReplySuccessAsync($"Members of the {taxon.GetRank().GetName()} **{taxon.GetName().ToTitle()}** are now commonly known as **{taxon.GetCommonName().ToTitle()}**.");
+                if (taxon is ISpecies species) {
+
+                    await ReplySuccessAsync($"{species.GetShortName().ToBold()} is now commonly known as the {species.GetCommonName().ToTitle().ToBold()}.");
+
+                }
+                else {
+
+                    await ReplySuccessAsync($"Members of the {taxon.GetRank().GetName()} {taxon.GetName().ToTitle().ToBold()} are now commonly known as {taxon.GetCommonName().ToTitle().ToBold()}.");
+
+                }
 
             }
 

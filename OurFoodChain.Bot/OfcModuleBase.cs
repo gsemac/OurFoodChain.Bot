@@ -160,7 +160,7 @@ namespace OurFoodChain {
 
             if (matchingSpecies.Count() <= 0) {
 
-                await ReplyNoSuchTaxonExistsAsync(string.Empty, null);
+                await ReplyNoSuchTaxonExistsAsync(string.Empty, null, rank: TaxonRankType.Species);
 
             }
             else if (matchingSpecies.Count() > 1) {
@@ -200,19 +200,49 @@ namespace OurFoodChain {
 
         }
 
-        public async Task<ISpeciesAmbiguityResolverResult> ReplyResolveAmbiguityAsync(string arg0, string arg1, string arg2) {
+        public async Task<ISpeciesAmbiguityResolverResult> ReplyResolveAmbiguityAsync(string arg0, string arg1, string arg2, string arg3 = "", AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
 
             ISpeciesAmbiguityResolver resolver = new SpeciesAmbiguityResolver(await GetDatabaseAsync());
-            ISpeciesAmbiguityResolverResult result = await resolver.ResolveAsync(arg0, arg1, arg2);
+            ISpeciesAmbiguityResolverResult result = string.IsNullOrWhiteSpace(arg3) ? await resolver.ResolveAsync(arg0, arg1, arg2, options) : await resolver.ResolveAsync(arg0, arg1, arg2, arg3, options);
 
-            if (result.First is null && result.Second is null)
-                await ReplyErrorAsync("Unable to unambiguously determine either species.");
-            else if (result.First is null)
-                await ReplyErrorAsync("Unable to unambiguously determine the first species.");
-            else if (result.Second is null)
-                await ReplyErrorAsync("Unable to unambiguously determine the second species.");
+            ISpecies species1 = null;
+            ISpecies species2 = null;
 
-            return result;
+            if (result.First.Count() > 1)
+                await ReplyValidateSpeciesAsync(result.First); // show matching species
+            else if (!result.First.Any())
+                await ReplyErrorAsync("The first species could not be determined.");
+            else
+                species1 = result.First.First();
+
+            if (species1.IsValid()) {
+
+                if (result.Second.Count() > 1) {
+
+                    await ReplyValidateSpeciesAsync(result.Second); // show matching species
+
+                }
+                else if (!result.Second.Any()) {
+
+                    if (!string.IsNullOrWhiteSpace(result.SuggestionHint))
+                        species2 = await GetSpeciesOrReplyAsync(result.SuggestionHint);
+
+                    if (!species2.IsValid())
+                        await ReplyErrorAsync("The second species could not be determined.");
+
+                }
+                else {
+
+                    species2 = result.Second.First();
+
+                }
+
+            }
+
+            if (species1.IsValid() && species2.IsValid())
+                return new SpeciesAmbiguityResolverResult(new ISpecies[] { species1 }, new ISpecies[] { species2 }, result.Extra);
+
+            return result; // not success
 
         }
 
@@ -351,7 +381,7 @@ namespace OurFoodChain {
                 foreach (Discord.Messaging.IEmbed page in pages)
                     page.Footer += $" — Empty {rank.GetName(true)} are not listed.";
 
-                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+                await ReplyAsync(new PaginatedMessage(pages));
 
             }
 
@@ -449,14 +479,19 @@ namespace OurFoodChain {
 
         }
 
-        public async Task<ITaxon> ReplyNoSuchTaxonExistsAsync(string input, ITaxon suggestion) {
+        public async Task<ITaxon> ReplyNoSuchTaxonExistsAsync(string input, ITaxon suggestion, TaxonRankType rank = TaxonRankType.None) {
+
+            string taxonName = rank == TaxonRankType.None ? "taxon" : rank.GetName();
+
+            if (suggestion != null)
+                taxonName = suggestion.GetRank().GetName();
 
             StringBuilder sb = new StringBuilder();
 
             if (string.IsNullOrWhiteSpace(input))
-                sb.Append($"No such {suggestion.GetRank().GetName()} exists.");
+                sb.Append($"No such {taxonName} exists.");
             else
-                sb.Append($"No {suggestion.GetRank().GetName()} named {input.ToBold()} exists.");
+                sb.Append($"No {taxonName} named {input.ToBold()} exists.");
 
             if (suggestion != null) {
 
@@ -640,7 +675,7 @@ namespace OurFoodChain {
 
                 }));
 
-                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+                await ReplyAsync(new PaginatedMessage(pages));
 
             }
 

@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Common.Taxa;
+﻿using OurFoodChain.Common;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
@@ -19,82 +20,218 @@ namespace OurFoodChain.Data {
 
         }
 
-        public async Task<ISpeciesAmbiguityResolverResult> ResolveAsync(string arg0, string arg1, string arg2) {
+        public async Task<ISpeciesAmbiguityResolverResult> ResolveAsync(string arg0, string arg1, string arg2, AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
 
-            // <genus> <species> <species>
+            // 1. <genus> <species> <species>
 
             IEnumerable<ISpecies> matchingSpecies = await database.GetSpeciesAsync(arg0, arg1);
-            ISpecies species1 = null;
-            ISpecies species2 = null;
-            //IEnumerable<ISpecies> species2AmbiguousMatches = null;
+            IEnumerable<ISpecies> species1 = Enumerable.Empty<ISpecies>();
+            IEnumerable<ISpecies> species2 = Enumerable.Empty<ISpecies>();
+            string suggestionHint = string.Empty;
 
             if (matchingSpecies.Count() > 1) {
 
-                // If the first species is ambiguous even with the genus, it will be without as well.
+                // We got multiple matches for the first species (including the genus). 
+                // We will fail immediately as there is no way for this to be unambiguous.
 
-                //await ReplyValidateSpeciesAsync(context, query_result);
-
-                return new SpeciesAmbiguityResolverResult(species1, species2);
+                return new SpeciesAmbiguityResolverResult(matchingSpecies, species2, suggestionHint);
 
             }
             else if (matchingSpecies.Count() == 1) {
 
-                species1 = matchingSpecies.First();
+                // We got a single match for the first species (including the genus).
+
+                species1 = matchingSpecies;
 
                 matchingSpecies = await database.GetSpeciesAsync(arg2);
 
                 if (matchingSpecies.Count() > 1) {
 
-                    // If the second species is ambiguous, store the query result to show later.
-                    // It's possible that it won't be ambiguous on the second attempt, so we won't show it for now.
+                    // We got multiple matches for the second species (without the genus).
+                    // We won't fail immediately, because we might get an unambiguous match by including the genus.
 
-                    //species2AmbiguousMatches = matchingSpecies;
+                    species2 = matchingSpecies;
 
                 }
                 else if (matchingSpecies.Count() == 1) {
 
-                    species2 = matchingSpecies.First();
+                    // We got a single match for the second species (without the genus).
+                    // We have unambiguously determined both species, so return the result.
+
+                    species2 = matchingSpecies;
 
                     if (species1 != null && species2 != null)
-                        return new SpeciesAmbiguityResolverResult(species1, species2);
+                        return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint);
 
                 }
+                else
+                    suggestionHint = arg2;
 
             }
 
-            // <species> <genus> <species>
+            // 2. <species> <genus> <species>
 
             matchingSpecies = await database.GetSpeciesAsync(arg0);
 
             if (matchingSpecies.Count() > 1) {
 
-                // If the first species is ambiguous, there's nothing we can do.
+                // We got multiple matches for the first species (without the genus). 
+                // We will fail immediately as there is no way for this to be unambiguous.
 
-                //await ReplyValidateSpeciesAsync(context, query_result);
-
-                return new SpeciesAmbiguityResolverResult(species1, species2);
+                return new SpeciesAmbiguityResolverResult(matchingSpecies, species2, suggestionHint);
 
             }
             else if (matchingSpecies.Count() == 1) {
 
-                // In this case, we will show if the second species is ambiguous, as there are no further cases to check.
+                // We got a single match for the first species (without the genus).
+                // This leaves us with two possible cases for the second species.
 
-                species1 = matchingSpecies.First();
+                species1 = matchingSpecies;
+
+                // 2.1. <species> <genus> <species>
 
                 matchingSpecies = await database.GetSpeciesAsync(arg1, arg2);
+                species2 = matchingSpecies;
+
+                if (matchingSpecies.Count() == 1) {
+
+                    // We got a single match for the second species (with the genus).
+                    // We have unambiguously determined both species, so return the result.
+
+                    species2 = matchingSpecies;
+
+                    return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint);
+
+                }
+                else if (matchingSpecies.Count() <= 0 && options.HasFlag(AmbiguityResolverOptions.AllowExtra)) {
+
+                    // 2.2. <species> <species> <extra>
+
+                    // We didn't get any matches for the second species by including the genus, so try to get a match with just the species.
+
+                    matchingSpecies = await database.GetSpeciesAsync(arg1);
+                    species2 = matchingSpecies;
+
+                    if (matchingSpecies.Count() == 1) {
+
+                        // We got a single match for the second species (without the genus).
+                        // We have unambiguously determined both species, so return the result.
+
+                        species2 = matchingSpecies;
+
+                        return new SpeciesAmbiguityResolverResult(species1, species2, arg2, suggestionHint);
+
+                    }
+
+                }
+                else
+                    suggestionHint = BinomialName.Parse(arg1, arg2).ToString();
+
+            }
+
+            // If we get here, we were not able to unambiguously figure out what the intended species are, or one of them didn't exist.
+
+            return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint);
+
+        }
+        public async Task<ISpeciesAmbiguityResolverResult> ResolveAsync(string arg0, string arg1, string arg2, string arg3, AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
+
+            // 1. <genus> <species> <?> <?>
+
+            IEnumerable<ISpecies> matchingSpecies = await database.GetSpeciesAsync(arg0, arg1);
+            IEnumerable<ISpecies> species1 = Enumerable.Empty<ISpecies>();
+            IEnumerable<ISpecies> species2 = Enumerable.Empty<ISpecies>();
+            string suggestionHint = string.Empty;
+
+            if (matchingSpecies.Count() > 1) {
+
+                // We got multiple matches for the first species (including the genus). 
+                // We will fail immediately as there is no way for this to be unambiguous.
+
+                return new SpeciesAmbiguityResolverResult(matchingSpecies, species2, suggestionHint);
+
+            }
+            else if (matchingSpecies.Count() == 1) {
+
+                // We got a single match for the first species (including the genus).
+
+                species1 = matchingSpecies;
+
+                // 1.2. <genus> <species> <genus> <species>
+
+                matchingSpecies = await database.GetSpeciesAsync(arg2, arg3);
 
                 if (matchingSpecies.Count() > 1) {
 
-                    //await ReplyValidateSpeciesAsync(context, query_result);
+                    // We got multiple matches for the second species (including the genus). 
+                    // We will fail immediately as there is no way for this to be unambiguous.
 
-                    return new SpeciesAmbiguityResolverResult(species1, species2);
+                    return new SpeciesAmbiguityResolverResult(species1, matchingSpecies, suggestionHint);
 
                 }
                 else if (matchingSpecies.Count() == 1) {
 
-                    species2 = matchingSpecies.First();
+                    // We got a single match for the second species (including the genus).
+                    // We have unambiguously determined both species, so return the result.
 
-                    return new SpeciesAmbiguityResolverResult(species1, species2);
+                    species2 = matchingSpecies;
+
+                    return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint);
+
+                }
+                else if (matchingSpecies.Count() <= 0 && options.HasFlag(AmbiguityResolverOptions.AllowExtra)) {
+
+                    // 1.3. <genus> <species> <species> <extra>
+
+                    // We didn't get any matches for the second species (including the genus).
+
+                    matchingSpecies = await database.GetSpeciesAsync(arg2);
+
+                    if (matchingSpecies.Count() == 1) {
+
+                        // We got a single match for the second species (without the genus).
+                        // We have unambiguously determined both species, so return the result.
+
+                        species2 = matchingSpecies;
+
+                        return new SpeciesAmbiguityResolverResult(species1, species2, arg3);
+
+                    }
+                    else if (matchingSpecies.Count() > 1) {
+
+                        // We got multiple matches for the second species (without the genus). 
+
+                        return new SpeciesAmbiguityResolverResult(species1, matchingSpecies, suggestionHint);
+
+                    }
+
+                }
+                else
+                    suggestionHint = BinomialName.Parse(arg2, arg3).ToString();
+
+            }
+            else {
+
+                // We didn't get any match for the first species (including the genus).
+
+                matchingSpecies = await database.GetSpeciesAsync(arg0);
+
+                if (matchingSpecies.Count() > 1) {
+
+                    // If this is ambiguous, we can't determine the first species at all.
+
+                    return new SpeciesAmbiguityResolverResult(matchingSpecies, species2, suggestionHint);
+
+                }
+                else if (matchingSpecies.Count() == 1) {
+
+                    // We must have something of the following form:
+                    // <species> <genus> <species> <notes>
+
+                    species1 = matchingSpecies;
+                    species2 = await database.GetSpeciesAsync(arg1, arg2);
+
+                    return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint, arg3);
 
                 }
 
@@ -102,20 +239,7 @@ namespace OurFoodChain.Data {
 
             // If we get here, we were not able to unambiguously figure out what the intended species are, or one of them didn't exist.
 
-            //if (species_1 is null && species_2 is null)
-            //    await ReplyAsync_Error(context, "The given species could not be determined.");
-            //else if (species_1 is null)
-            //    await ReplyAsync_Error(context, "The first species could not be determined.");
-            //else if (species_2 is null) {
-
-            //    if (species_2_ambiguous_matches != null)
-            //        await ReplyValidateSpeciesAsync(context, species_2_ambiguous_matches);
-            //    else
-            //        await ReplyAsync_Error(context, "The second species could not be determined.");
-
-            //}
-
-            return new SpeciesAmbiguityResolverResult(species1, species2);
+            return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint);
 
         }
 

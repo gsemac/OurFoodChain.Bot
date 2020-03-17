@@ -9,8 +9,10 @@ namespace OurFoodChain.Data {
 
         bool Success { get; }
 
-        ISpecies First { get; }
-        ISpecies Second { get; }
+        IEnumerable<ISpecies> First { get; }
+        IEnumerable<ISpecies> Second { get; }
+        string SuggestionHint { get; }
+        string Extra { get; }
 
     }
 

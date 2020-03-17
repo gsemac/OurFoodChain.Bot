@@ -9,7 +9,7 @@ namespace OurFoodChain.Common {
         IPredationInfo {
 
         public ISpecies Species { get; set; }
-        public string Notes { get; set; }
+        public string Notes { get; set; } = "";
 
     }
 

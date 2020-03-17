@@ -163,11 +163,15 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
-        public static string DisjunctiveJoin(string separator, IEnumerable<string> values) {
+        public static string DisjunctiveJoin(IEnumerable<string> values, string separator = ", ") {
+
             return JoinWithUniqueEndSeparator(separator, " or ", values);
+
         }
-        public static string ConjunctiveJoin(string separator, IEnumerable<string> values) {
+        public static string ConjunctiveJoin(IEnumerable<string> values, string separator = ", ") {
+
             return JoinWithUniqueEndSeparator(separator, separator.EndsWith(" ") && values.Count() > 2 ? "and " : " and ", values);
+
         }
 
         public static int GetLevenshteinDistance(string input, string other) {

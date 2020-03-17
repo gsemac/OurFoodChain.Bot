@@ -374,7 +374,7 @@ namespace OurFoodChain.Bot.Modules {
                     // Show a warning if the user provided any invalid zones.
 
                     await ReplyWarningAsync(string.Format("{0} {1} not exist.",
-                        StringUtilities.ConjunctiveJoin(", ", invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
+                        StringUtilities.ConjunctiveJoin(invalidZones.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))).ToArray()),
                         invalidZones.Count() == 1 ? "does" : "do"));
 
                 }
@@ -385,7 +385,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     await ReplyWarningAsync(string.Format("**{0}** is already absent from {1}.",
                         species.GetShortName(),
-                        StringUtilities.ConjunctiveJoin(", ", zones.Where(zone => !currentZoneIds.Any(id => id == zone.Id)).Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray())));
+                        StringUtilities.ConjunctiveJoin(zones.Where(zone => !currentZoneIds.Any(id => id == zone.Id)).Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray())));
 
                 }
 
@@ -395,7 +395,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     await ReplySuccessAsync(string.Format("**{0}** no longer inhabits {1}.",
                         species.GetShortName(),
-                        StringUtilities.DisjunctiveJoin(", ", zones.Where(zone => currentZoneIds.Any(id => id == zone.Id)).Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray())));
+                        StringUtilities.DisjunctiveJoin(zones.Where(zone => currentZoneIds.Any(id => id == zone.Id)).Select(zone => string.Format("**{0}**", zone.GetFullName())).ToArray())));
 
                 }
 
@@ -731,7 +731,7 @@ namespace OurFoodChain.Bot.Modules {
             ISpeciesAmbiguityResolverResult result = await ReplyResolveAmbiguityAsync(arg0, arg1, arg2);
 
             if (result.Success)
-                await ReplySetAncestorAsync(result.First, result.Second);
+                await ReplySetAncestorAsync(result.First.First(), result.Second.First());
 
         }
         [Command("setancestor", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
@@ -899,7 +899,7 @@ namespace OurFoodChain.Bot.Modules {
                         result.Append(string.Format("{0} - ", await GetDateStringAsync((DateTimeOffset)ts, DateStringFormat.Short)));
                         result.Append(i == 0 ? "Started in " : "Spread to ");
                         result.Append(zoneGroups[i].Count() == 1 ? "Zone " : "Zones ");
-                        result.Append(StringUtilities.ConjunctiveJoin(", ", zoneGroups[i].Select(x => x.Zone.GetShortName())));
+                        result.Append(StringUtilities.ConjunctiveJoin(zoneGroups[i].Select(x => x.Zone.GetShortName())));
 
                         result.AppendLine();
 
@@ -1048,7 +1048,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 await ReplyWarningAsync(
                     string.Format("{0} {1} not exist.",
-                    StringUtilities.ConjunctiveJoin(", ", invalidZoneNames.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x)))),
+                    StringUtilities.ConjunctiveJoin(invalidZoneNames.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x)))),
                     invalidZoneNames.Count() == 1 ? "does" : "do"));
 
             }
@@ -1060,7 +1060,7 @@ namespace OurFoodChain.Bot.Modules {
                 await ReplySuccessAsync(
                     string.Format("**{0}** now inhabits {1}.",
                     species.GetShortName(),
-                    StringUtilities.ConjunctiveJoin(", ", zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
+                    StringUtilities.ConjunctiveJoin(zones.Select(x => string.Format("**{0}**", x.GetFullName())).ToArray())));
 
             }
 

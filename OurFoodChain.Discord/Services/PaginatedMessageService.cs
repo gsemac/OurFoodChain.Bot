@@ -123,7 +123,7 @@ namespace OurFoodChain.Discord.Services {
 
             if (message != null && message.Count() > 0) {
 
-                IUserMessage sentMessage = await context.Channel.SendMessageAsync(message.FirstOrDefault()?.Text, false, message.FirstOrDefault()?.Embed?.ToDiscordEmbed());
+                IUserMessage sentMessage = await context.Channel.SendMessageAsync(message.CurrentPage?.Text, false, message.CurrentPage?.Embed?.ToDiscordEmbed());
 
                 foreach (string reaction in message.Reactions)
                     await sentMessage.AddReactionAsync(new Emoji(reaction));

@@ -529,9 +529,9 @@ namespace OurFoodChain.Data.Extensions {
 
             // Add the picture to this species' picture gallery (does nothing if it's already been added).
 
-            await database.AddPictureGalleryAsync(species);
+            await database.AddGalleryAsync(species);
 
-            IPictureGallery gallery = await database.GetPictureGalleryAsync(species);
+            IPictureGallery gallery = await database.GetGalleryAsync(species);
 
             await database.AddPictureAsync(gallery, picture);
 
@@ -553,7 +553,7 @@ namespace OurFoodChain.Data.Extensions {
 
             // Remove the picture from this species' picture gallery.
 
-            IPictureGallery gallery = await database.GetPictureGalleryAsync(species) ?? new PictureGallery();
+            IPictureGallery gallery = await database.GetGalleryAsync(species) ?? new PictureGallery();
 
             if (gallery.Count() >= 0 && gallery.Any(p => p.Id == picture.Id)) {
 
@@ -580,7 +580,7 @@ namespace OurFoodChain.Data.Extensions {
 
             List<IPicture> pictures = new List<IPicture>();
 
-            IPictureGallery gallery = await database.GetPictureGalleryAsync(species);
+            IPictureGallery gallery = await database.GetGalleryAsync(species);
 
             if (gallery != null)
                 pictures.AddRange(gallery);

@@ -22,6 +22,9 @@ namespace OurFoodChain.Discord.Messaging {
         bool Restricted { get; set; }
 
         IMessage CurrentPage { get; set; }
+        int CurrentIndex { get; }
+        int MinimumIndex { get; set; }
+        int MaximumIndex { get; set; }
 
         IEnumerable<string> Reactions { get; }
 
@@ -29,6 +32,7 @@ namespace OurFoodChain.Discord.Messaging {
 
         Task ForwardAsync();
         Task BackAsync();
+        Task GoToAsync(int pageIndex);
 
         PaginatedMessageReactionType GetReactionType(string emoji);
 

@@ -17,8 +17,17 @@ namespace OurFoodChain.Discord.Messaging {
         public bool Restricted { get; set; } = false;
 
         public IMessage CurrentPage {
-            get => setCurrentPage is null ? pages[currentPageIndex] : setCurrentPage;
+            get => setCurrentPage is null ? (pages.Count() > CurrentIndex ? pages[CurrentIndex] : null) : setCurrentPage;
             set => setCurrentPage = value;
+        }
+        public int CurrentIndex { get; private set; } = 0;
+        public int MinimumIndex {
+            get => minIndex;
+            set => minIndex = value;
+        }
+        public int MaximumIndex {
+            get => maxIndex == 0 ? pages.Count() - 1 : maxIndex;
+            set => maxIndex = value;
         }
 
         public IEnumerable<string> Reactions {
@@ -26,7 +35,7 @@ namespace OurFoodChain.Discord.Messaging {
 
                 List<string> reactions = new List<string>();
 
-                if (pages.Count() > 1) {
+                if (MaximumIndex - MinimumIndex > 0) {
 
                     reactions.Add(GetEmoji(PaginatedMessageReactionType.Previous));
                     reactions.Add(GetEmoji(PaginatedMessageReactionType.Next));
@@ -71,16 +80,27 @@ namespace OurFoodChain.Discord.Messaging {
 
         public async Task ForwardAsync() {
 
-            if (++currentPageIndex >= pages.Count())
-                currentPageIndex = 0;
+            ++CurrentIndex;
+
+            if (CurrentIndex > MaximumIndex)
+                CurrentIndex = MinimumIndex;
 
             await Task.CompletedTask;
 
         }
         public async Task BackAsync() {
 
-            if (--currentPageIndex < 0)
-                currentPageIndex = Math.Max(0, pages.Count() - 1); ;
+            --CurrentIndex;
+
+            if (CurrentIndex < MinimumIndex)
+                CurrentIndex = Math.Max(0, MaximumIndex);
+
+            await Task.CompletedTask;
+
+        }
+        public async Task GoToAsync(int pageIndex) {
+
+            CurrentIndex = Math.Max(0, Math.Min(pageIndex, pages.Count() - 1));
 
             await Task.CompletedTask;
 
@@ -149,14 +169,14 @@ namespace OurFoodChain.Discord.Messaging {
 
                 if (PaginationEnabled) {
 
-                    int originalPageIndex = currentPageIndex;
+                    int originalPageIndex = CurrentIndex;
 
                     if (args.Reaction == PaginatedMessageReactionType.Next)
                         await ForwardAsync();
                     else if (args.Reaction == PaginatedMessageReactionType.Previous)
                         await BackAsync();
 
-                    if (currentPageIndex != originalPageIndex)
+                    if (CurrentIndex != originalPageIndex)
                         setCurrentPage = null;
 
                 }
@@ -183,8 +203,9 @@ namespace OurFoodChain.Discord.Messaging {
 
         private readonly List<IMessage> pages = new List<IMessage>();
         private readonly Dictionary<string, Func<IPaginatedMessageReactionArgs, Task>> callbacks = new Dictionary<string, Func<IPaginatedMessageReactionArgs, Task>>();
-        private int currentPageIndex = 0;
         private IMessage setCurrentPage = null; // can be set by callbacks
+        private int minIndex = 0;
+        private int maxIndex = 0;
 
         private string GetEmoji(PaginatedMessageReactionType reactionType) {
 

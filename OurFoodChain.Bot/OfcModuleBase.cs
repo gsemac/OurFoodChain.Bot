@@ -628,7 +628,7 @@ namespace OurFoodChain {
                     Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 
                     string title = string.Format("Pictures of {0} ({1} of {2})", galleryName.ToTitle(), i + 1, pictures.Count());
-                    string footer = string.Format("\"{0}\" by {1} — {2}", picture.Name, picture.Artist, picture.Caption);
+                    string footer = string.Format("\"{0}\" by {1} — {2}", picture.GetName(), picture.Artist, picture.Caption);
 
                     embed.Title = title;
                     embed.ImageUrl = picture.Url;

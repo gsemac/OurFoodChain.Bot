@@ -37,7 +37,7 @@ namespace OurFoodChain.Bot {
 
                 if (await ReplyValidatePrivilegeAsync(PrivilegeLevel.ServerModerator, species) && await ReplyValidateImageUrlAsync(imageUrl)) {
 
-                    IPictureGallery gallery = await Db.GetPictureGalleryAsync(species) ?? new PictureGallery();
+                    IPictureGallery gallery = await Db.GetGalleryAsync(species) ?? new PictureGallery();
                     bool isFirstPicture = gallery.Count() <= 0;
 
                     await Db.SetPictureAsync(species, new Picture {
@@ -108,7 +108,7 @@ namespace OurFoodChain.Bot {
                 // If this is the first picture we've added to the species, set the artist as the species' owner.
                 // Otherwise, set the artist to the person submitting the image.
 
-                IPictureGallery gallery = await Db.GetPictureGalleryAsync(species) ?? new PictureGallery();
+                IPictureGallery gallery = await Db.GetGalleryAsync(species) ?? new PictureGallery();
 
                 bool isFirstPicture = gallery.Count() <= 0;
                 bool pictureAlreadyExists = gallery
@@ -344,7 +344,7 @@ namespace OurFoodChain.Bot {
                     Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 
                     string title = string.Format("Pictures of {0} ({1} of {2})", galleryName, index, pictures.Count());
-                    string footer = string.Format("\"{0}\" by {1} — {2}", p.Name, p.Artist, p.Caption);
+                    string footer = string.Format("\"{0}\" by {1} — {2}", p.GetName(), p.Artist, p.Caption);
 
                     embed.Title = title;
                     embed.ImageUrl = p.Url;

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,24 +14,22 @@ namespace OurFoodChain.Data.Extensions {
 
         // Public members
 
-        public static async Task AddPictureGalleryAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task AddGalleryAsync(this SQLiteDatabase database, ISpecies species) {
 
-            await AddPictureGalleryAsync(database, GetGalleryNameFromSpecies(species));
+            await AddGalleryAsync(database, GetGalleryNameFromSpecies(species));
 
         }
-        public static async Task AddPictureGalleryAsync(this SQLiteDatabase database, string name) {
+        public static async Task AddGalleryAsync(this SQLiteDatabase database, IPictureGallery gallery) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Gallery(name) VALUES($name)")) {
+            await database.AddGalleryAsync(gallery.Name);
 
-                cmd.Parameters.AddWithValue("$name", name);
+            IPictureGallery newGallery = await database.GetGalleryAsync(gallery.Name);
 
-                await database.ExecuteNonQueryAsync(cmd);
-
-            }
+            await database.UpdateGalleryAsync(new PictureGallery(newGallery.Id, gallery.Name, gallery.Pictures));
 
         }
 
-        public static async Task<IPictureGallery> GetPictureGalleryAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task<IPictureGallery> GetGalleryAsync(this SQLiteDatabase database, ISpecies species) {
 
             return await GetGalleryAsync(database, GetGalleryNameFromSpecies(species));
 
@@ -45,19 +44,61 @@ namespace OurFoodChain.Data.Extensions {
 
                 DataRow row = await database.GetRowAsync(cmd);
 
-                if (row != null) {
+                if (row != null)
+                    return await database.CreateGalleryFromDataRowAsync(row);
 
-                    gallery = CreateGalleryFromDataRow(row);
+            }
 
-                    IEnumerable<IPicture> pictures = await GetPicturesFromGalleryAsync(database, gallery);
+            return gallery;
 
-                    gallery = new PictureGallery(gallery.Id, gallery.Name, pictures);
+        }
+        public static async Task<IPictureGallery> GetGalleryAsync(this SQLiteDatabase database, long? id) {
+
+            IPictureGallery gallery = null;
+
+            if (id.HasValue) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gallery WHERE id = $id")) {
+
+                    cmd.Parameters.AddWithValue("$id", id);
+
+                    DataRow row = await database.GetRowAsync(cmd);
+
+                    if (row != null)
+                        return await database.CreateGalleryFromDataRowAsync(row);
 
                 }
 
             }
 
             return gallery;
+
+        }
+
+        public static async Task UpdateGalleryAsync(this SQLiteDatabase database, IPictureGallery gallery) {
+
+            if (!gallery.Id.HasValue) {
+
+                // If the gallery doesn't have an ID, assume that it's new, and attempt to add it.
+
+                await database.AddGalleryAsync(gallery);
+
+            }
+            else {
+
+                // Update the gallery in the database.
+
+                IPictureGallery oldGallery = await database.GetGalleryAsync(gallery.Id);
+                IEnumerable<IPicture> deletedPictures = oldGallery.Where(oldPicture => !gallery.Any(picture => oldPicture.Id == picture.Id));
+                IEnumerable<IPicture> newPictures = gallery.Where(picture => !oldGallery.Any(oldPicture => picture.Id == oldPicture.Id));
+
+                foreach (IPicture picture in deletedPictures)
+                    await database.RemovePictureAsync(gallery, picture);
+
+                foreach (IPicture picture in newPictures)
+                    await database.AddPictureAsync(gallery, picture);
+
+            }
 
         }
 
@@ -74,11 +115,12 @@ namespace OurFoodChain.Data.Extensions {
 
             if (!picture.Id.HasValue) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Picture(url, gallery_id, artist, description) VALUES($url, $gallery_id, $artist, $description)")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Picture(url, gallery_id, artist, name, description) VALUES($url, $gallery_id, $artist, $name, $description)")) {
 
                     cmd.Parameters.AddWithValue("$url", picture.Url);
                     cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
                     cmd.Parameters.AddWithValue("$artist", picture.Artist?.Name ?? "");
+                    cmd.Parameters.AddWithValue("$name", picture.Name);
                     cmd.Parameters.AddWithValue("$description", picture.Description);
 
                     await database.ExecuteNonQueryAsync(cmd);
@@ -159,14 +201,30 @@ namespace OurFoodChain.Data.Extensions {
             return result;
 
         }
-        private static IPictureGallery CreateGalleryFromDataRow(DataRow row) {
+        private static async Task<IPictureGallery> CreateGalleryFromDataRowAsync(this SQLiteDatabase database, DataRow row) {
 
-            PictureGallery result = new PictureGallery {
+            IPictureGallery result = new PictureGallery {
                 Id = row.Field<long>("id"),
                 Name = row.Field<string>("name")
             };
 
+            IEnumerable<IPicture> pictures = await database.GetPicturesFromGalleryAsync(result);
+
+            result = new PictureGallery(result.Id, result.Name, pictures);
+
             return result;
+
+        }
+
+        private static async Task AddGalleryAsync(this SQLiteDatabase database, string name) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Gallery(name) VALUES($name)")) {
+
+                cmd.Parameters.AddWithValue("$name", name);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
 
         }
 

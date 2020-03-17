@@ -13,146 +13,199 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurFoodChain.Common.Extensions;
 
 namespace OurFoodChain.Bot.Modules {
 
     public class MapModule :
          OfcModuleBase {
 
-        private const string MAP_GALLERY_NAME = "map";
+        // Public members
 
         [Command("map")]
         public async Task Map() {
 
-            // Get map images from the database.
+            await ShowMapAsync(string.Empty);
 
-            IPictureGallery gallery = await Db.GetGalleryAsync(MAP_GALLERY_NAME);
-            IPicture primary = null;
-            IPicture labeled = null;
+        }
+        [Command("map")]
+        public async Task Map([Remainder]string mapName) {
 
-            if (gallery != null) {
-
-                primary = gallery.GetPicture("primary");
-                labeled = gallery.GetPicture("labeled");
-
-            }
-
-            // If no primary image has been provided, display an error message.
-
-            if (primary is null) {
-
-                await BotUtils.ReplyAsync_Error(Context, string.Format("No map images have been set. Use the \"{0}setmap\" command to set map images.",
-                    Config.Prefix));
-
-                return;
-
-            }
-
-            // Build the embed.
-
-            string worldName = Config.WorldName;
-            string title = string.IsNullOrEmpty(worldName) ? "" : string.Format("Map of {0}", StringUtilities.ToTitleCase(worldName));
-            string footer = (labeled is null) ? "" : "Click the Z reaction to toggle zone labels.";
-
-            IPaginatedMessage paginatedMessage = new PaginatedMessage();
-
-            // Add the first page (primary image without zone labels).
-
-            paginatedMessage.AddPage(new Discord.Messaging.Embed {
-                Title = title,
-                ImageUrl = primary.Url,
-                Footer = footer
-            });
-
-            // A second page (with zone labels) is only included in the case an image has been provided.
-
-            if (labeled != null) {
-
-                paginatedMessage.AddPage(new Discord.Messaging.Embed {
-                    Title = title,
-                    ImageUrl = labeled.Url,
-                    Footer = footer
-                });
-
-            }
-
-            // Send the embed.
-
-            paginatedMessage.PaginationEnabled = false;
-
-            if (paginatedMessage.Count() > 1)
-                paginatedMessage.AddReaction("🇿", async (args) => await args.Message.ForwardAsync());
-
-            await ReplyAsync(paginatedMessage);
+            await ShowMapAsync(mapName);
 
         }
 
-        [Command("setmap"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetMap(string primaryImageUrl) {
-            await SetMap(primaryImageUrl, "");
+        [Command("addmap"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task AddMap(string imageUrl, string mapName = "", string description = "") {
+
+            IPictureGallery gallery = await GetMapGalleryAsync();
+
+            // Remove any pictures with the same name.
+
+            foreach (IPicture pictureWithSameName in gallery.Where(picture => picture.Name?.Equals(mapName, StringComparison.OrdinalIgnoreCase) ?? false).ToArray())
+                gallery.Pictures.Remove(pictureWithSameName);
+
+            // Add the new picture to the gallery.
+
+            IPicture newPicture = new Picture(imageUrl) {
+                Name = mapName,
+                Description = description
+            };
+
+            gallery.Pictures.Add(newPicture);
+
+            await Db.UpdateGalleryAsync(gallery);
+
+            if (string.IsNullOrEmpty(mapName))
+                await ReplySuccessAsync($"Successfully added new {"map".FromLink(imageUrl)}.");
+            else
+                await ReplySuccessAsync($"Successfully added new {"map".FromLink(imageUrl)}, {mapName.ToTitle().ToBold()}.");
+
         }
         [Command("setmap"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetMap(string primaryImageUrl, string labeledImageUrl) {
+        public async Task SetMap(string imageUrl) {
 
-            // Create an image gallery for storing the map images if one hasn't been created yet.
+            await AddMap(imageUrl, PrimaryMapName);
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Gallery(name) VALUES($name);")) {
+        }
 
-                cmd.Parameters.AddWithValue("$name", MAP_GALLERY_NAME);
+        // Private members
 
-                await Db.ExecuteNonQueryAsync(cmd);
+        private const string MapGalleryName = "map";
+        private const string PrimaryMapName = "primary";
+        private const string LabeledMapName = "labeled";
 
-            }
+        private async Task<IPictureGallery> GetMapGalleryAsync() {
 
-            IPictureGallery gallery = await Db.GetGalleryAsync(MAP_GALLERY_NAME);
+            IPictureGallery gallery = await Db.GetGalleryAsync(MapGalleryName);
 
-            // Remove existing images from the gallery.
+            if (gallery is null)
+                gallery = new PictureGallery(null, MapGalleryName, Enumerable.Empty<IPicture>());
 
-            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Picture WHERE gallery_id = $gallery_id;")) {
+            return gallery;
 
-                cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
+        }
+        private async Task ShowMapAsync(string mapName = "") {
 
-                await Db.ExecuteNonQueryAsync(cmd);
+            // Display a paginated list of maps.
+            // If a "primary" map is specified, show that map first.
+            // If a "labeled" map is specified, omit that map from pagination and show it when the user presses the "Z" reaction.
 
-            }
+            IPictureGallery gallery = await GetMapGalleryAsync();
 
-            // Insert the primary map image.
+            if (gallery is null || !gallery.Pictures.Any()) {
 
-            if (!await BotUtils.ReplyIsImageUrlValidAsync(Context, primaryImageUrl))
-                return;
-
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, name, artist) VALUES($url, $gallery_id, $name, $artist);")) {
-
-                cmd.Parameters.AddWithValue("$url", primaryImageUrl);
-                cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
-                cmd.Parameters.AddWithValue("$name", "primary");
-                cmd.Parameters.AddWithValue("$artist", Context.User.Username);
-
-                await Db.ExecuteNonQueryAsync(cmd);
+                await ReplyInfoAsync($"No map images have been set. Use the `{Config.Prefix}addmap` or `{Config.Prefix}setmap` command to add map images.");
 
             }
+            else {
 
-            // Insert the secondary map image (although it does not necessarily have to be provided).
+                IPaginatedMessage message = BuildMapEmbed(gallery);
 
-            if (!string.IsNullOrEmpty(labeledImageUrl)) {
+                if (!string.IsNullOrWhiteSpace(mapName)) {
 
-                if (!await BotUtils.ReplyIsImageUrlValidAsync(Context, labeledImageUrl))
-                    return;
+                    IPicture selectedMapPicture = gallery.GetPicture(mapName);
 
-                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO Picture(url, gallery_id, name, artist) VALUES($url, $gallery_id, $name, $artist);")) {
+                    if (selectedMapPicture is null) {
 
-                    cmd.Parameters.AddWithValue("$url", labeledImageUrl);
-                    cmd.Parameters.AddWithValue("$gallery_id", gallery.Id);
-                    cmd.Parameters.AddWithValue("$name", "labeled");
-                    cmd.Parameters.AddWithValue("$artist", Context.User.Username);
+                        await ReplyErrorAsync($"No map with the name {mapName.ToTitle().ToBold()} exists.");
 
-                    await Db.ExecuteNonQueryAsync(cmd);
+                    }
+                    else {
+
+                        for (int i = 0; i < message.Count(); ++i) {
+
+                            if (message.ElementAt(i).Embed?.ImageUrl?.Equals(selectedMapPicture.Url, StringComparison.OrdinalIgnoreCase) ?? false) {
+
+                                await message.GoToAsync(i);
+
+                                break;
+
+                            }
+
+                        }
+
+                        await ReplyAsync(message);
+
+                    }
+
+                }
+                else {
+
+                    await ReplyAsync(message);
 
                 }
 
             }
 
-            await BotUtils.ReplyAsync_Success(Context, "Successfully updated map images.");
+        }
+
+        private IPaginatedMessage BuildMapEmbed(IPictureGallery gallery) {
+
+            IPicture primaryMap = GetPictureByNames(gallery, new string[] { PrimaryMapName, "" }) ?? gallery.First();
+            IPicture labeledMap = GetPictureByNames(gallery, new string[] { LabeledMapName, "zones" });
+
+            List<IPicture> mapPictures = new List<IPicture>();
+
+            mapPictures.AddRange(gallery.Where(picture => picture.Id != primaryMap?.Id && picture.Id != labeledMap?.Id));
+
+            string primaryMapTitle = string.IsNullOrEmpty(Config.WorldName) ? "World Map" : $"Map of {Config.WorldName.ToTitle()}";
+            string primaryMapFooter = labeledMap is null ? string.Empty : "Click the Z reaction to toggle zone labels.";
+
+            IPaginatedMessage message = new PaginatedMessage();
+
+            if (primaryMap != null) {
+
+                message.AddPage(new Discord.Messaging.Embed() {
+                    Title = primaryMapTitle,
+                    Footer = primaryMapFooter,
+                    ImageUrl = primaryMap.Url
+                });
+
+            }
+
+            foreach (IPicture mapPicture in mapPictures) {
+
+                message.AddPage(new Discord.Messaging.Embed() {
+                    Title = $"{mapPicture.GetName().ToTitle()} Map",
+                    ImageUrl = mapPicture.Url
+                });
+
+            }
+
+            if (labeledMap != null) {
+
+                message.AddPage(new Discord.Messaging.Embed() {
+                    Title = primaryMapTitle,
+                    Footer = primaryMapFooter,
+                    ImageUrl = labeledMap.Url
+                });
+
+                message.MaximumIndex -= 1;
+
+                message.AddReaction("🇿", async (args) => {
+
+                    int targetIndex = args.Message.Count() - 1;
+
+                    if (args.Message.CurrentIndex == targetIndex)
+                        targetIndex = 0;
+
+                    if (args.Message.CurrentIndex == 0 || targetIndex == 0)
+                        await args.Message.GoToAsync(targetIndex);
+
+                });
+
+            }
+
+            return message;
+
+        }
+        private IPicture GetPictureByNames(IPictureGallery gallery, IEnumerable<string> names) {
+
+            return gallery
+                .Where(picture => names.Any(name => picture.GetName().Equals(name, StringComparison.OrdinalIgnoreCase)))
+                .FirstOrDefault();
+
 
         }
 

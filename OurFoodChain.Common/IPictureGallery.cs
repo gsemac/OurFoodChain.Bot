@@ -9,8 +9,7 @@ namespace OurFoodChain.Common {
 
         long? Id { get; set; }
         string Name { get; set; }
-
-        IPicture GetPicture(string name);
+        ICollection<IPicture> Pictures { get; }
 
     }
 

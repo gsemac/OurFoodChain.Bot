@@ -98,7 +98,7 @@ namespace OurFoodChain.Bot {
             using (SQLiteCommand cmd = new SQLiteCommand(query))
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                    ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row, GetSpeciesOptions.Fast);
+                    ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row);
 
                     ideas.Add($"There are no species that feed on {species.GetShortName().ToBold()}. Why not make one?");
 

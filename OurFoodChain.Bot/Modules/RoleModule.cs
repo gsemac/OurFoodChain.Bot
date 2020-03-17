@@ -33,13 +33,13 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("+role"), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+role", RunMode = RunMode.Async), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetRole(string speciesName, string roleName) {
 
             await SetRole(string.Empty, speciesName, roleName, string.Empty);
 
         }
-        [Command("+role"), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+role", RunMode = RunMode.Async), Alias("setrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetRole(string genusName, string speciesName, string roleName, string notes = "") {
 
             // Get the species.
@@ -68,13 +68,13 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("-role"), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-role", RunMode = RunMode.Async), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemoveRole(string speciesName, string roleName) {
 
             await RemoveRole(string.Empty, speciesName, roleName);
 
         }
-        [Command("-role"), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-role", RunMode = RunMode.Async), Alias("unsetrole"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemoveRole(string genusName, string speciesName, string roleName) {
 
             // Get the species.
@@ -121,7 +121,7 @@ namespace OurFoodChain.Bot {
             await ReplyAsync(embed);
 
         }
-        [Command("roles"), Alias("role")]
+        [Command("roles", RunMode = RunMode.Async), Alias("role")]
         public async Task Roles(string arg0) {
 
             // Possible cases:
@@ -180,7 +180,7 @@ namespace OurFoodChain.Bot {
             }
 
         }
-        [Command("roles"), Alias("role")]
+        [Command("roles", RunMode = RunMode.Async), Alias("role")]
         public async Task Roles(string genusName, string speciesName) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);

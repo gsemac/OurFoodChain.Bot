@@ -22,7 +22,7 @@ namespace OurFoodChain.Bot {
 
         // Public members
 
-        [Command("+prey"), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+prey", RunMode = RunMode.Async), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPrey(string speciesName, string preySpeciesName) {
 
             if (IsSpeciesList(preySpeciesName)) {
@@ -41,7 +41,7 @@ namespace OurFoodChain.Bot {
             }
 
         }
-        [Command("+prey"), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+prey", RunMode = RunMode.Async), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPrey(string arg0, string arg1, string arg2) {
 
             // We have the following possibilities, which we will check for in-order:
@@ -111,7 +111,7 @@ namespace OurFoodChain.Bot {
             }
 
         }
-        [Command("+prey"), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+prey", RunMode = RunMode.Async), Alias("setprey", "seteats", "setpredates"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task AddPrey(string genusName, string speciesName, string preyGenusName, string preySpeciesName, string notes = "") {
 
             ISpecies predatorSpecies = await GetSpeciesOrReplyAsync(genusName, speciesName);
@@ -122,13 +122,13 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("-prey"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-prey", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemovePrey(string speciesName, string preySpeciesName) {
 
             await RemovePrey(string.Empty, speciesName, string.Empty, preySpeciesName);
 
         }
-        [Command("-prey"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-prey", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemovePrey(string arg0, string arg1, string arg2) {
 
             // We have the following possibilities:
@@ -141,7 +141,7 @@ namespace OurFoodChain.Bot {
                 await ReplyRemovePreyAsync(result.First, result.Second);
 
         }
-        [Command("-prey"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-prey", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task RemovePrey(string genusName, string speciesName, string preyGenusName, string preySpeciesName) {
 
             ISpecies predatorSpecies = await GetSpeciesOrReplyAsync(genusName, speciesName);
@@ -152,7 +152,7 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("predates"), Alias("eats", "pred", "predators")]
+        [Command("predates", RunMode = RunMode.Async), Alias("eats", "pred", "predators")]
         public async Task Predates(string genusName, string speciesName = "") {
 
             // If the species parameter was not provided, assume the user only provided the species.
@@ -205,7 +205,7 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("prey")]
+        [Command("prey", RunMode = RunMode.Async)]
         public async Task Prey(string genusName, string speciesName = "") {
 
             // If no species argument was provided, assume the user omitted the genus.

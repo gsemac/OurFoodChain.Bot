@@ -50,13 +50,13 @@ namespace OurFoodChain.Bot {
             await ReplyAsync("", false, embed.Build());
 
         }
-        [Command("relationships"), Alias("relations", "related")]
+        [Command("relationships", RunMode = RunMode.Async), Alias("relations", "related")]
         public async Task Relationships(string species) {
 
             await Relationships("", species);
 
         }
-        [Command("relationships"), Alias("relations", "related")]
+        [Command("relationships", RunMode = RunMode.Async), Alias("relations", "related")]
         public async Task Relationships(string genus, string species) {
 
             // Get the species from the DB.
@@ -227,13 +227,13 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("+relationship"), Alias("+relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+relationship", RunMode = RunMode.Async), Alias("+relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusRelationship(string species1, string species2, string relationship) {
 
             await PlusRelationship("", species1, "", species2, relationship);
 
         }
-        [Command("+relationship"), Alias("+relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("+relationship", RunMode = RunMode.Async), Alias("+relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task PlusRelationship(string genus1, string species1, string genus2, string species2, string relationship) {
 
             // Get the relationship from the DB.
@@ -281,14 +281,14 @@ namespace OurFoodChain.Bot {
                 sp1.GetShortName()));
 
         }
-        [Command("-relationship"), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-relationship", RunMode = RunMode.Async), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusRelationship(string species1, string species2, string relationship) {
 
             await MinusRelationship("", species1, "", species2, relationship);
 
 
         }
-        [Command("-relationship"), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        [Command("-relationship", RunMode = RunMode.Async), Alias("-relation"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task MinusRelationship(string genus1, string species1, string genus2, string species2, string relationship) {
 
             // Get the relationship from the DB.

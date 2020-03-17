@@ -690,7 +690,7 @@ namespace OurFoodChain {
                 return string.Format("**`{0}.`**{1}`{2}` {3}",
                     item.Rank.ToString("0".PadRight(rankWidth, '0')),
                     item.Icon,
-                    item.Score.ToString("0".PadRight(rankWidth, '0')),
+                    item.Score.ToString("0".PadRight(scoreWidth, '0')),
                     string.Format(item.Rank <= 3 ? "**{0}**" : "{0}", string.IsNullOrEmpty(item.Name) ? "Results" : item.Name.ToTitle())
                 );
 
@@ -708,7 +708,7 @@ namespace OurFoodChain {
             foreach (Discord.Messaging.IEmbed page in pages)
                 page.Title = title;
 
-            await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+            await ReplyAsync(new PaginatedMessage(pages));
 
         }
         public async Task<bool> ReplyValidateImageUrlAsync(string imageUrl) {

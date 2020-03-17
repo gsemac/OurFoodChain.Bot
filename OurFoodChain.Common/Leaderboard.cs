@@ -22,6 +22,9 @@ namespace OurFoodChain.Common {
 
         }
 
+        public Leaderboard() : 
+            this("") {
+        }
         public Leaderboard(string title) {
 
             this.Title = title;

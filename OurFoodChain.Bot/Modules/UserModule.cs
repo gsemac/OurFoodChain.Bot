@@ -137,31 +137,17 @@ namespace OurFoodChain.Modules {
 
             IEnumerable<UserRank> userRanks = await Db.GetRanksAsync();
 
-            List<string> lines = new List<string>();
+            ILeaderboard leaderboard = new Leaderboard();
 
             foreach (UserRank userRank in userRanks) {
 
                 IUser user = Context.Guild is null ? null : await Context.Guild.GetUserAsync(userRank.User.Id);
 
-                lines.Add(string.Format("**`{0}`**{1}`{2}` {3}",
-                        string.Format("{0}.", userRank.Rank.ToString("000")),
-                        userRank.Icon,
-                        userRank.User.SubmissionCount.ToString("000"),
-                        string.Format(userRank.Rank <= 3 ? "**{0}**" : "{0}", user is null ? userRank.User.Username : user.Username)
-                       ));
+                leaderboard.Add(user?.Username ?? userRank.User.Username, userRank.User.SubmissionCount);
 
             }
 
-            // Create the embed.
-
-            IPaginatedMessage message = new PaginatedMessage();
-
-            message.AddLines(lines);
-            message.SetTitle($"🏆 Leaderboard ({lines.Count()})");
-            message.SetColor(255, 204, 77);
-            message.AddPageNumbers();
-
-            await ReplyAsync(message);
+            await ReplyLeaderboardAsync(leaderboard);
 
         }
 

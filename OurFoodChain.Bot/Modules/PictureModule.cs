@@ -278,7 +278,10 @@ namespace OurFoodChain.Bot {
 
                     // If no such taxon exists, show species recommendations to the user.
 
-                    await ReplyValidateSpeciesAsync(matchingSpecies);
+                    ISpecies species = await ReplySpeciesSuggestionAsync(string.Empty, arg0);
+
+                    if (species.IsValid())
+                        await ShowGalleryAsync(species);
 
                 }
                 else {

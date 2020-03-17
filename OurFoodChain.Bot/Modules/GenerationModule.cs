@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Extensions;
 
 namespace OurFoodChain.Bot {
 
@@ -59,7 +60,7 @@ namespace OurFoodChain.Bot {
 
         private async Task<IPaginatedMessage> BuildGenerationEmbedAsync(IGeneration generation) {
 
-            IPaginatedMessage message = await BuildRecentEventsMessageAsync(generation.StartDate, generation.EndDate);
+            IPaginatedMessage message = await this.BuildRecentEventsMessageAsync(generation.StartDate, generation.EndDate);
             TimeSpan span = DateUtilities.GetCurrentDateUtc() - generation.EndDate;
 
             string timeSpanString = DateUtilities.GetTimestampFromDate(generation.EndDate) == DateUtilities.GetMaxTimestamp() ? "Current" : DateUtilities.GetTimeSpanString(span) + " ago";

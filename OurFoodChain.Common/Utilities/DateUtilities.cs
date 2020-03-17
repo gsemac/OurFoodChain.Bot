@@ -147,6 +147,7 @@ namespace OurFoodChain.Common.Utilities {
                 case "h":
                 case "hour":
                 case "hours":
+                default:
                     result = TimeSpan.FromHours(amount);
                     break;
 

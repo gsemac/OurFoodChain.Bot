@@ -720,33 +720,6 @@ namespace OurFoodChain {
 
         }
 
-        public async Task<IPaginatedMessage> BuildRecentEventsMessageAsync(DateTimeOffset start, DateTimeOffset end) {
-
-            IEnumerable<ISpecies> newSpecies = (await Db.GetSpeciesAsync(start, end)).OrderBy(species => species.GetShortName());
-            IEnumerable<ISpecies> extinctSpecies = (await Db.GetExtinctSpeciesAsync(start, end)).OrderBy(species => species.GetShortName());
-
-            List<Discord.Messaging.IEmbed> pages = new List<Discord.Messaging.IEmbed>();
-
-            if (newSpecies.Count() > 0)
-                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"New species ({newSpecies.Count()})", newSpecies.Select(species => species.GetFullName())));
-
-            if (newSpecies.Count() > 0)
-                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"Extinctions ({extinctSpecies.Count()})", extinctSpecies.Select(species => species.GetFullName())));
-
-            EmbedUtilities.AddPageNumbers(pages);
-
-            foreach (Discord.Messaging.IEmbed page in pages)
-                page.Title = $"Recent events ({DateUtilities.GetTimeSpanString(end - start)})";
-
-            if (pages.Count() <= 0)
-                pages.Add(new Discord.Messaging.Embed() { Description = "No events" });
-
-            IPaginatedMessage message = new PaginatedMessage(pages);
-
-            return message;
-
-        }
-
         // Private members
 
         private async Task<ITaxon> GetTaxonOrReplyAsync(IEnumerable<ITaxon> matchingTaxa, TaxonRankType rank, string taxonName) {

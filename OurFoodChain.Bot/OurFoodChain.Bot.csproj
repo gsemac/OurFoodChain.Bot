@@ -264,6 +264,7 @@
   <ItemGroup>
     <Compile Include="Constants.cs" />
     <Compile Include="Extensions\GotchiExtensions.cs" />
+    <Compile Include="Extensions\OfcModuleBaseGenerationExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseGotchiExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseRoleExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseTrophyExtensions.cs" />
@@ -357,7 +358,6 @@
     <Compile Include="Reviews\ReviewInfo.cs" />
     <Compile Include="Discord\EmbedUtils.cs" />
     <Compile Include="Users\UserInfo.cs" />
-    <Compile Include="Utilities\TimeAmount.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

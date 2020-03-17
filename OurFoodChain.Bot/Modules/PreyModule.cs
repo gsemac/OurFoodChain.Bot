@@ -217,7 +217,7 @@ namespace OurFoodChain.Bot {
 
                     }
 
-                    IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, options: EmbedPaginationOptions.AddPageNumbers);
+                    IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, columnsPerPage: 1, options: EmbedPaginationOptions.AddPageNumbers);
 
                     foreach (Discord.Messaging.IEmbed page in pages) {
 

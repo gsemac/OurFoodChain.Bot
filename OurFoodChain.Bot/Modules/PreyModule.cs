@@ -118,7 +118,7 @@ namespace OurFoodChain.Bot {
         public async Task RemovePrey(string genusName, string speciesName, string preyGenusName, string preySpeciesName) {
 
             ISpecies predatorSpecies = await GetSpeciesOrReplyAsync(genusName, speciesName);
-            ISpecies preySpecies = predatorSpecies.IsValid() ? await GetSpeciesOrReplyAsync(genusName, speciesName) : null;
+            ISpecies preySpecies = predatorSpecies.IsValid() ? await GetSpeciesOrReplyAsync(preyGenusName, preySpeciesName) : null;
 
             if (predatorSpecies.IsValid() && preySpecies.IsValid())
                 await ReplyRemovePreyAsync(predatorSpecies, preySpecies);

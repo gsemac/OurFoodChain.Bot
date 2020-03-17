@@ -119,7 +119,7 @@ namespace OurFoodChain.Data {
 
                         species2 = matchingSpecies;
 
-                        return new SpeciesAmbiguityResolverResult(species1, species2, arg2, suggestionHint);
+                        return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint, arg2);
 
                     }
 

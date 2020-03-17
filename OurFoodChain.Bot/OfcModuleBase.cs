@@ -240,7 +240,7 @@ namespace OurFoodChain {
             }
 
             if (species1.IsValid() && species2.IsValid())
-                return new SpeciesAmbiguityResolverResult(new ISpecies[] { species1 }, new ISpecies[] { species2 }, result.Extra);
+                return new SpeciesAmbiguityResolverResult(new ISpecies[] { species1 }, new ISpecies[] { species2 }, result.SuggestionHint, result.Extra);
 
             return result; // not success
 

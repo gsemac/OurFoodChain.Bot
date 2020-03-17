@@ -9,6 +9,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Extensions;
 using System;
@@ -24,6 +25,8 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Gotchis {
 
     public static class GotchiUtilities {
+
+        // Public members
 
         public static async Task<GotchiItem[]> GetGotchiItemsAsync() {
 
@@ -179,6 +182,32 @@ namespace OurFoodChain.Gotchis {
 
         }
 
+        public static bool TryReadGotchiConfigurationFromFile(out GotchiConfiguration result) {
+
+            List<string> filePaths = new List<string> {
+                "gotchi-config.json", // file name used in past versions
+                "gotchi_config.json"
+            };
+
+            foreach (string path in filePaths) {
+
+                if (System.IO.File.Exists(path)) {
+
+                    result = ConfigurationBase.Open<GotchiConfiguration>(path);
+
+                    return true;
+
+                }
+
+            }
+
+            result = null;
+
+            return false;
+
+        }
+
+        // Private members
 
         private static List<GotchiTradeRequest> _trade_requests = new List<GotchiTradeRequest>();
 

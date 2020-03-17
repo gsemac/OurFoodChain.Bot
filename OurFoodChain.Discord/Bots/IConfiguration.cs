@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace OurFoodChain.Discord.Bots {
 
+    [JsonConverter(typeof(ConfigurationJsonConverter))]
     public interface IConfiguration {
 
         void Save(string filePath);

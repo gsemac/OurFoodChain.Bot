@@ -13,7 +13,7 @@ namespace OurFoodChain.Gotchis {
 
         public event Func<LogMessage, Task> LogAsync;
 
-        public GotchiConfig Config { get; set; } = new GotchiConfig();
+        public GotchiConfiguration Config { get; set; } = new GotchiConfiguration();
         public GotchiTypeRegistry TypeRegistry { get; } = new GotchiTypeRegistry();
         public GotchiStatusRegistry StatusRegistry { get; } = new GotchiStatusRegistry();
         public GotchiMoveRegistry MoveRegistry { get; } = new GotchiMoveRegistry();

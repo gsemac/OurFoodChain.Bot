@@ -1,23 +1,17 @@
 ﻿{
-
+  "botAdminUserIds": [],
+  "modRoleIds": [],
+  "scratchChannel": 0,
+  "scratchServer": 0,
+  "reviewChannels": null,
+  "worldName": "",
+  "wikiUrlFormat": "",
+  "trophiesEnabled": true,
+  "gotchisEnabled": true,
+  "generationsEnabled": false,
+  "advancedCommandsEnabled": false,
   "token": "",
   "playing": "",
   "prefix": "?",
-
-  "bot_admin_user_ids": [],
-  "mod_role_ids": [],
-
-  "scratch_channel": 0,
-  "scratch_server": 0,
-  "review_channels": [],
-
-  "world_name": "",
-
-  "wiki_url_format": "",
-
-  "trophies_enabled": true,
-  "gotchis_enabled": true,
-  "generations_enabled": false,
-  "advanced_commands_enabled": false
-
+  "dataDirectory": "data/"
 }

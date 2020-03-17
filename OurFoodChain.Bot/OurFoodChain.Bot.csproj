@@ -302,7 +302,7 @@
     <Compile Include="Gotchis\BattleGotchi.cs" />
     <Compile Include="Services\FileUploadService.cs" />
     <Compile Include="Services\GotchiBackgroundService.cs" />
-    <Compile Include="Gotchis\GotchiConfig.cs" />
+    <Compile Include="Gotchis\GotchiConfiguration.cs" />
     <Compile Include="Gotchis\GotchiContext.cs" />
     <Compile Include="Gotchis\GotchiExperienceCalculator.cs" />
     <Compile Include="Gotchis\GotchiGeneratorParameters.cs" />
@@ -365,7 +365,7 @@
     <None Include="data\help\gotchi\dex.json" />
     <None Include="data\help\gotchi\inventory.json" />
     <None Include="data\help\gotchi\useitem.json" />
-    <None Include="gotchi-config.json" />
+    <None Include="gotchi_config.json" />
     <None Include="data\gotchi\moves\branch_drop.lua" />
     <None Include="data\gotchi\moves\crush.lua" />
     <None Include="data\gotchi\moves\molt.lua" />

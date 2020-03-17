@@ -1,0 +1,7 @@
+﻿{
+  "sleepHours": 8,
+  "maxMissedFeedings": 3,
+  "trainingLimit": 3,
+  "trainingCooldown": 15,
+  "imageWhitelistEnabled": true
+}

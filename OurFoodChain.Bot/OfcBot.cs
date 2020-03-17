@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using OurFoodChain.Common;
 using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Gotchis;
 using OurFoodChain.Services;
 using OurFoodChain.Trophies;
 using System;
@@ -128,14 +129,16 @@ namespace OurFoodChain.Bot {
 
         private async Task InitializeGotchiContextAsync() {
 
-            Gotchis.GotchiContext gotchiContext = new Gotchis.GotchiContext();
+            GotchiContext gotchiContext = new GotchiContext();
 
             gotchiContext.LogAsync += async x => await OnLogAsync(x);
 
             // Load gotchi config.
 
-            if (System.IO.File.Exists("gotchi-config.json"))
-                gotchiContext.Config = ConfigurationBase.Open<Gotchis.GotchiConfig>("gotchi-config.json");
+            if (GotchiUtilities.TryReadGotchiConfigurationFromFile(out GotchiConfiguration gotchiConfiguration))
+                gotchiContext.Config = gotchiConfiguration;
+            else
+                await OnLogAsync(LogSeverity.Warning, "Gotchi", "Gotchi configuration file could not be found");
 
             // Initialize registries.
 

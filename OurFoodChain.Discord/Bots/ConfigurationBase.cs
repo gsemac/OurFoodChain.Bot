@@ -61,9 +61,7 @@ namespace OurFoodChain.Discord.Bots {
         }
         public static T Parse<T>(string json) {
 
-            return JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings() {
-                ContractResolver = new ConfigurationPropertyContractResolver()
-            });
+            return JsonConvert.DeserializeObject<T>(json);
 
         }
 
@@ -71,7 +69,7 @@ namespace OurFoodChain.Discord.Bots {
 
         private PropertyInfo GetPropertyByJsonPropertyAttribute(string jsonPropertyName) {
 
-            // Underscores are ignored when resolving properties.
+            // Underscores and casing are ignored when resolving properties.
 
             jsonPropertyName = jsonPropertyName.Replace("_", string.Empty);
 

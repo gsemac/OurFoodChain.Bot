@@ -6,6 +6,7 @@ using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Debug;
+using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Gotchis;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,6 @@ using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -596,7 +596,7 @@ namespace OurFoodChain.Extensions {
 
             string gotchi_pic = Constants.GotchiImagesDirectory + "default.png";
 
-            if (!string.IsNullOrEmpty(sp.GetPictureUrl()) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || Regex.Match(sp.GetPictureUrl(), @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase).Success)) {
+            if (!string.IsNullOrEmpty(sp.GetPictureUrl()) && (!Global.GotchiContext.Config.ImageWhitelistEnabled || DiscordUtilities.IsDiscordImageUrl(sp.GetPictureUrl()))) {
 
                 string downloads_dir = Constants.TempDirectory + "downloads";
                 string ext = Regex.Match(sp.GetPictureUrl(), @"(\.(?:jpg|png))(?:\?.+)?$", RegexOptions.IgnoreCase).Groups[1].Value;

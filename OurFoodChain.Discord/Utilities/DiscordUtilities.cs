@@ -90,6 +90,12 @@ namespace OurFoodChain.Discord.Utilities {
 
         }
 
+        public static bool IsDiscordImageUrl(string imageUrl) {
+
+            return Regex.IsMatch(imageUrl, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase);
+
+        }
+
         // Private members
 
         private static bool UserMatchesUsernameOrMention(IGuildUser user, string usernameOrMention) {

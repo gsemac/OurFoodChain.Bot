@@ -209,7 +209,7 @@ namespace OurFoodChain.Gotchis {
 
         // Private members
 
-        private static List<GotchiTradeRequest> _trade_requests = new List<GotchiTradeRequest>();
+        private static readonly List<GotchiTradeRequest> _trade_requests = new List<GotchiTradeRequest>();
 
     }
 

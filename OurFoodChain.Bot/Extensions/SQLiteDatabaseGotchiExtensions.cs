@@ -438,7 +438,7 @@ namespace OurFoodChain.Extensions {
                 foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
                     items.Add(new GotchiInventoryItem {
-                        Item = await GotchiUtils.GetGotchiItemAsync(row.Field<long>("item_id")),
+                        Item = await GotchiUtilities.GetGotchiItemAsync(row.Field<long>("item_id")),
                         Count = row is null ? 0 : row.Field<long>("count")
                     });
 
@@ -479,7 +479,7 @@ namespace OurFoodChain.Extensions {
 
             return (await database.GetInventoryAsync(userId))
                 .Where(i => i.Item.Id == (int)itemId)
-                .FirstOrDefault() ?? new GotchiInventoryItem { Item = await GotchiUtils.GetGotchiItemAsync((long)itemId), Count = 0 };
+                .FirstOrDefault() ?? new GotchiInventoryItem { Item = await GotchiUtilities.GetGotchiItemAsync((long)itemId), Count = 0 };
 
         }
 

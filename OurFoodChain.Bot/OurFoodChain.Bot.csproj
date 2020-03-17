@@ -271,7 +271,6 @@
     <Compile Include="Extensions\SQLiteDatabaseGotchiExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabasePeriodExtensions.cs" />
     <Compile Include="Extensions\SQLiteDatabaseUserExtensions.cs" />
-    <Compile Include="Gotchis\GotchiUtilities.cs" />
     <Compile Include="IOfcBotContext.cs" />
     <Compile Include="Modules\UserModule.cs" />
     <Compile Include="OfcBotContext.cs" />
@@ -341,7 +340,7 @@
     <Compile Include="Gotchis\GotchiMoveSet.cs" />
     <Compile Include="Gotchis\GotchiBattleStatus.cs" />
     <Compile Include="Gotchis\GotchiUserInfo.cs" />
-    <Compile Include="Gotchis\GotchiUtils.cs" />
+    <Compile Include="Gotchis\GotchiUtilities.cs" />
     <Compile Include="Periods\Period.cs" />
     <Compile Include="Taxa\Relationship.cs" />
     <Compile Include="Modules\TrophyModule.cs" />

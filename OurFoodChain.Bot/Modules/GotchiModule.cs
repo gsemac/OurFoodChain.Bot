@@ -475,19 +475,19 @@ namespace OurFoodChain.Bot.Modules {
                 // Get the trade that the user is involved with (if applicable).
 
                 Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
-                GotchiTradeRequest trade_request = GotchiUtils.GetTradeRequest(gotchi);
+                GotchiTradeRequest trade_request = GotchiUtilities.GetTradeRequest(gotchi);
                 bool trade_request_is_valid = !(trade_request is null);
 
                 if (trade_request_is_valid) {
 
-                    if (!await GotchiUtils.ValidateTradeRequestAsync(Context, Db, trade_request))
+                    if (!await GotchiUtilities.ValidateTradeRequestAsync(Context, Db, trade_request))
                         await ReplyInfoAsync("The trade request has expired, or is invalid.");
 
                     else {
 
                         // The trade is valid, so perform the trade.
 
-                        await GotchiUtils.ExecuteTradeRequestAsync(Context, Db, trade_request);
+                        await GotchiUtilities.ExecuteTradeRequestAsync(Context, Db, trade_request);
 
                         await ReplySuccessAsync(string.Format("**{0}** successfully traded gotchis with **{1}**. Take good care of them!",
                             Context.User.Username,
@@ -534,10 +534,10 @@ namespace OurFoodChain.Bot.Modules {
                 // Get the trade that the user is involved with (if applicable).
 
                 Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());
-                GotchiTradeRequest trade_request = GotchiUtils.GetTradeRequest(gotchi);
+                GotchiTradeRequest trade_request = GotchiUtilities.GetTradeRequest(gotchi);
                 bool trade_request_is_valid = !(trade_request is null);
 
-                if (trade_request_is_valid && await GotchiUtils.ValidateTradeRequestAsync(Context, Db, trade_request)) {
+                if (trade_request_is_valid && await GotchiUtilities.ValidateTradeRequestAsync(Context, Db, trade_request)) {
 
                     await ReplyAsync(string.Format("{0}, **{1}** has denied your trade request.",
                         (await Context.Guild.GetUserAsync(trade_request.OfferedGotchi.OwnerId)).Mention,
@@ -642,7 +642,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Submit the trade request.
 
-                switch (await GotchiUtils.MakeTradeRequestAsync(Context, Db, gotchi, partnerGotchi)) {
+                switch (await GotchiUtilities.MakeTradeRequestAsync(Context, Db, gotchi, partnerGotchi)) {
 
                     case GotchiTradeRequestResult.Success:
 
@@ -681,7 +681,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Generate a field for each item.
 
-            GotchiItem[] items = await GotchiUtils.GetGotchiItemsAsync();
+            GotchiItem[] items = await GotchiUtilities.GetGotchiItemsAsync();
             List<IEmbedField> item_fields = new List<IEmbedField>();
 
             foreach (GotchiItem item in items) {
@@ -718,7 +718,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("buy")]
         public async Task Buy(string itemIdentifier, long count = 1) {
 
-            GotchiItem item = await GotchiUtils.GetGotchiItemAsync(itemIdentifier);
+            GotchiItem item = await GotchiUtilities.GetGotchiItemAsync(itemIdentifier);
             GotchiUserInfo userInfo = await Db.GetUserInfoAsync(Context.User.ToCreator());
 
             // Calculate the price of the item.

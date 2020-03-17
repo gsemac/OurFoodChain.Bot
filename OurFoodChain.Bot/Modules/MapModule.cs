@@ -31,7 +31,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("map")]
         public async Task Map([Remainder]string mapName) {
 
-            await ShowMapAsync(mapName);
+            await ShowMapAsync(StringUtilities.StripOuterQuotes(mapName));
 
         }
 

@@ -31,6 +31,8 @@ namespace OurFoodChain.Bot.Modules {
         [Command("info", RunMode = RunMode.Async), Alias("i")]
         public async Task GetInfo([Remainder]string taxonName) {
 
+            taxonName = StringUtilities.StripOuterQuotes(taxonName);
+
             // Prioritize species first.
 
             IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(taxonName);
@@ -81,7 +83,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("species", RunMode = RunMode.Async), Alias("sp", "s")]
         public async Task SpeciesInfo([Remainder]string speciesName) {
 
-            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(StringUtilities.StripOuterQuotes(speciesName));
 
             if (species.IsValid())
                 await ReplySpeciesAsync(species);

@@ -442,8 +442,7 @@ namespace OurFoodChain.Common.Utilities {
 
             // For each argument that begins and ends with a quote ("), strip the outer quotes.
 
-            return arguments
-                .Select(arg => (arg.Length > 1 && arg.StartsWith("\"") && arg.EndsWith("\"")) ? arg.Trim('"') : arg);
+            return arguments.Select(arg => StripOuterQuotes(arg));
 
         }
         public static IEnumerable<string> ParseDelimitedString(string input, string delimiter = ",") {
@@ -456,6 +455,14 @@ namespace OurFoodChain.Common.Utilities {
             return input.Split(delimiters.ToArray(), StringSplitOptions.None)
                 .Select(item => item.Trim())
                 .Where(item => !string.IsNullOrEmpty(item));
+
+        }
+        public static string StripOuterQuotes(string input) {
+
+            if (input.Length > 1 && input.StartsWith("\"") && input.EndsWith("\""))
+                input = input.Trim('"');
+
+            return input;
 
         }
 

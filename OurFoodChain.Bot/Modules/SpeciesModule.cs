@@ -928,6 +928,7 @@ namespace OurFoodChain.Bot.Modules {
 
             ISpecies species = null;
             ILengthUnit units = null;
+            bool invalidUnits = false;
 
             // Attempt to get the specified species, assuming the user passed in <genus> <species>.
 
@@ -948,16 +949,16 @@ namespace OurFoodChain.Bot.Modules {
                     // Assume the second argument was the desired units.
                     // Make sure the units given are valid.
 
-                    LengthUnit.TryParse(arg1, out units);
+                    invalidUnits = !LengthUnit.TryParse(arg1, out units);
 
-                    if (units is null)
-                        await ReplyErrorAsync(string.Format("Invalid units (\"{0}\").", arg1));
 
                 }
 
             }
 
-            if (species != null && units != null)
+            if (invalidUnits)
+                await ReplyErrorAsync($"Invalid units ({arg1}).");
+            else if (species.IsValid())
                 await ReplySizeAsync(species, units);
 
         }

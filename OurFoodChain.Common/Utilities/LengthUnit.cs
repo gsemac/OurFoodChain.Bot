@@ -63,7 +63,7 @@ namespace OurFoodChain.Common.Utilities {
 
             result = GetKnownUnit(input);
 
-            return result is null;
+            return result != null;
 
         }
 
@@ -118,6 +118,13 @@ namespace OurFoodChain.Common.Utilities {
             RegisterUnit(knownUnits, new LengthUnit("planck length", "ℓP", 1.6 / Math.Pow(10, 35)));
             RegisterUnit(knownUnits, new LengthUnit("planck", "ℓP", 1.6 / Math.Pow(10, 35)));
 
+            // Also map the lowercase version of each unit abbreviation to the unit.
+            // This is done last to avoid problems with conflicting units (e.g. "mm" and "Mm").
+
+            foreach (ILengthUnit unit in knownUnits.Values.ToArray())
+                if (!knownUnits.Keys.Contains(unit.Abbreviation.ToLowerInvariant()))
+                    knownUnits.Add(unit.Abbreviation.ToLowerInvariant(), unit);
+
             return knownUnits;
 
         }
@@ -125,25 +132,27 @@ namespace OurFoodChain.Common.Utilities {
 
             if (!string.IsNullOrEmpty(unit.Name)) {
 
-                dictionary.Add(unit.Name.ToLowerInvariant().Replace("-", " "), unit);
-                dictionary.Add(ToPlural(unit.Name).ToLowerInvariant().Replace("-", " "), unit);
+                string pluralName = ToPlural(unit.Name).Replace("-", " ");
+
+                dictionary[unit.Name.ToLowerInvariant().Replace("-", " ")] = unit;
+                dictionary[pluralName] = unit;
 
             }
 
-            if (!string.IsNullOrEmpty(unit.Abbreviation))
-                dictionary.Add(unit.Abbreviation, unit);
+            dictionary[unit.Abbreviation] = unit;
 
         }
         private static ILengthUnit GetKnownUnit(string name) {
 
-            name = name.ToLowerInvariant();
-            name = Regex.Replace(name, @"metre(s?)$", "meter$1");
+            name = Regex.Replace(name, @"metre(s?)$", "meter$1", RegexOptions.IgnoreCase);
             name = name.Replace("-", " ");
 
-            if (knownUnits.Value.TryGetValue(name, out ILengthUnit value))
-                return value;
-            else
-                return null;
+            ILengthUnit result;
+
+            if (knownUnits.Value.TryGetValue(name, out result) || knownUnits.Value.TryGetValue(name.ToLowerInvariant(), out result))
+                return result;
+
+            return null;
 
         }
         private static string ToPlural(string name) {

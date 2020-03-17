@@ -113,20 +113,20 @@ namespace OurFoodChain.Common.Utilities {
             }
 
         }
-        public string ToString(ILengthUnit units) {
+        public string ToString(ILengthUnit newUnits) {
 
-            if (units is null)
-                throw new ArgumentNullException(nameof(units));
+            if (newUnits is null)
+                throw new ArgumentNullException(nameof(newUnits));
 
-            if ((minSize <= 0.0 && maxSize <= 0.0) || units is null)
+            if ((minSize <= 0.0 && maxSize <= 0.0) || newUnits is null)
                 return UnknownSize;
 
             if (minSize != maxSize) {
 
                 // Represent the size as a range.
 
-                LengthMeasurement minLength = new LengthMeasurement(minSize, units).ConvertTo(units);
-                LengthMeasurement maxLength = new LengthMeasurement(maxSize, units).ConvertTo(units);
+                LengthMeasurement minLength = new LengthMeasurement(minSize, this.units).ConvertTo(newUnits);
+                LengthMeasurement maxLength = new LengthMeasurement(maxSize, this.units).ConvertTo(newUnits);
 
                 return string.Format("**{0}-{1} {2}**",
                     minLength.ToString(LengthMeasurementFormat.Value),
@@ -138,7 +138,7 @@ namespace OurFoodChain.Common.Utilities {
 
                 // Represent the size as a single value.
 
-                LengthMeasurement size = new LengthMeasurement(minSize <= 0.0 ? maxSize : minSize, units).ConvertTo(units);
+                LengthMeasurement size = new LengthMeasurement(minSize <= 0.0 ? maxSize : minSize, this.units).ConvertTo(newUnits);
 
                 return string.Format("**{0}**", size.ToString());
 

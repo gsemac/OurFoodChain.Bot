@@ -114,13 +114,13 @@ namespace OurFoodChain.Bot.Modules {
                 await ReplyErrorAsync("There are currently no species available.");
 
         }
-        [Command("get")]
+        [Command("get", RunMode = RunMode.Async)]
         public async Task Get(string speciesName) {
 
             await Get(string.Empty, speciesName);
 
         }
-        [Command("get")]
+        [Command("get", RunMode = RunMode.Async)]
         public async Task Get(string genusName, string speciesName) {
 
             // Get the species that the user specified.
@@ -794,7 +794,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("useitem")]
+        [Command("useitem", RunMode = RunMode.Async)]
         public async Task UseItem(string itemIdentifier) {
 
             IUser user = Context.User;
@@ -946,7 +946,7 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            long gotchi_id = OurFoodChain.Gotchis.Gotchi.NullGotchiId;
+            long gotchi_id = Gotchis.Gotchi.NullGotchiId;
             string name = "";
 
             if (StringUtilities.IsNumeric(nameOrIndex)) {
@@ -963,7 +963,7 @@ namespace OurFoodChain.Bot.Modules {
 
             }
 
-            if (gotchi_id == OurFoodChain.Gotchis.Gotchi.NullGotchiId) {
+            if (gotchi_id == Gotchis.Gotchi.NullGotchiId) {
 
                 Gotchi gotchi = await Db.GetGotchiAsync(Context.User.Id, nameOrIndex.ToLower());
 
@@ -997,9 +997,11 @@ namespace OurFoodChain.Bot.Modules {
 
         [Command("dex")]
         public async Task Dex(string speciesName) {
+
             await Dex(string.Empty, speciesName);
+
         }
-        [Command("dex")]
+        [Command("dex", RunMode = RunMode.Async)]
         public async Task Dex(string genusName, string speciesName) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);

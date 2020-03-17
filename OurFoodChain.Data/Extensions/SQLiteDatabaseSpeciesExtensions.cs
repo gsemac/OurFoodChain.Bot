@@ -14,14 +14,15 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
+
+    public enum GetSpeciesOptions {
+        None = 0,
+        Fast = 1
+    }
+
     public static class SQLiteDatabaseSpeciesExtensions {
 
         // Public members
-
-        public enum GetSpeciesOptions {
-            None = 0,
-            Basic = 1
-        }
 
         public static async Task AddSpeciesAsync(this SQLiteDatabase database, ISpecies species) {
 
@@ -595,7 +596,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IZone zone) {
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IZone zone, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             if (zone is null || zone.Id <= 0)
                 return Enumerable.Empty<ISpecies>();
@@ -607,7 +608,7 @@ namespace OurFoodChain.Data.Extensions {
                 cmd.Parameters.AddWithValue("$zone_id", zone.Id);
 
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    species.Add(await CreateSpeciesFromDataRowAsync(database, row));
+                    species.Add(await CreateSpeciesFromDataRowAsync(database, row, options));
 
             }
 
@@ -838,7 +839,7 @@ namespace OurFoodChain.Data.Extensions {
 
             ITaxon genus;
 
-            if (options.HasFlag(GetSpeciesOptions.Basic)) {
+            if (options.HasFlag(GetSpeciesOptions.Fast)) {
 
                 // Get basic genus information.
 
@@ -879,7 +880,7 @@ namespace OurFoodChain.Data.Extensions {
             if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))
                 commonNames.Add(row.Field<string>("common_name"));
 
-            if (!options.HasFlag(GetSpeciesOptions.Basic))
+            if (!options.HasFlag(GetSpeciesOptions.Fast))
                 commonNames.AddRange(await database.GetCommonNamesAsync(species));
 
             species.CommonNames.AddRange(commonNames.Distinct(StringComparer.OrdinalIgnoreCase));

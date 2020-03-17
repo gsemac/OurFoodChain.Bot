@@ -3,14 +3,13 @@ using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
-using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Bot {
@@ -48,8 +47,8 @@ namespace OurFoodChain.Bot {
 
             foreach (IZone zone in await Db.GetZonesAsync()) {
 
-                if ((await Db.GetSpeciesAsync(zone)).Count() <= 0)
-                    ideas.Add(string.Format("**{0}** does not contain any species yet. Why not make one?", zone.GetFullName()));
+                if ((await Db.GetSpeciesAsync(zone, GetSpeciesOptions.Fast)).Count() <= 0)
+                    ideas.Add($"{zone.GetFullName().ToBold()} does not contain any species yet. Why not make one?");
 
             }
 
@@ -65,7 +64,7 @@ namespace OurFoodChain.Bot {
             foreach (ITaxon genus in await Db.GetTaxaAsync(TaxonRankType.Genus)) {
 
                 if ((await Db.GetSubtaxaAsync(genus)).Count() <= 0)
-                    ideas.Add(string.Format("Genus **{0}** only has one species in it. Why not make another?", genus.Name.ToTitle()));
+                    ideas.Add($"Genus {genus.Name.ToTitle().ToBold()} only has one species in it. Why not make another?");
 
             }
 
@@ -99,9 +98,9 @@ namespace OurFoodChain.Bot {
             using (SQLiteCommand cmd = new SQLiteCommand(query))
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                    ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row);
+                    ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row, GetSpeciesOptions.Fast);
 
-                    ideas.Add(string.Format("There are no species that feed on **{0}**. Why not make one?", species.GetShortName()));
+                    ideas.Add($"There are no species that feed on {species.GetShortName().ToBold()}. Why not make one?");
 
                 }
 

@@ -24,7 +24,8 @@ namespace OurFoodChain.Data.Queries {
                     .Where(species => species.Id.HasValue)
                     .OrderBy(species => NumberUtilities.GetRandomInteger(int.MaxValue))
                     .Take(count)
-                    .Select(species => (long)species.Id);
+                    .Select(species => (long)species.Id)
+                    .ToArray();
 
                 // Filter all but those results.
 

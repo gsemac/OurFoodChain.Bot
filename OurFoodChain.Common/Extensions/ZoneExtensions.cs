@@ -41,6 +41,12 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
+        public static string GetPictureUrl(this IZone zone) {
+
+            return zone?.Pictures?.FirstOrDefault()?.Url;
+
+        }
+
         public static string ToString(this IEnumerable<ISpeciesZoneInfo> zones, ZoneListToStringOptions options, int maxLength = 0) {
 
             if (maxLength < 0)

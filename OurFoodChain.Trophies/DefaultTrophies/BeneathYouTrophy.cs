@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace OurFoodChain.Trophies.DefaultTrophies {
 
     public class BeneathYouTrophy :
-        RoleMatchTrophyBase {
+        DescriptionMatchTrophyBase {
 
         public BeneathYouTrophy() :
             base("Beneath You", "Create a species that burrows or tunnels.", TrophyFlags.None, @"\bburrow\b") {

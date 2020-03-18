@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Roles;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Data.Extensions;
 using System;
@@ -52,8 +53,17 @@ namespace OurFoodChain.Data.Queries {
                     case GroupBy.Status:
                         return new string[] { await Task.FromResult(species.Status.IsExinct ? "extinct" : "extant") };
 
-                    case GroupBy.Role:
-                        return (await context.Database.GetRolesAsync(species.Id)).Select(role => role.Name);
+                    case GroupBy.Role: {
+
+                            IEnumerable<string> roleNames = (await context.Database.GetRolesAsync(species.Id))
+                                .Select(role => role.Name);
+
+                            if (!roleNames.Any())
+                                roleNames = new string[] { "N/A" };
+
+                            return roleNames;
+
+                        }
 
                     case GroupBy.Generation:
                         return new string[] { (await context.Database.GetGenerationByDateAsync(species.CreationDate))?.Name ?? "Gen ?" };

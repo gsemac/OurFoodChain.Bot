@@ -11,6 +11,7 @@ using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain {
@@ -139,22 +140,40 @@ namespace OurFoodChain {
 
             List<string> lines = new List<string>();
             int zones_per_page = 20;
-            int max_line_length = Math.Min(showIcon ? 78 : 80, (DiscordUtils.MaxEmbedLength - existingLength) / zones_per_page);
+            int maxLineLength = Math.Min(showIcon ? 78 : 80, (DiscordUtils.MaxEmbedLength - existingLength) / zones_per_page);
 
             foreach (IZone zone in zones) {
 
                 IZoneType type = await database.GetZoneTypeAsync(zone.TypeId);
 
-                string line = string.Format("{1} **{0}**\t-\t{2}", StringUtilities.ToTitleCase(zone.Name), showIcon ? (type is null ? new ZoneType() : type).Icon : "", zone.Description.GetFirstSentence());
+                StringBuilder lineBuilder = new StringBuilder();
 
-                if (line.Length > max_line_length)
-                    line = line.Substring(0, max_line_length - 3) + "...";
+                if (showIcon) {
+
+                    lineBuilder.Append((type ?? new ZoneType()).Icon);
+                    lineBuilder.Append(" ");
+
+                }
+
+                lineBuilder.Append(zone.Name.ToTitle().ToBold());
+
+                if (!string.IsNullOrWhiteSpace(zone.Description)) {
+
+                    lineBuilder.Append("\t—\t");
+                    lineBuilder.Append(zone.Description.GetFirstSentence());
+
+                }
+
+                string line = lineBuilder.ToString();
+
+                if (line.Length > maxLineLength)
+                    line = line.Substring(0, maxLineLength - 3) + "...";
 
                 lines.Add(line);
 
             }
 
-            return EmbedUtilities.CreateEmbedPages(string.Empty, lines, itemsPerPage: 20, options: EmbedPaginationOptions.AddPageNumbers);
+            return EmbedUtilities.CreateEmbedPages(string.Empty, lines, itemsPerPage: 20, columnsPerPage: 1, options: EmbedPaginationOptions.AddPageNumbers);
 
         }
 

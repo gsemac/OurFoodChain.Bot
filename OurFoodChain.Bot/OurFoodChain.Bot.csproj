@@ -273,6 +273,7 @@
     <Compile Include="Extensions\SQLiteDatabaseUserExtensions.cs" />
     <Compile Include="IOfcBotContext.cs" />
     <Compile Include="Modules\UserModule.cs" />
+    <Compile Include="Modules\ZoneTypeModule.cs" />
     <Compile Include="OfcBotContext.cs" />
     <Compile Include="OfcModuleBase.cs" />
     <Compile Include="SearchContext.cs" />

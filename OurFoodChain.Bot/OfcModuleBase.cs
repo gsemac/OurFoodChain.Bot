@@ -376,7 +376,7 @@ namespace OurFoodChain {
 
                 string title = $"All {rank.GetName(true)} ({lines.Count()})";
 
-                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(title, lines, options: EmbedPaginationOptions.AddPageNumbers);
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(title.ToTitle(), lines, options: EmbedPaginationOptions.AddPageNumbers);
 
                 foreach (Discord.Messaging.IEmbed page in pages)
                     page.Footer += $" — Empty {rank.GetName(true)} are not listed.";

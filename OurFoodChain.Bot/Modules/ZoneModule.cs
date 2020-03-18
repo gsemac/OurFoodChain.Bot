@@ -109,12 +109,12 @@ namespace OurFoodChain.Bot.Modules {
 
                     IEnumerable<IEmbed> pages = await BotUtils.ZonesToEmbedPagesAsync(embedTitle.Length + embedDescription.Length, zones, Db);
 
-                    IPaginatedMessage message = new PaginatedMessage();
+                    foreach (IEmbed page in pages)
+                        page.Description = embedDescription + page.Description;
 
-                    message.AddPages(pages);
+                    IPaginatedMessage message = new PaginatedMessage(pages);
 
                     message.SetTitle(embedTitle);
-                    message.SetDescription(embedDescription);
 
                     if (zoneType.IsValid())
                         message.SetColor(zoneType.Color);
@@ -159,7 +159,7 @@ namespace OurFoodChain.Bot.Modules {
                         new List<Discord.Messaging.IEmbed>(EmbedUtilities.CreateEmbedPages(string.Format("Extant species in this zone ({0}):", species_list.Count()), species_list, options: EmbedPaginationOptions.AddPageNumbers));
 
                     if (embed_pages.Count() <= 0)
-                        embed_pages.Add(new Discord.Messaging.Embed());
+                        embed_pages.Add(new Embed());
 
                     // Add title, decription, etc., to all pages.
 
@@ -313,127 +313,6 @@ namespace OurFoodChain.Bot.Modules {
             }
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", zone.GetFullName()));
-
-        }
-
-        [Command("zonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
-        public async Task GetZoneType(string arg0) {
-
-            // If the given argument is a zone type, display information for that type.
-            // If the given argument is a zone name, display information for the type corresponding to that zone.
-
-            IZoneType type = await Db.GetZoneTypeAsync(arg0);
-
-            if (!type.IsValid()) {
-
-                // If no zone type exists with this name, attempt to get the type of the zone with this name.
-
-                IZone zone = await Db.GetZoneAsync(arg0);
-
-                if (zone != null)
-                    type = await Db.GetZoneTypeAsync(zone.TypeId);
-
-            }
-
-            if (type.IsValid()) {
-
-                // We got a valid zone type, so show information about the zone type.
-
-                IEnumerable<IZone> zones = await Db.GetZonesAsync(type);
-
-                string embedTitle = string.Format("{0} {1} Zones ({2})", type.Icon, type.Name, zones.Count());
-                string embedDescription = type.Description + "\n\n";
-                System.Drawing.Color embedColor = type.Color;
-
-                IEnumerable<Discord.Messaging.IEmbed> pages = await BotUtils.ZonesToEmbedPagesAsync(embedTitle.Length + embedDescription.Length, zones, Db, showIcon: false);
-
-                EmbedUtilities.AddPageNumbers(pages);
-
-                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
-
-            }
-            else
-                await BotUtils.ReplyAsync_Error(Context, "No such zone type exists.");
-
-        }
-
-        [Command("addzonetype"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
-        public async Task AddZoneType(params string[] args) {
-
-            if (args.Count() <= 0) {
-                await BotUtils.ReplyAsync_Error(Context, "You must specify a name for the zone type.");
-            }
-            else if (args.Count() > 4) {
-                await BotUtils.ReplyAsync_Error(Context, "Too many arguments have been provided.");
-            }
-            else {
-
-                string name = args[0];
-                string icon = ZoneTypeBase.DefaultIcon;
-                System.Drawing.Color color = ZoneTypeBase.DefaultColor;
-                string description = "";
-
-                if (await Db.GetZoneTypeAsync(name) != null) {
-
-                    // If a zone type with this name already exists, do not create a new one.
-                    await BotUtils.ReplyAsync_Warning(Context, string.Format("A zone type named \"{0}\" already exists.", name));
-
-                }
-                else {
-
-                    // Read the rest of the arguments.
-
-                    for (int i = 1; i < args.Count(); ++i) {
-
-                        if (Bot.DiscordUtils.IsEmoji(args[i]))
-                            icon = args[i];
-                        else if (StringUtilities.TryParseColor(args[i], out System.Drawing.Color result))
-                            color = result;
-                        else if (string.IsNullOrEmpty(description))
-                            description = args[i];
-                        else
-                            await BotUtils.ReplyAsync_Warning(Context, string.Format("Invalid argument provided: {0}", args[i]));
-
-                    }
-
-                    ZoneType type = new ZoneType {
-                        Name = name,
-                        Icon = icon,
-                        Description = description,
-                        Color = color
-                    };
-
-                    // Add the zone type to the database.
-
-                    await Db.AddZoneTypeAsync(type);
-
-                    await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully created new zone type **{0}**.", type.Name));
-
-                }
-
-            }
-
-
-        }
-
-        [Command("setzonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
-        public async Task SetZoneType(string zoneName, string zoneType) {
-
-            IZone zone = await Db.GetZoneAsync(zoneName);
-            IZoneType type = await Db.GetZoneTypeAsync(zoneType);
-
-            if (await BotUtils.ReplyValidateZoneAsync(Context, zone) && await BotUtils.ReplyValidateZoneTypeAsync(Context, type)) {
-
-                zone.TypeId = type.Id;
-
-                await Db.UpdateZoneAsync(zone);
-
-                await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully set the type of {0}**{1}** to **{2}**.",
-                    zone.GetFullName().StartsWith("Zone") ? string.Empty : "zone ",
-                    zone.GetFullName(),
-                    type.Name));
-
-            }
 
         }
 

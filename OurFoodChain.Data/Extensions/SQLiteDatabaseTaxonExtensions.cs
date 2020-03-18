@@ -296,8 +296,8 @@ namespace OurFoodChain.Data.Extensions {
 
             List<ITaxon> result = new List<ITaxon>();
 
-            string tableName = GetTableNameForRank(TaxonUtilities.GetChildRank(taxon.Rank.Type));
-            string parentColumnName = GetFieldNameForRank(taxon.Rank.Type);
+            string tableName = GetTableNameForRank(taxon.GetChildRank());
+            string parentColumnName = GetFieldNameForRank(taxon.GetRank());
 
             if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(parentColumnName) || !taxon.Id.HasValue)
                 return Enumerable.Empty<ITaxon>();
@@ -309,7 +309,7 @@ namespace OurFoodChain.Data.Extensions {
                 cmd.Parameters.AddWithValue("$parent_id", taxon.Id);
 
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    result.Add(CreateTaxonFromDataRow(row, TaxonUtilities.GetChildRank(taxon.Rank.Type)));
+                    result.Add(CreateTaxonFromDataRow(row, taxon.GetChildRank()));
 
             }
 
@@ -365,7 +365,7 @@ namespace OurFoodChain.Data.Extensions {
                 IEnumerable<ITaxon> subtaxa = await database.GetSubtaxaAsync(taxon);
 
                 foreach (ITaxon subtaxon in subtaxa)
-                    speciesCount += await database.GetSpeciesCountAsync(taxon);
+                    speciesCount += await database.GetSpeciesCountAsync(subtaxon);
 
             }
 

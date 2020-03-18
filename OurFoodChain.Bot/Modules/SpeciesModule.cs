@@ -1076,6 +1076,11 @@ namespace OurFoodChain.Bot.Modules {
                     await ReplyErrorAsync("A species cannot be its own ancestor.");
 
                 }
+                else if ((await Db.GetDescendantIdsAsync(childSpecies.Id, GetSpeciesOptions.BreakOnCycle)).Contains(ancestorSpecies.Id.Value)) {
+
+                    await ReplyErrorAsync($"Setting {childSpecies.GetShortName().ToPossessive().ToBold()} ancestor to {ancestorSpecies.GetShortName().ToBold()} would produce a cycle.");
+
+                }
                 else {
 
                     // Check if an ancestor has already been set for this species. If so, update the ancestor, but we'll show a different message later notifying the user of the change.

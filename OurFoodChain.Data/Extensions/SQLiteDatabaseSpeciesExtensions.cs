@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Exceptions;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Roles;
 using OurFoodChain.Common.Taxa;
@@ -17,7 +18,8 @@ namespace OurFoodChain.Data.Extensions {
 
     public enum GetSpeciesOptions {
         None = 0,
-        Fast = 1
+        Fast = 1,
+        BreakOnCycle = 2
     }
 
     public static class SQLiteDatabaseSpeciesExtensions {
@@ -357,7 +359,8 @@ namespace OurFoodChain.Data.Extensions {
             if (!speciesId.HasValue)
                 return Enumerable.Empty<long>();
 
-            List<long> ancestorIds = new List<long>();
+            List<long> result = new List<long>();
+            HashSet<long> seenIds = new HashSet<long>();
 
             while (true) {
 
@@ -371,8 +374,15 @@ namespace OurFoodChain.Data.Extensions {
 
                         speciesId = row.Field<long>("ancestor_id");
 
-                        if (speciesId.HasValue)
-                            ancestorIds.Add((long)speciesId);
+                        if (speciesId.HasValue) {
+
+                            if (seenIds.Contains(speciesId.Value))
+                                await database.ThrowCycleExceptionAsync(speciesId);
+
+                            result.Add(speciesId.Value);
+                            seenIds.Add(speciesId.Value);
+
+                        }
 
                     }
                     else
@@ -383,9 +393,17 @@ namespace OurFoodChain.Data.Extensions {
             }
 
             // Reverse the array so that earliest ancestors are listed first.
-            ancestorIds.Reverse();
 
-            return ancestorIds.ToArray();
+            result.Reverse();
+
+            return result;
+
+        }
+        public static async Task<TreeNode<long>> GetDescendantIdsAsync(this SQLiteDatabase database, long? speciesId, GetSpeciesOptions options = GetSpeciesOptions.None) {
+
+            HashSet<long> seenIds = new HashSet<long>();
+
+            return await database.GetDescendantIdsAsync(speciesId, seenIds, options);
 
         }
         public static async Task<ISpecies> GetAncestorAsync(this SQLiteDatabase database, ISpecies species) {
@@ -1050,6 +1068,54 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        private static async Task<TreeNode<long>> GetDescendantIdsAsync(this SQLiteDatabase database, long? speciesId, HashSet<long> seenIds, GetSpeciesOptions options = GetSpeciesOptions.None) {
+
+            if (!speciesId.HasValue)
+                return TreeNode.Empty<long>();
+
+            TreeNode<long> root = new TreeNode<long>() { Value = speciesId.Value };
+
+            while (true) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT species_id FROM Ancestors WHERE ancestor_id = $ancestor_id")) {
+
+                    cmd.Parameters.AddWithValue("$ancestor_id", speciesId);
+
+                    DataRow row = await database.GetRowAsync(cmd);
+
+                    if (row != null) {
+
+                        speciesId = row.Field<long>("species_id");
+
+                        if (speciesId.HasValue) {
+
+                            if (seenIds.Contains(speciesId.Value)) {
+
+                                if (options.HasFlag(GetSpeciesOptions.BreakOnCycle))
+                                    break;
+                                else
+                                    await database.ThrowCycleExceptionAsync(speciesId);
+
+                            }
+
+                            seenIds.Add(speciesId.Value);
+
+                            root.Children.Add(await database.GetDescendantIdsAsync(speciesId, seenIds, options));
+
+                        }
+
+                    }
+                    else
+                        break;
+
+                }
+
+            }
+
+            return root;
+
+        }
+
         private static SQLiteCommand GetSqlCommandFromSearchQuery(ISearchQuery query) {
 
             // Build up a list of conditions to query for.
@@ -1099,6 +1165,14 @@ namespace OurFoodChain.Data.Extensions {
             }
 
             return result;
+
+        }
+
+        private static async Task ThrowCycleExceptionAsync(this SQLiteDatabase database, long? speciesId) {
+
+            ISpecies species = await database.GetSpeciesAsync(speciesId);
+
+            throw new CycleException(species);
 
         }
 

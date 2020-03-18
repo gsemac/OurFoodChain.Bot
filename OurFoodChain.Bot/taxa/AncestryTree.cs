@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Exceptions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
@@ -30,23 +31,25 @@ namespace OurFoodChain {
 
             // Start by finding the earliest ancestor of this species.
 
-            List<long> ancestor_ids = new List<long>();
+            List<long> ancestorIds = new List<long>();
 
             if (!flags.HasFlag(AncestryTreeGenerationFlags.DescendantsOnly))
-                ancestor_ids.AddRange(await database.GetAncestorIdsAsync(species.Id));
+                ancestorIds.AddRange(await database.GetAncestorIdsAsync(species.Id));
 
-            ancestor_ids.Add((long)species.Id);
+            ancestorIds.Add((long)species.Id);
 
             // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
 
             TreeNode<NodeData> root = new TreeNode<NodeData> {
                 Value = new NodeData {
-                    Species = await database.GetSpeciesAsync(ancestor_ids.First()),
+                    Species = await database.GetSpeciesAsync(ancestorIds.First()),
                     IsAncestor = true
                 }
             };
 
             Queue<TreeNode<NodeData>> queue = new Queue<TreeNode<NodeData>>();
+            HashSet<long> seenIds = new HashSet<long>();
+
             queue.Enqueue(root);
 
             while (queue.Count() > 0) {
@@ -58,7 +61,7 @@ namespace OurFoodChain {
                     TreeNode<NodeData> node = new TreeNode<NodeData> {
                         Value = new NodeData {
                             Species = descendant,
-                            IsAncestor = ancestor_ids.Contains((long)descendant.Id)
+                            IsAncestor = ancestorIds.Contains((long)descendant.Id)
                         }
                     };
 
@@ -66,6 +69,15 @@ namespace OurFoodChain {
 
                         queue.First().Children.Add(node);
                         queue.Enqueue(node);
+
+                        if (descendant.Id.HasValue) {
+
+                            if(seenIds.Contains(descendant.Id.Value))
+                                throw new CycleException(descendant);
+
+                            seenIds.Add(species.Id.Value);
+
+                        }
 
                     }
 

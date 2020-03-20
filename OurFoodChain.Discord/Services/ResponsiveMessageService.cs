@@ -67,7 +67,11 @@ namespace OurFoodChain.Discord.Services {
 
             if (info != null && message.Channel.Id == info.Context.Channel.Id) {
 
-                info.Response = new ResponseMessageResponse(new Message(message.Content), info.AllowCancellation && message.Content.Equals(CancellationString, StringComparison.OrdinalIgnoreCase));
+                Messaging.IMessage responseMessage = new Message(message.Content) {
+                    Attachments = message.Attachments.Select(attachment => new Messaging.Attachment() { Url = attachment.Url, Filename = attachment.Filename })
+                };
+
+                info.Response = new ResponseMessageResponse(responseMessage, info.AllowCancellation && message.Content.Equals(CancellationString, StringComparison.OrdinalIgnoreCase));
 
                 RemoveMessageInfo(message.Author.Id);
 

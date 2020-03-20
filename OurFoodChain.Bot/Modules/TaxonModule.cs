@@ -6,6 +6,7 @@ using OurFoodChain.Common.Taxa;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -892,11 +893,11 @@ namespace OurFoodChain.Bot.Modules {
 
                 string name = (taxon is ISpecies species) ? species.GetFullName() : taxon.GetName();
 
-                Discord.Messaging.IMessage message = new Message($"Reply with the description for {taxon.GetRank().GetName()} **{name}**.");
+                IMessage message = new Message($"Reply with the description for {taxon.GetRank().GetName()} **{name}**.");
                 IResponsiveMessageResponse response = await ResponsiveMessageService.GetResponseAsync(Context, message);
 
                 if (!response.Canceled)
-                    await ReplySetTaxonDescriptionAsync(taxon, response.Message.Text);
+                    await ReplySetTaxonDescriptionAsync(taxon, await GetDescriptionFromMessageAsync(response.Message));
 
             }
 
@@ -1022,11 +1023,11 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                Discord.Messaging.IMessage message = new Message($"Reply with the description for {species.GetRank().GetName()} **{species.GetFullName()}**.");
+                IMessage message = new Message($"Reply with the description for {species.GetRank().GetName()} **{species.GetFullName()}**.");
                 IResponsiveMessageResponse response = await ResponsiveMessageService.GetResponseAsync(Context, message);
 
                 if (!response.Canceled)
-                    await ReplyAppendDescriptionAsync(species, response.Message.Text);
+                    await ReplyAppendDescriptionAsync(species, await GetDescriptionFromMessageAsync(response.Message));
 
             }
 
@@ -1060,6 +1061,19 @@ namespace OurFoodChain.Bot.Modules {
 
 
             }
+
+        }
+
+        private async Task<string> GetDescriptionFromMessageAsync(IMessage message) {
+
+            // The user can either provide a message or text attachment.
+
+            string descriptionText = message.Text;
+
+            if (message.Attachments.Any())
+                descriptionText = await DiscordUtilities.DownloadTextAttachmentAsync(message.Attachments.First());
+
+            return descriptionText;
 
         }
 

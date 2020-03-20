@@ -71,6 +71,10 @@ namespace OurFoodChain.Discord.Messaging {
 
             }
         }
+        public IEnumerable<IAttachment> Attachments {
+            get => pages.SelectMany(p => p.Attachments);
+            set => throw new NotImplementedException();
+        }
 
         public void AddPage(IMessage message) {
 

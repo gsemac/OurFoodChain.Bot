@@ -9,6 +9,7 @@ namespace OurFoodChain.Discord.Messaging {
 
         public string Text { get; set; }
         public IEmbed Embed { get; set; }
+        public IEnumerable<IAttachment> Attachments { get; set; }
 
         public Message() { }
         public Message(string text) {

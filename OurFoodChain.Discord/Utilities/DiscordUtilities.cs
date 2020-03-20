@@ -8,6 +8,7 @@ using OurFoodChain.Discord.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -87,6 +88,30 @@ namespace OurFoodChain.Discord.Utilities {
                 IOUtilities.TryDeleteFile(filePath);
 
             return url;
+
+        }
+        public static async Task<string> DownloadTextAttachmentAsync(Messaging.IAttachment attachment) {
+
+            if (System.IO.Path.GetExtension(attachment.Filename).Equals(".txt", StringComparison.OrdinalIgnoreCase)) {
+
+                string content = "";
+
+                using (WebClient client = new WebClient()) {
+
+                    // I don't think setting these headers is necessary, but it can't hurt.
+
+                    client.Headers[HttpRequestHeader.UserAgent] = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0";
+                    client.Headers[HttpRequestHeader.Accept] = "*/*";
+
+                    await Task.Run(() => content = client.DownloadString(attachment.Url));
+
+                }
+
+                return content;
+
+            }
+            else
+                throw new ArgumentException("The given attachment was not a text file (.txt).");
 
         }
 

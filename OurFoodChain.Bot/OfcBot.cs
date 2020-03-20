@@ -57,18 +57,26 @@ namespace OurFoodChain.Bot {
 
         protected override async Task<IServiceCollection> ConfigureServicesAsync() {
 
-            return (await base.ConfigureServicesAsync())
+            IServiceCollection serviceCollection = await base.ConfigureServicesAsync();
+
+            if (Configuration.SingleDatabase)
+                serviceCollection.AddSingleton<Discord.Services.IDatabaseService, Discord.Services.SingleDatabaseService>();
+            else
+                serviceCollection.AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>();
+
+            serviceCollection
                 .AddSingleton(Data.SQLiteDatabase.FromFile(Constants.DatabaseFilePath))
                 .AddSingleton<Discord.Services.ICommandService, Services.OurFoodChainBotCommandHandlingService>()
                 .AddSingleton<Discord.Services.IPaginatedMessageService, Discord.Services.PaginatedMessageService>()
                 .AddSingleton<Discord.Services.IResponsiveMessageService, Discord.Services.ResponsiveMessageService>()
-                .AddSingleton<Discord.Services.IDatabaseService, Discord.Services.MultiDatabaseService>()
                 .AddSingleton<Services.GotchiBackgroundService>()
                 .AddSingleton<ITrophyService, TrophyService>()
                 .AddSingleton<ITrophyScanner, TrophyScanner>()
                 .AddSingleton<GotchiService>()
                 .AddSingleton<FileUploadService>()
                 .AddSingleton<IOfcBotConfiguration>(Configuration);
+
+            return serviceCollection;
 
         }
         protected override async Task InitializeServicesAsync(IServiceProvider serviceProvider) {

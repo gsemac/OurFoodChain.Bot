@@ -17,7 +17,7 @@ namespace OurFoodChain.Discord.Messaging {
         public string ThumbnailUrl { get; set; }
         public string Description { get; set; }
         public string Footer { get; set; }
-        public Color? Color { get; set; } 
+        public Color? Color { get; set; }
 
         public IEnumerable<IEmbedField> Fields => fields;
 
@@ -40,9 +40,9 @@ namespace OurFoodChain.Discord.Messaging {
             }
         }
 
-        public void AddField(string name, object value, bool inline = false) {
+        public void InsertField(int index, IEmbedField field) {
 
-            fields.Add(new EmbedField(name, value) { Inline = inline });
+            fields.Insert(index, field);
 
         }
         public void AddField(IEmbedField field) {

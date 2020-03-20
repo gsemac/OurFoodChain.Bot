@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Collections;
+using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
@@ -133,6 +134,9 @@ namespace OurFoodChain.Data.Extensions {
             await database.RemoveZoneAliasesAsync(zone);
             await database.AddZoneAliasesAsync(zone);
 
+            await database.RemoveZoneFieldsAsync(zone);
+            await database.AddZoneFieldsAsync(zone);
+
         }
 
         public static async Task<IEnumerable<IZoneType>> GetZoneTypesAsync(this SQLiteDatabase database) {
@@ -240,6 +244,10 @@ namespace OurFoodChain.Data.Extensions {
 
                 zone.Aliases = new List<string>(aliases.Distinct());
 
+                // Get fields.
+
+                zone.Fields = new List<IZoneField>(await database.GetZoneFieldsAsync(zone));
+
             }
 
             return zone;
@@ -299,7 +307,52 @@ namespace OurFoodChain.Data.Extensions {
                 using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO ZoneAliases(zone_id, alias) VALUES($zone_id, $alias)")) {
 
                     cmd.Parameters.AddWithValue("$zone_id", zone.Id);
-                    cmd.Parameters.AddWithValue("$alias", alias);
+                    cmd.Parameters.AddWithValue("$alias", alias.ToLowerInvariant().SafeTrim());
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
+
+        }
+
+        private static async Task<IEnumerable<IZoneField>> GetZoneFieldsAsync(this SQLiteDatabase database, IZone zone) {
+
+            List<IZoneField> results = new List<IZoneField>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM ZoneFields WHERE zone_id = $zone_id")) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(new ZoneField(row.Field<string>("name"), row.Field<string>("value")));
+
+            }
+
+            return results.OrderBy(field => field.Name);
+
+        }
+        private static async Task RemoveZoneFieldsAsync(this SQLiteDatabase database, IZone zone) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM ZoneFields WHERE zone_id = $zone_id")) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+        private static async Task AddZoneFieldsAsync(this SQLiteDatabase database, IZone zone) {
+
+            foreach (IZoneField field in zone.Fields) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO ZoneFields(zone_id, name, value) VALUES($zone_id, $name, $value)")) {
+
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+                    cmd.Parameters.AddWithValue("$name", field.Name.ToLowerInvariant().SafeTrim());
+                    cmd.Parameters.AddWithValue("$value", field.Value.ToLowerInvariant().SafeTrim());
 
                     await database.ExecuteNonQueryAsync(cmd);
 

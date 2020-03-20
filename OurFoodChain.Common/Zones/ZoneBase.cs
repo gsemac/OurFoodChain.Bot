@@ -17,6 +17,7 @@ namespace OurFoodChain.Common.Zones {
         public string Name { get; set; }
         public string Description { get; set; }
 
+        public ICollection<IZoneField> Fields { get; set; } = new List<IZoneField>();
         public ICollection<string> Aliases { get; set; } = new List<string>();
         public ICollection<IPicture> Pictures { get; set; } = new List<IPicture>();
 

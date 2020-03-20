@@ -39,6 +39,17 @@ namespace OurFoodChain.Discord.Extensions {
 
         }
 
+        public static void AddField(this Messaging.IEmbed embed, string name, object value, bool inline = false) {
+
+            embed.AddField(new Messaging.EmbedField(name, value) { Inline = inline });
+
+        }
+        public static void InsertField(this Messaging.IEmbed embed, int index, string name, object value, bool inline = false) {
+
+            embed.InsertField(index, new Messaging.EmbedField(name, value) { Inline = inline });
+
+        }
+
     }
 
 }

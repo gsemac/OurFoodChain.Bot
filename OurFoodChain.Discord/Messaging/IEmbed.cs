@@ -18,7 +18,7 @@ namespace OurFoodChain.Discord.Messaging {
 
         int Length { get; }
 
-        void AddField(string name, object value, bool inline = false);
+        void InsertField(int index, IEmbedField field);
         void AddField(IEmbedField field);
 
     }

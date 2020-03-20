@@ -304,6 +304,69 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
+        [Command("+ZoneField"), Alias("AddZoneField", "+ZField", "AddZField"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task AddZoneField(string zoneName, string fieldName, string fieldValue) {
+
+            IZone zone = await this.GetZoneOrReplyAsync(zoneName);
+
+            if (zone.IsValid()) {
+
+                IZoneField existingField = zone.Fields
+                    .Where(field => field.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault();
+
+                if (existingField != null) {
+
+                    existingField.Value = fieldValue;
+
+                    await Db.UpdateZoneAsync(zone);
+
+                    await ReplySuccessAsync($"The value for field {fieldName.ToTitle().ToBold()} was successfully updated.");
+
+                }
+                else {
+
+                    zone.Fields.Add(new ZoneField(fieldName, fieldValue));
+
+                    await Db.UpdateZoneAsync(zone);
+
+                    await ReplySuccessAsync($"Field {fieldName.ToTitle().ToBold()} was successfully added to {zone.GetFullName()}.");
+
+                }
+
+            }
+
+        }
+        [Command("-ZoneField"), Alias("-ZField"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task RemoveZoneField(string zoneName, string fieldName) {
+
+            IZone zone = await this.GetZoneOrReplyAsync(zoneName);
+
+            if (zone.IsValid()) {
+
+                IZoneField existingField = zone.Fields
+                    .Where(field => field.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault();
+
+                if (existingField != null) {
+
+                    zone.Fields.Remove(existingField);
+
+                    await Db.UpdateZoneAsync(zone);
+
+                    await ReplySuccessAsync($"The field {fieldName.ToTitle().ToBold()} was successfully removed from {zone.GetFullName()}.");
+
+                }
+                else {
+
+                    await ReplyWarningAsync($"No field named {fieldName.ToTitle()} exists.");
+
+                }
+
+            }
+
+        }
+
         // Private members
 
         private async Task ShowZonesAsync(IEnumerable<IZone> zones, IZoneType type) {
@@ -354,34 +417,53 @@ namespace OurFoodChain.Bot.Modules {
                 // Starting building a paginated message.
                 // The message will have a paginated species list, and a toggle button to display the species sorted by role.
 
-                List<IEmbed> embedPages =
-                    new List<IEmbed>(EmbedUtilities.CreateEmbedPages(string.Format("Extant species in this zone ({0}):", speciesList.Count()), speciesList, options: EmbedPaginationOptions.AddPageNumbers));
-
-                if (embedPages.Count() <= 0)
-                    embedPages.Add(new Embed());
-
-                // Add title, decription, etc., to all pages.
-
-                IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId) ?? new ZoneType();
-                string aliases = zone.Aliases.Any() ? string.Format("({0})", string.Join(", ", zone.Aliases.Select(alias => alias.ToTitle()))) : string.Empty;
-                string title = string.Format("{0} {1} {2}", type.Icon, zone.GetFullName(), aliases).Trim();
                 string description = zone.GetDescriptionOrDefault();
-                System.Drawing.Color color = type.Color;
-
 
                 if (!speciesList.Any())
                     description += "\n\nThis zone does not contain any species.";
 
+                List<IEmbed> embedPages = new List<IEmbed>();
+
+                if (zone.Fields.Any()) {
+
+                    embedPages.Add(new Embed());
+
+                    foreach (IZoneField field in zone.Fields)
+                        embedPages.Last().AddField(field.Name.ToTitle(), field.Value, true);
+
+                    embedPages.Last().Description = description;
+
+                }
+
+                embedPages.AddRange(EmbedUtilities.CreateEmbedPages(string.Format("Extant species in this zone ({0}):", speciesList.Count()), speciesList));
+
+                // Add title, decription, etc., to all pages.
+
+                if (!embedPages.Any())
+                    embedPages.Add(new Embed());
+
+                IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId) ?? new ZoneType();
+                string aliases = zone.Aliases.Any() ? string.Format("({0})", string.Join(", ", zone.Aliases.Select(alias => alias.ToTitle()))) : string.Empty;
+                string title = string.Format("{0} {1} {2}", type.Icon, zone.GetFullName(), aliases).Trim();
+
+                System.Drawing.Color color = type.Color;
+
                 foreach (IEmbed page in embedPages) {
 
                     page.Title = title;
-                    page.Description = description;
                     page.ThumbnailUrl = zone.Pictures.FirstOrDefault()?.Url;
                     page.Color = color;
+
+                    // Add the zone description to all pages if the zone doesn't have any fields (because the info page will be missing).
+
+                    if (!zone.Fields.Any())
+                        page.Description = description;
 
                 }
 
                 IPaginatedMessage message = new PaginatedMessage(embedPages);
+
+                message.AddPageNumbers();
 
                 // This page will have species organized by role.
                 // Only bother with the role page if species actually exist in this zone.
@@ -390,7 +472,6 @@ namespace OurFoodChain.Bot.Modules {
 
                     IEmbed rolesPage = new Embed {
                         Title = title,
-                        Description = description,
                         ThumbnailUrl = zone.GetPictureUrl(),
                         Color = color
                     };

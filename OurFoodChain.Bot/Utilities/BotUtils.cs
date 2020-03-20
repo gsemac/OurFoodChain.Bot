@@ -155,7 +155,7 @@ namespace OurFoodChain {
 
                 }
 
-                lineBuilder.Append(zone.Name.ToTitle().ToBold());
+                lineBuilder.Append(zone.GetFullName().ToBold());
 
                 if (!string.IsNullOrWhiteSpace(zone.Description)) {
 

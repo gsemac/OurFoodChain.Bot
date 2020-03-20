@@ -21,10 +21,7 @@ namespace OurFoodChain.Extensions {
             return zone;
 
         }
-
-        // Private members
-
-        private static async Task<bool> ReplyValidateZoneAsync(this OfcModuleBase moduleBase, IZone zone, string zoneName = "") {
+        public static async Task<bool> ReplyValidateZoneAsync(this OfcModuleBase moduleBase, IZone zone, string zoneName = "") {
 
             if (!zone.IsValid()) {
 

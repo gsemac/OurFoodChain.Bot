@@ -119,7 +119,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 }
                 else
-                    BotUtils.ReplyValidateZoneAsync(Context, zone, arg0);
+                    await this.ReplyValidateZoneAsync(zone, arg0);
 
             }
 
@@ -343,7 +343,7 @@ namespace OurFoodChain.Bot.Modules {
         }
         private async Task ShowZoneAsync(IZone zone) {
 
-            if (await BotUtils.ReplyValidateZoneAsync(Context, zone)) {
+            if (await this.ReplyValidateZoneAsync(zone)) {
 
                 // Get all species living in this zone.
 
@@ -368,6 +368,10 @@ namespace OurFoodChain.Bot.Modules {
                 string description = zone.GetDescriptionOrDefault();
                 System.Drawing.Color color = type.Color;
 
+
+                if (!speciesList.Any())
+                    description += "\n\nThis zone does not contain any species.";
+
                 foreach (IEmbed page in embedPages) {
 
                     page.Title = title;
@@ -376,6 +380,8 @@ namespace OurFoodChain.Bot.Modules {
                     page.Color = color;
 
                 }
+
+                IPaginatedMessage message = new PaginatedMessage(embedPages);
 
                 // This page will have species organized by role.
                 // Only bother with the role page if species actually exist in this zone.
@@ -440,8 +446,6 @@ namespace OurFoodChain.Bot.Modules {
 
                     // Add the page to the builder.
 
-                    IPaginatedMessage message = new PaginatedMessage(embedPages);
-
                     message.AddReaction("🇷", async (args) => {
 
                         if (args.Emoji != "🇷")
@@ -456,9 +460,9 @@ namespace OurFoodChain.Bot.Modules {
 
                     });
 
-                    await ReplyAsync(message);
-
                 }
+
+                await ReplyAsync(message);
 
             }
 

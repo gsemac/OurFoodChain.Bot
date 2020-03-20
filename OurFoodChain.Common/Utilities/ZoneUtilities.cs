@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OurFoodChain.Common.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,10 +16,12 @@ namespace OurFoodChain.Common.Utilities {
         }
         public static string GetFullName(string zoneName) {
 
-            if (StringUtilities.IsNumeric(zoneName) || zoneName.Length == 1)
-                zoneName = "zone " + zoneName;
+            zoneName = zoneName.ToLowerInvariant();
 
-            zoneName = StringUtilities.ToTitleCase(zoneName);
+            if (Regex.IsMatch(zoneName, @"^(?:zone\s+)?[a-zA-Z0-9]{1,2}$", RegexOptions.IgnoreCase) || zoneName.Length == 1)
+                zoneName = "Zone " + zoneName.After("zone").Trim().ToUpperInvariant();
+            else
+                zoneName = zoneName.ToTitle();
 
             return zoneName;
 

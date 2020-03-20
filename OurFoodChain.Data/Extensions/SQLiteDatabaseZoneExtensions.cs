@@ -45,11 +45,12 @@ namespace OurFoodChain.Data.Extensions {
             if (string.IsNullOrWhiteSpace(name))
                 return null;
 
-            name = ZoneUtilities.GetFullName(name.Trim()).ToLowerInvariant();
+            string fullName = ZoneUtilities.GetFullName(name.Trim()).ToLowerInvariant();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name OR id IN (SELECT zone_id FROM ZoneAliases WHERE alias = $name)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name OR name = $fullName OR id IN (SELECT zone_id FROM ZoneAliases WHERE alias = $name)")) {
 
                 cmd.Parameters.AddWithValue("$name", name);
+                cmd.Parameters.AddWithValue("$fullName", fullName);
 
                 DataRow row = await database.GetRowAsync(cmd);
 

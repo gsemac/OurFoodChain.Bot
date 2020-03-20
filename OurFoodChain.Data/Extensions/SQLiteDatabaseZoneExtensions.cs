@@ -15,6 +15,11 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
 
+    public enum GetZoneOptions {
+        None = 0,
+        Fast = 1
+    }
+
     public static class SQLiteDatabaseZoneExtensions {
 
         // Public members
@@ -28,28 +33,28 @@ namespace OurFoodChain.Data.Extensions {
                 DataRow row = await database.GetRowAsync(cmd);
 
                 if (row != null)
-                    return CreateZoneFromDataRow(row);
+                    return await database.CreateZoneFromDataRowAsync(row);
 
             }
 
             return null;
 
         }
-        public static async Task<IZone> GetZoneAsync(this SQLiteDatabase database, string name) {
+        public static async Task<IZone> GetZoneAsync(this SQLiteDatabase database, string name, GetZoneOptions options = GetZoneOptions.None) {
 
             if (string.IsNullOrWhiteSpace(name))
                 return null;
 
             name = ZoneUtilities.GetFullName(name.Trim()).ToLowerInvariant();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name OR id IN (SELECT zone_id FROM ZoneAliases WHERE alias = $name)")) {
 
                 cmd.Parameters.AddWithValue("$name", name);
 
                 DataRow row = await database.GetRowAsync(cmd);
 
                 if (row != null)
-                    return CreateZoneFromDataRow(row);
+                    return await database.CreateZoneFromDataRowAsync(row, options);
 
             }
 
@@ -63,7 +68,7 @@ namespace OurFoodChain.Data.Extensions {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones"))
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    results.Add(CreateZoneFromDataRow(row));
+                    results.Add(await database.CreateZoneFromDataRowAsync(row));
 
             results.Sort((lhs, rhs) => new NaturalStringComparer().Compare(lhs.Name, rhs.Name));
 
@@ -123,6 +128,9 @@ namespace OurFoodChain.Data.Extensions {
                 await database.ExecuteNonQueryAsync(cmd);
 
             }
+
+            await database.RemoveZoneAliasesAsync(zone);
+            await database.AddZoneAliasesAsync(zone);
 
         }
 
@@ -201,7 +209,7 @@ namespace OurFoodChain.Data.Extensions {
 
         // Private members
 
-        private static IZone CreateZoneFromDataRow(DataRow row) {
+        private static async Task<IZone> CreateZoneFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetZoneOptions options = GetZoneOptions.None) {
 
             IZone zone = new Zone {
                 Id = row.Field<long>("id"),
@@ -218,6 +226,20 @@ namespace OurFoodChain.Data.Extensions {
 
             if (!row.IsNull("flags"))
                 zone.Flags = (ZoneFlags)row.Field<long>("flags");
+
+            if (!options.HasFlag(GetZoneOptions.Fast)) {
+
+                List<string> aliases = new List<string>();
+
+                // Get aliases.
+
+                aliases.AddRange(await database.GetZoneAliasesAsync(zone));
+
+                aliases.Remove(zone.Name.ToLowerInvariant());
+
+                zone.Aliases = new List<string>(aliases.Distinct());
+
+            }
 
             return zone;
 
@@ -239,6 +261,50 @@ namespace OurFoodChain.Data.Extensions {
             catch (Exception) { }
 
             return result;
+
+        }
+
+        private static async Task<IEnumerable<string>> GetZoneAliasesAsync(this SQLiteDatabase database, IZone zone) {
+
+            List<string> results = new List<string>();
+
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT alias FROM ZoneAliases WHERE zone_id = $zone_id")) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+
+                foreach (DataRow row in await database.GetRowsAsync(cmd))
+                    results.Add(row.Field<string>("alias").ToLowerInvariant());
+
+            }
+
+            return results.OrderBy(alias => alias);
+
+        }
+        private static async Task RemoveZoneAliasesAsync(this SQLiteDatabase database, IZone zone) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM ZoneAliases WHERE zone_id = $zone_id")) {
+
+                cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+        }
+        private static async Task AddZoneAliasesAsync(this SQLiteDatabase database, IZone zone) {
+
+            foreach (string alias in zone.Aliases.Select(alias => ZoneUtilities.GetFullName(alias).ToLowerInvariant()).Distinct()) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO ZoneAliases(zone_id, alias) VALUES($zone_id, $alias)")) {
+
+                    cmd.Parameters.AddWithValue("$zone_id", zone.Id);
+                    cmd.Parameters.AddWithValue("$alias", alias);
+
+                    await database.ExecuteNonQueryAsync(cmd);
+
+                }
+
+            }
 
         }
 

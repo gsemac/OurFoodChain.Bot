@@ -8,6 +8,8 @@ using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
@@ -116,6 +118,8 @@ namespace OurFoodChain.Bot.Modules {
                     await ShowZonesAsync(zones, zoneType);
 
                 }
+                else
+                    BotUtils.ReplyValidateZoneAsync(Context, zone, arg0);
 
             }
 
@@ -223,6 +227,83 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
+        [Command("SetZoneName"), Alias("SetZName"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetZoneName(string oldZoneName, string newZoneName) {
+
+            IZone zone = await this.GetZoneOrReplyAsync(oldZoneName);
+
+            if (zone.IsValid()) {
+
+                oldZoneName = zone.GetFullName();
+                newZoneName = ZoneUtilities.GetFullName(newZoneName);
+
+                if ((await Db.GetZoneAsync(newZoneName)).IsValid()) {
+
+                    // The given name cannot be the name of an existing zone.
+
+                    await ReplyErrorAsync($"There is already a zone named {newZoneName.ToBold()}.");
+
+                }
+                else {
+
+                    if (oldZoneName.Equals(newZoneName, System.StringComparison.OrdinalIgnoreCase)) {
+
+                        await ReplyWarningAsync($"{zone.GetFullName().ToBold()} already has this name.");
+
+                    }
+                    else {
+
+                        zone.Name = newZoneName;
+
+                        await Db.UpdateZoneAsync(zone);
+
+                        await ReplySuccessAsync($"{oldZoneName.ToBold()} was successfully renamed to {newZoneName.ToBold()}.");
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        [Command("+ZoneAlias"), Alias("AddZoneAlias", "+ZAlias", "AddZAlias"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task AddZoneAlias(string zoneName, string alias) {
+
+            IZone zone = await this.GetZoneOrReplyAsync(zoneName);
+
+            if (zone.IsValid()) {
+
+                alias = ZoneUtilities.GetFullName(alias);
+
+                if (zone.GetFullName().Equals(alias, StringComparison.OrdinalIgnoreCase) || zone.Aliases.Contains(alias, StringComparer.OrdinalIgnoreCase)) {
+
+                    // The zone already has the given name/alias.
+
+                    await ReplyWarningAsync($"{zone.GetFullName().ToBold()} already has this name.");
+
+                }
+                else if ((await Db.GetZoneAsync(alias)).IsValid()) {
+
+                    // Another zone already has the given name/alias.
+
+                    await ReplyErrorAsync($"There is already a zone named {alias.ToBold()}.");
+
+                }
+                else {
+
+                    zone.Aliases.Add(alias);
+
+                    await Db.UpdateZoneAsync(zone);
+
+                    await ReplySuccessAsync($"{alias.ToBold()} was successfully added as an alias for {zone.GetFullName().ToBold()}.");
+
+                }
+
+            }
+
+        }
+
         // Private members
 
         private async Task ShowZonesAsync(IEnumerable<IZone> zones, IZoneType type) {
@@ -282,7 +363,8 @@ namespace OurFoodChain.Bot.Modules {
                 // Add title, decription, etc., to all pages.
 
                 IZoneType type = await Db.GetZoneTypeAsync(zone.TypeId) ?? new ZoneType();
-                string title = string.Format("{0} {1}", type.Icon, zone.GetFullName());
+                string aliases = zone.Aliases.Any() ? string.Format("({0})", string.Join(", ", zone.Aliases.Select(alias => alias.ToTitle()))) : string.Empty;
+                string title = string.Format("{0} {1} {2}", type.Icon, zone.GetFullName(), aliases).Trim();
                 string description = zone.GetDescriptionOrDefault();
                 System.Drawing.Color color = type.Color;
 

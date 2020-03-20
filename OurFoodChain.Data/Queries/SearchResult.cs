@@ -43,12 +43,12 @@ namespace OurFoodChain.Data.Queries {
 
         }
 
-        public void Add(string groupName, ISpecies species) {
+        public ISearchResultGroup Add(string groupName, ISpecies species) {
 
-            Add(groupName, new ISpecies[] { species });
+            return Add(groupName, new ISpecies[] { species });
 
         }
-        public void Add(string groupName, IEnumerable<ISpecies> species) {
+        public ISearchResultGroup Add(string groupName, IEnumerable<ISpecies> species) {
 
             if (!groups.ContainsKey(groupName)) {
 
@@ -57,6 +57,8 @@ namespace OurFoodChain.Data.Queries {
             }
             else
                 groups[groupName].Items.AddRange(species);
+
+            return groups[groupName];
 
         }
         public int Count() {
@@ -94,7 +96,7 @@ namespace OurFoodChain.Data.Queries {
 
             foreach (Species s in species)
                 foreach (string group in await groupingFunction(s))
-                    Add(group, s);
+                    await Add(group, s).FormatByAsync(formatterFunction);
 
             hasDefaultGrouping = false;
 
@@ -146,6 +148,8 @@ namespace OurFoodChain.Data.Queries {
             foreach (ISearchResultGroup group in groups.Values)
                 await group.FormatByAsync(formatterFunction);
 
+            this.formatterFunction = formatterFunction;
+
         }
 
         public async Task<IEnumerable<ISpecies>> GetResultsAsync() {
@@ -184,6 +188,7 @@ namespace OurFoodChain.Data.Queries {
 
         private readonly SortedDictionary<string, ISearchResultGroup> groups = new SortedDictionary<string, ISearchResultGroup>(new NaturalStringComparer());
         private IComparer<ISearchResultGroup> groupComparer = null;
+        private Func<ISpecies, Task<string>> formatterFunction = null;
         private bool hasDefaultGrouping = true;
         private bool hasDefaultOrdering = true;
 

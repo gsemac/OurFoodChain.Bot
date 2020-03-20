@@ -22,8 +22,8 @@ namespace OurFoodChain.Data.Queries {
         bool HasDefaultOrdering { get; }
         bool HasDefaultGrouping { get; }
 
-        void Add(string groupName, ISpecies species);
-        void Add(string groupName, IEnumerable<ISpecies> species);
+        ISearchResultGroup Add(string groupName, ISpecies species);
+        ISearchResultGroup Add(string groupName, IEnumerable<ISpecies> species);
         int Count();
 
         bool ContainsGroup(string groupName);

@@ -504,7 +504,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("search")]
+        [Command("search", RunMode = RunMode.Async)]
         public async Task Search([Remainder]string queryString) {
 
             // Create and execute the search query.

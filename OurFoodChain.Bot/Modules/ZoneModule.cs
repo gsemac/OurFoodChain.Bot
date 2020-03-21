@@ -128,7 +128,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("zone"), Alias("z", "zones")]
         public async Task GetZones() {
 
-            await ShowZonesAsync((await Db.GetZonesAsync()).OrderBy(zone => zone.TypeId).ThenBy(zone => zone.GetFullName(), new NaturalStringComparer()), null);
+            await ShowZonesAsync((await Db.GetZonesAsync()).OrderBy(zone => zone.GetFullName(), new NaturalStringComparer()), null);
 
         }
 

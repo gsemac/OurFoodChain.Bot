@@ -50,8 +50,8 @@ namespace OurFoodChain.Data.Extensions {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name OR name = $fullName OR id IN (SELECT zone_id FROM ZoneAliases WHERE alias = $name)")) {
 
-                cmd.Parameters.AddWithValue("$name", name);
-                cmd.Parameters.AddWithValue("$fullName", fullName);
+                cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$fullName", fullName.ToLowerInvariant());
 
                 DataRow row = await database.GetRowAsync(cmd);
 

@@ -167,23 +167,19 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get the zone from the database.
 
-            IZone zone = await Db.GetZoneAsync(zoneName);
+            IZone zone = await this.GetZoneOrReplyAsync(zoneName);
 
-            if (!await BotUtils.ReplyValidateZoneAsync(Context, zone))
-                return;
+            if (zone.IsValid()) {
 
-            // Update the description for the zone.
+                // Update the description for the zone.
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET description=$description WHERE id=$id;")) {
+                zone.Description = description;
 
-                cmd.Parameters.AddWithValue("$description", description);
-                cmd.Parameters.AddWithValue("$id", zone.Id);
+                await Db.UpdateZoneAsync(zone);
 
-                await Db.ExecuteNonQueryAsync(cmd);
+                await ReplySuccessAsync($"Successfully updated the description for {zone.GetFullName().ToBold()}.");
 
             }
-
-            await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully updated the description for **{0}**.", zone.GetFullName()));
 
         }
 

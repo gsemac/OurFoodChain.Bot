@@ -16,9 +16,13 @@ namespace OurFoodChain.Common.Utilities {
         }
         public static string GetFullName(string zoneName) {
 
+            // Zone names should be formatted as "Zone X" if:
+            // - they are a single character (e.g. "Zone A" or "Zone 1")
+            // - they are two letters (DA), digits followed by a single letter (28A), or a letter followed by a single digit (A1)
+
             zoneName = zoneName.ToLowerInvariant();
 
-            if (Regex.IsMatch(zoneName, @"^(?:zone\s+)?[a-zA-Z0-9]{1,2}$", RegexOptions.IgnoreCase) || zoneName.Length == 1)
+            if (Regex.IsMatch(zoneName, @"^(?:zone\s+)?(?:\d+[a-z]{0,2}|[a-z]\d|[a-z]{1,2})$", RegexOptions.IgnoreCase) || zoneName.Length == 1)
                 zoneName = "Zone " + zoneName.After("zone").Trim().ToUpperInvariant();
             else
                 zoneName = zoneName.ToTitle();

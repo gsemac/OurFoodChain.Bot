@@ -48,7 +48,7 @@ namespace OurFoodChain.Data.Extensions {
 
             string fullName = ZoneUtilities.GetFullName(name.Trim()).ToLowerInvariant();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name OR name = $fullName OR id IN (SELECT zone_id FROM ZoneAliases WHERE alias = $name)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE name = $name OR name = $fullName OR id IN (SELECT zone_id FROM ZoneAliases WHERE alias = $name OR alias = $fullName)")) {
 
                 cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
                 cmd.Parameters.AddWithValue("$fullName", fullName.ToLowerInvariant());

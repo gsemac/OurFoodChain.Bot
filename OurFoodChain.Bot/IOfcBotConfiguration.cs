@@ -23,6 +23,8 @@ namespace OurFoodChain.Bot {
 
         string WikiUrlFormat { get; set; }
 
+        bool SingleDatabase { get; set; }
+
         bool TrophiesEnabled { get; set; }
         bool GotchisEnabled { get; set; }
         bool GenerationsEnabled { get; set; }

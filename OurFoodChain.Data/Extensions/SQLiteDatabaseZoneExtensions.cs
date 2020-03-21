@@ -106,9 +106,10 @@ namespace OurFoodChain.Data.Extensions {
 
         public static async Task AddZoneAsync(this SQLiteDatabase database, IZone zone) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Zones(name, type_id, description) VALUES($name, $type_id, $description)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Zones(name, type, type_id, description) VALUES($name, $type, $type_id, $description)")) {
 
                 cmd.Parameters.AddWithValue("$name", zone.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$type", zone.Type?.Name.ToLowerInvariant() ?? string.Empty);
                 cmd.Parameters.AddWithValue("$type_id", zone.TypeId);
                 cmd.Parameters.AddWithValue("$description", zone.Description);
 
@@ -119,11 +120,12 @@ namespace OurFoodChain.Data.Extensions {
         }
         public static async Task UpdateZoneAsync(this SQLiteDatabase database, IZone zone) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type_id = $type_id, description = $description, parent_id = $parent_id WHERE id = $id")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type = $type, type_id = $type_id, description = $description, parent_id = $parent_id WHERE id = $id")) {
 
                 cmd.Parameters.AddWithValue("$id", zone.Id);
                 cmd.Parameters.AddWithValue("$parent_id", zone.ParentId);
                 cmd.Parameters.AddWithValue("$name", zone.Name.ToLowerInvariant());
+                cmd.Parameters.AddWithValue("$type", zone.Type?.Name.ToLowerInvariant() ?? string.Empty);
                 cmd.Parameters.AddWithValue("$type_id", zone.TypeId);
                 cmd.Parameters.AddWithValue("$description", zone.Description);
 

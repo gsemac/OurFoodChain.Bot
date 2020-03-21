@@ -363,7 +363,9 @@ namespace OurFoodChain.Bot.Modules {
 
                 IEnumerable<string> parsedZoneNames = ZoneUtilities.ParseZoneNameList(zoneNames);
                 IEnumerable<IZone> zones = await Db.GetZonesAsync(parsedZoneNames);
-                IEnumerable<string> invalidZones = parsedZoneNames.Except(zones.Select(zone => zone.Name), StringComparer.OrdinalIgnoreCase);
+                IEnumerable<string> invalidZones = parsedZoneNames
+                    .Select(name => ZoneUtilities.GetFullName(name).ToLowerInvariant())
+                    .Except(zones.Select(zone => zone.GetFullName().ToLowerInvariant()), StringComparer.OrdinalIgnoreCase);
 
                 // Remove the zones from the species.
 

@@ -410,7 +410,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Get all species living in this zone.
 
-                List<ISpecies> speciesList = new List<ISpecies>(await Db.GetSpeciesAsync(zone));
+                List<ISpecies> speciesList = new List<ISpecies>((await Db.GetSpeciesAsync(zone)).Where(species => !species.IsExtinct()));
 
                 speciesList.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
 

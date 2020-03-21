@@ -330,7 +330,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     await Db.UpdateZoneAsync(zone);
 
-                    await ReplySuccessAsync($"Field {fieldName.ToTitle().ToBold()} was successfully added to {zone.GetFullName()}.");
+                    await ReplySuccessAsync($"Field {fieldName.ToTitle().ToBold()} was successfully added to {zone.GetFullName().ToBold()}.");
 
                 }
 
@@ -354,7 +354,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     await Db.UpdateZoneAsync(zone);
 
-                    await ReplySuccessAsync($"The field {fieldName.ToTitle().ToBold()} was successfully removed from {zone.GetFullName()}.");
+                    await ReplySuccessAsync($"The field {fieldName.ToTitle().ToBold()} was successfully removed from {zone.GetFullName().ToBold()}.");
 
                 }
                 else {

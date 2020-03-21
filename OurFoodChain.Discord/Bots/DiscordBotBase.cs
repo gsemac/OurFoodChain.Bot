@@ -21,7 +21,7 @@ namespace OurFoodChain.Discord.Bots {
 
         // Public members
 
-        public virtual string Name => Client?.CurrentUser.Username ?? "Bot";
+        public virtual string Name => Client?.CurrentUser?.Username ?? "Bot";
 
         public virtual async Task StartAsync() {
 

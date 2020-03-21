@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using OurFoodChain.Bot.Attributes;
+using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
@@ -113,7 +114,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // The user passed in a valid zone type, so show all zones with that type.
 
-                    IEnumerable<IZone> zones = await Db.GetZonesAsync(zoneType);
+                    IEnumerable<IZone> zones = (await Db.GetZonesAsync(zoneType));
 
                     await ShowZonesAsync(zones, zoneType);
 
@@ -127,7 +128,7 @@ namespace OurFoodChain.Bot.Modules {
         [Command("zone"), Alias("z", "zones")]
         public async Task GetZones() {
 
-            await ShowZonesAsync(await Db.GetZonesAsync(), null);
+            await ShowZonesAsync((await Db.GetZonesAsync()).OrderBy(zone => zone.TypeId).ThenBy(zone => zone.GetFullName(), new NaturalStringComparer()), null);
 
         }
 

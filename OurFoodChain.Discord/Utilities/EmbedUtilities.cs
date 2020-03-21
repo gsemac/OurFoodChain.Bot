@@ -251,17 +251,22 @@ namespace OurFoodChain.Discord.Utilities {
                     if (columnsPerPage == 1) {
 
                         // If there's only one column, add text directly to the description.
+                        // The page should be changed out immediately.
 
                         currentPage.Description = builder.ToString();
+
+                        pages.Add(currentPage);
+
+                        currentPage = new Messaging.Embed();
 
                     }
                     else {
 
                         currentPage.AddField(listTitle, builder.ToString(), inline: true);
 
-                    }
+                        ++fieldCount;
 
-                    ++fieldCount;
+                    }
 
                 }
                 else {

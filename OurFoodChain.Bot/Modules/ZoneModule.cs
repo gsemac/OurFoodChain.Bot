@@ -429,7 +429,7 @@ namespace OurFoodChain.Bot.Modules {
                     embedPages.Add(new Embed());
 
                     foreach (IZoneField field in zone.Fields)
-                        embedPages.Last().AddField(field.Name.ToTitle(), field.Value, true);
+                        embedPages.Last().AddField(field.GetName(), field.GetValue(), true);
 
                     embedPages.Last().Description = description;
 

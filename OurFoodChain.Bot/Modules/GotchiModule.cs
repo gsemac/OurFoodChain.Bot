@@ -782,12 +782,16 @@ namespace OurFoodChain.Bot.Modules {
 
             IPaginatedMessage embed = new PaginatedMessage();
 
-            embed.AddLines(lines);
+            if (!lines.Any())
+                embed.AddPage(new Discord.Messaging.Embed());
+            else
+                embed.AddLines(lines);
+
             embed.SetTitle($"{user.Username}'s inventory");
             embed.SetFooter(string.Format("You currently have {0:n0}G.", userInfo.G));
             embed.AddPageNumbers();
 
-            if (lines.Count <= 0)
+            if (!lines.Any())
                 embed.SetDescription("Your inventory is empty.");
 
             await ReplyAsync(embed);

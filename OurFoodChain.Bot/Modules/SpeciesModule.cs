@@ -95,7 +95,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get all species.
 
-            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync()).OrderBy(s => s.GetShortName()));
+            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(GetSpeciesOptions.Default | GetSpeciesOptions.IgnoreCommonNames)).OrderBy(s => s.GetShortName()));
 
             if (species.Count <= 0) {
 
@@ -107,7 +107,7 @@ namespace OurFoodChain.Bot.Modules {
                 // Create embed pages.
 
                 IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"All species ({species.Count()}):", species, options: EmbedPaginationOptions.AddPageNumbers);
-                IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(pages);
+                IPaginatedMessage message = new PaginatedMessage(pages);
 
                 await ReplyAsync(message);
 

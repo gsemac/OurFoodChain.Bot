@@ -16,10 +16,15 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
 
+    [Flags]
     public enum GetSpeciesOptions {
         None = 0,
-        Fast = 1,
-        BreakOnCycle = 2
+        IgnoreStatus = 1,
+        IgnoreCommonNames = 2,
+        IgnoreGenus = 4,
+        BreakOnCycle = 8,
+        Fast = IgnoreStatus | IgnoreCommonNames | IgnoreGenus,
+        Default = None
     }
 
     public static class SQLiteDatabaseSpeciesExtensions {
@@ -75,13 +80,13 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database) {
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             List<ISpecies> species = new List<ISpecies>();
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species"))
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    species.Add(await database.CreateSpeciesFromDataRowAsync(row));
+                    species.Add(await database.CreateSpeciesFromDataRowAsync(row, options));
 
             return species;
 
@@ -219,7 +224,7 @@ namespace OurFoodChain.Data.Extensions {
             return results;
 
         }
-        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IRole role, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IRole role, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             // Return all species with the given role.
 
@@ -399,7 +404,7 @@ namespace OurFoodChain.Data.Extensions {
             return result;
 
         }
-        public static async Task<TreeNode<long>> GetDescendantIdsAsync(this SQLiteDatabase database, long? speciesId, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        public static async Task<TreeNode<long>> GetDescendantIdsAsync(this SQLiteDatabase database, long? speciesId, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             HashSet<long> seenIds = new HashSet<long>();
 
@@ -614,7 +619,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IZone zone, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IZone zone, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             if (zone is null || zone.Id <= 0)
                 return Enumerable.Empty<ISpecies>();
@@ -851,13 +856,13 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        public static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             long genusId = row.Field<long>("genus_id");
 
             ITaxon genus;
 
-            if (options.HasFlag(GetSpeciesOptions.Fast)) {
+            if (options.HasFlag(GetSpeciesOptions.IgnoreGenus)) {
 
                 // Get basic genus information.
 
@@ -874,13 +879,13 @@ namespace OurFoodChain.Data.Extensions {
 
             }
 
-            return await database.CreateSpeciesFromDataRowAsync(row, genus);
+            return await database.CreateSpeciesFromDataRowAsync(row, genus, options);
 
         }
 
         // Private members
 
-        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        private static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, ITaxon genus, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             ISpecies species = new Species {
                 Id = row.Field<long>("id"),
@@ -898,7 +903,7 @@ namespace OurFoodChain.Data.Extensions {
             if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))
                 commonNames.Add(row.Field<string>("common_name"));
 
-            if (!options.HasFlag(GetSpeciesOptions.Fast))
+            if (!options.HasFlag(GetSpeciesOptions.IgnoreCommonNames))
                 commonNames.AddRange(await database.GetCommonNamesAsync(species));
 
             species.CommonNames.AddRange(commonNames.Distinct(StringComparer.OrdinalIgnoreCase));
@@ -906,7 +911,8 @@ namespace OurFoodChain.Data.Extensions {
             if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
                 species.Pictures.Add(new Picture(row.Field<string>("pics")));
 
-            species.Status = await database.GetConservationStatusAsync(species) ?? new ConservationStatus();
+            if (!options.HasFlag(GetSpeciesOptions.IgnoreStatus))
+                species.Status = await database.GetConservationStatusAsync(species) ?? new ConservationStatus();
 
             return species;
 
@@ -1068,7 +1074,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        private static async Task<TreeNode<long>> GetDescendantIdsAsync(this SQLiteDatabase database, long? speciesId, HashSet<long> seenIds, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        private static async Task<TreeNode<long>> GetDescendantIdsAsync(this SQLiteDatabase database, long? speciesId, HashSet<long> seenIds, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             if (!speciesId.HasValue)
                 return TreeNode.Empty<long>();

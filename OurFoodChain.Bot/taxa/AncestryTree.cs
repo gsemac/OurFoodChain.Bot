@@ -72,10 +72,10 @@ namespace OurFoodChain {
 
                         if (descendant.Id.HasValue) {
 
-                            if(seenIds.Contains(descendant.Id.Value))
+                            if (seenIds.Contains(descendant.Id.Value))
                                 throw new CycleException(descendant);
 
-                            seenIds.Add(species.Id.Value);
+                            seenIds.Add(descendant.Id.Value);
 
                         }
 

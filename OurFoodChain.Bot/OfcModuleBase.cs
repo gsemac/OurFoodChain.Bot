@@ -10,6 +10,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
+using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Services;
@@ -32,6 +33,7 @@ namespace OurFoodChain {
 
         // Public members
 
+        public IDiscordBot Bot { get; set; }
         public IDatabaseService DatabaseService { get; set; }
         public IPaginatedMessageService PaginatedMessageService { get; set; }
         public IResponsiveMessageService ResponsiveMessageService { get; set; }

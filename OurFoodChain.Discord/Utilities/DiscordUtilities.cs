@@ -29,24 +29,24 @@ namespace OurFoodChain.Discord.Utilities {
         public const int MaxFieldCount = 25;
         public const int MaxEmbedLength = 2048;
 
-        public static async Task ReplySuccessAsync(IMessageChannel channel, string message) {
+        public static async Task<IUserMessage> ReplySuccessAsync(IMessageChannel channel, string message) {
 
-            await channel.SendMessageAsync("", false, EmbedUtilities.BuildSuccessEmbed(message).ToDiscordEmbed());
-
-        }
-        public static async Task ReplyWarningAsync(IMessageChannel channel, string message) {
-
-            await channel.SendMessageAsync("", false, EmbedUtilities.BuildWarningEmbed(message).ToDiscordEmbed());
+            return await channel.SendMessageAsync("", false, EmbedUtilities.BuildSuccessEmbed(message).ToDiscordEmbed());
 
         }
-        public static async Task ReplyErrorAsync(IMessageChannel channel, string message) {
+        public static async Task<IUserMessage> ReplyWarningAsync(IMessageChannel channel, string message) {
 
-            await channel.SendMessageAsync("", false, EmbedUtilities.BuildErrorEmbed(message).ToDiscordEmbed());
+            return await channel.SendMessageAsync("", false, EmbedUtilities.BuildWarningEmbed(message).ToDiscordEmbed());
 
         }
-        public static async Task ReplyInfoAsync(IMessageChannel channel, string message) {
+        public static async Task<IUserMessage> ReplyErrorAsync(IMessageChannel channel, string message) {
 
-            await channel.SendMessageAsync("", false, EmbedUtilities.BuildInfoEmbed(message).ToDiscordEmbed());
+            return await channel.SendMessageAsync("", false, EmbedUtilities.BuildErrorEmbed(message).ToDiscordEmbed());
+
+        }
+        public static async Task<IUserMessage> ReplyInfoAsync(IMessageChannel channel, string message) {
+
+            return await channel.SendMessageAsync("", false, EmbedUtilities.BuildInfoEmbed(message).ToDiscordEmbed());
 
         }
 

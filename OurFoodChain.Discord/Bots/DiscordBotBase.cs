@@ -4,7 +4,9 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Services;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,6 +20,8 @@ namespace OurFoodChain.Discord.Bots {
         IDiscordBot {
 
         // Public members
+
+        public virtual string Name => Client?.CurrentUser.Username ?? "Bot";
 
         public virtual async Task StartAsync() {
 
@@ -42,6 +46,34 @@ namespace OurFoodChain.Discord.Bots {
             // Connect and bring the bot online.
 
             await ConnectAsync();
+
+            Client.Log += OnLogAsync;
+            Client.Ready += ReadyAsync;
+
+        }
+        public virtual async Task StopAsync() {
+
+            await Client.LogoutAsync();
+
+            Client.Dispose();
+
+        }
+        public virtual async Task RestartAsync(IMessageChannel channel = null) {
+
+            restartChannel = channel;
+
+            if (restartChannel != null)
+                restartMessage = await DiscordUtilities.ReplySuccessAsync(restartChannel, $"Restarting {Name.ToBold()}...");
+
+            await StopAsync();
+
+            await StartAsync();
+
+        }
+
+        public void Dispose() {
+
+            Dispose(true);
 
         }
 
@@ -72,6 +104,7 @@ namespace OurFoodChain.Discord.Bots {
             IServiceCollection services = new ServiceCollection();
 
             services
+                .AddSingleton<IDiscordBot>(this)
                 .AddSingleton(Client)
                 .AddSingleton<global::Discord.Commands.CommandService>()
                 .AddSingleton(Configuration);
@@ -95,6 +128,74 @@ namespace OurFoodChain.Discord.Bots {
             serviceProvider.GetRequiredService<ILoggingService>(); // instantiate the logging service
 
             await serviceProvider.GetRequiredService<ICommandService>().InitializeAsync(serviceProvider);
+
+        }
+
+        protected async Task OnLogAsync(LogSeverity severity, string source, string message) {
+
+            await OnLogAsync(new LogMessage(severity, source, message));
+
+        }
+        protected async Task OnLogAsync(LogMessage logMessage) {
+
+            Console.WriteLine(logMessage.ToString());
+
+            await Task.CompletedTask;
+
+        }
+        protected async Task OnLogAsync(Debug.ILogMessage logMessage) {
+
+            Console.WriteLine(logMessage.ToString());
+
+            await Task.CompletedTask;
+
+        }
+
+        protected virtual void Dispose(bool disposing) {
+
+            if (!disposedValue) {
+
+                if (disposing) {
+
+                    Client.Dispose();
+
+                }
+
+                disposedValue = true;
+            }
+
+        }
+
+        // Private members
+
+        private IMessageChannel restartChannel = null;
+        private IUserMessage restartMessage = null;
+        private bool disposedValue = false;
+
+        private async Task ReadyAsync() {
+
+            foreach (IGuild guild in Client.Guilds)
+                await OnLogAsync(LogSeverity.Info, Name, $"Joined {guild.Name} ({guild.Id})");
+
+            if (restartChannel != null && restartMessage != null) {
+
+                restartChannel = Client.GetChannel(restartChannel.Id) as IMessageChannel;
+
+                if (restartChannel != null)
+                    restartMessage = await restartChannel.GetMessageAsync(restartMessage.Id) as IUserMessage;
+
+                await restartMessage.ModifyAsync(async m => {
+
+                    m.Embed = EmbedUtilities.BuildSuccessEmbed($"Restarting {Name.ToBold()}... and we're back!").ToDiscordEmbed();
+
+                    await Task.CompletedTask;
+
+                });
+
+            }
+
+            restartChannel = null;
+            restartMessage = null;
 
         }
 

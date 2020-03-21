@@ -812,7 +812,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
-                    MaxLength = Bot.DiscordUtils.MaxMessageLength - 6, // account for code block markup
+                    MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
                     TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result
                 };
 

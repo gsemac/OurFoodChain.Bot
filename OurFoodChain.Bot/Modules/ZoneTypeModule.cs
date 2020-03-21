@@ -149,7 +149,7 @@ namespace OurFoodChain.Modules {
 
                     for (int i = 1; i < args.Count(); ++i) {
 
-                        if (Bot.DiscordUtils.IsEmoji(args[i]))
+                        if (DiscordUtils.IsEmoji(args[i]))
                             icon = args[i];
                         else if (StringUtilities.TryParseColor(args[i], out System.Drawing.Color result))
                             color = result;

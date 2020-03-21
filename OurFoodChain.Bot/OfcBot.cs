@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using OurFoodChain.Common;
 using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Extensions;
+using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Gotchis;
 using OurFoodChain.Services;
 using OurFoodChain.Trophies;
@@ -32,7 +33,7 @@ namespace OurFoodChain.Bot {
 
         public override async Task StartAsync() {
 
-            await OnLogAsync(LogSeverity.Info, "OurFoodChain", "Starting bot");
+            await OnLogAsync(LogSeverity.Info, Name, "Starting bot");
 
             // Copy user's custom data to the main data directory.
 
@@ -43,11 +44,9 @@ namespace OurFoodChain.Bot {
 
             // Initialize services.
 
-            await OnLogAsync(LogSeverity.Info, "OurFoodChain", "Configuring services");
+            await OnLogAsync(LogSeverity.Info, Name, "Configuring services");
 
             await base.StartAsync();
-
-            Client.Log += OnLogAsync;
 
         }
 
@@ -110,26 +109,6 @@ namespace OurFoodChain.Bot {
             trophyScanner.TrophyUnlocked += TrophyUnlockedAsync;
 
             await trophyService.RegisterTrophiesAsync();
-
-        }
-
-        protected async Task OnLogAsync(LogSeverity severity, string source, string message) {
-
-            await OnLogAsync(new LogMessage(severity, source, message));
-
-        }
-        protected async Task OnLogAsync(LogMessage logMessage) {
-
-            Console.WriteLine(logMessage.ToString());
-
-            await Task.CompletedTask;
-
-        }
-        protected async Task OnLogAsync(Debug.ILogMessage logMessage) {
-
-            Console.WriteLine(logMessage.ToString());
-
-            await Task.CompletedTask;
 
         }
 

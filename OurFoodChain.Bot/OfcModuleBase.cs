@@ -558,7 +558,7 @@ namespace OurFoodChain {
                 List<ISpecies> speciesList = new List<ISpecies>();
 
                 foreach (ITaxon subtaxon in await Db.GetSubtaxaAsync(taxon))
-                    speciesList.Add(await Db.GetSpeciesAsync(subtaxon.Id));
+                    speciesList.Add(await Db.GetSpeciesAsync(subtaxon.Id, GetSpeciesOptions.Fast & ~GetSpeciesOptions.IgnoreGenus));
 
                 speciesList.Sort((lhs, rhs) => lhs.GetName().CompareTo(rhs.GetName()));
 
@@ -594,13 +594,13 @@ namespace OurFoodChain {
                         // Count the number of species under this taxon.
                         // Taxa with no species under them will not be displayed.
 
-                        long speciesCount = await Db.GetSpeciesCountAsync(taxon);
+                        long speciesCount = await Db.GetSpeciesCountAsync(subtaxon);
 
                         if (speciesCount > 0) {
 
                             // Count the sub-taxa under this taxon.
 
-                            long subtaxaCount = (await Db.GetSubtaxaAsync(taxon)).Count();
+                            long subtaxaCount = (await Db.GetSubtaxaAsync(subtaxon)).Count();
 
                             // Add the taxon to the list.
 
@@ -631,8 +631,12 @@ namespace OurFoodChain {
 
             }
 
-            IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(fieldTitle, subItems, options: EmbedPaginationOptions.AddPageNumbers);
-            IPaginatedMessage paginatedMessage = new Discord.Messaging.PaginatedMessage(pages);
+            List<Discord.Messaging.IEmbed> pages = new List<Discord.Messaging.IEmbed>(EmbedUtilities.CreateEmbedPages(fieldTitle, subItems, options: EmbedPaginationOptions.AddPageNumbers));
+
+            if (!pages.Any())
+                pages.Add(new Discord.Messaging.Embed());
+
+            IPaginatedMessage paginatedMessage = new PaginatedMessage(pages);
 
             foreach (Discord.Messaging.IEmbed page in paginatedMessage.Select(m => m.Embed)) {
 

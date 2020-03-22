@@ -165,7 +165,7 @@ namespace OurFoodChain.Data.Extensions {
             }
 
         }
-        public static async Task<ISpecies> GetSpeciesAsync(this SQLiteDatabase database, long? speciesId) {
+        public static async Task<ISpecies> GetSpeciesAsync(this SQLiteDatabase database, long? speciesId, GetSpeciesOptions options = GetSpeciesOptions.None) {
 
             if (!speciesId.HasValue)
                 return null;

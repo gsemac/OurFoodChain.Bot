@@ -1049,10 +1049,25 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Show a warning if the user provided any invalid zones.
 
-                await ReplyWarningAsync(
-                    string.Format("{0} {1} not exist.",
-                    StringUtilities.ConjunctiveJoin(invalidZoneNames.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x)))),
-                    invalidZoneNames.Count() == 1 ? "does" : "do"));
+                string zoneListString = StringUtilities.ConjunctiveJoin(invalidZoneNames.Select(x => string.Format("**{0}**", ZoneUtilities.GetFullName(x))));
+
+                StringBuilder warningBuilder = new StringBuilder();
+
+                if (invalidZoneNames.Count() > 1)
+                    warningBuilder.Append("Zones ");
+                else if (!zoneListString.StartsWith("**zone", StringComparison.OrdinalIgnoreCase))
+                    warningBuilder.Append("Zone ");
+
+                warningBuilder.Append(zoneListString);
+
+                if (invalidZoneNames.Count() == 1)
+                    warningBuilder.Append(" does ");
+                else
+                    warningBuilder.Append(" do ");
+
+                warningBuilder.Append("not exist.");
+
+                await ReplyWarningAsync(warningBuilder.ToString());
 
             }
 

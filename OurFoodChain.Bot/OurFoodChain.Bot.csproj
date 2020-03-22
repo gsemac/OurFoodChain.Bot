@@ -9,7 +9,7 @@
     <ProjectGuid>{8EA1FE67-F170-45B4-ABB0-A1DD6142C389}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>OurFoodChain</RootNamespace>
-    <AssemblyName>ourfoodchain-bot</AssemblyName>
+    <AssemblyName>OurFoodChain.Bot</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

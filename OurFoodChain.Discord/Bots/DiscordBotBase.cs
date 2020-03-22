@@ -129,12 +129,12 @@ namespace OurFoodChain.Discord.Bots {
 
             global::Discord.Commands.CommandService discordCommandService = serviceProvider.GetRequiredService<global::Discord.Commands.CommandService>();
 
-            if(discordCommandService != null)
+            if (discordCommandService != null)
                 discordCommandService.Log += OnLogAsync;
 
             ICommandService commandService = serviceProvider.GetRequiredService<ICommandService>();
 
-            if(commandService != null) {
+            if (commandService != null) {
 
                 commandService.Log += OnLogAsync;
 
@@ -192,18 +192,36 @@ namespace OurFoodChain.Discord.Bots {
 
             if (restartChannel != null && restartMessage != null) {
 
-                restartChannel = Client.GetChannel(restartChannel.Id) as IMessageChannel;
+                ulong restartMessageId = restartMessage.Id;
+                ulong restartChannelId = restartChannel.Id;
+
+                // Attempt to get the channel the bot was restarted from.
+
+                restartChannel = Client.GetChannel(restartChannelId) as IMessageChannel;
+
+                if (restartChannel is null)
+                    restartChannel = await Client.GetDMChannelAsync(restartChannelId) as IMessageChannel;
+
+                // Attempt to get the confirmation message.
 
                 if (restartChannel != null)
-                    restartMessage = await restartChannel.GetMessageAsync(restartMessage.Id) as IUserMessage;
+                    restartMessage = await restartChannel.GetMessageAsync(restartMessageId) as IUserMessage;
+                else
+                    restartMessage = null;
 
-                await restartMessage.ModifyAsync(async m => {
+                if (restartMessage != null) {
 
-                    m.Embed = EmbedUtilities.BuildSuccessEmbed($"Restarting {Name.ToBold()}... and we're back!").ToDiscordEmbed();
+                    // Modify the confirmation message.
 
-                    await Task.CompletedTask;
+                    await restartMessage.ModifyAsync(async m => {
 
-                });
+                        m.Embed = EmbedUtilities.BuildSuccessEmbed($"Restarting {Name.ToBold()}... and we're back!").ToDiscordEmbed();
+
+                        await Task.CompletedTask;
+
+                    });
+
+                }
 
             }
 

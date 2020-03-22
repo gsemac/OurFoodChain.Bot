@@ -17,7 +17,7 @@ namespace OurFoodChain.Bot {
         [Command("backup", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task Backup() {
 
-            await DatabaseService.UploadDatabaseBackupAsync(Context.Channel, Context.Guild.Id);
+            await DatabaseService.UploadDatabaseBackupAsync(Context);
 
         }
 

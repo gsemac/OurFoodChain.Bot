@@ -1,9 +1,8 @@
 ﻿using Discord;
+using Discord.Commands;
 using OurFoodChain.Data;
+using OurFoodChain.Discord.Utilities;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
@@ -13,30 +12,49 @@ namespace OurFoodChain.Discord.Services {
 
         // Public members
 
-        public async override Task<SQLiteDatabase> GetDatabaseAsync(ulong serverId) {
+        public async override Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context) {
 
             // Each guild should have access to their own database, saved inside of their guild folder.
 
-            string databaseFilePath = GetDatabasePathForGuild(serverId);
+            string databaseFilePath = GetDatabasePathForGuild(context.Guild);
+
+            if (string.IsNullOrWhiteSpace(databaseFilePath)) {
+
+                string exceptionMessage = context.Guild is null ?
+                    "Database must be accessed through a guild." :
+                    "The database path could not be determined.";
+
+                await DiscordUtilities.ReplyErrorAsync(context.Channel, exceptionMessage);
+
+                throw new Exception(exceptionMessage);
+
+            }
 
             return await GetDatabaseAsync(databaseFilePath);
 
         }
-        public async override Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId) {
+        public async override Task UploadDatabaseBackupAsync(ICommandContext context) {
 
-            await UploadDatabaseBackupAsync(channel, GetDatabasePathForGuild(serverId));
+            await UploadDatabaseBackupAsync(context, GetDatabasePathForGuild(context.Guild));
 
         }
 
         // Private members
 
-        private string GetDatabasePathForGuild(ulong serverId) {
+        private string GetDatabasePathForGuild(IGuild guild) {
 
-            string databaseDirectory = serverId.ToString();
-            string databaseFilePath = System.IO.Path.Combine(databaseDirectory, "data.db");
+            string databaseFilePath = string.Empty;
 
-            if (!System.IO.Directory.Exists(databaseDirectory))
-                System.IO.Directory.CreateDirectory(databaseDirectory);
+            if (guild != null) {
+
+                string databaseDirectory = guild.Id.ToString();
+
+                if (!System.IO.Directory.Exists(databaseDirectory))
+                    System.IO.Directory.CreateDirectory(databaseDirectory);
+
+                databaseFilePath = System.IO.Path.Combine(databaseDirectory, "data.db");
+
+            }
 
             return databaseFilePath;
 

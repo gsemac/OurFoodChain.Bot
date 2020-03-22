@@ -1,9 +1,8 @@
 ﻿using Discord;
+using Discord.Commands;
 using OurFoodChain.Data;
 using OurFoodChain.Debug;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
@@ -13,8 +12,10 @@ namespace OurFoodChain.Discord.Services {
         event Func<ILogMessage, Task> Log;
 
         Task InitializeAsync();
-        Task<SQLiteDatabase> GetDatabaseAsync(ulong serverId);
-        Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId);
+
+        Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context);
+
+        Task UploadDatabaseBackupAsync(ICommandContext context);
 
     }
 

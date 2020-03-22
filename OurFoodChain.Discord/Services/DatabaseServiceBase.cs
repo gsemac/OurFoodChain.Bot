@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Commands;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
@@ -6,8 +7,6 @@ using OurFoodChain.Debug;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
@@ -26,8 +25,10 @@ namespace OurFoodChain.Discord.Services {
             await Task.CompletedTask;
 
         }
-        public abstract Task<SQLiteDatabase> GetDatabaseAsync(ulong serverId);
-        public abstract Task UploadDatabaseBackupAsync(IMessageChannel channel, ulong serverId);
+
+        public abstract Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context);
+
+        public abstract Task UploadDatabaseBackupAsync(ICommandContext context);
 
         // Protected members
 
@@ -51,13 +52,13 @@ namespace OurFoodChain.Discord.Services {
             return SQLiteDatabase.FromFile(databaseFilePath);
 
         }
-        protected async Task UploadDatabaseBackupAsync(IMessageChannel channel, string databaseFilePath) {
+        protected async Task UploadDatabaseBackupAsync(ICommandContext context, string databaseFilePath) {
 
             bool backupInProgress = GetDatabaseStatus(databaseFilePath).BackupInProgress;
 
             if (backupInProgress) {
 
-                await DiscordUtilities.ReplyErrorAsync(channel, "A backup is already in progress. Please wait until it has completed.");
+                await DiscordUtilities.ReplyErrorAsync(context.Channel, "A backup is already in progress. Please wait until it has completed.");
 
             }
             else {
@@ -68,23 +69,23 @@ namespace OurFoodChain.Discord.Services {
 
                     try {
 
-                        await DiscordUtilities.ReplyInfoAsync(channel,
+                        await DiscordUtilities.ReplyInfoAsync(context.Channel,
                             string.Format("Uploading database backup ({0:0.##} MB).\nThe backup will be posted in this channel when it is complete.",
                             new System.IO.FileInfo(databaseFilePath).Length / 1024000.0));
 
-                        await channel.SendFileAsync(databaseFilePath, string.Format("`Database backup ({0})`", DateUtilities.GetCurrentDateUtc()));
+                        await context.Channel.SendFileAsync(databaseFilePath, string.Format("`Database backup ({0})`", DateUtilities.GetCurrentDateUtc()));
 
                     }
                     catch (Exception) {
 
-                        await DiscordUtilities.ReplyErrorAsync(channel, "Database file cannot be accessed.");
+                        await DiscordUtilities.ReplyErrorAsync(context.Channel, "Database file cannot be accessed.");
 
                     }
 
                 }
                 else {
 
-                    await DiscordUtilities.ReplyErrorAsync(channel, "Database file does not exist at the specified path.");
+                    await DiscordUtilities.ReplyErrorAsync(context.Channel, "Database file does not exist at the specified path.");
 
                 }
 

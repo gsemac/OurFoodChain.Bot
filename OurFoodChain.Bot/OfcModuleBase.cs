@@ -48,7 +48,11 @@ namespace OurFoodChain {
         public SearchContext SearchContext => new SearchContext(Context, Db);
         public OfcBotContext BotContext => new OfcBotContext(Context, Config, Db);
 
-        public async Task<SQLiteDatabase> GetDatabaseAsync() => await DatabaseService.GetDatabaseAsync(Context.Guild.Id);
+        public async Task<SQLiteDatabase> GetDatabaseAsync() {
+
+            return await DatabaseService.GetDatabaseAsync(Context);
+
+        }
 
         // Status replies
 

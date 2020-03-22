@@ -127,7 +127,20 @@ namespace OurFoodChain.Discord.Bots {
 
             serviceProvider.GetRequiredService<ILoggingService>(); // instantiate the logging service
 
-            await serviceProvider.GetRequiredService<ICommandService>().InitializeAsync(serviceProvider);
+            global::Discord.Commands.CommandService discordCommandService = serviceProvider.GetRequiredService<global::Discord.Commands.CommandService>();
+
+            if(discordCommandService != null)
+                discordCommandService.Log += OnLogAsync;
+
+            ICommandService commandService = serviceProvider.GetRequiredService<ICommandService>();
+
+            if(commandService != null) {
+
+                commandService.Log += OnLogAsync;
+
+                await commandService.InitializeAsync(serviceProvider);
+
+            }
 
         }
 

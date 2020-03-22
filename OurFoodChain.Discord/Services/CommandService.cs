@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Debug;
 using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Commands;
 using OurFoodChain.Discord.Utilities;
@@ -19,6 +20,8 @@ namespace OurFoodChain.Discord.Services {
         ICommandService {
 
         // Public members
+
+        public event Func<ILogMessage, Task> Log;
 
         public CommandService(
             IBotConfiguration configuration,
@@ -43,12 +46,16 @@ namespace OurFoodChain.Discord.Services {
 
         public async Task InitializeAsync(IServiceProvider provider) {
 
+            await OnLogAsync(Debug.LogSeverity.Info, "Initializing command service");
+
             serviceProvider = provider;
 
             await InstallCommandsAsync();
 
         }
         public virtual async Task InstallCommandsAsync() {
+
+            await OnLogAsync(Debug.LogSeverity.Info, "Installing commands");
 
             foreach (ModuleInfo moduleInfo in DiscordCommandService.Modules.ToArray())
                 await DiscordCommandService.RemoveModuleAsync(moduleInfo);
@@ -218,6 +225,19 @@ namespace OurFoodChain.Discord.Services {
 
         }
 
+        protected async Task OnLogAsync(ILogMessage logMessage) {
+
+            if (Log != null)
+                await Log(logMessage);
+
+        }
+        protected async Task OnLogAsync(Debug.LogSeverity severity, string message) {
+
+            if (Log != null)
+                await Log(new Debug.LogMessage(severity, nameof(CommandService), message));
+
+        }
+
         // Private members
 
         private IServiceProvider serviceProvider;
@@ -225,6 +245,23 @@ namespace OurFoodChain.Discord.Services {
         private readonly IHelpService helpService;
         private readonly DiscordSocketClient discordClient;
         private readonly IResponsiveMessageService responsiveMessageService;
+
+        private async Task OnLogAsync(global::Discord.LogMessage logMessage) {
+
+            StringBuilder messageBuilder = new StringBuilder();
+
+            messageBuilder.Append(logMessage);
+
+            if (logMessage.Exception != null) {
+
+                messageBuilder.AppendLine();
+                messageBuilder.Append(logMessage.Exception.ToString());
+
+            }
+
+            await OnLogAsync(new Debug.LogMessage((Debug.LogSeverity)logMessage.Severity, logMessage.Source, messageBuilder.ToString()));
+
+        }
 
     }
 

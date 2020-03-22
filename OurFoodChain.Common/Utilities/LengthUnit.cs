@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace OurFoodChain.Common.Utilities {
@@ -16,6 +15,12 @@ namespace OurFoodChain.Common.Utilities {
         public double MeterConversionFactor { get; }
         public LengthUnitType Type { get; } = LengthUnitType.Unknown;
 
+        public LengthUnit(string nameOrAbbreviation) :
+            this(GetKnownUnitOrThrow(nameOrAbbreviation)) {
+        }
+        public LengthUnit(ILengthUnit other) :
+            this(other.Name, other.Abbreviation, other.MeterConversionFactor, other.Type) {
+        }
         public LengthUnit(string name, string abbreviation, double meterConversionFactor) :
             this(name, abbreviation, meterConversionFactor, LengthUnitType.Unknown) {
         }
@@ -28,20 +33,34 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
+        public override bool Equals(object other) {
+
+            if (other is string unit) {
+
+                return Name.Equals(unit, StringComparison.OrdinalIgnoreCase) ||
+                    ToPlural(Name).Equals(unit, StringComparison.OrdinalIgnoreCase) ||
+                    Abbreviation.Equals(unit, StringComparison.OrdinalIgnoreCase);
+
+            }
+            else
+                return this == other;
+
+        }
+
         public ILengthUnit ToNearestUnits(LengthUnitType type, params string[] allowedUnits) {
 
             if (Type == type)
-                return new LengthUnit(Name, Abbreviation, MeterConversionFactor, Type);
+                return new LengthUnit(this);
 
             // Find the unit with the closest conversion factor to ours.
 
-            ILengthUnit unit = knownUnits.Value.Values
-                .Where(u => u.Type == type)
-                .Where(u => allowedUnits.Count() <= 0 || allowedUnits.Any(au => au.Equals(u.Name, StringComparison.OrdinalIgnoreCase)) || allowedUnits.Any(au => au.Equals(u.Abbreviation, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(u => Math.Abs(MeterConversionFactor - u.MeterConversionFactor))
+            ILengthUnit result = knownUnits.Value.Values
+                .Where(unit => unit.Type == type)
+                .Where(unit => allowedUnits.Count() <= 0 || allowedUnits.Any(allowedUnit => unit.Equals(allowedUnit)))
+                .OrderBy(unitu => Math.Abs(MeterConversionFactor - unitu.MeterConversionFactor))
                 .FirstOrDefault();
 
-            return unit;
+            return result;
 
         }
 
@@ -153,6 +172,16 @@ namespace OurFoodChain.Common.Utilities {
                 return result;
 
             return null;
+
+        }
+        private static ILengthUnit GetKnownUnitOrThrow(string name) {
+
+            ILengthUnit knownUnit = GetKnownUnit(name);
+
+            if (knownUnit is null)
+                throw new ArgumentException("Unrecognized units.");
+
+            return knownUnit;
 
         }
         private static string ToPlural(string name) {

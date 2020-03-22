@@ -1127,7 +1127,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Attempt to get the size of the species.
 
-            SpeciesSizeMatch match = SpeciesSizeMatch.Find(species.Description);
+            SpeciesSizeMatch match = SpeciesSizeMatch.Match(species.Description);
 
             // Output the result.
 

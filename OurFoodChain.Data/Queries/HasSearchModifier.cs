@@ -43,7 +43,7 @@ namespace OurFoodChain.Data.Queries {
                     break;
 
                 case HasType.Size:
-                    await result.FilterByAsync(async (species) => await Task.FromResult(!SpeciesSizeMatch.Find(species.Description).Success), Invert);
+                    await result.FilterByAsync(async (species) => await Task.FromResult(!SpeciesSizeMatch.Match(species.Description).Success), Invert);
                     break;
 
             }

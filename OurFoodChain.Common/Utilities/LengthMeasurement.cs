@@ -30,11 +30,6 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
-        public double ToMeters() {
-
-            return Value * Units.MeterConversionFactor;
-
-        }
         public LengthMeasurement ToNearestUnits(LengthUnitType type, params string[] allowedUnits) {
 
             if (Units.Type == type)
@@ -44,11 +39,16 @@ namespace OurFoodChain.Common.Utilities {
 
             ILengthUnit unit = Units.ToNearestUnits(type, allowedUnits);
 
-            return ConvertTo(unit);
+            return To(unit);
 
         }
 
-        public LengthMeasurement ConvertTo(ILengthUnit units) {
+        public double ToMeters() {
+
+            return Value * Units.MeterConversionFactor;
+
+        }
+        public LengthMeasurement To(ILengthUnit units) {
 
             if (units.Name.Equals(Units.Name, StringComparison.OrdinalIgnoreCase))
                 return new LengthMeasurement(Value, Units);
@@ -56,12 +56,12 @@ namespace OurFoodChain.Common.Utilities {
             return new LengthMeasurement(ToMeters() / units.MeterConversionFactor, units);
 
         }
-        public LengthMeasurement ConvertTo(string units) {
+        public LengthMeasurement To(string units) {
 
             if (units.Equals(Units.Name, StringComparison.OrdinalIgnoreCase))
                 return new LengthMeasurement(Value, Units);
 
-            return ConvertTo(LengthUnit.Parse(units));
+            return To(LengthUnit.Parse(units));
 
         }
 

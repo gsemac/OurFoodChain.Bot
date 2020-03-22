@@ -1,18 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using OurFoodChain.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OurFoodChainBotTests {
+namespace OurFoodChain.Common.Tests {
 
     [TestClass]
     public class BinomialNameTests {
-        public BinomialNameTests() {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
 
         [TestMethod]
         public void TestSpeciesOnly() {
@@ -88,4 +79,5 @@ namespace OurFoodChainBotTests {
         }
 
     }
+
 }

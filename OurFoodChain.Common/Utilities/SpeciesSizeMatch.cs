@@ -15,7 +15,7 @@ namespace OurFoodChain.Common.Utilities {
         public LengthMeasurement MinSize => units is null ? new LengthMeasurement(0, "m") : new LengthMeasurement(minSize, units);
         public LengthMeasurement MaxSize => units is null ? new LengthMeasurement(0, "m") : new LengthMeasurement(maxSize, units);
 
-        public static SpeciesSizeMatch Find(string input) {
+        public static SpeciesSizeMatch Match(string input) {
 
             SpeciesSizeMatch result = new SpeciesSizeMatch();
 
@@ -87,28 +87,27 @@ namespace OurFoodChain.Common.Utilities {
 
                 // Represent the size as a range.
 
-                LengthMeasurement minLength = new LengthMeasurement(minSize, units).ToNearestUnits(LengthUnitType.Metric, "m", "cm");
-                LengthMeasurement maxLength = new LengthMeasurement(maxSize, units).ToNearestUnits(LengthUnitType.Metric, "m", "cm");
+                var minMeasurements = GetMetricAndImperialMeasurements(minSize);
+                var maxMeasurements = GetMetricAndImperialMeasurements(maxSize);
 
                 return string.Format("**{0}-{1} {2}** ({3}-{4} {5})",
-                    minLength.ToString(LengthMeasurementFormat.Value),
-                    maxLength.ToString(LengthMeasurementFormat.Value),
-                    minLength.Units.ToString(),
-                    minLength.ToNearestUnits(LengthUnitType.Imperial, "ft", "in").ToString(LengthMeasurementFormat.Value),
-                    maxLength.ToNearestUnits(LengthUnitType.Imperial, "ft", "in").ToString(LengthMeasurementFormat.Value),
-                    maxLength.ToNearestUnits(LengthUnitType.Imperial, "ft", "in").Units);
+                    minMeasurements.Item1.ToString(LengthMeasurementFormat.Value),
+                    maxMeasurements.Item1.ToString(LengthMeasurementFormat.Value),
+                    minMeasurements.Item1.Units,
+                    minMeasurements.Item2.ToString(LengthMeasurementFormat.Value),
+                    maxMeasurements.Item2.ToString(LengthMeasurementFormat.Value),
+                    maxMeasurements.Item2.Units);
 
             }
             else {
 
                 // Represent the size as a single value.
 
-                LengthMeasurement size = new LengthMeasurement(minSize <= 0.0 ? maxSize : minSize, units)
-                    .ToNearestUnits(LengthUnitType.Metric, "m", "cm");
+                double sizeValue = minSize <= 0.0 ? maxSize : minSize;
 
-                return string.Format("**{0}** ({1})",
-                    size.ToString(),
-                    size.ToNearestUnits(LengthUnitType.Imperial, "ft", "in").ToString());
+                var measurements = GetMetricAndImperialMeasurements(sizeValue);
+
+                return string.Format("**{0}** ({1})", measurements.Item1, measurements.Item2);
 
             }
 
@@ -125,8 +124,8 @@ namespace OurFoodChain.Common.Utilities {
 
                 // Represent the size as a range.
 
-                LengthMeasurement minLength = new LengthMeasurement(minSize, this.units).ConvertTo(newUnits);
-                LengthMeasurement maxLength = new LengthMeasurement(maxSize, this.units).ConvertTo(newUnits);
+                LengthMeasurement minLength = new LengthMeasurement(minSize, this.units).To(newUnits);
+                LengthMeasurement maxLength = new LengthMeasurement(maxSize, this.units).To(newUnits);
 
                 return string.Format("**{0}-{1} {2}**",
                     minLength.ToString(LengthMeasurementFormat.Value),
@@ -138,7 +137,7 @@ namespace OurFoodChain.Common.Utilities {
 
                 // Represent the size as a single value.
 
-                LengthMeasurement size = new LengthMeasurement(minSize <= 0.0 ? maxSize : minSize, this.units).ConvertTo(newUnits);
+                LengthMeasurement size = new LengthMeasurement(minSize <= 0.0 ? maxSize : minSize, this.units).To(newUnits);
 
                 return string.Format("**{0}**", size.ToString());
 
@@ -183,6 +182,43 @@ namespace OurFoodChain.Common.Utilities {
                 maxSize = max;
 
             }
+
+        }
+
+        private Tuple<LengthMeasurement, LengthMeasurement> GetMetricAndImperialMeasurements(double sizeValue) {
+
+            LengthMeasurement metricLength;
+            LengthMeasurement imperialLength;
+
+            // If the given length is >= 1 meter, show the length as meters.
+            // If the given length >= 1 centimeter, show the length as centimeters.
+            // If the unit is already metric, show the length as the given unit.
+            // Otherwise, default to centimeters.
+
+            if (sizeValue >= new LengthMeasurement(1, "m").To(units).Value)
+                metricLength = new LengthMeasurement(sizeValue, units).To("m");
+            else if (sizeValue >= new LengthMeasurement(1, "cm").To(units).Value)
+                metricLength = new LengthMeasurement(sizeValue, units).To("cm");
+            else if (units.Type == LengthUnitType.Metric)
+                metricLength = new LengthMeasurement(sizeValue, units);
+            else
+                metricLength = new LengthMeasurement(sizeValue, units).To("cm");
+
+            // If the given length is >= 1 foot, show the length as feet.
+            // If the given length >= 1 inch, show the length as inches.
+            // If the unit is already imperial, show the length as the given unit.
+            // Otherwise, default to inches.
+
+            if (sizeValue >= new LengthMeasurement(1, "ft").To(units).Value)
+                imperialLength = new LengthMeasurement(sizeValue, units).To("ft");
+            else if (sizeValue >= new LengthMeasurement(1, "in").To(units).Value)
+                imperialLength = new LengthMeasurement(sizeValue, units).To("in");
+            else if (units.Type == LengthUnitType.Imperial)
+                imperialLength = new LengthMeasurement(sizeValue, units);
+            else
+                imperialLength = new LengthMeasurement(sizeValue, units).To("in");
+
+            return new Tuple<LengthMeasurement, LengthMeasurement>(metricLength, imperialLength);
 
         }
 

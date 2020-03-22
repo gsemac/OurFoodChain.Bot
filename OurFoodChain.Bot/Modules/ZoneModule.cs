@@ -318,16 +318,18 @@ namespace OurFoodChain.Bot.Modules {
 
                     await Db.UpdateZoneAsync(zone);
 
-                    await ReplySuccessAsync($"The value for field {fieldName.ToTitle().ToBold()} was successfully updated.");
+                    await ReplySuccessAsync($"The value for field {existingField.GetName().ToBold()} was successfully updated.");
 
                 }
                 else {
 
-                    zone.Fields.Add(new ZoneField(fieldName, fieldValue));
+                    IZoneField field = new ZoneField(fieldName, fieldValue);
+
+                    zone.Fields.Add(field);
 
                     await Db.UpdateZoneAsync(zone);
 
-                    await ReplySuccessAsync($"Field {fieldName.ToTitle().ToBold()} was successfully added to {zone.GetFullName().ToBold()}.");
+                    await ReplySuccessAsync($"Field {field.GetName().ToBold()} was successfully added to {zone.GetFullName().ToBold()}.");
 
                 }
 
@@ -426,7 +428,8 @@ namespace OurFoodChain.Bot.Modules {
                     embedPages.Add(new Embed());
 
                     foreach (IZoneField field in zone.Fields)
-                        embedPages.Last().AddField(field.GetName(), field.GetValue(), true);
+                        if (!string.IsNullOrWhiteSpace(field.GetName()) && !string.IsNullOrWhiteSpace(field.GetValue()))
+                            embedPages.Last().AddField(field.GetName(), field.GetValue(), true);
 
                     embedPages.Last().Description = description;
 

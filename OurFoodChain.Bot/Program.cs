@@ -1,4 +1,5 @@
-﻿using OurFoodChain.Discord.Bots;
+﻿using OurFoodChain.Debug;
+using OurFoodChain.Discord.Bots;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,25 +19,44 @@ namespace OurFoodChain {
 
             if (!System.IO.File.Exists(configFilePath)) {
 
+                // If the user does not have a configuration file, create the file.
+
                 new Bot.OfcBotConfiguration().Save(configFilePath);
 
-                Console.WriteLine(string.Format("Configuration file \"{0}\" has been created. Fill out the configuration file, and then run this program again.",
-                    configFilePath));
-
             }
-            else {
 
-                Bot.OfcBotConfiguration configuration =
+            Console.WriteLine(new LogMessage(LogSeverity.Info, "Init", $"To configure your bot, edit the {configFilePath} file.").ToString());
+
+            Bot.OfcBotConfiguration configuration =
                     ConfigurationBase.Open<Bot.OfcBotConfiguration>(configFilePath);
 
-                Bot.OfcBot bot = new Bot.OfcBot(configuration);
+            if (string.IsNullOrWhiteSpace(configuration.Token)) {
 
-                await bot.StartAsync();
+                Console.WriteLine(new LogMessage(LogSeverity.Error, "Init", $"Token was missing from configuration file").ToString());
 
-                // Block this task until the program is closed.
-                await Task.Delay(-1);
+                Console.Write($"Paste your bot token and press Enter to continue: ");
+
+                string token = Console.ReadLine().Trim();
+
+                if(!string.IsNullOrWhiteSpace(token)) {
+
+                    configuration.Token = token;
+
+                    configuration.Save(configFilePath);
+
+                }
 
             }
+
+            if (string.IsNullOrWhiteSpace(configuration.Token))
+                Console.WriteLine(new LogMessage(LogSeverity.Error, "Init", $"Token is invalid").ToString());
+
+            Bot.OfcBot bot = new Bot.OfcBot(configuration);
+
+            await bot.StartAsync();
+
+            // Block this task until the program is closed.
+            await Task.Delay(-1);
 
         }
 

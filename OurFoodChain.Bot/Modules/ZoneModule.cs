@@ -536,6 +536,8 @@ namespace OurFoodChain.Bot.Modules {
                         else
                             args.Message.CurrentPage = null;
 
+                        await Task.CompletedTask;
+
                     });
 
                 }

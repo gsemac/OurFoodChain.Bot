@@ -611,9 +611,14 @@ namespace OurFoodChain.Data.Extensions {
             if (species.Pictures.Count() > 0 && !string.IsNullOrEmpty(species.Pictures.First().Url) && !pictures.Any(p => species.Pictures.First().Url.Equals(p.Url)))
                 pictures.Insert(0, species.Pictures.First());
 
-            pictures.ForEach(p => {
-                p.Caption = string.Format("Depiction of {0}", species.GetShortName());
-            });
+            foreach (IPicture picture in pictures) {
+
+                picture.Caption = string.Format("Depiction of {0}", species.GetShortName());
+
+                if (picture.Artist is null || string.IsNullOrWhiteSpace(picture.Artist.Name))
+                    picture.Artist = species.Creator;
+
+            }
 
             return pictures;
 

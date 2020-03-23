@@ -8,6 +8,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
+using OurFoodChain.Discord.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -347,7 +348,7 @@ namespace OurFoodChain.Bot {
                     Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
 
                     string title = string.Format("Pictures of {0} ({1} of {2})", galleryName, index, pictures.Count());
-                    string footer = string.Format("\"{0}\" by {1} — {2}", p.GetName(), p.Artist, p.Caption);
+                    string footer = string.Format("\"{0}\" by {1} — {2}", p.GetName(), (await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, p.Artist))?.ToCreator() ?? p.Artist, p.Caption);
 
                     embed.Title = title;
                     embed.ImageUrl = p.Url;

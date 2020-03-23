@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,10 @@ namespace OurFoodChain {
 
         // Public members
 
-        public static async Task<string> Save(SQLiteDatabase database, ISpecies species, AncestryTreeGenerationFlags flags) {
+        public static async Task<string> Save(SQLiteDatabase database, ISpecies species, AncestryTreeGenerationFlags flags, ITaxonFormatter formatter = null) {
+
+            if (formatter is null)
+                formatter = new BinomialNameTaxonFormatter();
 
             // Generate the ancestry tree.
 
@@ -37,7 +41,7 @@ namespace OurFoodChain {
 
                 root.PostOrderTraverse(node => {
 
-                    SizeF size = GraphicsUtils.MeasureString(node.Value.Species.GetShortName(), font);
+                    SizeF size = GraphicsUtils.MeasureString(formatter.GetString(node.Value.Species), font);
 
                     node.Value.Bounds.Width = size.Width + horizontal_padding;
                     node.Value.Bounds.Height = size.Height;
@@ -74,7 +78,7 @@ namespace OurFoodChain {
                     gfx.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
                     gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                    _drawSpeciesTreeNode(gfx, root, species, font);
+                    _drawSpeciesTreeNode(gfx, root, species, font, formatter);
 
                     // Save the result.
 
@@ -111,7 +115,7 @@ namespace OurFoodChain {
             public RectangleF Bounds;
         }
 
-        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<AncestryTreeRendererNodeData> node, ISpecies selectedSpecies, Font font) {
+        private static void _drawSpeciesTreeNode(Graphics gfx, TreeNode<AncestryTreeRendererNodeData> node, ISpecies selectedSpecies, Font font, ITaxonFormatter formatter) {
 
             // Cross-out the species if it's extinct.
 
@@ -125,7 +129,7 @@ namespace OurFoodChain {
             // Draw the name of the species.
 
             using (Brush brush = new SolidBrush(node.Value.Species.Id == selectedSpecies.Id ? Color.Yellow : Color.White))
-                gfx.DrawString(node.Value.Species.GetShortName(), font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
+                gfx.DrawString(formatter.GetString(node.Value.Species), font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
 
             // Draw child nodes.
 
@@ -142,7 +146,7 @@ namespace OurFoodChain {
 
                 }
 
-                _drawSpeciesTreeNode(gfx, child, selectedSpecies, font);
+                _drawSpeciesTreeNode(gfx, child, selectedSpecies, font, formatter);
 
             }
 

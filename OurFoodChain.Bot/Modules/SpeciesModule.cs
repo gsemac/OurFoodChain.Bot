@@ -769,7 +769,8 @@ namespace OurFoodChain.Bot.Modules {
                     Tree = tree,
                     DrawLines = false,
                     MaxLength = DiscordUtilities.MaxMessageLength - 6, // account for code block markup
-                    TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result
+                    TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result,
+                    TaxonFormatter = TaxonFormatter
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -790,7 +791,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.Full);
+                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.Full, formatter: TaxonFormatter);
 
                 await Context.Channel.SendFileAsync(image);
 
@@ -816,7 +817,8 @@ namespace OurFoodChain.Bot.Modules {
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = tree,
                     MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
-                    TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result
+                    TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result,
+                    TaxonFormatter = TaxonFormatter
                 };
 
                 await ReplyAsync(string.Format("```{0}```", renderer.ToString()));
@@ -837,7 +839,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.DescendantsOnly);
+                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.DescendantsOnly, formatter: TaxonFormatter);
 
                 await Context.Channel.SendFileAsync(image);
 
@@ -991,7 +993,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.IsValid()) {
 
                 Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed {
-                    Title = string.Format("Taxonomy of {0}", species.GetShortName()),
+                    Title = string.Format("Taxonomy of {0}", TaxonFormatter.GetString(species)),
                     ThumbnailUrl = species.GetPictureUrl()
                 };
 

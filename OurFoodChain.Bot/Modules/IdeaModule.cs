@@ -82,7 +82,7 @@ namespace OurFoodChain.Bot {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Ancestors) AND id NOT IN (SELECT ancestor_id FROM Ancestors) AND id NOT IN (SELECT species_id FROM Extinctions)"))
                 foreach (DataRow row in await Db.GetRowsAsync(cmd))
-                    ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", (await Db.CreateSpeciesFromDataRowAsync(row)).GetShortName()));
+                    ideas.Add(string.Format("Species **{0}** does not have any descendants. Why not derive one?", TaxonFormatter.GetString(await Db.CreateSpeciesFromDataRowAsync(row))));
 
             return ideas.ToArray();
 
@@ -103,7 +103,7 @@ namespace OurFoodChain.Bot {
 
                     ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row);
 
-                    ideas.Add($"There are no species that feed on {species.GetShortName().ToBold()}. Why not make one?");
+                    ideas.Add($"There are no species that feed on {TaxonFormatter.GetString(species).ToBold()}. Why not make one?");
 
                 }
 

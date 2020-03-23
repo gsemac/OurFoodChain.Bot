@@ -17,6 +17,7 @@ namespace OurFoodChain {
         public int MaxLength { get; set; } = int.MaxValue;
         public bool DrawLines { get; set; } = true;
         public Func<long, string> TimestampFormatter { get; set; }
+        public ITaxonFormatter TaxonFormatter { get; set; } = new BinomialNameTaxonFormatter();
 
         public AncestryTreeTextRenderer() {
         }
@@ -104,7 +105,7 @@ namespace OurFoodChain {
 
                 }
 
-                line += x.Value.Species.GetShortName();
+                line += TaxonFormatter.GetString(x.Value.Species);
 
                 lines.Add(line);
 

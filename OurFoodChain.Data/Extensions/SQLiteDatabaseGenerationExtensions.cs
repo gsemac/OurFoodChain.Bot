@@ -121,10 +121,17 @@ namespace OurFoodChain.Data.Extensions {
 
             IGeneration generation = new Generation {
                 Id = row.Field<long>("id"),
-                Number = int.Parse(Regex.Match(row.Field<string>("name"), @"\d+$").Value),
-                StartDate = DateUtilities.GetDateFromTimestamp(row.Field<string>("start_ts")),
-                EndDate = DateUtilities.GetDateFromTimestamp(row.Field<string>("end_ts"))
+                Number = int.Parse(Regex.Match(row.Field<string>("name"), @"\d+$").Value)
             };
+
+            long minTimestamp = DateUtilities.GetMinTimestamp();
+            long maxTimestamp = DateUtilities.GetMaxTimestamp();
+
+            long startTimestamp = DateUtilities.ParseTimestamp(row.Field<string>("start_ts"));
+            long endTimestamp = DateUtilities.ParseTimestamp(row.Field<string>("end_ts"));
+
+            generation.StartDate = DateUtilities.GetDateFromTimestamp(Math.Min(Math.Max(startTimestamp, minTimestamp), maxTimestamp));
+            generation.EndDate = DateUtilities.GetDateFromTimestamp(Math.Min(Math.Max(endTimestamp, minTimestamp), maxTimestamp));
 
             return generation;
 

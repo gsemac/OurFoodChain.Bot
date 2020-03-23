@@ -120,7 +120,7 @@ namespace OurFoodChain.Data.Extensions {
         }
         public static async Task UpdateZoneAsync(this SQLiteDatabase database, IZone zone) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type = $type, type_id = $type_id, description = $description, parent_id = $parent_id WHERE id = $id")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Zones SET name = $name, type = $type, type_id = $type_id, description = $description, parent_id = $parent_id, flags = $flags WHERE id = $id")) {
 
                 cmd.Parameters.AddWithValue("$id", zone.Id);
                 cmd.Parameters.AddWithValue("$parent_id", zone.ParentId);
@@ -128,6 +128,7 @@ namespace OurFoodChain.Data.Extensions {
                 cmd.Parameters.AddWithValue("$type", zone.Type?.Name.ToLowerInvariant() ?? string.Empty);
                 cmd.Parameters.AddWithValue("$type_id", zone.TypeId);
                 cmd.Parameters.AddWithValue("$description", zone.Description);
+                cmd.Parameters.AddWithValue("$flags", (long)zone.Flags);
 
                 await database.ExecuteNonQueryAsync(cmd);
 
@@ -220,10 +221,12 @@ namespace OurFoodChain.Data.Extensions {
 
             IZone zone = new Zone {
                 Id = row.Field<long>("id"),
-                ParentId = row.IsNull("parent_id") ? -1 : row.Field<long>("parent_id"),
                 Name = StringUtilities.ToTitleCase(row.Field<string>("name")),
                 Description = row.Field<string>("description")
             };
+
+            if (!row.IsNull("parent_id"))
+                zone.ParentId = row.Field<long>("parent_id");
 
             if (!row.IsNull("pics") && !string.IsNullOrEmpty(row.Field<string>("pics")))
                 zone.Pictures.Add(new Picture(row.Field<string>("pics")));

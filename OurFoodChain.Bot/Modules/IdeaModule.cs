@@ -31,9 +31,9 @@ namespace OurFoodChain.Bot {
             ideas.AddRange(await GetMissingRolesInZoneIdeasAsync());
 
             if (ideas.Count() > 0)
-                await BotUtils.ReplyAsync_Info(Context, string.Format("💡 {0}", ideas[new Random().Next(ideas.Count())]));
+                await ReplyInfoAsync(string.Format("💡 {0}", ideas[new Random().Next(ideas.Count())]));
             else
-                await BotUtils.ReplyAsync_Info(Context, "I don't have any good ideas right now.");
+                await ReplyInfoAsync("I don't have any good ideas right now.");
 
         }
 
@@ -45,7 +45,10 @@ namespace OurFoodChain.Bot {
 
             List<string> ideas = new List<string>();
 
-            foreach (IZone zone in await Db.GetZonesAsync()) {
+            IEnumerable<IZone> zones = (await Db.GetZonesAsync())
+                .Where(zone => !zone.Flags.HasFlag(ZoneFlags.Retired));
+
+            foreach (IZone zone in zones) {
 
                 if ((await Db.GetSpeciesAsync(zone, GetSpeciesOptions.Fast)).Count() <= 0)
                     ideas.Add($"{zone.GetFullName().ToBold()} does not contain any species yet. Why not make one?");
@@ -113,20 +116,30 @@ namespace OurFoodChain.Bot {
 
             List<string> ideas = new List<string>();
 
-            string query = @"SELECT Zones.id AS zone_id1, Zones.name AS zone_name, Roles.id AS role_id1, Roles.name AS role_name FROM Zones, Roles WHERE
+            string query = @"SELECT Zones.id AS zone_id1, Zones.name AS zone_name, Zones.flags AS zone_flags, Roles.id AS role_id1, Roles.name AS role_name FROM Zones, Roles WHERE
 	            NOT EXISTS(SELECT * FROM SpeciesRoles WHERE role_id = role_id1 AND species_id IN (SELECT species_id FROM SpeciesZones WHERE zone_id = zone_id1));";
 
-            using (SQLiteCommand cmd = new SQLiteCommand(query))
+            using (SQLiteCommand cmd = new SQLiteCommand(query)) {
+
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                    string zone_name = row.Field<string>("zone_name");
-                    string role_name = row.Field<string>("role_name");
+                    ZoneFlags zoneFlags = ZoneFlags.None;
 
-                    ideas.Add(string.Format("**{0}** does not have any **{1}s**. Why not fill this role?",
-                        ZoneUtilities.GetFullName(zone_name),
-                        StringUtilities.ToTitleCase(role_name)));
+                    if (!row.IsNull("zone_flags"))
+                        zoneFlags = (ZoneFlags)row.Field<long>("zone_flags");
+
+                    if (!zoneFlags.HasFlag(ZoneFlags.Retired)) {
+
+                        string zoneName = row.Field<string>("zone_name");
+                        string roleName = row.Field<string>("role_name");
+
+                        ideas.Add($"{ZoneUtilities.GetFullName(zoneName).ToBold()} does not have any {roleName.ToTitle().ToBold()}s. Why not fill this role?");
+
+                    }
 
                 }
+
+            }
 
             return ideas.ToArray();
 

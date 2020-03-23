@@ -128,7 +128,12 @@ namespace OurFoodChain.Bot.Modules {
         [Command("zone"), Alias("z", "zones")]
         public async Task GetZones() {
 
-            await ShowZonesAsync((await Db.GetZonesAsync()).OrderBy(zone => zone.GetFullName(), new NaturalStringComparer()), null);
+            IEnumerable<IZone> zones = await Db.GetZonesAsync();
+
+            IEnumerable<IZone> displayedZones = zones.Where(zone => !zone.Flags.HasFlag(ZoneFlags.Retired))
+                .OrderBy(zone => zone.GetFullName(), new NaturalStringComparer());
+
+            await ShowZonesAsync(displayedZones, null);
 
         }
 
@@ -366,6 +371,71 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
+        [Command("+ZoneFlag"), Alias("+ZoneFlags", "+ZFlag", "+ZFlags", "AddZoneFlag", "AddZFlag", "AddZoneFlags", "AddZFlags"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task AddZoneFlag(string zoneName, params string[] flagNames) {
+
+            IZone zone = await this.GetZoneOrReplyAsync(zoneName);
+
+            if (zone.IsValid()) {
+
+                ZoneFlags parsedFlags = ParseZoneFlags(flagNames);
+
+                IEnumerable<string> parsedFlagNames = Enum.GetValues(typeof(ZoneFlags)).Cast<ZoneFlags>()
+                    .Where(value => value != ZoneFlags.None)
+                    .Where(value => parsedFlags.HasFlag(value))
+                    .Select(flag => flag.ToString());
+
+                if (parsedFlags == ZoneFlags.None) {
+
+                    await ReplyErrorAsync("No valid flags were specified.");
+
+                }
+                else {
+
+                    zone.Flags |= parsedFlags;
+
+                    await Db.UpdateZoneAsync(zone);
+
+                    await ReplySuccessAsync($"Flag(s) {StringUtilities.ConjunctiveJoin(parsedFlagNames.Select(name => name.ToBold()))} successfully set for {zone.GetFullName().ToBold()}.");
+
+                }
+
+            }
+
+        }
+        [Command("-ZoneFlag"), Alias("-ZoneFlags", "-ZFlag", "-ZFlags"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
+        public async Task RemoveZoneFlag(string zoneName, params string[] flagNames) {
+
+            IZone zone = await this.GetZoneOrReplyAsync(zoneName);
+
+            if (zone.IsValid()) {
+
+                ZoneFlags parsedFlags = ParseZoneFlags(flagNames);
+
+                IEnumerable<string> parsedFlagNames = Enum.GetValues(typeof(ZoneFlags)).Cast<ZoneFlags>()
+                    .Where(value => value != ZoneFlags.None)
+                    .Where(value => parsedFlags.HasFlag(value))
+                    .Select(flag => flag.ToString());
+
+                if (parsedFlags == ZoneFlags.None) {
+
+                    await ReplyErrorAsync("No valid flags were specified.");
+
+                }
+                else {
+
+                    zone.Flags &= ~parsedFlags;
+
+                    await Db.UpdateZoneAsync(zone);
+
+                    await ReplySuccessAsync($"Flag(s) {StringUtilities.ConjunctiveJoin(parsedFlagNames.Select(name => name.ToBold()))} successfully unset for {zone.GetFullName().ToBold()}.");
+
+                }
+
+            }
+
+        }
+
         // Private members
 
         private async Task ShowZonesAsync(IEnumerable<IZone> zones, IZoneType type) {
@@ -548,6 +618,14 @@ namespace OurFoodChain.Bot.Modules {
                 await ReplyAsync(message);
 
             }
+
+        }
+
+        private ZoneFlags ParseZoneFlags(IEnumerable<string> flags) {
+
+            return Enum.GetNames(typeof(ZoneFlags))
+                .Where(name => flags.Any(flag => name.Equals(flag, StringComparison.OrdinalIgnoreCase)))
+                .Aggregate(ZoneFlags.None, (current, item) => current |= (ZoneFlags)Enum.Parse(typeof(ZoneFlags), item));
 
         }
 

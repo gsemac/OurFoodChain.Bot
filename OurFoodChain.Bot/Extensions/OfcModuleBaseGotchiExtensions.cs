@@ -1,4 +1,5 @@
 ﻿using Discord;
+using OurFoodChain.Common;
 using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Gotchis;
 using System;
@@ -12,6 +13,17 @@ namespace OurFoodChain.Extensions {
     public static class OfcModuleBaseGotchiExtensions {
 
         // Public members
+
+        public static async Task<Gotchi> GetGotchiOrReplyAsync(this OfcModuleBase moduleBase, ICreator creator) {
+
+            Gotchi gotchi = await moduleBase.Db.GetGotchiAsync(creator);
+
+            if (await moduleBase.ReplyValidateGotchiAsync(gotchi))
+                return gotchi;
+
+            return null;
+
+        }
 
         public static async Task<bool> ReplyValidateGotchiAsync(this OfcModuleBase moduleBase, Gotchi gotchi) {
 

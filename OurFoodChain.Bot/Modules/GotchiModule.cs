@@ -1000,6 +1000,23 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("dex")]
+        public async Task Dex() {
+
+            // Show the dex entry for the user's current gotchi.
+
+            Gotchi gotchi = await this.GetGotchiOrReplyAsync(Context.User.ToCreator());
+
+            if (gotchi.IsValid()) {
+
+                ISpecies species = await Db.GetSpeciesAsync(gotchi.SpeciesId);
+
+                if (species.IsValid())
+                    await ShowDexEntryAsync(species);
+
+            }
+
+        }
+        [Command("dex")]
         public async Task Dex(string speciesName) {
 
             await Dex(string.Empty, speciesName);
@@ -1010,65 +1027,7 @@ namespace OurFoodChain.Bot.Modules {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
-            if (species.IsValid()) {
-
-                Gotchi gotchi = new Gotchi() {
-                    SpeciesId = species.Id,
-                    Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.Default, 100)
-                };
-
-                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(Db, gotchi);
-                IEnumerable<GotchiMove> moves = await Global.GotchiContext.MoveRegistry.GetLearnSetAsync(Db, gotchi);
-                GotchiStats stats = await new GotchiStatsCalculator(Db, Global.GotchiContext).GetBaseStatsAsync(gotchi);
-
-                // Create the stats page.
-
-                string typesString = string.Format("**Type(s):** {0}", string.Join(", ", types.Select(t => t.Name)));
-
-                StringBuilder descriptionBuilder = new StringBuilder();
-                descriptionBuilder.AppendLine(string.IsNullOrEmpty(typesString) ? "None" : typesString);
-                descriptionBuilder.AppendLine();
-                descriptionBuilder.AppendLine(string.Format("*{0}*", StringUtilities.GetFirstSentence(species.Description)));
-                descriptionBuilder.AppendLine("\u200B");
-
-                Discord.Messaging.IEmbed statsPageBuilder = new Discord.Messaging.Embed {
-                    Title = string.Format("{0} (#{1}) — Overview", species.GetShortName(), species.Id),
-                    Description = descriptionBuilder.ToString(),
-                    ImageUrl = species.GetPictureUrl()
-                };
-
-                statsPageBuilder.AddField("❤ Base HP", stats.MaxHp, inline: true);
-                statsPageBuilder.AddField("💥 Base Attack", stats.Atk, inline: true);
-                statsPageBuilder.AddField("🛡 Base Defense", stats.Def, inline: true);
-                statsPageBuilder.AddField("💨 Base Speed", stats.Spd, inline: true);
-
-                // Create the learnset pages.
-
-                List<IEmbedField> moveFields = new List<IEmbedField>();
-
-                foreach (GotchiMove move in moves.OrderBy(m => m.Requires.MinimumLevelValue)) {
-
-                    IEmbedField field = new Discord.Messaging.EmbedField {
-                        Name = string.Format("{0}. **{1}** ({2} PP)", moveFields.Count + 1, move.Name, move.PP),
-                        Value = move.Description
-                    };
-
-                    moveFields.Add(field);
-
-                }
-
-                IPaginatedMessage message = new PaginatedMessage();
-
-                message.AddPage(statsPageBuilder);
-                message.AddFields(moveFields);
-
-                message.SetTitle(string.Format("{0} (#{1}) — Learnset", species.GetShortName(), species.Id));
-
-                message.AddPageNumbers();
-
-                await ReplyAsync(message);
-
-            }
+            await ShowDexEntryAsync(species);
 
         }
 
@@ -1247,6 +1206,71 @@ namespace OurFoodChain.Bot.Modules {
                     }
 
                 });
+
+                await ReplyAsync(message);
+
+            }
+
+        }
+
+        public async Task ShowDexEntryAsync(ISpecies species) {
+
+            if (species.IsValid()) {
+
+                Gotchi gotchi = new Gotchi() {
+                    SpeciesId = species.Id,
+                    Experience = GotchiExperienceCalculator.ExperienceToLevel(ExperienceGroup.Default, 100)
+                };
+
+                GotchiType[] types = await Global.GotchiContext.TypeRegistry.GetTypesAsync(Db, gotchi);
+                IEnumerable<GotchiMove> moves = await Global.GotchiContext.MoveRegistry.GetLearnSetAsync(Db, gotchi);
+                GotchiStats stats = await new GotchiStatsCalculator(Db, Global.GotchiContext).GetBaseStatsAsync(gotchi);
+
+                // Create the stats page.
+
+                string typesString = string.Format("**Type(s):** {0}", types.Any() ? string.Join(", ", types.Select(t => t.Name)) : "None");
+
+                StringBuilder descriptionBuilder = new StringBuilder();
+                descriptionBuilder.AppendLine(typesString);
+                descriptionBuilder.AppendLine();
+                descriptionBuilder.AppendLine(string.Format("*{0}*", StringUtilities.GetFirstSentence(species.Description)));
+                descriptionBuilder.AppendLine("\u200B");
+
+                Discord.Messaging.IEmbed statsPageBuilder = new Discord.Messaging.Embed {
+                    Title = string.Format("{0} (#{1}) — Overview", species.GetShortName(), species.Id),
+                    Description = descriptionBuilder.ToString(),
+                    ImageUrl = species.GetPictureUrl()
+                };
+
+                statsPageBuilder.AddField("❤ Base HP", stats.MaxHp, inline: true);
+                statsPageBuilder.AddField("💥 Base Attack", stats.Atk, inline: true);
+                statsPageBuilder.AddField("🛡 Base Defense", stats.Def, inline: true);
+                statsPageBuilder.AddField("💨 Base Speed", stats.Spd, inline: true);
+
+                // Create the learnset pages.
+
+                List<IEmbedField> moveFields = new List<IEmbedField>();
+
+                foreach (GotchiMove move in moves.OrderBy(m => m.Requires.MinimumLevelValue)) {
+
+                    IEmbedField field = new Discord.Messaging.EmbedField {
+                        Name = string.Format("{0}. **{1}** ({2} PP)", moveFields.Count + 1, move.Name, move.PP),
+                        Value = move.Description
+                    };
+
+                    moveFields.Add(field);
+
+                }
+
+                IPaginatedMessage message = new PaginatedMessage();
+
+                message.AddPage(statsPageBuilder);
+                message.AddFields(moveFields);
+
+                foreach (Discord.Messaging.IEmbed embed in message.Skip(1).Select(m => m.Embed))
+                    embed.Title = $"{species.GetShortName()} (#{species.Id}) — Learnset";
+
+                message.AddPageNumbers();
 
                 await ReplyAsync(message);
 

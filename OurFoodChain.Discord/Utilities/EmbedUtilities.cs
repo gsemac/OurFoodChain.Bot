@@ -198,7 +198,7 @@ namespace OurFoodChain.Discord.Utilities {
 
                 if (maxDescriptionLengthPerPage <= 0)
                     throw new Exception("The embed is too long to be paginated.");
-    
+
                 foreach (string pageDescription in new StringPaginator(description, maxDescriptionLengthPerPage)) {
 
                     Messaging.IEmbed page = new Messaging.Embed {
@@ -305,11 +305,14 @@ namespace OurFoodChain.Discord.Utilities {
             return pages;
 
         }
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, int itemsPerPage = DefaultItemsPerPage, int columnsPerPage = DefaultColumnsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, ITaxonFormatter formatter = null, int itemsPerPage = DefaultItemsPerPage, int columnsPerPage = DefaultColumnsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+
+            if (formatter is null)
+                formatter = new BinomialNameTaxonFormatter();
 
             IEnumerable<string> stringListItems = listItems.Select(species => {
 
-                string name = species.BinomialName.ToString(BinomialNameFormat.Abbreviated);
+                string name = formatter.GetString(species);
 
                 if (species.IsExtinct() && !options.HasFlag(EmbedPaginationOptions.NoStrikethrough))
                     name = string.Format("~~{0}~~", name);

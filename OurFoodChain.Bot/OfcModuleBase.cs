@@ -48,6 +48,24 @@ namespace OurFoodChain {
         public SearchContext SearchContext => new SearchContext(Context, Db);
         public OfcBotContext BotContext => new OfcBotContext(Context, Config, Db);
 
+        public ITaxonFormatter TaxonFormatter {
+            get {
+
+                BinomialNameTaxonFormatter formatter;
+
+                if (Config.PreferCommonNames)
+                    formatter = new CommonNameTaxonFormatter();
+                else
+                    formatter = new BinomialNameTaxonFormatter();
+
+                if (Config.PreferFullNames)
+                    formatter.Format = BinomialNameFormat.Full;
+
+                return formatter;
+
+            }
+        }
+
         public async Task<SQLiteDatabase> GetDatabaseAsync() {
 
             return await DatabaseService.GetDatabaseAsync(Context);

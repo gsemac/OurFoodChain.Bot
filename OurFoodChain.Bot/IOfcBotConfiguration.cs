@@ -30,6 +30,9 @@ namespace OurFoodChain.Bot {
         bool GenerationsEnabled { get; set; }
         bool AdvancedCommandsEnabled { get; set; }
 
+        bool PreferCommonNames { get; set; }
+        bool PreferFullNames { get; set; }
+
         PrivilegeLevel GetPrivilegeLevel(IUser user);
         bool HasPrivilegeLevel(IUser user, PrivilegeLevel privilegeLevel);
 

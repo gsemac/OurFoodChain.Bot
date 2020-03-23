@@ -95,7 +95,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get all species.
 
-            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(GetSpeciesOptions.Default | GetSpeciesOptions.IgnoreCommonNames)).OrderBy(s => s.GetShortName()));
+            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(GetSpeciesOptions.Default | GetSpeciesOptions.IgnoreCommonNames)).OrderBy(s => TaxonFormatter.GetString(s)));
 
             if (species.Count <= 0) {
 
@@ -106,7 +106,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Create embed pages.
 
-                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"All species ({species.Count()}):", species, options: EmbedPaginationOptions.AddPageNumbers);
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"All species ({species.Count()}):", species, formatter: TaxonFormatter, options: EmbedPaginationOptions.AddPageNumbers);
                 IPaginatedMessage message = new PaginatedMessage(pages);
 
                 await ReplyAsync(message);
@@ -125,11 +125,11 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Get all species under that taxon.
 
-                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon)).OrderBy(s => s.GetShortName()));
+                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon)).OrderBy(s => TaxonFormatter.GetString(s)));
 
                 // Create embed pages.
 
-                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Species in this {taxon.GetRank().GetName()} ({species.Count()}):", species, options: EmbedPaginationOptions.AddPageNumbers);
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Species in this {taxon.GetRank().GetName()} ({species.Count()}):", species, formatter: TaxonFormatter, options: EmbedPaginationOptions.AddPageNumbers);
 
                 StringBuilder descriptionBuilder = new StringBuilder();
 
@@ -577,7 +577,7 @@ namespace OurFoodChain.Bot.Modules {
                         }
 
                         foreach (Discord.Messaging.IEmbed page in message.Select(m => m.Embed))
-                            page.Footer += $" — {result.TotalResults()} results in {DateUtilities.GetTimeSpanString(DateTimeOffset.UtcNow  - result.Date)}";
+                            page.Footer += $" — {result.TotalResults()} results in {DateUtilities.GetTimeSpanString(DateTimeOffset.UtcNow - result.Date)}";
 
                         await ReplyAsync(message);
 

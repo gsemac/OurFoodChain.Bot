@@ -32,6 +32,9 @@ namespace OurFoodChain.Bot {
         public bool GenerationsEnabled { get; set; } = false;
         public bool AdvancedCommandsEnabled { get; set; } = false;
 
+        public bool PreferCommonNames { get; set; } = false;
+        public bool PreferFullNames { get; set; } = false;
+
         public PrivilegeLevel GetPrivilegeLevel(IUser user) {
 
             // If there are no privileges set up in the configuration file, grant all users full privileges.

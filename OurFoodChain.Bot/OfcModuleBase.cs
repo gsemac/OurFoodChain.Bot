@@ -164,18 +164,16 @@ namespace OurFoodChain {
         }
         public async Task ReplyMatchingSpeciesAsync(IEnumerable<ISpecies> matchingSpecies) {
 
-            Discord.Messaging.Embed embed = new Discord.Messaging.Embed();
+            IPaginatedMessage message = new PaginatedMessage();
 
             List<string> lines = new List<string>();
-
-            embed.Title = string.Format("Matching species ({0})", matchingSpecies.Count());
 
             foreach (ISpecies species in matchingSpecies.OrderBy(species => species.GetFullName()))
                 lines.Add(species.GetFullName());
 
-            embed.Description = (string.Join(Environment.NewLine, lines));
+            message.AddLines($"Matching species ({matchingSpecies.Count()})", lines, options: EmbedPaginationOptions.AddPageNumbers);
 
-            await ReplyAsync(embed);
+            await ReplyAsync(message);
 
         }
         public async Task<ISpecies> ReplyValidateSpeciesAsync(IEnumerable<ISpecies> matchingSpecies) {

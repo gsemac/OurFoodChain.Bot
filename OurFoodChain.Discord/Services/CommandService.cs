@@ -6,6 +6,7 @@ using OurFoodChain.Common.Utilities;
 using OurFoodChain.Debug;
 using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Commands;
+using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
@@ -145,10 +146,10 @@ namespace OurFoodChain.Discord.Services {
 
                 if (!string.IsNullOrEmpty(commandName)) {
 
-                    string suggestedCommandName = StringUtilities.GetBestMatch(commandName, GetCommandNames());
+                    string suggestedCommandName = StringUtilities.GetBestMatch(commandName, GetCommandNames().Where(name => helpService.IsCommandAvailableAsync(context, name).Result));
                     ICommandHelpInfo commandHelpInfo = await helpService.GetCommandHelpInfoAsync(suggestedCommandName);
 
-                    await DiscordUtilities.ReplyErrorAsync(context.Channel, string.Format($"Unknown command. Did you mean **{commandHelpInfo.Name}**?"));
+                    await DiscordUtilities.ReplyErrorAsync(context.Channel, string.Format($"Unknown command. Did you mean {commandHelpInfo.Name.ToBold()}?"));
 
                 }
                 else

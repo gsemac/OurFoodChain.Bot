@@ -22,11 +22,11 @@ namespace OurFoodChain.Discord.Messaging {
         }
         public int CurrentIndex { get; private set; } = 0;
         public int MinimumIndex {
-            get => minIndex;
+            get => minIndex ?? 0;
             set => minIndex = value;
         }
         public int MaximumIndex {
-            get => maxIndex == 0 ? pages.Count() - 1 : maxIndex;
+            get => maxIndex ?? pages.Count() - 1;
             set => maxIndex = value;
         }
 
@@ -208,8 +208,8 @@ namespace OurFoodChain.Discord.Messaging {
         private readonly List<IMessage> pages = new List<IMessage>();
         private readonly Dictionary<string, Func<IPaginatedMessageReactionArgs, Task>> callbacks = new Dictionary<string, Func<IPaginatedMessageReactionArgs, Task>>();
         private IMessage setCurrentPage = null; // can be set by callbacks
-        private int minIndex = 0;
-        private int maxIndex = 0;
+        private int? minIndex;
+        private int? maxIndex;
 
         private string GetEmoji(PaginatedMessageReactionType reactionType) {
 

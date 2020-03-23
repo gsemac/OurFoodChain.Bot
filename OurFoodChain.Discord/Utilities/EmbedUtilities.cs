@@ -15,10 +15,12 @@ using System.Text;
 
 namespace OurFoodChain.Discord.Utilities {
 
+    [Flags]
     public enum EmbedPaginationOptions {
         None = 0,
         AddPageNumbers = 1,
-        NoStrikethrough = 2
+        NoStrikethrough = 2,
+        CopyFields = 4
     }
 
     public static class EmbedUtilities {
@@ -196,7 +198,7 @@ namespace OurFoodChain.Discord.Utilities {
 
                 if (maxDescriptionLengthPerPage <= 0)
                     throw new Exception("The embed is too long to be paginated.");
-
+    
                 foreach (string pageDescription in new StringPaginator(description, maxDescriptionLengthPerPage)) {
 
                     Messaging.IEmbed page = new Messaging.Embed {
@@ -208,8 +210,12 @@ namespace OurFoodChain.Discord.Utilities {
                         Url = embed.Url
                     };
 
-                    foreach (IEmbedField field in embed.Fields)
-                        page.AddField(field);
+                    if (pages.Count() < 1 || options.HasFlag(EmbedPaginationOptions.CopyFields)) {
+
+                        foreach (IEmbedField field in embed.Fields)
+                            page.AddField(field);
+
+                    }
 
                     pages.Add(page);
 

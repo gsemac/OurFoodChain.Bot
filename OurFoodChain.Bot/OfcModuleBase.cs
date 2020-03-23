@@ -280,7 +280,8 @@ namespace OurFoodChain {
 
             // Add a field for the species' zones.
 
-            IEnumerable<ISpeciesZoneInfo> speciesZoneList = await Db.GetZonesAsync(species);
+            IEnumerable<ISpeciesZoneInfo> speciesZoneList = (await Db.GetZonesAsync(species))
+                .Where(info => !info.Zone.Flags.HasFlag(ZoneFlags.Retired));
 
             string zonesFieldValue = speciesZoneList.ToString(ZoneListToStringOptions.Default, DiscordUtilities.MaxFieldLength);
 
@@ -320,7 +321,7 @@ namespace OurFoodChain {
 
             // Create embed pages.
 
-            IEnumerable<Discord.Messaging.IEmbed> embedPages = EmbedUtilities.CreateEmbedPages(embed, EmbedPaginationOptions.AddPageNumbers);
+            IEnumerable<Discord.Messaging.IEmbed> embedPages = EmbedUtilities.CreateEmbedPages(embed, EmbedPaginationOptions.AddPageNumbers | EmbedPaginationOptions.CopyFields);
             IPaginatedMessage paginatedMessage = new PaginatedMessage(embedPages);
 
             if (speciesZoneList.Count() > 0)

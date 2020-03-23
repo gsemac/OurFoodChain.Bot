@@ -20,7 +20,7 @@ namespace OurFoodChain.Data.Queries {
 
             await result.FilterByAsync(async (species) => {
 
-                return species is null || !(await context.Database.GetAncestorIdsAsync(species.Id)).Any(id => id == species.Id);
+                return ancestorSpecies is null || !(await context.Database.GetAncestorIdsAsync(species.Id)).Any(id => id == ancestorSpecies.Id);
 
             }, Invert);
 

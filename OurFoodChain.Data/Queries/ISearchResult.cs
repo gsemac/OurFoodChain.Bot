@@ -12,6 +12,10 @@ namespace OurFoodChain.Data.Queries {
         Leaderboard
     }
 
+    public delegate Task<IEnumerable<string>> SpeciesGroupFunction(ISpecies species);
+    public delegate Task<bool> SpeciesFilterFunction(ISpecies species);
+    public delegate Task<string> SpeciesFormatFunction(ISpecies species);
+
     public interface ISearchResult :
         IEnumerable<ISearchResultGroup> {
 
@@ -22,17 +26,19 @@ namespace OurFoodChain.Data.Queries {
         bool HasDefaultOrdering { get; }
         bool HasDefaultGrouping { get; }
 
+        DateTimeOffset Date { get; set; }
+
         ISearchResultGroup Add(string groupName, ISpecies species);
         ISearchResultGroup Add(string groupName, IEnumerable<ISpecies> species);
-        int Count();
+        int TotalResults();
 
         bool ContainsGroup(string groupName);
 
-        Task GroupByAsync(Func<ISpecies, Task<IEnumerable<string>>> groupingFunction);
-        Task FilterByAsync(Func<ISpecies, Task<bool>> filterFunction, bool invertCondition = false);
+        Task GroupByAsync(SpeciesGroupFunction groupingFunction);
+        Task FilterByAsync(SpeciesFilterFunction filterFunction, bool invertCondition = false);
         Task OrderByAsync(IComparer<ISearchResultGroup> groupComparer);
         Task OrderByAsync(IComparer<ISpecies> resultComparer);
-        Task FormatByAsync(Func<ISpecies, Task<string>> formatterFunction);
+        Task FormatByAsync(SpeciesFormatFunction formatterFunction);
 
         Task<IEnumerable<ISpecies>> GetResultsAsync();
         Task<IEnumerable<string>> GetStringResultsAsync();

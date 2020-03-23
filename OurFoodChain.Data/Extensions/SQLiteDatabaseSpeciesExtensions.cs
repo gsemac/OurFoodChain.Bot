@@ -165,7 +165,7 @@ namespace OurFoodChain.Data.Extensions {
             }
 
         }
-        public static async Task<ISpecies> GetSpeciesAsync(this SQLiteDatabase database, long? speciesId, GetSpeciesOptions options = GetSpeciesOptions.None) {
+        public static async Task<ISpecies> GetSpeciesAsync(this SQLiteDatabase database, long? speciesId, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             if (!speciesId.HasValue)
                 return null;
@@ -176,7 +176,7 @@ namespace OurFoodChain.Data.Extensions {
 
                 DataRow row = await database.GetRowAsync(cmd);
 
-                return row is null ? null : await database.CreateSpeciesFromDataRowAsync(row);
+                return row is null ? null : await database.CreateSpeciesFromDataRowAsync(row, options);
 
             }
 
@@ -411,7 +411,7 @@ namespace OurFoodChain.Data.Extensions {
             return await database.GetDescendantIdsAsync(speciesId, seenIds, options);
 
         }
-        public static async Task<ISpecies> GetAncestorAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task<ISpecies> GetAncestorAsync(this SQLiteDatabase database, ISpecies species, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT ancestor_id FROM Ancestors WHERE species_id = $species_id")) {
 
@@ -419,7 +419,7 @@ namespace OurFoodChain.Data.Extensions {
 
                 DataRow row = await database.GetRowAsync(cmd);
 
-                return row is null ? null : await database.GetSpeciesAsync(row.Field<long>("ancestor_id"));
+                return row is null ? null : await database.GetSpeciesAsync(row.Field<long>("ancestor_id"), options);
 
             }
 
@@ -842,6 +842,8 @@ namespace OurFoodChain.Data.Extensions {
 
         public static async Task<ISearchResult> GetSearchResultsAsync(this SQLiteDatabase database, ISearchContext context, ISearchQuery query) {
 
+            DateTimeOffset initialTimestamp = DateUtilities.GetCurrentDateUtc();
+
             List<ISpecies> results = new List<ISpecies>();
 
             using (SQLiteCommand cmd = GetSqlCommandFromSearchQuery(query)) {
@@ -854,6 +856,8 @@ namespace OurFoodChain.Data.Extensions {
             // Apply any post-match modifiers (e.g. groupings), and return the result.
 
             ISearchResult result = await ApplyPostMatchModifiersAsync(results, context, query);
+
+            result.Date = initialTimestamp;
 
             // Return the result.
 

@@ -512,7 +512,7 @@ namespace OurFoodChain.Bot.Modules {
             ISearchQuery query = new SearchQuery(queryString);
             ISearchResult result = await Db.GetSearchResultsAsync(SearchContext, query);
 
-            if (result.Count() <= 0) {
+            if (result.TotalResults() <= 0) {
 
                 // There are no results to display.
 
@@ -530,7 +530,7 @@ namespace OurFoodChain.Bot.Modules {
                     foreach (ISpecies species in await result.GetResultsAsync())
                         pictures.AddRange(species.Pictures);
 
-                    await ReplyGalleryAsync($"search results ({result.Count()})", pictures);
+                    await ReplyGalleryAsync($"search results ({result.TotalResults()})", pictures);
 
                 }
                 else if (result.DisplayFormat == SearchResultDisplayFormat.Leaderboard) {
@@ -547,7 +547,7 @@ namespace OurFoodChain.Bot.Modules {
                 }
                 else {
 
-                    if (result.Count() == 1) {
+                    if (result.TotalResults() == 1) {
 
                         // If there's only one result, just show that species.
 
@@ -564,17 +564,20 @@ namespace OurFoodChain.Bot.Modules {
 
                             // If there's only one group, just list the species without creating separate fields.
 
-                            message = new Discord.Messaging.PaginatedMessage(EmbedUtilities.CreateEmbedPages(
-                                $"Search results ({result.Count()})",
+                            message = new PaginatedMessage(EmbedUtilities.CreateEmbedPages(
+                                $"Search results ({result.TotalResults()})",
                                 result.DefaultGroup.GetStringResults(),
                                 options: EmbedPaginationOptions.AddPageNumbers));
 
                         }
                         else {
 
-                            message = new Discord.Messaging.PaginatedMessage(EmbedUtilities.CreateEmbedPages(result));
+                            message = new PaginatedMessage(EmbedUtilities.CreateEmbedPages(result));
 
                         }
+
+                        foreach (Discord.Messaging.IEmbed page in message.Select(m => m.Embed))
+                            page.Footer += $" — {result.TotalResults()} results in {DateUtilities.GetTimeSpanString(DateTimeOffset.UtcNow  - result.Date)}";
 
                         await ReplyAsync(message);
 

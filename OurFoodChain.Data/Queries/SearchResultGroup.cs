@@ -3,6 +3,7 @@ using OurFoodChain.Common.Taxa;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,12 +26,12 @@ namespace OurFoodChain.Data.Queries {
 
         public async Task SortByAsync(IComparer<ISpecies> resultComparer) {
 
-            (Items as List<ISpecies>).Sort(resultComparer);
+            speciesComparers.Add(resultComparer);
 
             await Task.CompletedTask;
 
         }
-        public async Task FormatByAsync(Func<ISpecies, Task<string>> formatterFunction) {
+        public async Task FormatByAsync(SpeciesFormatFunction formatterFunction) {
 
             this.formatter = formatterFunction;
 
@@ -40,7 +41,15 @@ namespace OurFoodChain.Data.Queries {
 
         public IEnumerable<ISpecies> GetResults() {
 
-            return Items;
+            IComparer<ISpecies> firstComparer = speciesComparers
+                .FirstOrDefault() ?? Comparer<ISpecies>.Create((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+
+            IOrderedEnumerable<ISpecies> results = Items.OrderBy(species => species, firstComparer);
+
+            foreach (IComparer<ISpecies> comparer in speciesComparers.Skip(1))
+                results.ThenBy(species => species, comparer);
+
+            return results;
 
         }
         public IEnumerable<string> GetStringResults() {
@@ -58,7 +67,7 @@ namespace OurFoodChain.Data.Queries {
 
             List<string> items = new List<string>();
 
-            foreach (ISpecies species in this)
+            foreach (ISpecies species in await GetResultsAsync())
                 items.Add(await ResultToString(species));
 
             return items;
@@ -78,7 +87,8 @@ namespace OurFoodChain.Data.Queries {
 
         // Private members
 
-        private Func<ISpecies, Task<string>> formatter = null;
+        private SpeciesFormatFunction formatter = null;
+        private List<IComparer<ISpecies>> speciesComparers = new List<IComparer<ISpecies>>();
 
         private async Task<string> ResultToString(ISpecies species) {
 

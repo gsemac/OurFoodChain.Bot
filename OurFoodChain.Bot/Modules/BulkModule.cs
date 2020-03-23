@@ -24,7 +24,7 @@ namespace OurFoodChain.Bot.Modules {
             Taxa.IBulkOperation bulkOperation = new Taxa.BulkOperation(operationString);
             ISearchResult queryResult = await Db.GetSearchResultsAsync(SearchContext, bulkOperation.Query);
 
-            if (queryResult.Count() <= 0) {
+            if (queryResult.TotalResults() <= 0) {
 
                 await ReplyInfoAsync("No species matching this query could be found.");
 
@@ -47,7 +47,7 @@ namespace OurFoodChain.Bot.Modules {
 
                             if (await BotUtils.ReplyValidateZoneAsync(Context, zone, zoneName)) {
 
-                                IPaginatedMessage message = new PaginatedMessage(string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.Count(), zone.GetFullName())) {
+                                IPaginatedMessage message = new PaginatedMessage(string.Format("**{0}** species will be added to **{1}**. Is this OK?", queryResult.TotalResults(), zone.GetFullName())) {
                                     Restricted = true
                                 };
 

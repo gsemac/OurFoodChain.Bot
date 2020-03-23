@@ -27,7 +27,7 @@ namespace OurFoodChain.Data.Queries {
                     break;
 
                 case HasType.Ancestor:
-                    await result.FilterByAsync(async (species) => await context.Database.GetAncestorAsync(species) is null, Invert);
+                    await result.FilterByAsync(async (species) => await context.Database.GetAncestorAsync(species, GetSpeciesOptions.Fast) is null, Invert);
                     break;
 
                 case HasType.Descendant:

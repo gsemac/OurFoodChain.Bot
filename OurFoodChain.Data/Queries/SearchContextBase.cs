@@ -86,6 +86,7 @@ namespace OurFoodChain.Data.Queries {
             RegisterSearchModifier<LimitSearchModifier>();
             RegisterSearchModifier<ArtistSearchModifier>();
             RegisterSearchModifier<GenerationSearchModifier>();
+            RegisterSearchModifier<RecentSearchModifier>();
 
         }
 

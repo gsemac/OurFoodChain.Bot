@@ -687,13 +687,14 @@ namespace OurFoodChain.Bot.Modules {
         [Command("extinct")]
         public async Task Extinct() {
 
-            IEnumerable<ISpecies> species = await Db.GetExtinctSpeciesAsync();
+            IEnumerable<ISpecies> species = (await Db.GetExtinctSpeciesAsync())
+                  .OrderBy(s => TaxonFormatter.GetString(s, false));
 
             if (species.Count() > 0) {
 
-                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Extinct species ({species.Count()})", species, options: EmbedPaginationOptions.NoStrikethrough | EmbedPaginationOptions.AddPageNumbers);
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Extinct species ({species.Count()})", species, formatter: TaxonFormatter, options: EmbedPaginationOptions.NoStrikethrough | EmbedPaginationOptions.AddPageNumbers);
 
-                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+                await ReplyAsync(new PaginatedMessage(pages));
 
             }
             else {
@@ -706,13 +707,14 @@ namespace OurFoodChain.Bot.Modules {
         [Command("extant")]
         public async Task Extant() {
 
-            IEnumerable<ISpecies> species = await Db.GetExtantSpeciesAsync();
+            IEnumerable<ISpecies> species = (await Db.GetExtantSpeciesAsync())
+                .OrderBy(s => TaxonFormatter.GetString(s, false));
 
             if (species.Count() > 0) {
 
-                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Extant species ({species.Count()})", species, options: EmbedPaginationOptions.AddPageNumbers);
+                IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages($"Extant species ({species.Count()})", species, formatter: TaxonFormatter, options: EmbedPaginationOptions.AddPageNumbers);
 
-                await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+                await ReplyAsync(new PaginatedMessage(pages));
 
             }
             else {

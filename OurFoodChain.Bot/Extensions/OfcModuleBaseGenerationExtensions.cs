@@ -23,16 +23,16 @@ namespace OurFoodChain.Extensions {
 
         public static async Task<IPaginatedMessage> BuildRecentEventsMessageAsync(this OfcModuleBase moduleBase, DateTimeOffset start, DateTimeOffset end) {
 
-            IEnumerable<ISpecies> newSpecies = (await moduleBase.Db.GetSpeciesAsync(start, end)).OrderBy(species => species.GetShortName());
-            IEnumerable<ISpecies> extinctSpecies = (await moduleBase.Db.GetExtinctSpeciesAsync(start, end)).OrderBy(species => species.GetShortName());
+            IEnumerable<ISpecies> newSpecies = (await moduleBase.Db.GetSpeciesAsync(start, end)).OrderBy(species => moduleBase.TaxonFormatter.GetString(species, false));
+            IEnumerable<ISpecies> extinctSpecies = (await moduleBase.Db.GetExtinctSpeciesAsync(start, end)).OrderBy(species => moduleBase.TaxonFormatter.GetString(species, false));
 
             List<IEmbed> pages = new List<IEmbed>();
 
             if (newSpecies.Count() > 0)
-                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"New species ({newSpecies.Count()})", newSpecies.Select(species => species.GetFullName())));
+                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"New species ({newSpecies.Count()})", newSpecies.Select(species => moduleBase.TaxonFormatter.GetString(species))));
 
             if (newSpecies.Count() > 0)
-                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"Extinctions ({extinctSpecies.Count()})", extinctSpecies.Select(species => species.GetFullName())));
+                EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"Extinctions ({extinctSpecies.Count()})", extinctSpecies.Select(species => moduleBase.TaxonFormatter.GetString(species))));
 
             EmbedUtilities.AddPageNumbers(pages);
 

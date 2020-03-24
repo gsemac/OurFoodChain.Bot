@@ -233,7 +233,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     EmbedBuilder stats_page = new EmbedBuilder();
 
-                    stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, sp.GetShortName(), gotchi.Age));
+                    stats_page.WithTitle(string.Format("{0}'s {2}, **Level {1}** (Age {3})", Context.User.Username, stats.Level, TaxonFormatter.GetString(sp, false), gotchi.Age));
                     stats_page.WithThumbnailUrl(sp.GetPictureUrl());
                     stats_page.WithFooter(string.Format("{0} experience points until next level", stats.ExperienceToNextLevel));
 
@@ -1237,7 +1237,7 @@ namespace OurFoodChain.Bot.Modules {
                 descriptionBuilder.AppendLine("\u200B");
 
                 Discord.Messaging.IEmbed statsPageBuilder = new Discord.Messaging.Embed {
-                    Title = string.Format("{0} (#{1}) — Overview", species.GetShortName(), species.Id),
+                    Title = string.Format("{0} (#{1}) — Overview", TaxonFormatter.GetString(species, false), species.Id),
                     Description = descriptionBuilder.ToString(),
                     ImageUrl = species.GetPictureUrl()
                 };

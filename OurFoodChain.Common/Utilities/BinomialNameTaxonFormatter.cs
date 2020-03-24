@@ -9,17 +9,12 @@ namespace OurFoodChain.Common.Utilities {
     public class BinomialNameTaxonFormatter :
         TaxonFormatterBase {
 
-        public BinomialNameFormat Format { get; set; } = BinomialNameFormat.Abbreviated;
+        public BinomialNameFormat NameFormat { get; set; } = BinomialNameFormat.Abbreviated;
 
-        public override string GetString(ISpecies species) {
-
-            return species.BinomialName.ToString(Format);
-
-        }
         public override string GetString(ITaxon taxon) {
 
             if (taxon is ISpecies species)
-                return species.BinomialName.ToString(Format);
+                return species.BinomialName.ToString(NameFormat);
 
             return taxon.GetName();
 

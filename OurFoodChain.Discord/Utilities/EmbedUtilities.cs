@@ -316,10 +316,7 @@ namespace OurFoodChain.Discord.Utilities {
 
             IEnumerable<string> stringListItems = listItems.Select(species => {
 
-                string name = formatter.GetString(species);
-
-                if (species.IsExtinct() && !options.HasFlag(EmbedPaginationOptions.NoStrikethrough))
-                    name = string.Format("~~{0}~~", name);
+                string name = formatter.GetString(species, species.IsExtinct() && !options.HasFlag(EmbedPaginationOptions.NoStrikethrough));
 
                 return name;
 

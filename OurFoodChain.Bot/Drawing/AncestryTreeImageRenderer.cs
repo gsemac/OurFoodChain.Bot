@@ -3,6 +3,7 @@ using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -41,7 +42,7 @@ namespace OurFoodChain {
 
                 root.PostOrderTraverse(node => {
 
-                    SizeF size = GraphicsUtils.MeasureString(formatter.GetString(node.Value.Species), font);
+                    SizeF size = GraphicsUtils.MeasureString(DiscordUtilities.StripMarkup(formatter.GetString(node.Value.Species)), font);
 
                     node.Value.Bounds.Width = size.Width + horizontal_padding;
                     node.Value.Bounds.Height = size.Height;
@@ -119,7 +120,9 @@ namespace OurFoodChain {
 
             // Cross-out the species if it's extinct.
 
-            if (node.Value.Species.IsExtinct())
+            string speciesName = formatter.GetString(node.Value.Species);
+
+            if (node.Value.Species.IsExtinct() && DiscordUtilities.GetMarkupProperties(speciesName).HasFlag(MarkupProperties.Strikethrough))
                 using (Brush brush = new SolidBrush(Color.White))
                 using (Pen pen = new Pen(brush, 1.0f))
                     gfx.DrawLine(pen,
@@ -129,7 +132,7 @@ namespace OurFoodChain {
             // Draw the name of the species.
 
             using (Brush brush = new SolidBrush(node.Value.Species.Id == selectedSpecies.Id ? Color.Yellow : Color.White))
-                gfx.DrawString(formatter.GetString(node.Value.Species), font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
+                gfx.DrawString(DiscordUtilities.StripMarkup(speciesName), font, brush, new PointF(node.Value.Bounds.X, node.Value.Bounds.Y));
 
             // Draw child nodes.
 

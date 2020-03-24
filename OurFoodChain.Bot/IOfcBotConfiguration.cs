@@ -1,5 +1,7 @@
 ﻿using Discord;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using OurFoodChain.Common.Utilities;
 using OurFoodChain.Discord.Bots;
 using System;
 using System.Collections.Generic;
@@ -32,6 +34,8 @@ namespace OurFoodChain.Bot {
 
         bool PreferCommonNames { get; set; }
         bool PreferFullNames { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        ExtinctNameFormat ExtinctNameFormat { get; set; }
 
         PrivilegeLevel GetPrivilegeLevel(IUser user);
         bool HasPrivilegeLevel(IUser user, PrivilegeLevel privilegeLevel);

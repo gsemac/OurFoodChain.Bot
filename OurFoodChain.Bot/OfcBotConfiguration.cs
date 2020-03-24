@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Newtonsoft.Json;
+using OurFoodChain.Common.Utilities;
 using OurFoodChain.Discord.Bots;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ namespace OurFoodChain.Bot {
 
         public bool PreferCommonNames { get; set; } = false;
         public bool PreferFullNames { get; set; } = false;
+        public ExtinctNameFormat ExtinctNameFormat { get; set; } = ExtinctNameFormat.Default;
 
         public PrivilegeLevel GetPrivilegeLevel(IUser user) {
 

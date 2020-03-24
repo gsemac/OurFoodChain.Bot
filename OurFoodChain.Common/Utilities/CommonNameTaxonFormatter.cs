@@ -9,19 +9,16 @@ namespace OurFoodChain.Common.Utilities {
     public class CommonNameTaxonFormatter :
         BinomialNameTaxonFormatter {
 
-        public override string GetString(ISpecies species) {
+        // Public members
 
-            return GetString((ITaxon)species);
-
-        }
         public override string GetString(ITaxon taxon) {
 
-            string result = taxon.GetCommonName();
+            string name = taxon.GetCommonName();
 
-            if (string.IsNullOrEmpty(result))
+            if (string.IsNullOrEmpty(name))
                 return base.GetString(taxon);
 
-            return result;
+            return name;
 
         }
 

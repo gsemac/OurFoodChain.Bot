@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,7 +106,7 @@ namespace OurFoodChain {
 
                 }
 
-                line += TaxonFormatter.GetString(x.Value.Species);
+                line += DiscordUtilities.StripMarkup(TaxonFormatter.GetString(x.Value.Species, false));
 
                 lines.Add(line);
 

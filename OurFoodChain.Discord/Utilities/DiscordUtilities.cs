@@ -15,9 +15,16 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Utilities {
 
+    [Flags]
     public enum FileUploadOptions {
         None = 0,
         DeleteFileAfterUpload = 1
+    }
+
+    [Flags]
+    public enum MarkupProperties {
+        None = 0,
+        Strikethrough = 1
     }
 
     public static class DiscordUtilities {
@@ -118,6 +125,24 @@ namespace OurFoodChain.Discord.Utilities {
         public static bool IsDiscordImageUrl(string imageUrl) {
 
             return Regex.IsMatch(imageUrl, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase);
+
+        }
+
+        public static string StripMarkup(string input) {
+
+            input = input.Trim('~', '_', '*');
+
+            return input;
+
+        }
+        public static MarkupProperties GetMarkupProperties(string input) {
+
+            MarkupProperties properties = MarkupProperties.None;
+
+            if (Regex.IsMatch(input, "~~.+?~~", RegexOptions.Singleline))
+                properties |= MarkupProperties.Strikethrough;
+
+            return properties;
 
         }
 

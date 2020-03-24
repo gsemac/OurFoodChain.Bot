@@ -59,7 +59,9 @@ namespace OurFoodChain {
                     formatter = new BinomialNameTaxonFormatter();
 
                 if (Config.PreferFullNames)
-                    formatter.Format = BinomialNameFormat.Full;
+                    formatter.NameFormat = BinomialNameFormat.Full;
+
+                formatter.ExtinctNameFormat = Config.ExtinctNameFormat;
 
                 return formatter;
 

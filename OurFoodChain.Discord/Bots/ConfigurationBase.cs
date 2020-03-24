@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,8 +35,18 @@ namespace OurFoodChain.Discord.Bots {
 
             PropertyInfo property = GetPropertyByJsonPropertyAttribute(name);
 
-            if (property != null)
-                property.SetValue(this, Convert.ChangeType(value, property.PropertyType), null);
+            if (property != null) {
+
+                object convertedValue;
+
+                if (property.PropertyType.IsEnum)
+                    convertedValue = Enum.Parse(property.PropertyType, value, true);
+                else
+                    convertedValue = Convert.ChangeType(value, property.PropertyType);
+
+                property.SetValue(this, convertedValue, null);
+
+            }
             else
                 return false;
 

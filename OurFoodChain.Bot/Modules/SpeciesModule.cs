@@ -95,7 +95,8 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get all species.
 
-            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(GetSpeciesOptions.Default | GetSpeciesOptions.IgnoreCommonNames)).OrderBy(s => TaxonFormatter.GetString(s)));
+            List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(GetSpeciesOptions.Default | GetSpeciesOptions.IgnoreCommonNames))
+                .OrderBy(s => TaxonFormatter.GetString(s, false)));
 
             if (species.Count <= 0) {
 
@@ -119,13 +120,15 @@ namespace OurFoodChain.Bot.Modules {
 
             // Get the taxon.
 
-            ITaxon taxon = await ReplyValidateTaxaAsync((await Db.GetTaxaAsync(taxonName)).Where(t => t.GetRank() != TaxonRankType.Species));
+            ITaxon taxon = await ReplyValidateTaxaAsync((await Db.GetTaxaAsync(taxonName))
+                .Where(t => t.GetRank() != TaxonRankType.Species));
 
             if (taxon.IsValid()) {
 
                 // Get all species under that taxon.
 
-                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon)).OrderBy(s => TaxonFormatter.GetString(s)));
+                List<ISpecies> species = new List<ISpecies>((await Db.GetSpeciesAsync(taxon))
+                    .OrderBy(s => TaxonFormatter.GetString(s, false)));
 
                 // Create embed pages.
 
@@ -993,7 +996,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.IsValid()) {
 
                 Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed {
-                    Title = string.Format("Taxonomy of {0}", TaxonFormatter.GetString(species)),
+                    Title = string.Format("Taxonomy of {0}", TaxonFormatter.GetString(species, false)),
                     ThumbnailUrl = species.GetPictureUrl()
                 };
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,13 +11,13 @@ namespace OurFoodChain.Wiki {
 
     public class SpeciesPageBuilder {
 
-        public Species Species { get; set; }
-        public Species[] AllSpecies { get; set; }
+        public ISpecies Species { get; set; }
+        public ISpecies[] AllSpecies { get; set; }
         public WikiPageTemplate Template { get; set; }
         public WikiLinkList LinkList { get; set; }
         public List<string> PictureFilenames { get; set; } = new List<string>();
 
-        public SpeciesPageBuilder(Species species, WikiPageTemplate template) {
+        public SpeciesPageBuilder(ISpecies species, WikiPageTemplate template) {
 
             if (species is null)
                 throw new ArgumentNullException("species");
@@ -40,7 +42,7 @@ namespace OurFoodChain.Wiki {
         private async Task<string> BuildTitleAsync() {
             return await BuildTitleAsync(Species);
         }
-        private async Task<string> BuildTitleAsync(Species species) {
+        private async Task<string> BuildTitleAsync(ISpecies species) {
 
             if (species is null)
                 throw new ArgumentNullException("species");
@@ -50,8 +52,8 @@ namespace OurFoodChain.Wiki {
 
             string title = string.Empty;
 
-            if (!string.IsNullOrWhiteSpace(species.CommonName))
-                title = species.CommonName;
+            if (!string.IsNullOrWhiteSpace(species.GetCommonName()))
+                title = species.GetCommonName();
             else {
 
                 CommonName[] commonNames = await SpeciesUtils.GetCommonNamesAsync(species);
@@ -59,14 +61,14 @@ namespace OurFoodChain.Wiki {
                 if (commonNames.Count() > 0)
                     title = commonNames.First().Value;
                 else
-                    title = species.FullName;
+                    title = species.GetFullName();
 
             }
 
             // If the title is empty for whatever reason (common names set to whitespace, for example), use the species' binomial name.
 
             if (string.IsNullOrWhiteSpace(title))
-                title = species.FullName;
+                title = species.GetFullName();
 
             // Trim any surrounding whitespace from the title.
 
@@ -109,10 +111,10 @@ namespace OurFoodChain.Wiki {
 
         }
         private async Task<string> GetOwnerTokenValueAsync() {
-            return await Task.FromResult(Species.OwnerName);
+            return await Task.FromResult(Species.Creator.Name);
         }
         private async Task<string> GetStatusTokenValueAsync() {
-            return await Task.FromResult(Species.IsExtinct ? "Extinct" : "Extant");
+            return await Task.FromResult(Species.IsExtinct() ? "Extinct" : "Extant");
         }
         private async Task<string> GetCommonNamesTokenValueAsync() {
             return await Task.FromResult(string.Join(", ", SpeciesUtils.GetCommonNamesAsync(Species).Result.Select(x => x.Value)));
@@ -124,14 +126,14 @@ namespace OurFoodChain.Wiki {
             return string.Join(", ", (await SpeciesUtils.GetRolesAsync(Species)).Select(x => x.Name));
         }
         private async Task<string> GetGenusTokenValueAsync() {
-            return await Task.FromResult(Species.GenusName);
+            return await Task.FromResult(Species.Genus.GetName());
         }
         private async Task<string> GetSpeciesTokenValueAsync() {
             return await Task.FromResult(Species.Name.ToLower());
         }
         private async Task<string> GetAncestorTokenValueAsync() {
 
-            Species ancestorSpecies = await SpeciesUtils.GetAncestorAsync(Species);
+            ISpecies ancestorSpecies = await SpeciesUtils.GetAncestorAsync(Species);
 
             if (ancestorSpecies != null)
                 return await BuildTitleAsync(ancestorSpecies);
@@ -140,7 +142,7 @@ namespace OurFoodChain.Wiki {
 
         }
         private async Task<string> GetCreationDateTokenValueAsync() {
-            return await Task.FromResult(FormatDate(DateTimeOffset.FromUnixTimeSeconds(Species.Timestamp).Date));
+            return await Task.FromResult(FormatDate(Species.CreationDate.DateTime));
         }
         private async Task<string> GetExtinctionDateTokenValueAsync() {
 
@@ -226,13 +228,13 @@ namespace OurFoodChain.Wiki {
         private string EmboldenFirstMentionOfSpecies(string input) {
 
             List<string> toMatch = new List<string> {
-                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.FullName.ToLower())),
-                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.ShortName.ToLower())),
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.GetFullName().ToLower())),
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.GetShortName().ToLower())),
                 string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.Name.ToLower()))
             };
 
-            if (!string.IsNullOrEmpty(Species.CommonName))
-                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.CommonName.ToLower()));
+            if (!string.IsNullOrEmpty(Species.GetCommonName()))
+                string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, Regex.Escape(Species.GetCommonName().ToLower()));
 
             Regex regex = new Regex(string.Join("|", toMatch), RegexOptions.IgnoreCase);
 
@@ -243,11 +245,11 @@ namespace OurFoodChain.Wiki {
 
             if (AllSpecies != null) {
 
-                foreach (Species species in AllSpecies) {
+                foreach (ISpecies species in AllSpecies) {
 
                     List<string> to_match = new List<string> {
-                    string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.FullName)),
-                    string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.ShortName)),
+                    string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.GetFullName())),
+                    string.Format(WikiPageUtils.UnformattedWikiTextPatternFormat, Regex.Escape(species.GetShortName())),
                 };
 
                     Regex regex = new Regex(string.Join("|", to_match), RegexOptions.IgnoreCase);
@@ -265,14 +267,14 @@ namespace OurFoodChain.Wiki {
             return input;
 
         }
-        private bool StringMatchesSpeciesName(string name, Species species) {
+        private bool StringMatchesSpeciesName(string name, ISpecies species) {
 
             name = name.ToLower();
 
             return name == species.Name.ToLower() ||
-                name == species.ShortName.ToLower() ||
-                name == species.FullName.ToLower() ||
-                (!string.IsNullOrEmpty(species.CommonName) && name == species.CommonName.ToLower());
+                name == species.GetShortName().ToLower() ||
+                name == species.GetFullName().ToLower() ||
+                (!string.IsNullOrEmpty(species.GetCommonName()) && name == species.GetCommonName().ToLower());
 
         }
 

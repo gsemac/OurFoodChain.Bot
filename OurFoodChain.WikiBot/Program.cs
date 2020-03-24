@@ -1,6 +1,9 @@
 ﻿using Newtonsoft.Json;
 using OurFoodChain.Common;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
+using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Debug;
@@ -50,13 +53,13 @@ namespace OurFoodChain.Wiki {
                 Log("synchronizing species");
                 Log("getting species from database");
 
-                Species[] speciesList = await SpeciesUtils.GetSpeciesAsync();
+                ISpecies[] speciesList = await SpeciesUtils.GetSpeciesAsync();
 
                 Log(string.Format("got {0} results", speciesList.Count()));
 
-                foreach (Species species in speciesList) {
+                foreach (ISpecies species in speciesList) {
 
-                    Log(string.Format("synchronizing species {0}", species.ShortName));
+                    Log(string.Format("synchronizing species {0}", species.GetShortName()));
 
                     // Create the page builder.
 
@@ -76,7 +79,7 @@ namespace OurFoodChain.Wiki {
                     WikiPage wikiPage = await pageBuilder.BuildAsync();
 
                     string pageTitle = wikiPage.Title;
-                    bool createRedirect = pageTitle != species.FullName;
+                    bool createRedirect = pageTitle != species.GetFullName();
 
                     // Upload page content.
 
@@ -86,14 +89,14 @@ namespace OurFoodChain.Wiki {
 
                     if (createRedirect) {
 
-                        string redirect_page_title = species.FullName;
+                        string redirect_page_title = species.GetFullName();
 
                         if (await _editPageAsync(client, history, redirect_page_title, string.Format("#REDIRECT [[{0}]]", pageTitle) + "\n" + BotFlag))
                             await history.AddRedirectRecordAsync(redirect_page_title, pageTitle);
 
                     }
 
-                    Log(string.Format("finished synchronizing species {0}", species.ShortName));
+                    Log(string.Format("finished synchronizing species {0}", species.GetShortName()));
 
                 }
 
@@ -144,37 +147,37 @@ namespace OurFoodChain.Wiki {
 
             // Add species names to the dictionary.
 
-            Species[] species_list = await SpeciesUtils.GetSpeciesAsync();
+            ISpecies[] species_list = await SpeciesUtils.GetSpeciesAsync();
 
-            foreach (Species species in species_list) {
+            foreach (ISpecies species in species_list) {
 
-                list.Add(species.ShortName.ToLower(), species.FullName);
-                list.Add(species.FullName.ToLower(), species.FullName);
-                list.Add(species.Name.ToLower(), species.FullName);
+                list.Add(species.GetShortName().ToLower(), species.GetFullName());
+                list.Add(species.GetFullName().ToLower(), species.GetFullName());
+                list.Add(species.Name.ToLower(), species.GetFullName());
 
-                if (!string.IsNullOrEmpty(species.CommonName))
-                    list.Add(species.CommonName.ToLower(), species.FullName);
+                if (!string.IsNullOrEmpty(species.GetCommonName()))
+                    list.Add(species.GetCommonName().ToLower(), species.GetFullName());
 
             }
 
-            foreach (Species species in species_list) {
+            foreach (ISpecies species in species_list) {
 
                 // Also linkify binomial names that might be using outdated genera (e.g. Species moved to a new genus since the description was written).
                 // Only do this for species that have a unique name-- otherwise, there's no way to know for sure which species to link to!
                 // This might create some false-positives, so it could be a good idea to limit matches only to known genera (at the expense of a significantly longer regex).
 
                 if (list.Count(x => x.Value == species.Name.ToLower()) == 1)
-                    list.Add(string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower())), species.FullName, WikiLinkListDataType.Regex);
+                    list.Add(string.Format(WikiPageUtils.UnlinkedWikiTextPatternFormat, @"[A-Z](?:[a-z]+|\.)\s" + Regex.Escape(species.Name.ToLower())), species.GetFullName(), WikiLinkListDataType.Regex);
 
             }
 
             // Add zone names to the dictionary.
 
-            Zone[] zones_list = await ZoneUtils.GetZonesAsync();
+            IZone[] zones_list = await ZoneUtils.GetZonesAsync();
 
-            foreach (Zone zone in zones_list) {
+            foreach (IZone zone in zones_list) {
 
-                list.Add(zone.FullName.ToLower(), zone.FullName);
+                list.Add(zone.GetFullName().ToLower(), zone.GetFullName());
 
             }
 
@@ -182,21 +185,21 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private static string GeneratePictureFilenameFromSpecies(Species species) {
+        private static string GeneratePictureFilenameFromSpecies(ISpecies species) {
 
-            if (string.IsNullOrEmpty(species.Picture))
+            if (string.IsNullOrEmpty(species.GetPictureUrl()))
                 return string.Empty;
 
-            string pictureFilename = GetPictureFilenameFromPictureUrl(species.Picture);
+            string pictureFilename = GetPictureFilenameFromPictureUrl(species.GetPictureUrl());
 
-            return string.Format("{0}{1}", species.FullName.ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(pictureFilename).ToLower());
+            return string.Format("{0}{1}", species.GetFullName().ToLower().Replace(' ', '_'), System.IO.Path.GetExtension(pictureFilename).ToLower());
 
         }
-        private static string GeneratePictureFilenameFromSpecies(Species species, string pictureUrl) {
+        private static string GeneratePictureFilenameFromSpecies(ISpecies species, string pictureUrl) {
 
             string pictureFilename = GetPictureFilenameFromPictureUrl(pictureUrl);
 
-            return string.Format("{0}-{1}{2}", species.FullName.ToLower().Replace(' ', '_'), StringUtilities.GetMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
+            return string.Format("{0}-{1}{2}", species.GetFullName().ToLower().Replace(' ', '_'), StringUtilities.GetMD5(pictureUrl), System.IO.Path.GetExtension(pictureFilename).ToLower());
 
         }
         private static string GetPictureFilenameFromPictureUrl(string pictureUrl) {
@@ -210,7 +213,7 @@ namespace OurFoodChain.Wiki {
             return System.IO.Path.GetFileName(pictureUrl);
 
         }
-        private static async Task<string> UploadSpeciesPictureAsync(MediaWikiClient client, EditHistory history, Species species) {
+        private static async Task<string> UploadSpeciesPictureAsync(MediaWikiClient client, EditHistory history, ISpecies species) {
 
             // Generate a filename for the image, which will be the filename when it's uploaded to the wiki.
 
@@ -222,7 +225,7 @@ namespace OurFoodChain.Wiki {
 
                 UploadParameters uploadParameters = new UploadParameters {
                     UploadFileName = uploadedFilename,
-                    FilePath = species.Picture
+                    FilePath = species.GetPictureUrl()
                 };
 
                 return await UploadPictureAsync(client, history, uploadParameters, true);
@@ -232,11 +235,11 @@ namespace OurFoodChain.Wiki {
             return string.Empty;
 
         }
-        private async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, Species species) {
+        private async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, ISpecies species) {
 
             // Upload all images in the given species' gallery.
 
-            IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(new SpeciesAdapter(species));
+            IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(species);
             List<string> uploadedFilenames = new List<string>();
 
             if (pictures != null) {
@@ -245,7 +248,7 @@ namespace OurFoodChain.Wiki {
 
                     // Skip the image if it's the same as the species' default image, because we would've already uploaded it
 
-                    if (picture.Url == species.Picture)
+                    if (picture.Url == species.GetPictureUrl())
                         continue;
 
                     string uploadedFilename = GeneratePictureFilenameFromSpecies(species, picture.Url);
@@ -360,7 +363,7 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private static async Task _editSpeciesPageAsync(MediaWikiClient client, EditHistory history, Species species, string pageTitle, string pageContent) {
+        private static async Task _editSpeciesPageAsync(MediaWikiClient client, EditHistory history, ISpecies species, string pageTitle, string pageContent) {
 
             if (await _editPageAsync(client, history, pageTitle, pageContent)) {
 
@@ -370,12 +373,12 @@ namespace OurFoodChain.Wiki {
 
                 if (record != null) {
 
-                    await history.AddEditRecordAsync(species.Id, record);
+                    await history.AddEditRecordAsync(species.Id.Value, record);
 
                     // Because it's possible that the species was renamed, we need to look at past edits to find previous titles of the same page.
                     // Old pages for renamed species will be deleted.
 
-                    EditRecord[] edit_records = (await history.GetEditRecordsAsync(species.Id))
+                    EditRecord[] edit_records = (await history.GetEditRecordsAsync(species.Id.Value))
                         .Where(x => x.Id != record.Id && x.Title.ToLower() != record.Title.ToLower())
                         .ToArray();
 
@@ -407,7 +410,7 @@ namespace OurFoodChain.Wiki {
 
                     RedirectRecord[] redirect_records = (await history.GetRedirectRecordsAsync())
                         .Where(i => i.Target == pageTitle || edit_records.Any(j => j.Title == i.Target)) // points to the title of this page, or one of its previous titles
-                        .Where(i => i.Title != species.FullName) // the title doesn't match this species' full name (the species has been renamed)
+                        .Where(i => i.Title != species.GetFullName()) // the title doesn't match this species' full name (the species has been renamed)
                         .ToArray();
 
                     foreach (RedirectRecord j in redirect_records) {

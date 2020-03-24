@@ -51,6 +51,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>OurFoodChain.Bot.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="AnimatedGif, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AnimatedGif.1.0.5\lib\netstandard2.0\AnimatedGif.dll</HintPath>
@@ -555,6 +558,7 @@
     <Content Include="data\updates\update025.sql" />
     <Content Include="data\updates\update026.sql" />
     <Content Include="data\updates\update027.sql" />
+    <Content Include="OurFoodChain.Bot.ico" />
     <None Include="data\help\addzonetype.json" />
     <Content Include="data\updates\update001.sql" />
     <Content Include="data\updates\update010.sql" />

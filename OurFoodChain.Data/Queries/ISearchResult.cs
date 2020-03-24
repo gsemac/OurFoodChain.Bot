@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,7 +15,6 @@ namespace OurFoodChain.Data.Queries {
 
     public delegate Task<IEnumerable<string>> SpeciesGroupFunction(ISpecies species);
     public delegate Task<bool> SpeciesFilterFunction(ISpecies species);
-    public delegate Task<string> SpeciesFormatFunction(ISpecies species);
 
     public interface ISearchResult :
         IEnumerable<ISearchResultGroup> {
@@ -38,7 +38,7 @@ namespace OurFoodChain.Data.Queries {
         Task FilterByAsync(SpeciesFilterFunction filterFunction, bool invertCondition = false);
         Task OrderByAsync(IComparer<ISearchResultGroup> groupComparer);
         Task OrderByAsync(IComparer<ISpecies> resultComparer);
-        Task FormatByAsync(SpeciesFormatFunction formatterFunction);
+        Task FormatByAsync(ITaxonFormatter formatter);
 
         Task<IEnumerable<ISpecies>> GetResultsAsync();
         Task<IEnumerable<string>> GetStringResultsAsync();

@@ -840,7 +840,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<ISearchResult> GetSearchResultsAsync(this SQLiteDatabase database, ISearchContext context, ISearchQuery query) {
+        public static async Task<ISearchResult> GetSearchResultsAsync(this SQLiteDatabase database, ISearchContext context, ISearchQuery query, ITaxonFormatter formatter = null) {
 
             DateTimeOffset initialTimestamp = DateUtilities.GetCurrentDateUtc();
 
@@ -855,9 +855,14 @@ namespace OurFoodChain.Data.Extensions {
 
             // Apply any post-match modifiers (e.g. groupings), and return the result.
 
-            ISearchResult result = await ApplyPostMatchModifiersAsync(results, context, query);
+            ISearchResult result = new SearchResult(results) {
+                Date = initialTimestamp
+            };
 
-            result.Date = initialTimestamp;
+            if (formatter != null)
+                await result.FormatByAsync(formatter);
+
+            await ApplyPostMatchModifiersAsync(result, context, query);
 
             // Return the result.
 
@@ -1166,9 +1171,7 @@ namespace OurFoodChain.Data.Extensions {
             return command;
 
         }
-        private static async Task<ISearchResult> ApplyPostMatchModifiersAsync(IEnumerable<ISpecies> results, ISearchContext context, ISearchQuery query) {
-
-            ISearchResult result = new SearchResult(results);
+        private static async Task ApplyPostMatchModifiersAsync(ISearchResult result, ISearchContext context, ISearchQuery query) {
 
             foreach (string modifier in query.Modifiers) {
 
@@ -1178,8 +1181,6 @@ namespace OurFoodChain.Data.Extensions {
                     await searchModifier.ApplyAsync(context, result);
 
             }
-
-            return result;
 
         }
 

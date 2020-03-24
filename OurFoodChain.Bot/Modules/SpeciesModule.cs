@@ -513,7 +513,7 @@ namespace OurFoodChain.Bot.Modules {
             // Create and execute the search query.
 
             ISearchQuery query = new SearchQuery(queryString);
-            ISearchResult result = await Db.GetSearchResultsAsync(SearchContext, query);
+            ISearchResult result = await Db.GetSearchResultsAsync(SearchContext, query, formatter: TaxonFormatter);
 
             if (result.TotalResults() <= 0) {
 

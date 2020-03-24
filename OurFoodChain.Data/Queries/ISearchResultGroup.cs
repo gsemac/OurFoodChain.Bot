@@ -1,4 +1,5 @@
 ﻿using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace OurFoodChain.Data.Queries {
         ICollection<ISpecies> Items { get; }
 
         Task SortByAsync(IComparer<ISpecies> resultComparer);
-        Task FormatByAsync(SpeciesFormatFunction formatterFunction);
+        Task FormatByAsync(ITaxonFormatter formatter);
 
         IEnumerable<ISpecies> GetResults();
         IEnumerable<string> GetStringResults();

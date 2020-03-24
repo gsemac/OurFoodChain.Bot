@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -145,12 +146,12 @@ namespace OurFoodChain.Data.Queries {
             HasDefaultOrdering = false;
 
         }
-        public async Task FormatByAsync(SpeciesFormatFunction formatterFunction) {
+        public async Task FormatByAsync(ITaxonFormatter formatter) {
 
             foreach (ISearchResultGroup group in groups.Values)
-                await group.FormatByAsync(formatterFunction);
+                await group.FormatByAsync(formatter);
 
-            this.formatter = formatterFunction;
+            this.formatter = formatter;
 
         }
 
@@ -190,7 +191,7 @@ namespace OurFoodChain.Data.Queries {
 
         private readonly SortedDictionary<string, ISearchResultGroup> groups = new SortedDictionary<string, ISearchResultGroup>(new NaturalStringComparer());
         private IComparer<ISearchResultGroup> groupComparer = null;
-        private SpeciesFormatFunction formatter = null;
+        private ITaxonFormatter formatter = null;
 
     }
 

@@ -1,4 +1,6 @@
-﻿using OurFoodChain.Common.Extensions;
+﻿using OurFoodChain.Common;
+using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,15 +20,15 @@ namespace OurFoodChain.Data.Queries {
             switch (ParseFormatBy(Value)) {
 
                 case FormatBy.CommonName:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.CommonNames.FirstOrDefault()?.ToTitle() ?? species.GetShortName()));
+                    await result.FormatByAsync(new CommonNameTaxonFormatter());
                     break;
 
                 case FormatBy.FullName:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.GetFullName()));
+                    await result.FormatByAsync(new BinomialNameTaxonFormatter() { NameFormat = BinomialNameFormat.Full });
                     break;
 
                 case FormatBy.SpeciesOnly:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.Name.ToLowerInvariant()));
+                    await result.FormatByAsync(new BinomialNameTaxonFormatter() { NameFormat = BinomialNameFormat.Species });
                     break;
 
                 case FormatBy.Gallery:
@@ -46,7 +48,7 @@ namespace OurFoodChain.Data.Queries {
 
                 default:
                 case FormatBy.ShortName:
-                    await result.FormatByAsync(async (species) => await Task.FromResult(species.GetShortName()));
+                    await result.FormatByAsync(new BinomialNameTaxonFormatter());
                     break;
 
             }

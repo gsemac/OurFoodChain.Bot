@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,9 +32,9 @@ namespace OurFoodChain.Data.Queries {
             await Task.CompletedTask;
 
         }
-        public async Task FormatByAsync(SpeciesFormatFunction formatterFunction) {
+        public async Task FormatByAsync(ITaxonFormatter formatter) {
 
-            this.formatter = formatterFunction;
+            this.formatter = formatter;
 
             await Task.CompletedTask;
 
@@ -42,7 +43,7 @@ namespace OurFoodChain.Data.Queries {
         public IEnumerable<ISpecies> GetResults() {
 
             IComparer<ISpecies> firstComparer = speciesComparers
-                .FirstOrDefault() ?? Comparer<ISpecies>.Create((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                .FirstOrDefault() ?? Comparer<ISpecies>.Create((lhs, rhs) => (formatter?.GetString(lhs, false) ?? lhs.GetShortName()).CompareTo(formatter?.GetString(rhs, false) ?? rhs.GetShortName()));
 
             IOrderedEnumerable<ISpecies> results = Items.OrderBy(species => species, firstComparer);
 
@@ -68,7 +69,7 @@ namespace OurFoodChain.Data.Queries {
             List<string> items = new List<string>();
 
             foreach (ISpecies species in await GetResultsAsync())
-                items.Add(await ResultToString(species));
+                items.Add(await ResultToStringAsync(species));
 
             return items;
 
@@ -87,22 +88,19 @@ namespace OurFoodChain.Data.Queries {
 
         // Private members
 
-        private SpeciesFormatFunction formatter = null;
-        private List<IComparer<ISpecies>> speciesComparers = new List<IComparer<ISpecies>>();
+        private ITaxonFormatter formatter = new BinomialNameTaxonFormatter();
+        private readonly List<IComparer<ISpecies>> speciesComparers = new List<IComparer<ISpecies>>();
 
-        private async Task<string> ResultToString(ISpecies species) {
+        private async Task<string> ResultToStringAsync(ISpecies species) {
 
             string result;
 
             if (formatter != null)
-                result = await formatter(species);
+                result = formatter.GetString(species);
             else
                 result = species.GetShortName();
 
-            if (species.Status.IsExinct)
-                result = string.Format("~~{0}~~", result);
-
-            return result;
+            return await Task.FromResult(result);
 
         }
 

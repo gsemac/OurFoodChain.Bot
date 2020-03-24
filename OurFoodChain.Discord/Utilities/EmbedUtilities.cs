@@ -245,6 +245,9 @@ namespace OurFoodChain.Discord.Utilities {
             Messaging.IEmbed currentPage = new Messaging.Embed();
             int fieldCount = 0;
 
+            bool hasTitle = !(string.IsNullOrWhiteSpace(listTitle) || listTitle.Equals(Messaging.EmbedField.EmptyName));
+            bool usingDescription = columnsPerPage == 1 || (columns.Count() == 1 && !hasTitle);
+
             foreach (IEnumerable<string> column in columns) {
 
                 StringBuilder builder = new StringBuilder();
@@ -254,7 +257,7 @@ namespace OurFoodChain.Discord.Utilities {
 
                 if (fieldCount <= 0) {
 
-                    if (columnsPerPage == 1) {
+                    if (usingDescription) {
 
                         // If there's only one column, add text directly to the description.
                         // The page should be changed out immediately.
@@ -295,7 +298,7 @@ namespace OurFoodChain.Discord.Utilities {
             if (currentPage.Fields.Count() > 0 || currentPage.Description?.Length > 0)
                 pages.Add(currentPage);
 
-            if (columnsPerPage == 1)
+            if (usingDescription)
                 foreach (Messaging.IEmbed page in pages)
                     page.Title = listTitle;
 

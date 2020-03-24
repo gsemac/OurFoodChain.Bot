@@ -217,15 +217,15 @@ namespace OurFoodChain.Bot {
 
                     }
 
-                    IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, columnsPerPage: 1, options: EmbedPaginationOptions.AddPageNumbers);
+                    string title = string.Format("Species preyed upon by {0} ({1})", species.GetShortName(), preySpecies.Count());
 
-                    foreach (Discord.Messaging.IEmbed page in pages) {
+                    IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, columnsPerPage: 2, options: EmbedPaginationOptions.AddPageNumbers);
 
-                        page.Title = string.Format("Species preyed upon by {0} ({1})", species.GetShortName(), preySpecies.Count());
+                    Discord.Messaging.IPaginatedMessage message = new Discord.Messaging.PaginatedMessage(pages);
 
-                    }
+                    message.SetTitle(title);
 
-                    await ReplyAsync(new Discord.Messaging.PaginatedMessage(pages));
+                    await ReplyAsync(message);
 
                 }
                 else {

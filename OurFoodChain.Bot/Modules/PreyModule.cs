@@ -153,7 +153,7 @@ namespace OurFoodChain.Bot {
 
                     foreach (IPredationInfo info in predatorSpecies) {
 
-                        string lineText = info.Species.IsExtinct() ? info.Species.GetShortName().ToStrikethrough() : info.Species.GetShortName();
+                        string lineText = TaxonFormatter.GetString(info.Species);
 
                         if (!string.IsNullOrEmpty(info.Notes))
                             lineText += string.Format(" ({0})", info.Notes.ToLowerInvariant());
@@ -208,7 +208,7 @@ namespace OurFoodChain.Bot {
 
                     foreach (IPredationInfo preyInfo in preySpecies) {
 
-                        string line = preyInfo.Species.IsExtinct() ? preyInfo.Species.GetShortName().ToStrikethrough() : preyInfo.Species.GetShortName();
+                        string line = TaxonFormatter.GetString(preyInfo.Species);
 
                         if (!string.IsNullOrEmpty(preyInfo.Notes))
                             line += (string.Format(" ({0})", preyInfo.Notes.ToLowerInvariant()));

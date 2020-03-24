@@ -754,15 +754,11 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("ancestry", RunMode = RunMode.Async), Alias("lineage", "ancestors", "anc")]
-        public async Task Lineage(string speciesName) {
+        public async Task Lineage([Remainder]string speciesName) {
 
-            await Lineage(string.Empty, speciesName);
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-        }
-        [Command("ancestry", RunMode = RunMode.Async), Alias("lineage", "ancestors", "anc")]
-        public async Task Lineage(string genusName, string speciesName) {
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -782,15 +778,11 @@ namespace OurFoodChain.Bot.Modules {
 
         }
         [Command("ancestry2", RunMode = RunMode.Async), Alias("lineage2", "anc2")]
-        public async Task Lineage2(string species) {
+        public async Task Lineage2([Remainder]string speciesName) {
 
-            await Lineage2(string.Empty, species);
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-        }
-        [Command("ancestry2", RunMode = RunMode.Async), Alias("lineage2", "anc2")]
-        public async Task Lineage2(string genusName, string speciesName) {
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -803,15 +795,11 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("evolution", RunMode = RunMode.Async), Alias("evo")]
-        public async Task Evolution(string speciesName) {
+        public async Task Evolution([Remainder]string speciesName) {
 
-            await Evolution(string.Empty, speciesName);
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-        }
-        [Command("evolution", RunMode = RunMode.Async), Alias("evo")]
-        public async Task Evolution(string genusName, string speciesName) {
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -830,15 +818,11 @@ namespace OurFoodChain.Bot.Modules {
 
         }
         [Command("evolution2", RunMode = RunMode.Async), Alias("evo2")]
-        public async Task Evolution2(string speciesName) {
+        public async Task Evolution2([Remainder]string speciesName) {
 
-            await Evolution2(string.Empty, speciesName);
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-        }
-        [Command("evolution2", RunMode = RunMode.Async), Alias("evo2")]
-        public async Task Evolution2(string genusName, string speciesName) {
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -851,15 +835,11 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("migration", RunMode = RunMode.Async), Alias("spread")]
-        public async Task Migration(string speciesName) {
+        public async Task Migration([Remainder]string speciesName) {
 
-            await Migration(string.Empty, speciesName);
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-        }
-        [Command("migration", RunMode = RunMode.Async), Alias("spread")]
-        public async Task Migration(string genusName, string speciesName) {
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -983,15 +963,11 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("taxonomy", RunMode = RunMode.Async), Alias("taxon")]
-        public async Task Taxonomy(string speciesName) {
+        public async Task Taxonomy([Remainder]string speciesName) {
 
-            await Taxonomy(string.Empty, speciesName);
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-        }
-        [Command("taxonomy", RunMode = RunMode.Async), Alias("taxon")]
-        public async Task Taxonomy(string genusName, string speciesName) {
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 

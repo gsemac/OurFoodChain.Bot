@@ -126,18 +126,11 @@ namespace OurFoodChain.Bot {
         }
 
         [Command("predates", RunMode = RunMode.Async), Alias("eats", "pred", "predators")]
-        public async Task Predates(string genusName, string speciesName = "") {
+        public async Task Predates([Remainder]string speciesName) {
 
-            // If the species parameter was not provided, assume the user only provided the species.
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-            if (string.IsNullOrEmpty(speciesName)) {
-
-                speciesName = genusName;
-                genusName = string.Empty;
-
-            }
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -162,7 +155,7 @@ namespace OurFoodChain.Bot {
 
                     }
 
-                    embed.Title = string.Format("Predators of {0} ({1})", species.GetShortName(), lines.Count());
+                    embed.Title = string.Format("Predators of {0} ({1})", TaxonFormatter.GetString(species, false), lines.Count());
                     embed.Description = string.Join(Environment.NewLine, lines);
 
                     await ReplyAsync(embed);
@@ -179,20 +172,11 @@ namespace OurFoodChain.Bot {
         }
 
         [Command("prey", RunMode = RunMode.Async)]
-        public async Task Prey(string genusName, string speciesName = "") {
+        public async Task Prey([Remainder]string speciesName) {
 
-            // If no species argument was provided, assume the user omitted the genus.
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
 
-            if (string.IsNullOrEmpty(speciesName)) {
-
-                speciesName = genusName;
-                genusName = string.Empty;
-
-            }
-
-            // Get the specified species.
-
-            ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
+            ISpecies species = await GetSpeciesOrReplyAsync(speciesName);
 
             if (species.IsValid()) {
 
@@ -216,7 +200,7 @@ namespace OurFoodChain.Bot {
 
                     }
 
-                    string title = string.Format("Species preyed upon by {0} ({1})", species.GetShortName(), preySpecies.Count());
+                    string title = string.Format("Species preyed upon by {0} ({1})", TaxonFormatter.GetString(species, false), preySpecies.Count());
 
                     IEnumerable<Discord.Messaging.IEmbed> pages = EmbedUtilities.CreateEmbedPages(string.Empty, lines, columnsPerPage: 2, options: EmbedPaginationOptions.AddPageNumbers);
 

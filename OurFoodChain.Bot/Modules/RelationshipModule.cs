@@ -51,17 +51,11 @@ namespace OurFoodChain.Bot {
 
         }
         [Command("relationships", RunMode = RunMode.Async), Alias("relations", "related")]
-        public async Task Relationships(string species) {
-
-            await Relationships("", species);
-
-        }
-        [Command("relationships", RunMode = RunMode.Async), Alias("relations", "related")]
-        public async Task Relationships(string genus, string species) {
+        public async Task Relationships([Remainder] string speciesName) {
 
             // Get the species from the DB.
 
-            ISpecies sp = await GetSpeciesOrReplyAsync(genus, species);
+            ISpecies sp = await GetSpeciesOrReplyAsync(speciesName);
 
             if (!sp.IsValid())
                 return;
@@ -187,7 +181,7 @@ namespace OurFoodChain.Bot {
 
             }
 
-            embed.WithTitle(string.Format("Relationships involving {0} ({1})", sp.GetShortName(), relationship_count));
+            embed.WithTitle(string.Format("Relationships involving {0} ({1})", TaxonFormatter.GetString(sp, false), relationship_count));
 
             await ReplyAsync("", false, embed.Build());
 

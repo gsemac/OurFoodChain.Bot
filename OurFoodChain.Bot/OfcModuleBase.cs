@@ -514,7 +514,7 @@ namespace OurFoodChain {
             if (string.IsNullOrWhiteSpace(input))
                 sb.Append($"No such {taxonName} exists.");
             else
-                sb.Append($"No {taxonName} named {input.ToBold()} exists.");
+                sb.Append($"No {taxonName} named \"{input}\" exists.");
 
             if (suggestion != null) {
 

@@ -118,6 +118,7 @@ namespace OurFoodChain.Common.Utilities {
 
             RegisterUnit(knownUnits, new LengthUnit("inch", "in", 0.0254, LengthUnitType.Imperial));
             RegisterUnit(knownUnits, new LengthUnit("hand", "h", 0.1016, LengthUnitType.Imperial));
+            RegisterUnit(knownUnits, new LengthUnit("palm", "palms", 0.0762, LengthUnitType.Imperial));
             RegisterUnit(knownUnits, new LengthUnit("feet", "ft", 0.3048, LengthUnitType.Imperial));
             RegisterUnit(knownUnits, new LengthUnit("yard", "yd", 0.9144, LengthUnitType.Imperial));
             RegisterUnit(knownUnits, new LengthUnit("fathom", "fathoms", 1.8288, LengthUnitType.Imperial));
@@ -132,10 +133,55 @@ namespace OurFoodChain.Common.Utilities {
             RegisterUnit(knownUnits, new LengthUnit("ångström", "Å", 1.0 / Math.Pow(10, 10)));
             RegisterUnit(knownUnits, new LengthUnit("angstrom", "Å", 1.0 / Math.Pow(10, 10)));
             RegisterUnit(knownUnits, new LengthUnit("nautical mile", "nmi", 1852));
+            RegisterUnit(knownUnits, new LengthUnit("light second", "ls", 2.998 * Math.Pow(10, 8)));
+            RegisterUnit(knownUnits, new LengthUnit("light minute", "lm", 1.799 * Math.Pow(10, 10)));
             RegisterUnit(knownUnits, new LengthUnit("light year", "ly", 9.461 * Math.Pow(10, 15)));
             RegisterUnit(knownUnits, new LengthUnit("astronomical unit", "AU", 1.496 * Math.Pow(10, 11)));
             RegisterUnit(knownUnits, new LengthUnit("planck length", "ℓP", 1.6 / Math.Pow(10, 35)));
             RegisterUnit(knownUnits, new LengthUnit("planck", "ℓP", 1.6 / Math.Pow(10, 35)));
+            RegisterUnit(knownUnits, new LengthUnit("attoparsec", "apc", 0.0308568));
+            RegisterUnit(knownUnits, new LengthUnit("parsec", "pc", 3.086 * Math.Pow(10, 16)));
+            RegisterUnit(knownUnits, new LengthUnit("megaparsec", "mpc", 3.086 * Math.Pow(10, 22)));
+            RegisterUnit(knownUnits, new LengthUnit("gigaparsec", "gpc", 3.086 * Math.Pow(10, 25)));
+            RegisterUnit(knownUnits, new LengthUnit("lunar distance", "LD", 3.843e+8));
+            RegisterUnit(knownUnits, new LengthUnit("barleycorn", "barleycorns", 1.0 / 118.0));
+            RegisterUnit(knownUnits, new LengthUnit("link", "l.", 1.0 / 4.975));
+            RegisterUnit(knownUnits, new LengthUnit("american football field", "football fields", 91.44));
+            RegisterUnit(knownUnits, new LengthUnit("football field", "football fields", 91.44));
+
+            RegisterUnit(knownUnits, new LengthUnit("pica", "pica", 1.0 / 236.0));
+            RegisterUnit(knownUnits, new LengthUnit("point", "pt", 1.0 / 2835.0));
+
+            RegisterUnit(knownUnits, new LengthUnit("smoot", "smoots", 1.702));
+            RegisterUnit(knownUnits, new LengthUnit("moot", "moots", 1.70));
+            RegisterUnit(knownUnits, new LengthUnit("altuve", "altuves", 1.65));
+            RegisterUnit(knownUnits, new LengthUnit("beard second", "beard-seconds", 1.0 / 5e-9));
+            RegisterUnit(knownUnits, new LengthUnit("beard-second", "beard-seconds", 1.0 / 5e-9));
+            RegisterUnit(knownUnits, new LengthUnit("beer can", "beer cans", 0.0762));
+            RegisterUnit(knownUnits, new LengthUnit("mickey", "mickeys", 1.27 * Math.Pow(10, -4)));
+            RegisterUnit(knownUnits, new LengthUnit("bloit", "bloits", 1075.04179));
+            RegisterUnit(knownUnits, new LengthUnit("sheppey", "Sheppeys", 1400));
+            RegisterUnit(knownUnits, new LengthUnit("wiffle", "wiffles", 0.089));
+
+            RegisterUnit(knownUnits, new LengthUnit("li", "里", 576.0));
+            RegisterUnit(knownUnits, new LengthUnit("lǐ", "里", 576.0));
+            RegisterUnit(knownUnits, new LengthUnit("shìlǐ", "市里", 576.0));
+            RegisterUnit(knownUnits, new LengthUnit("yin", "引", 32.0));
+            RegisterUnit(knownUnits, new LengthUnit("yǐn", "引", 32.0));
+            RegisterUnit(knownUnits, new LengthUnit("zhang", "丈", 3.2));
+            RegisterUnit(knownUnits, new LengthUnit("zhàng", "丈", 3.2));
+            RegisterUnit(knownUnits, new LengthUnit("bu", "步", 1.6));
+            RegisterUnit(knownUnits, new LengthUnit("bù", "步", 1.6));
+            RegisterUnit(knownUnits, new LengthUnit("chi", "呎", 0.32));
+            RegisterUnit(knownUnits, new LengthUnit("chǐ", "呎", 0.32));
+            RegisterUnit(knownUnits, new LengthUnit("cun", "寸", 0.032));
+            RegisterUnit(knownUnits, new LengthUnit("cùn", "寸", 0.032));
+            RegisterUnit(knownUnits, new LengthUnit("fen", "分", 0.0032));
+            RegisterUnit(knownUnits, new LengthUnit("fēn", "分", 0.0032));
+            RegisterUnit(knownUnits, new LengthUnit("lí", "釐", 0.00032));
+            RegisterUnit(knownUnits, new LengthUnit("lí", "厘", 0.00032));
+            RegisterUnit(knownUnits, new LengthUnit("hao", "毫", 0.00032));
+            RegisterUnit(knownUnits, new LengthUnit("háo", "毫", 3.2e-5));
 
             // Also map the lowercase version of each unit abbreviation to the unit.
             // This is done last to avoid problems with conflicting units (e.g. "mm" and "Mm").

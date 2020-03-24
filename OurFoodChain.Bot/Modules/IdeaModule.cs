@@ -22,16 +22,27 @@ namespace OurFoodChain.Bot {
         [Command("idea")]
         public async Task Idea() {
 
+            List<Func<Task<IEnumerable<string>>>> ideaGenerators = new List<Func<Task<IEnumerable<string>>>> {
+                async () => await GetEmptyZoneIdeasAsync(),
+                async () => await GetSmallGenusIdeasAsync(),
+                async () => await GetEmptyLineageIdeasAsync(),
+                async () => await GetNoPredatorIdeasAsync(),
+                async () => await GetMissingRolesInZoneIdeasAsync()
+            };
+
             List<string> ideas = new List<string>();
 
-            ideas.AddRange(await GetEmptyZoneIdeasAsync());
-            ideas.AddRange(await GetSmallGenusIdeasAsync());
-            ideas.AddRange(await GetEmptyLineageIdeasAsync());
-            ideas.AddRange(await GetNoPredatorIdeasAsync());
-            ideas.AddRange(await GetMissingRolesInZoneIdeasAsync());
+            foreach (int index in Enumerable.Range(0, ideaGenerators.Count()).OrderBy(i => NumberUtilities.GetRandomInteger())) {
+
+                ideas.AddRange(await ideaGenerators[index]());
+
+                if (ideas.Any())
+                    break;
+
+            }
 
             if (ideas.Count() > 0)
-                await ReplyInfoAsync(string.Format("💡 {0}", ideas[new Random().Next(ideas.Count())]));
+                await ReplyInfoAsync(string.Format("💡 {0}", ideas.Random()));
             else
                 await ReplyInfoAsync("I don't have any good ideas right now.");
 
@@ -45,13 +56,16 @@ namespace OurFoodChain.Bot {
 
             List<string> ideas = new List<string>();
 
-            IEnumerable<IZone> zones = (await Db.GetZonesAsync())
-                .Where(zone => !zone.Flags.HasFlag(ZoneFlags.Retired));
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id NOT IN (SELECT zone_id FROM SpeciesZones)")) {
 
-            foreach (IZone zone in zones) {
+                foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                if ((await Db.GetSpeciesAsync(zone, GetSpeciesOptions.Fast)).Count() <= 0)
-                    ideas.Add($"{zone.GetFullName().ToBold()} does not contain any species yet. Why not make one?");
+                    IZone zone = await Db.CreateZoneFromDataRowAsync(row, GetZoneOptions.Fast);
+
+                    if (!zone.Flags.HasFlag(ZoneFlags.Retired))
+                        ideas.Add($"{zone.GetFullName().ToBold()} does not contain any species yet. Why not make one?");
+
+                }
 
             }
 
@@ -64,10 +78,16 @@ namespace OurFoodChain.Bot {
 
             List<string> ideas = new List<string>();
 
-            foreach (ITaxon genus in await Db.GetTaxaAsync(TaxonRankType.Genus)) {
+            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Genus WHERE id IN (SELECT genus_id FROM(SELECT genus_id, COUNT(genus_id) AS c FROM (SELECT * FROM Species WHERE id NOT IN (SELECT species_id FROM Extinctions)) GROUP BY genus_id) WHERE c <= 1)")) {
 
-                if ((await Db.GetSubtaxaAsync(genus)).Count() <= 0)
-                    ideas.Add($"Genus {genus.Name.ToTitle().ToBold()} only has one species in it. Why not make another?");
+                foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
+
+                    ITaxon taxon = await Db.CreateTaxonFromDataRowAsync(row, TaxonRankType.Genus);
+
+                    ideas.Add($"Genus {taxon.GetName().ToBold()} only has one species in it. Why not make another?");
+
+                }
+
 
             }
 
@@ -101,7 +121,7 @@ namespace OurFoodChain.Bot {
             using (SQLiteCommand cmd = new SQLiteCommand(query))
                 foreach (DataRow row in await Db.GetRowsAsync(cmd)) {
 
-                    ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row);
+                    ISpecies species = await Db.CreateSpeciesFromDataRowAsync(row, GetSpeciesOptions.Default | GetSpeciesOptions.IgnoreStatus);
 
                     ideas.Add($"There are no species that feed on {TaxonFormatter.GetString(species).ToBold()}. Why not make one?");
 
@@ -133,7 +153,7 @@ namespace OurFoodChain.Bot {
                         string zoneName = row.Field<string>("zone_name");
                         string roleName = row.Field<string>("role_name");
 
-                        ideas.Add($"{ZoneUtilities.GetFullName(zoneName).ToBold()} does not have any {roleName.ToTitle().ToBold()}s. Why not fill this role?");
+                        ideas.Add($"{ZoneUtilities.GetFullName(zoneName).ToBold()} does not have any {roleName.ToTitle().ToPlural().ToBold()}. Why not fill this role?");
 
                     }
 

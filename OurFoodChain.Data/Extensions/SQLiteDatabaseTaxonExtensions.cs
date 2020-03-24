@@ -107,7 +107,7 @@ namespace OurFoodChain.Data.Extensions {
                 DataRow row = await database.GetRowAsync(cmd);
 
                 if (row != null)
-                    taxon = CreateTaxonFromDataRow(row, rank);
+                    taxon = await database.CreateTaxonFromDataRowAsync(row, rank);
 
             }
 
@@ -178,7 +178,7 @@ namespace OurFoodChain.Data.Extensions {
                     cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
 
                     foreach (DataRow row in await database.GetRowsAsync(cmd))
-                        taxa.Add(CreateTaxonFromDataRow(row, rank));
+                        taxa.Add(await database.CreateTaxonFromDataRowAsync(row, rank));
 
                 }
 
@@ -220,7 +220,7 @@ namespace OurFoodChain.Data.Extensions {
 
             using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0}", tableName)))
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    taxa.Add(CreateTaxonFromDataRow(row, rank));
+                    taxa.Add(await database.CreateTaxonFromDataRowAsync(row, rank));
 
             return taxa;
 
@@ -309,7 +309,7 @@ namespace OurFoodChain.Data.Extensions {
                 cmd.Parameters.AddWithValue("$parent_id", taxon.Id);
 
                 foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    result.Add(CreateTaxonFromDataRow(row, taxon.GetChildRank()));
+                    result.Add(await database.CreateTaxonFromDataRowAsync(row, taxon.GetChildRank()));
 
             }
 
@@ -373,6 +373,28 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<ITaxon> CreateTaxonFromDataRowAsync(this SQLiteDatabase database, DataRow row, TaxonRankType rank) {
+
+            ITaxon taxon = new Taxon(rank, row.Field<string>("name")) {
+                Id = row.Field<long>("id"),
+                Description = row.Field<string>("description")
+            };
+
+            if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))
+                taxon.CommonNames.Add(row.Field<string>("common_name"));
+
+            if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
+                taxon.Pictures.Add(new Picture(row.Field<string>("pics")));
+
+            string parentIdFieldName = GetFieldNameForRank(TaxonUtilities.GetParentRank(rank));
+
+            if (!string.IsNullOrEmpty(parentIdFieldName) && !row.IsNull(parentIdFieldName))
+                taxon.ParentId = row.Field<long>(parentIdFieldName);
+
+            return await Task.FromResult(taxon);
+
+        }
+
         // Private members
 
         private static string GetTableNameForRank(TaxonRankType rank) {
@@ -391,27 +413,6 @@ namespace OurFoodChain.Data.Extensions {
                 return string.Empty;
 
             return string.Format("{0}_id", TaxonUtilities.GetNameForRank(rank).ToLowerInvariant());
-
-        }
-        private static ITaxon CreateTaxonFromDataRow(DataRow row, TaxonRankType rank) {
-
-            ITaxon taxon = new Taxon(rank, row.Field<string>("name")) {
-                Id = row.Field<long>("id"),
-                Description = row.Field<string>("description")
-            };
-
-            if (!row.IsNull("common_name") && !string.IsNullOrWhiteSpace(row.Field<string>("common_name")))
-                taxon.CommonNames.Add(row.Field<string>("common_name"));
-
-            if (!row.IsNull("pics") && !string.IsNullOrWhiteSpace(row.Field<string>("pics")))
-                taxon.Pictures.Add(new Picture(row.Field<string>("pics")));
-
-            string parentIdFieldName = GetFieldNameForRank(TaxonUtilities.GetParentRank(rank));
-
-            if (!string.IsNullOrEmpty(parentIdFieldName) && !row.IsNull(parentIdFieldName))
-                taxon.ParentId = row.Field<long>(parentIdFieldName);
-
-            return taxon;
 
         }
 

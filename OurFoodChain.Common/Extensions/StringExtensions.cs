@@ -22,6 +22,16 @@ namespace OurFoodChain.Common.Extensions {
             return StringUtilities.ToPossessive(input);
 
         }
+        public static string ToPlural(this string input) {
+
+            if (input.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+                input += "es";
+            else
+                input += "s";
+
+            return input;
+
+        }
 
         public static string After(this string input, string substring) {
 

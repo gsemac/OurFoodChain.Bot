@@ -215,9 +215,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        // Private members
-
-        private static async Task<IZone> CreateZoneFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetZoneOptions options = GetZoneOptions.None) {
+        public static async Task<IZone> CreateZoneFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetZoneOptions options = GetZoneOptions.None) {
 
             IZone zone = new Zone {
                 Id = row.Field<long>("id"),
@@ -258,6 +256,9 @@ namespace OurFoodChain.Data.Extensions {
             return zone;
 
         }
+
+        // Private members
+
         private static IZoneType CreateZoneTypeFromDataRow(DataRow row) {
 
             IZoneType result = new ZoneType {

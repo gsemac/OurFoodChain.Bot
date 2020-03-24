@@ -8,6 +8,11 @@ namespace OurFoodChain.Common.Utilities {
 
         // Public members
 
+        public static int GetRandomInteger() {
+
+            return random.Next();
+
+        }
         public static int GetRandomInteger(int max) {
 
             return random.Next(max);

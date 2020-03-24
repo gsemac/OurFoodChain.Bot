@@ -20,7 +20,8 @@ namespace OurFoodChain.Discord.Utilities {
         None = 0,
         AddPageNumbers = 1,
         NoStrikethrough = 2,
-        CopyFields = 4
+        CopyFields = 4,
+        Default = None
     }
 
     public static class EmbedUtilities {
@@ -185,7 +186,7 @@ namespace OurFoodChain.Discord.Utilities {
 
         }
 
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(Messaging.IEmbed embed, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(Messaging.IEmbed embed, EmbedPaginationOptions options = EmbedPaginationOptions.Default) {
 
             List<Messaging.IEmbed> pages = new List<Messaging.IEmbed>();
             string description = embed.Description;
@@ -308,7 +309,7 @@ namespace OurFoodChain.Discord.Utilities {
             return pages;
 
         }
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, ITaxonFormatter formatter = null, int itemsPerPage = DefaultItemsPerPage, int columnsPerPage = DefaultColumnsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.None) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(string listTitle, IEnumerable<ISpecies> listItems, ITaxonFormatter formatter = null, int itemsPerPage = DefaultItemsPerPage, int columnsPerPage = DefaultColumnsPerPage, EmbedPaginationOptions options = EmbedPaginationOptions.Default) {
 
             if (formatter is null)
                 formatter = new BinomialNameTaxonFormatter();
@@ -327,7 +328,7 @@ namespace OurFoodChain.Discord.Utilities {
             return CreateEmbedPages(listTitle, stringListItems, itemsPerPage, columnsPerPage, options);
 
         }
-        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(ISearchResult searchResult) {
+        public static IEnumerable<Messaging.IEmbed> CreateEmbedPages(ISearchResult searchResult, EmbedPaginationOptions options = EmbedPaginationOptions.Default) {
 
             List<Messaging.IEmbed> pages = new List<Messaging.IEmbed>();
 
@@ -365,6 +366,9 @@ namespace OurFoodChain.Discord.Utilities {
                 }
 
             }
+
+            if (options.HasFlag(EmbedPaginationOptions.AddPageNumbers))
+                AddPageNumbers(pages);
 
             return pages;
 

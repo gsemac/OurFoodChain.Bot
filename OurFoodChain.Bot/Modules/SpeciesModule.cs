@@ -572,7 +572,7 @@ namespace OurFoodChain.Bot.Modules {
                         }
                         else {
 
-                            message = new PaginatedMessage(EmbedUtilities.CreateEmbedPages(result));
+                            message = new PaginatedMessage(EmbedUtilities.CreateEmbedPages(result, options: EmbedPaginationOptions.AddPageNumbers));
 
                         }
 

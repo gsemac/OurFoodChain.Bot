@@ -88,7 +88,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey(relationship.BeneficiaryName(plural: true)))
                         items[relationship.BeneficiaryName(plural: true)] = new List<string>();
 
-                    items[relationship.BeneficiaryName(plural: true)].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                    items[relationship.BeneficiaryName(plural: true)].Add(TaxonFormatter.GetString(other_species));
 
                 }
 
@@ -112,7 +112,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey(relationship.BenefactorName(plural: true)))
                         items[relationship.BenefactorName(plural: true)] = new List<string>();
 
-                    items[relationship.BenefactorName(plural: true)].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                    items[relationship.BenefactorName(plural: true)].Add(TaxonFormatter.GetString(other_species));
 
                 }
 
@@ -135,7 +135,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey("prey"))
                         items["prey"] = new List<string>();
 
-                    items["prey"].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                    items["prey"].Add(TaxonFormatter.GetString(other_species));
 
                 }
 
@@ -156,7 +156,7 @@ namespace OurFoodChain.Bot {
                     if (!items.ContainsKey("predators"))
                         items["predators"] = new List<string>();
 
-                    items["predators"].Add(other_species.IsExtinct() ? string.Format("~~{0}~~", other_species.GetShortName()) : other_species.GetShortName());
+                    items["predators"].Add(TaxonFormatter.GetString(other_species));
 
                 }
 

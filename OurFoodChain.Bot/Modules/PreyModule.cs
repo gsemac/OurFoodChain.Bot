@@ -199,7 +199,6 @@ namespace OurFoodChain.Bot {
                 // Get the preyed-upon species.
 
                 IEnumerable<IPredationInfo> preySpecies = (await Db.GetPreyAsync(species))
-                    .Where(info => !info.Species.IsExtinct())
                     .OrderBy(info => info.Species.GetShortName());
 
                 if (preySpecies.Count() > 0) {

@@ -22,6 +22,7 @@ namespace OurFoodChain.Data.Queries {
         ISearchResultGroup DefaultGroup { get; }
         IEnumerable<ISearchResultGroup> Groups { get; }
         SearchResultDisplayFormat DisplayFormat { get; set; }
+        ITaxonFormatter TaxonFormatter { get; }
 
         bool HasDefaultOrdering { get; }
         bool HasDefaultGrouping { get; }

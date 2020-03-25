@@ -71,6 +71,9 @@ namespace OurFoodChain.Data.Queries {
                     default:
                         return new string[] { SearchResult.DefaultGroupName };
 
+                    case GroupBy.Suffix:
+                        return new string[] { await Task.FromResult(result.TaxonFormatter.GetString(species, false).Split(' ').LastOrDefault()?.Trim().ToPlural() ?? "N/A") };
+
                 }
 
             });
@@ -94,7 +97,8 @@ namespace OurFoodChain.Data.Queries {
             Creator,
             Status,
             Role,
-            Generation
+            Generation,
+            Suffix
 
         }
 
@@ -150,6 +154,9 @@ namespace OurFoodChain.Data.Queries {
                 case "gen":
                 case "generation":
                     return GroupBy.Generation;
+
+                case "suffix":
+                    return GroupBy.Suffix;
 
                 default:
                     return GroupBy.Unknown;

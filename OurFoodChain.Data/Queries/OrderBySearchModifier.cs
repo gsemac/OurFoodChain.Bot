@@ -36,12 +36,23 @@ namespace OurFoodChain.Data.Queries {
                     break;
 
                 case OrderBy.Count:
-                    await result.OrderByAsync(Comparer<ISearchResultGroup>.Create((lhs, rhs) => lhs.Count().CompareTo(rhs.Count())));
+                    await result.OrderByAsync(Comparer<ISearchResultGroup>.Create((lhs, rhs) => rhs.Count().CompareTo(lhs.Count())));
+                    break;
+
+                case OrderBy.Suffix:
+                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => {
+
+                        string lhsStr = new string(result.TaxonFormatter.GetString(lhs, false).Reverse().ToArray());
+                        string rhsStr = new string(result.TaxonFormatter.GetString(rhs, false).Reverse().ToArray());
+
+                        return lhsStr.CompareTo(rhsStr);
+
+                    }));
                     break;
 
                 default:
                 case OrderBy.Default:
-                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName())));
+                    await result.OrderByAsync(Comparer<ISpecies>.Create((lhs, rhs) => result.TaxonFormatter.GetString(lhs, false).CompareTo(result.TaxonFormatter.GetString(rhs, false))));
                     break;
 
             }
@@ -60,7 +71,8 @@ namespace OurFoodChain.Data.Queries {
             Oldest,
             Smallest,
             Largest,
-            Count
+            Count,
+            Suffix
 
         }
 
@@ -89,6 +101,9 @@ namespace OurFoodChain.Data.Queries {
                 case "total":
                 case "count":
                     return OrderBy.Count;
+
+                case "suffix":
+                    return OrderBy.Suffix;
 
                 default:
                     return OrderBy.Unknown;

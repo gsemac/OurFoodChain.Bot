@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OurFoodChain.Common.Extensions {
@@ -24,7 +25,7 @@ namespace OurFoodChain.Common.Extensions {
         }
         public static string ToPlural(this string input) {
 
-            if (input.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+            if (new string[] { "h", "s" }.Any(s => input.EndsWith(s, StringComparison.OrdinalIgnoreCase)))
                 input += "es";
             else
                 input += "s";

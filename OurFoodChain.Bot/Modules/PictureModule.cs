@@ -370,7 +370,7 @@ namespace OurFoodChain.Bot {
 
             IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(species);
 
-            await ShowGalleryAsync(species.GetShortName(), pictures);
+            await ShowGalleryAsync(TaxonFormatter.GetString(species, false), pictures);
 
         }
 

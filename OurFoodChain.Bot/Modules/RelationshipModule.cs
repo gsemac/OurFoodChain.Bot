@@ -55,6 +55,8 @@ namespace OurFoodChain.Bot {
 
             // Get the species from the DB.
 
+            speciesName = StringUtilities.StripOuterQuotes(speciesName);
+
             ISpecies sp = await GetSpeciesOrReplyAsync(speciesName);
 
             if (!sp.IsValid())

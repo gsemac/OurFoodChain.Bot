@@ -91,7 +91,9 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("zone"), Alias("z", "zones")]
-        public async Task GetZone(string arg0) {
+        public async Task GetZone([Remainder] string arg0) {
+
+            arg0 = StringUtilities.StripOuterQuotes(arg0);
 
             // Show either the given zone, or all zones of the given type.
 
@@ -481,7 +483,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 List<ISpecies> speciesList = new List<ISpecies>((await Db.GetSpeciesAsync(zone)).Where(species => !species.IsExtinct()));
 
-                speciesList.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                speciesList.Sort((lhs, rhs) => TaxonFormatter.GetString(lhs, false).CompareTo(TaxonFormatter.GetString(rhs, false)));
 
                 // Starting building a paginated message.
                 // The message will have a paginated species list, and a toggle button to display the species sorted by role.
@@ -505,7 +507,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 }
 
-                embedPages.AddRange(EmbedUtilities.CreateEmbedPages(string.Format("Extant species in this zone ({0}):", speciesList.Count()), speciesList));
+                embedPages.AddRange(EmbedUtilities.CreateEmbedPages(string.Format("Extant species in this zone ({0}):", speciesList.Count()), speciesList, formatter: TaxonFormatter));
 
                 // Add title, decription, etc., to all pages.
 
@@ -577,7 +579,7 @@ namespace OurFoodChain.Bot.Modules {
                     // Sort the list of species belonging to each role.
 
                     foreach (List<ISpecies> i in rolesMap.Values)
-                        i.Sort((lhs, rhs) => lhs.GetShortName().CompareTo(rhs.GetShortName()));
+                        i.Sort((lhs, rhs) => TaxonFormatter.GetString(lhs, false).CompareTo(TaxonFormatter.GetString(rhs, false)));
 
                     // Create a sorted list of keys so that the roles are in order.
 
@@ -588,8 +590,8 @@ namespace OurFoodChain.Bot.Modules {
 
                         StringBuilder lines = new StringBuilder();
 
-                        foreach (Species j in rolesMap[i])
-                            lines.AppendLine(j.GetShortName());
+                        foreach (ISpecies j in rolesMap[i])
+                            lines.AppendLine(TaxonFormatter.GetString(j));
 
                         rolesPage.AddField(string.Format("{0}s ({1})", StringUtilities.ToTitleCase(i), rolesMap[i].Count()), lines.ToString(), inline: true);
 

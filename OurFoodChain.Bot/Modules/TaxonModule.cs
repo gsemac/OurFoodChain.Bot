@@ -661,6 +661,9 @@ namespace OurFoodChain.Bot.Modules {
 
                 ITaxon taxon = await ReplyValidateTaxaAsync(taxa);
 
+                if (taxon.GetRank() == TaxonRankType.Species)
+                    taxon = await Db.GetSpeciesAsync(taxon.Id);
+
                 if (taxon.IsValid())
                     await ReplySetTaxonDescriptionAsync(taxon);
 
@@ -891,9 +894,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (taxon.IsValid()) {
 
-                string name = (taxon is ISpecies species) ? species.GetFullName() : taxon.GetName();
-
-                IMessage message = new Message($"Reply with the description for {taxon.GetRank().GetName()} **{name}**.");
+                IMessage message = new Message($"Reply with the description for {taxon.GetRank().GetName()} **{TaxonFormatter.GetString(taxon, false)}**.");
                 IResponsiveMessageResponse response = await ResponsiveMessageService.GetResponseAsync(Context, message);
 
                 if (!response.Canceled)

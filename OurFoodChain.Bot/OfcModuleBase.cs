@@ -577,18 +577,12 @@ namespace OurFoodChain {
                 List<ISpecies> speciesList = new List<ISpecies>();
 
                 foreach (ITaxon subtaxon in await Db.GetSubtaxaAsync(taxon))
-                    speciesList.Add(await Db.GetSpeciesAsync(subtaxon.Id, GetSpeciesOptions.Fast & ~GetSpeciesOptions.IgnoreGenus));
+                    speciesList.Add(await Db.GetSpeciesAsync(subtaxon.Id));
 
-                speciesList.Sort((lhs, rhs) => lhs.GetName().CompareTo(rhs.GetName()));
+                speciesList.Sort((lhs, rhs) => TaxonFormatter.GetString(lhs, false).CompareTo(TaxonFormatter.GetString(rhs, false)));
 
-                foreach (ISpecies species in speciesList.Where(s => s.IsValid())) {
-
-                    if (species.Status.IsExinct)
-                        subItems.Add(string.Format("~~{0}~~", species.GetName()));
-                    else
-                        subItems.Add(species.GetName());
-
-                }
+                foreach (ISpecies species in speciesList.Where(s => s.IsValid()))
+                    subItems.Add(TaxonFormatter.GetString(species));
 
             }
             else {

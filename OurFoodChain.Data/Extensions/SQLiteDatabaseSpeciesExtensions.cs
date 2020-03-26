@@ -59,7 +59,7 @@ namespace OurFoodChain.Data.Extensions {
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Species SET name = $name, common_name = $common_name, genus_id = $genus_id, owner = $owner, user_id = $user_id WHERE id = $species_id")) {
 
                 cmd.Parameters.AddWithValue("$species_id", species.Id);
-                cmd.Parameters.AddWithValue("$common_name", species.GetCommonName());
+                cmd.Parameters.AddWithValue("$common_name", species.GetCommonName().ToLowerInvariant());
                 cmd.Parameters.AddWithValue("$name", species.Name.ToLowerInvariant());
                 cmd.Parameters.AddWithValue("$genus_id", species.ParentId);
                 cmd.Parameters.AddWithValue("$owner", species.Creator.Name);

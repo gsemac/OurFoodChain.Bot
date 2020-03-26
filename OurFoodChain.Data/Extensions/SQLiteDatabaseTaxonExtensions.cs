@@ -173,7 +173,7 @@ namespace OurFoodChain.Data.Extensions {
                 if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(name))
                     return Enumerable.Empty<ITaxon>();
 
-                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name = $name OR common_name = $name", tableName))) {
+                using (SQLiteCommand cmd = new SQLiteCommand(string.Format("SELECT * FROM {0} WHERE name = $name OR common_name = $name COLLATE NOCASE", tableName))) {
 
                     cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
 

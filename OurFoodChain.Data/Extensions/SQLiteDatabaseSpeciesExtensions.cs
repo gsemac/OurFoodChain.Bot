@@ -113,7 +113,7 @@ namespace OurFoodChain.Data.Extensions {
 
                 // Attempt to get the species by common name/species name.
 
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name)")) {
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Species WHERE name = $name OR common_name = $name OR id IN (SELECT species_id FROM SpeciesCommonNames where name = $name) COLLATE NOCASE")) {
 
                     cmd.Parameters.AddWithValue("$name", name.ToLowerInvariant());
 

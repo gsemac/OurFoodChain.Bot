@@ -259,7 +259,9 @@ namespace OurFoodChain.Bot {
         }
 
         [Command("gallery", RunMode = RunMode.Async), Alias("pic", "pics", "picture", "pictures", "image", "images")]
-        public async Task Gallery(string arg0) {
+        public async Task Gallery([Remainder]string arg0) {
+
+            arg0 = StringUtilities.StripOuterQuotes(arg0);
 
             // Possible cases:
             // 1. <species>

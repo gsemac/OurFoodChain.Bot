@@ -1,10 +1,10 @@
 ﻿using OurFoodChain.Data;
+using OurFoodChain.Discord.Services;
 using OurFoodChain.Extensions;
 using OurFoodChain.Gotchis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,16 +16,18 @@ namespace OurFoodChain.Bot.Services {
 
         public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
 
-        public GotchiBackgroundService(IOfcBotConfiguration botConfiguration, SQLiteDatabase database) {
+        public GotchiBackgroundService(IOfcBotConfiguration botConfiguration, IDatabaseService databaseService) {
 
             this.botConfiguration = botConfiguration;
-            this.database = database;
+            this.databaseService = databaseService;
 
         }
 
         public async Task InitializeAsync() {
 
             _ = Task.Run(async () => {
+
+                await Task.Delay(DelayMilliseconds, cancellationTokenSource.Token);
 
                 while (!cancellationTokenSource.Token.IsCancellationRequested) {
 
@@ -36,8 +38,6 @@ namespace OurFoodChain.Bot.Services {
                         // Exceptions shouldn't kill the task.
                         // #todo log the error
                     }
-
-                    await Task.Delay(DelayMilliseconds, cancellationTokenSource.Token);
 
                 }
 
@@ -56,7 +56,7 @@ namespace OurFoodChain.Bot.Services {
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private readonly IOfcBotConfiguration botConfiguration;
-        private readonly SQLiteDatabase database;
+        private readonly IDatabaseService databaseService;
 
         private async Task DoBackgroundLoopAsync() {
 
@@ -64,17 +64,21 @@ namespace OurFoodChain.Bot.Services {
 
             if (botConfiguration.GotchisEnabled) {
 
-                foreach (IGrouping<ulong, Gotchi> userGotchis in (await database.GetGotchisAsync()).GroupBy(g => g.OwnerId)) {
+                foreach (SQLiteDatabase database in await databaseService.GetDatabasesAsync()) {
 
-                    await DoAutoFeederAsync(userGotchis.Key, userGotchis);
-                    await DoEvolveAsync(userGotchis.Key, userGotchis);
+                    foreach (IGrouping<ulong, Gotchi> userGotchis in (await database.GetGotchisAsync()).GroupBy(g => g.OwnerId)) {
+
+                        await DoAutoFeederAsync(userGotchis.Key, database, userGotchis);
+                        await DoEvolveAsync(userGotchis.Key, database, userGotchis);
+
+                    }
 
                 }
 
             }
 
         }
-        private async Task DoEvolveAsync(ulong userId, IEnumerable<Gotchi> userGotchis) {
+        private async Task DoEvolveAsync(ulong userId, SQLiteDatabase database, IEnumerable<Gotchi> userGotchis) {
 
             // Gotchi evolution (time-based)
 
@@ -86,7 +90,7 @@ namespace OurFoodChain.Bot.Services {
             }
 
         }
-        private async Task DoAutoFeederAsync(ulong userId, IEnumerable<Gotchi> userGotchis) {
+        private async Task DoAutoFeederAsync(ulong userId, SQLiteDatabase database, IEnumerable<Gotchi> userGotchis) {
 
             // Auto-feeder
 

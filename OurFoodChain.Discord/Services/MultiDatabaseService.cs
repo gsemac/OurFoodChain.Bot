@@ -1,9 +1,8 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Data;
-using OurFoodChain.Discord.Utilities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
@@ -43,6 +42,16 @@ namespace OurFoodChain.Discord.Services {
             }
 
             return await GetDatabaseAsync(databaseFilePath);
+
+        }
+        public override async Task<IEnumerable<SQLiteDatabase>> GetDatabasesAsync() {
+
+            List<SQLiteDatabase> result = new List<SQLiteDatabase>();
+
+            foreach (IGuild guild in discordClient.Guilds)
+                result.Add(await GetDatabaseAsync(guild));
+
+            return result;
 
         }
         public override async Task UploadDatabaseBackupAsync(IMessageChannel channel, IGuild guild) {

@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Commands;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
@@ -7,6 +6,7 @@ using OurFoodChain.Debug;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,6 +35,7 @@ namespace OurFoodChain.Discord.Services {
         }
 
         public abstract Task<SQLiteDatabase> GetDatabaseAsync(IGuild guild);
+        public abstract Task<IEnumerable<SQLiteDatabase>> GetDatabasesAsync();
 
         public abstract Task UploadDatabaseBackupAsync(IMessageChannel channel, IGuild guild);
 

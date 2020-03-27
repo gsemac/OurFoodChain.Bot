@@ -7,9 +7,17 @@ using OurFoodChain.Debug;
 using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OurFoodChain.Discord.Services {
+
+    public enum DatabaseBackupFrequency {
+        Always,
+        Daily,
+        Default = Always
+    }
 
     public abstract class DatabaseServiceBase :
         IDatabaseService {
@@ -26,9 +34,9 @@ namespace OurFoodChain.Discord.Services {
 
         }
 
-        public abstract Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context);
+        public abstract Task<SQLiteDatabase> GetDatabaseAsync(IGuild guild);
 
-        public abstract Task UploadDatabaseBackupAsync(ICommandContext context);
+        public abstract Task UploadDatabaseBackupAsync(IMessageChannel channel, IGuild guild);
 
         // Protected members
 
@@ -52,13 +60,13 @@ namespace OurFoodChain.Discord.Services {
             return SQLiteDatabase.FromFile(databaseFilePath);
 
         }
-        protected async Task UploadDatabaseBackupAsync(ICommandContext context, string databaseFilePath) {
+        protected async Task UploadDatabaseBackupAsync(IMessageChannel channel, string databaseFilePath) {
 
             bool backupInProgress = GetDatabaseStatus(databaseFilePath).BackupInProgress;
 
             if (backupInProgress) {
 
-                await DiscordUtilities.ReplyErrorAsync(context.Channel, "A backup is already in progress. Please wait until it has completed.");
+                await DiscordUtilities.ReplyErrorAsync(channel, "A backup is already in progress. Please wait until it has completed.");
 
             }
             else {
@@ -69,23 +77,23 @@ namespace OurFoodChain.Discord.Services {
 
                     try {
 
-                        await DiscordUtilities.ReplyInfoAsync(context.Channel,
+                        await DiscordUtilities.ReplyInfoAsync(channel,
                             string.Format("Uploading database backup ({0:0.##} MB).\nThe backup will be posted in this channel when it is complete.",
                             new System.IO.FileInfo(databaseFilePath).Length / 1024000.0));
 
-                        await context.Channel.SendFileAsync(databaseFilePath, string.Format("`Database backup ({0})`", DateUtilities.GetCurrentDateUtc()));
+                        await channel.SendFileAsync(databaseFilePath, string.Format("`Database backup ({0})`", DateUtilities.GetCurrentDateUtc()));
 
                     }
                     catch (Exception) {
 
-                        await DiscordUtilities.ReplyErrorAsync(context.Channel, "Database file cannot be accessed.");
+                        await DiscordUtilities.ReplyErrorAsync(channel, "Database file cannot be accessed.");
 
                     }
 
                 }
                 else {
 
-                    await DiscordUtilities.ReplyErrorAsync(context.Channel, "Database file does not exist at the specified path.");
+                    await DiscordUtilities.ReplyErrorAsync(channel, "Database file does not exist at the specified path.");
 
                 }
 
@@ -94,24 +102,38 @@ namespace OurFoodChain.Discord.Services {
             }
 
         }
-        protected async Task BackupDatabaseAsync(string databaseFilePath) {
+        protected async Task BackupDatabaseAsync(string databaseFilePath, DatabaseBackupFrequency backupFrequency = DatabaseBackupFrequency.Default) {
 
-            if (System.IO.File.Exists(databaseFilePath)) {
+            if (File.Exists(databaseFilePath)) {
 
-                string databaseDirectoryPath = System.IO.Path.GetDirectoryName(databaseFilePath);
-                string backupDirectoryPath = System.IO.Path.Combine(databaseDirectoryPath, "backups");
+                string databaseDirectoryPath = Path.GetDirectoryName(databaseFilePath);
+                string backupDirectoryPath = Path.Combine(databaseDirectoryPath, "backups");
 
-                if (!System.IO.Directory.Exists(backupDirectoryPath))
-                    System.IO.Directory.CreateDirectory(backupDirectoryPath);
+                if (!Directory.Exists(backupDirectoryPath))
+                    Directory.CreateDirectory(backupDirectoryPath);
 
-                string backupFilename = string.Format("{0}-{1}", DateUtilities.GetCurrentTimestamp(), System.IO.Path.GetFileName(databaseFilePath));
-                string backupFilePath = System.IO.Path.Combine(backupDirectoryPath, backupFilename);
+                bool doBackup = true;
 
-                await OnLogAsync(Debug.LogSeverity.Info, "Creating database backup: " + backupFilePath);
+                DateTimeOffset lastWriteTime = GetFileLastWriteTime(databaseFilePath);
+                DateTimeOffset lastBackupWriteTime = GetLastDatabaseBackupTime(backupDirectoryPath);
 
-                System.IO.Directory.CreateDirectory("backups");
+                if (backupFrequency == DatabaseBackupFrequency.Daily && (DateTimeOffset.UtcNow.Date == lastBackupWriteTime.Date))
+                    doBackup = false;
 
-                System.IO.File.Copy(databaseFilePath, backupFilePath);
+                doBackup = doBackup && lastWriteTime != lastBackupWriteTime;
+
+                if (doBackup) {
+
+                    string backupFilename = string.Format("{0}-{1}", DateUtilities.GetCurrentTimestamp(), Path.GetFileName(databaseFilePath));
+                    string backupFilePath = Path.Combine(backupDirectoryPath, backupFilename);
+
+                    await OnLogAsync(Debug.LogSeverity.Info, "Creating database backup " + backupFilePath);
+
+                    Directory.CreateDirectory("backups");
+
+                    File.Copy(databaseFilePath, backupFilePath);
+
+                }
 
             }
 
@@ -131,7 +153,7 @@ namespace OurFoodChain.Discord.Services {
 
         private async Task<SQLiteDatabase> InitializeDatabaseAsync(string databaseFilePath) {
 
-            await OnLogAsync(Debug.LogSeverity.Info, "Initializing database: " + databaseFilePath);
+            await OnLogAsync(Debug.LogSeverity.Info, "Initializing database " + databaseFilePath);
 
             SQLiteDatabase database = SQLiteDatabase.FromFile(databaseFilePath);
             SQLiteDatabaseUpdater updater = new SQLiteDatabaseUpdater(DatabaseUpdatesDirectory);
@@ -155,6 +177,25 @@ namespace OurFoodChain.Discord.Services {
             }
 
             return databaseStatuses[databaseFilePath];
+
+        }
+
+        private DateTimeOffset GetFileLastWriteTime(string filePath) {
+
+            return new FileInfo(filePath).LastWriteTimeUtc;
+
+        }
+        private DateTimeOffset GetLastDatabaseBackupTime(string backupDirectoryPath) {
+
+            if (!Directory.Exists(backupDirectoryPath))
+                return DateTimeOffset.MinValue;
+
+            DirectoryInfo directoryInfo = new DirectoryInfo(backupDirectoryPath);
+
+            return directoryInfo.GetFiles("*.db", SearchOption.TopDirectoryOnly)
+                .Select(fileInfo => new DateTimeOffset(fileInfo.LastWriteTimeUtc))
+                .OrderByDescending(date => date)
+                .FirstOrDefault();
 
         }
 

@@ -13,9 +13,9 @@ namespace OurFoodChain.Discord.Services {
 
         Task InitializeAsync();
 
-        Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context);
+        Task<SQLiteDatabase> GetDatabaseAsync(IGuild guild);
 
-        Task UploadDatabaseBackupAsync(ICommandContext context);
+        Task UploadDatabaseBackupAsync(IMessageChannel channel, IGuild guild);
 
     }
 

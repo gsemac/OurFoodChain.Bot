@@ -23,7 +23,7 @@ namespace OurFoodChain.Services {
 
         public async Task<string> CreateGifAsync(ICommandContext context, IEnumerable<GotchiGifCreatorParams> gifParams, GotchiGifCreatorExtraParams extraGifParams) {
 
-            string gifFilePath = await (await databaseService.GetDatabaseAsync(context)).CreateGotchiGifAsync(gifParams.ToArray(), extraGifParams);
+            string gifFilePath = await (await databaseService.GetDatabaseAsync(context.Guild)).CreateGotchiGifAsync(gifParams.ToArray(), extraGifParams);
             string uploadUrl = string.Empty;
 
             if (!string.IsNullOrEmpty(gifFilePath))

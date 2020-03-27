@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using OurFoodChain.Data;
 using System.Threading.Tasks;
 
@@ -15,13 +16,13 @@ namespace OurFoodChain.Discord.Services {
 
             await BackupDatabaseAsync(DatabaseFilePath);
 
-            await GetDatabaseAsync((ICommandContext)null); // initialize the database by accessing it
+            await GetDatabaseAsync((IGuild)null); // initialize the database by accessing it
 
             await base.InitializeAsync();
 
         }
 
-        public override async Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context) {
+        public override async Task<SQLiteDatabase> GetDatabaseAsync(IGuild guild) {
 
             // Each guild uses the same database.
 
@@ -29,9 +30,9 @@ namespace OurFoodChain.Discord.Services {
 
         }
 
-        public override async Task UploadDatabaseBackupAsync(ICommandContext context) {
+        public override async Task UploadDatabaseBackupAsync(IMessageChannel channel, IGuild guild) {
 
-            await UploadDatabaseBackupAsync(context, DatabaseFilePath);
+            await UploadDatabaseBackupAsync(channel, DatabaseFilePath);
 
         }
 

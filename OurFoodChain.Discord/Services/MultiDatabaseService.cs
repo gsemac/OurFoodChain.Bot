@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using OurFoodChain.Data;
 using OurFoodChain.Discord.Utilities;
 using System;
@@ -12,19 +13,30 @@ namespace OurFoodChain.Discord.Services {
 
         // Public members
 
-        public async override Task<SQLiteDatabase> GetDatabaseAsync(ICommandContext context) {
+        public MultiDatabaseService(DiscordSocketClient discordClient) {
+
+            this.discordClient = discordClient;
+
+        }
+
+        public override async Task InitializeAsync() {
+
+            discordClient.GuildAvailable += GuildAvailableAsync;
+
+            await base.InitializeAsync();
+
+        }
+        public override async Task<SQLiteDatabase> GetDatabaseAsync(IGuild guild) {
 
             // Each guild should have access to their own database, saved inside of their guild folder.
 
-            string databaseFilePath = GetDatabasePathForGuild(context.Guild);
+            string databaseFilePath = GetDatabaseFilePathForGuild(guild);
 
             if (string.IsNullOrWhiteSpace(databaseFilePath)) {
 
-                string exceptionMessage = context.Guild is null ?
+                string exceptionMessage = guild is null ?
                     "Database must be accessed through a guild." :
                     "The database path could not be determined.";
-
-                await DiscordUtilities.ReplyErrorAsync(context.Channel, exceptionMessage);
 
                 throw new Exception(exceptionMessage);
 
@@ -33,15 +45,17 @@ namespace OurFoodChain.Discord.Services {
             return await GetDatabaseAsync(databaseFilePath);
 
         }
-        public async override Task UploadDatabaseBackupAsync(ICommandContext context) {
+        public override async Task UploadDatabaseBackupAsync(IMessageChannel channel, IGuild guild) {
 
-            await UploadDatabaseBackupAsync(context, GetDatabasePathForGuild(context.Guild));
+            await UploadDatabaseBackupAsync(channel, GetDatabaseFilePathForGuild(guild));
 
         }
 
         // Private members
 
-        private string GetDatabasePathForGuild(IGuild guild) {
+        private readonly DiscordSocketClient discordClient;
+
+        private string GetDatabaseFilePathForGuild(IGuild guild) {
 
             string databaseFilePath = string.Empty;
 
@@ -57,6 +71,16 @@ namespace OurFoodChain.Discord.Services {
             }
 
             return databaseFilePath;
+
+        }
+
+        private async Task GuildAvailableAsync(IGuild guild) {
+
+            // Create a database backup and initialize the database.
+
+            await BackupDatabaseAsync(GetDatabaseFilePathForGuild(guild));
+
+            await GetDatabaseAsync(guild); // initialize the database by accessing it
 
         }
 

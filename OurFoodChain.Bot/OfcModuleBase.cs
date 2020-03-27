@@ -70,7 +70,18 @@ namespace OurFoodChain {
 
         public async Task<SQLiteDatabase> GetDatabaseAsync() {
 
-            return await DatabaseService.GetDatabaseAsync(Context);
+            try {
+
+                return await DatabaseService.GetDatabaseAsync(Context.Guild);
+
+            }
+            catch (Exception ex) {
+
+                await ReplyErrorAsync(ex.Message);
+
+                throw ex;
+
+            }
 
         }
 

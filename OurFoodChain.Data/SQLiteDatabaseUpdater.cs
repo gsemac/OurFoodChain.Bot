@@ -27,14 +27,20 @@ namespace OurFoodChain.Data {
                .OrderBy(f => f);
 
             long version = await GetDatabaseVersionAsync(database);
+            long initialVersion = version;
+            long latestVersion = LatestVersion;
+
+            if (initialVersion <= 0)
+                OnLog($"Building database (version {latestVersion})");
 
             // Update the database to the latest version.
 
             using (SQLiteConnection conn = await database.GetConnectionAsync()) {
 
-                for (long i = version + 1; i <= LatestVersion; ++i) {
+                for (long i = version + 1; i <= latestVersion; ++i) {
 
-                    OnLog(string.Format("Updating database to version {0}", i));
+                    if (initialVersion != 0)
+                        OnLog(string.Format("Updating database to version {0}", i));
 
                     await ApplyDatabaseUpdateAsync(conn, updateFiles.ElementAt((int)(i - 1)));
 

@@ -125,9 +125,6 @@ namespace OurFoodChain.Discord.Services {
 
                 IUserMessage sentMessage = await context.Channel.SendMessageAsync(message.CurrentPage?.Text, false, message.CurrentPage?.Embed?.ToDiscordEmbed());
 
-                foreach (string reaction in message.Reactions)
-                    await sentMessage.AddReactionAsync(new Emoji(reaction));
-
                 if (paginatedMessages.Count() >= MaxPaginatedMessages) {
 
                     // Remove the oldest message.
@@ -156,8 +153,18 @@ namespace OurFoodChain.Discord.Services {
                     Message = message
                 };
 
-                if (paginatedMessages.TryAdd(sentMessage.Id, info))
+                if (paginatedMessages.TryAdd(sentMessage.Id, info)) {
+
+                    // Add the reactions to the message after we add it to the dictionary.
+                    // This ensures that the service is ready to respond to reactions as soon as they are added.
+
+                    foreach (string reaction in message.Reactions)
+                        await sentMessage.AddReactionAsync(new Emoji(reaction));
+
                     return info;
+
+                }
+                    
             }
 
             return null;

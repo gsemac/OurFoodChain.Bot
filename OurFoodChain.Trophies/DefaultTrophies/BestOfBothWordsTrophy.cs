@@ -10,7 +10,7 @@ namespace OurFoodChain.Trophies.DefaultTrophies {
         ZoneTypeMatchTrophyBase {
 
         public BestOfBothWorldsTrophy() :
-            base("Best of Both Worlds", "Create an amphibious species.", TrophyFlags.None, "aquatic|terrestrial") {
+            base("Best of Both Worlds", "Create an amphibious species.", TrophyFlags.None, new[] { "aquatic", "terrestrial" }) {
         }
 
     }

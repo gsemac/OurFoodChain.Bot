@@ -929,6 +929,7 @@ namespace OurFoodChain.Bot.Modules {
                         .OrderBy(g => g.Key);
 
                     StringBuilder result = new StringBuilder();
+                    bool isFirstLine = true;
 
                     foreach (var eventGroup in groupedEvents) {
 
@@ -938,7 +939,7 @@ namespace OurFoodChain.Bot.Modules {
 
                         if (eventGroup.First() is ISpeciesZoneInfo) {
 
-                            result.Append(eventGroup == groupedEvents.First() ? "Started in " : "Spread to ");
+                            result.Append(isFirstLine ? "Started in " : "Spread to ");
                             result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
                             result.Append(StringUtilities.ConjunctiveJoin(eventGroup.OfType<ISpeciesZoneInfo>().Select(ev => ev.Zone.GetShortName())));
 
@@ -960,6 +961,8 @@ namespace OurFoodChain.Bot.Modules {
                         }
 
                         result.AppendLine();
+
+                        isFirstLine = false;
 
                     }
 

@@ -4,10 +4,10 @@ using System.Text;
 
 namespace OurFoodChain.Common {
 
-    public interface IConservationStatus :
-        IExtinctionInfo {
+    public interface IExtinctionInfo :
+        ITimestampedEvent {
 
-        bool IsExinct { get; }
+        string Reason { get; set; }
 
     }
 

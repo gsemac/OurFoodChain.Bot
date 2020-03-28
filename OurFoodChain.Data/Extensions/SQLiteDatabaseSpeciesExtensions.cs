@@ -840,6 +840,50 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task AddLocalExtinctionAsync(this SQLiteDatabase database, ISpecies species, LocalExtinctionInfo extinctionInfo) {
+
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO LocalExtinctions(species_id, zone_id, reason, timestamp) VALUES($species_id, $zone_id, $reason, $timestamp)")) {
+
+                cmd.Parameters.AddWithValue("$species_id", species.Id);
+                cmd.Parameters.AddWithValue("$zone_id", extinctionInfo.Zone.Id);
+                cmd.Parameters.AddWithValue("$reason", extinctionInfo.Reason);
+                cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetTimestampFromDate(extinctionInfo.Date ?? DateUtilities.GetCurrentDateUtc()));
+
+                await database.ExecuteNonQueryAsync(cmd);
+
+            }
+
+            await database.RemoveZonesAsync(species, new[] { extinctionInfo.Zone });
+
+        }
+        public static async Task<IEnumerable<LocalExtinctionInfo>> GetLocalExtinctionsAsync(this SQLiteDatabase database, ISpecies species) {
+
+            List<LocalExtinctionInfo> result = new List<LocalExtinctionInfo>();
+
+            if (species.IsValid()) {
+
+                using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM LocalExtinctions WHERE species_id = $species_id")) {
+
+                    cmd.Parameters.AddWithValue("$species_id", species.Id);
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd)) {
+
+                        result.Add(new LocalExtinctionInfo {
+                            Date = DateUtilities.GetDateFromTimestamp(row.Field<long>("timestamp")),
+                            Reason = row.Field<string>("reason"),
+                            Zone = await database.GetZoneAsync(row.Field<long>("zone_id"))
+                        });
+
+                    }
+
+                }
+
+            }
+
+            return result;
+
+        }
+
         public static async Task<ISearchResult> GetSearchResultsAsync(this SQLiteDatabase database, ISearchContext context, ISearchQuery query, ITaxonFormatter formatter = null) {
 
             DateTimeOffset initialTimestamp = DateUtilities.GetCurrentDateUtc();
@@ -1020,8 +1064,8 @@ namespace OurFoodChain.Data.Extensions {
                         long timestamp = (long)row.Field<decimal>("timestamp");
 
                         result = new ConservationStatus() {
-                            ExtinctionDate = DateUtilities.GetDateFromTimestamp(timestamp),
-                            ExtinctionReason = reason
+                            Date = DateUtilities.GetDateFromTimestamp(timestamp),
+                            Reason = reason
                         };
 
                     }
@@ -1048,8 +1092,8 @@ namespace OurFoodChain.Data.Extensions {
                     using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR IGNORE INTO Extinctions(species_id, reason, timestamp) VALUES($species_id, $reason, $timestamp)")) {
 
                         cmd.Parameters.AddWithValue("$species_id", species.Id);
-                        cmd.Parameters.AddWithValue("$reason", species.Status.ExtinctionReason);
-                        cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetTimestampFromDate(species.Status.ExtinctionDate ?? DateUtilities.GetCurrentDateUtc()));
+                        cmd.Parameters.AddWithValue("$reason", species.Status.Reason);
+                        cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetTimestampFromDate(species.Status.Date ?? DateUtilities.GetCurrentDateUtc()));
 
                         await database.ExecuteNonQueryAsync(cmd);
 
@@ -1063,7 +1107,7 @@ namespace OurFoodChain.Data.Extensions {
                     using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Extinctions SET reason = $reason WHERE species_id = $species_id")) {
 
                         cmd.Parameters.AddWithValue("$species_id", species.Id);
-                        cmd.Parameters.AddWithValue("$reason", species.Status.ExtinctionReason);
+                        cmd.Parameters.AddWithValue("$reason", species.Status.Reason);
 
                         await database.ExecuteNonQueryAsync(cmd);
 

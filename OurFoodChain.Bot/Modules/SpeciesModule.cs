@@ -605,19 +605,20 @@ namespace OurFoodChain.Bot.Modules {
             // Possible cases:
             // 1. <genus> <species>
             // 2. <species> <reason>
+            // 3. <species> <zone>
 
             IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(arg0, arg1);
 
             if (matchingSpecies.Count() > 0) {
 
-                // One or more matching species exists, so we have case (1).
+                // One or more matching species exists, so we have Case (1).
 
                 await SetExtinct(arg0, arg1, string.Empty);
 
             }
             else {
 
-                // No matching species exist, so we have case (2).
+                // No matching species exist, so we have Case (2) or Case (3).
 
                 await SetExtinct(string.Empty, arg0, arg1);
 
@@ -625,24 +626,85 @@ namespace OurFoodChain.Bot.Modules {
 
         }
         [Command("+extinct", RunMode = RunMode.Async), Alias("setextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetExtinct(string genusName, string speciesName, string reason) {
+        public async Task SetExtinct(string arg0, string arg1, string arg2) {
+
+            // We have two possible cases:
+            // 1. <genus> <species> <reason>
+            // 2. <genus> <species> <zone>
+            // 3. <species> <zone> <reason>
+
+            IEnumerable<ISpecies> matchingSpecies = await Db.GetSpeciesAsync(arg0, arg1);
+
+            if (matchingSpecies.Count() == 1) {
+
+                // Assume that we have Case (1) or Case (2).
+
+                ISpecies species = matchingSpecies.First();
+                IZone zone = await Db.GetZoneAsync(arg2);
+
+                if (zone.IsValid())
+                    await ReplySetExtinctAsync(species, zone, string.Empty);
+                else
+                    await ReplySetExtinctAsync(species, arg2);
+
+            }
+            else if (matchingSpecies.Count() == 0) {
+
+                // Assume that we have Case (3).
+
+                IZone zone = await Db.GetZoneAsync(arg1);
+
+                if (zone.IsValid()) {
+
+                    ISpecies species = await GetSpeciesOrReplyAsync(arg0);
+
+                    if (species.IsValid())
+                        await ReplySetExtinctAsync(species, zone, arg2);
+
+                }
+                else {
+
+                    // If the zone is invalid as well, assume that we have Case (1) or Case (2) with an invalid species.
+
+                    ISpecies species = await GetSpeciesOrReplyAsync(arg0, arg1);
+
+                    if (species.IsValid()) {
+
+                        zone = await Db.GetZoneAsync(arg2);
+
+                        if (zone.IsValid())
+                            await ReplySetExtinctAsync(species, zone, string.Empty);
+                        else
+                            await ReplySetExtinctAsync(species, arg2);
+
+                    }
+
+                }
+
+            }
+            else {
+
+                // We got more than one match, so show the matches to the user.
+
+                await ReplyValidateSpeciesAsync(matchingSpecies);
+
+            }
+
+        }
+        [Command("+extinct", RunMode = RunMode.Async), Alias("setextinct"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
+        public async Task SetExtinct(string genusName, string speciesName, string zoneName, string reason) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
             if (species.IsValid()) {
 
-                bool alreadyExtinct = species.IsExtinct();
+                IZone zone = await this.GetZoneOrReplyAsync(zoneName);
 
-                species.Status.ExtinctionDate = DateUtilities.GetCurrentDateUtc();
-                species.Status.ExtinctionReason = reason;
+                if (zone.IsValid()) {
 
-                await Db.UpdateSpeciesAsync(species);
+                    await ReplySetExtinctAsync(species, zone, reason);
 
-                string confirmationMessage = alreadyExtinct ?
-                    $"Updated extinction details for **{species.GetShortName()}**." :
-                    $"The last **{species.GetShortName()}** has perished, and the species is now extinct.";
-
-                await ReplySuccessAsync(confirmationMessage);
+                }
 
             }
 
@@ -665,7 +727,7 @@ namespace OurFoodChain.Bot.Modules {
 
                     // The species is extinct.
 
-                    species.Status.ExtinctionDate = null;
+                    species.Status.Date = null;
 
                     await Db.UpdateSpeciesAsync(species);
 
@@ -845,59 +907,63 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                IEnumerable<ISpeciesZoneInfo> zones = (await Db.GetZonesAsync(species)).OrderBy(x => x.Date);
+                // Get timestamped events that we will display in the migration info.
 
-                if (zones.Count() <= 0) {
+                IEnumerable<ITimestampedEvent> zoneEvents = await Db.GetZonesAsync(species);
+                IEnumerable<ITimestampedEvent> localExtinctionEvents = await Db.GetLocalExtinctionsAsync(species);
+
+                if (zoneEvents.Count() <= 0) {
+
+                    // There are no events to show.
 
                     await ReplyInfoAsync($"**{species.GetShortName()}** is not present in any zones.");
 
                 }
                 else {
 
-                    // Group zones changes that happened closely together (12 hours).
+                    // Group events that occurred on the same date.
+                    // We should only group events that are of the same type.
 
-                    List<List<ISpeciesZoneInfo>> zoneGroups = new List<List<ISpeciesZoneInfo>>();
-
-                    DateTimeOffset? lastTimestamp = zones.Count() > 0 ? zones.First().Date : default;
-
-                    foreach (ISpeciesZoneInfo zone in zones) {
-
-                        if (zoneGroups.Count() <= 0)
-                            zoneGroups.Add(new List<ISpeciesZoneInfo>());
-
-                        if (zoneGroups.Last().Count() <= 0 || Math.Abs((zoneGroups.Last().Last().Date - zone.Date).Value.TotalSeconds) < 60 * 60 * 12)
-                            zoneGroups.Last().Add(zone);
-                        else {
-
-                            lastTimestamp = zone.Date;
-                            zoneGroups.Add(new List<ISpeciesZoneInfo> { zone });
-
-                        }
-
-                    }
+                    var groupedEvents = zoneEvents.GroupBy(ev => ev.Date?.Date ?? species.CreationDate)
+                        .Concat(localExtinctionEvents.GroupBy(ev => ev.Date?.Date ?? species.CreationDate))
+                        .OrderBy(g => g.Key);
 
                     StringBuilder result = new StringBuilder();
 
-                    for (int i = 0; i < zoneGroups.Count(); ++i) {
+                    foreach (var eventGroup in groupedEvents) {
 
-                        if (zoneGroups[i].Count() <= 0)
-                            continue;
+                        DateTimeOffset timestamp = eventGroup.Key;
 
-                        DateTimeOffset? ts = i == 0 ? species.CreationDate : zoneGroups[i].First().Date;
+                        result.Append(string.Format("{0} - ", await GetDateStringAsync(timestamp, DateStringFormat.Short)));
 
-                        if (!ts.HasValue)
-                            ts = species.CreationDate;
+                        if (eventGroup.First() is ISpeciesZoneInfo) {
 
-                        result.Append(string.Format("{0} - ", await GetDateStringAsync((DateTimeOffset)ts, DateStringFormat.Short)));
-                        result.Append(i == 0 ? "Started in " : "Spread to ");
-                        result.Append(zoneGroups[i].Count() == 1 ? "Zone " : "Zones ");
-                        result.Append(StringUtilities.ConjunctiveJoin(zoneGroups[i].Select(x => x.Zone.GetShortName())));
+                            result.Append(eventGroup == groupedEvents.First() ? "Started in " : "Spread to ");
+                            result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
+                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.OfType<ISpeciesZoneInfo>().Select(ev => ev.Zone.GetShortName())));
+
+                        }
+                        else if (eventGroup.First() is LocalExtinctionInfo) {
+
+                            result.Append("Went extinct in ");
+                            result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
+                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.OfType<LocalExtinctionInfo>().GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName())));
+
+                            string reason = eventGroup.OfType<LocalExtinctionInfo>()
+                                .Select(ev => ev.Reason)
+                                .Where(r => !string.IsNullOrEmpty(r))
+                                .FirstOrDefault();
+
+                            if (!string.IsNullOrWhiteSpace(reason))
+                                result.Append($" ({reason.ToLowerInvariant()})");
+
+                        }
 
                         result.AppendLine();
 
                     }
 
-                    await ReplyAsync(string.Format("```{0}```", result.ToString()));
+                    await ReplyAsync($"```{result.ToString()}```");
 
                 }
 
@@ -1139,6 +1205,62 @@ namespace OurFoodChain.Bot.Modules {
             };
 
             await ReplyAsync(embed);
+
+        }
+
+        public async Task ReplySetExtinctAsync(ISpecies species, string reason = "") {
+
+            bool alreadyExtinct = species.IsExtinct();
+
+            if (alreadyExtinct && string.IsNullOrWhiteSpace(reason)) {
+
+                // If the species is already extinct and the user isn't updating the extinction reason, show a warning.
+
+                await ReplyWarningAsync($"{TaxonFormatter.GetString(species, false)} is already extinct.");
+
+            }
+            else {
+
+                species.Status.Date = DateUtilities.GetCurrentDateUtc();
+
+                if (!string.IsNullOrWhiteSpace(reason))
+                    species.Status.Reason = reason;
+
+                await Db.UpdateSpeciesAsync(species);
+
+                string confirmationMessage = alreadyExtinct ?
+                    $"Updated extinction details for **{TaxonFormatter.GetString(species, false)}**." :
+                    $"The last **{TaxonFormatter.GetString(species, false)}** has perished, and the species is now extinct.";
+
+                await ReplySuccessAsync(confirmationMessage);
+
+            }
+
+        }
+        public async Task ReplySetExtinctAsync(ISpecies species, IZone zone, string reason = "") {
+
+            // Make sure that species is actually in the zone first.
+
+            IEnumerable<ISpeciesZoneInfo> zonesInfo = await Db.GetZonesAsync(species);
+
+            if (zonesInfo.Any(z => z.Zone.Id == zone.Id)) {
+
+                LocalExtinctionInfo localExtinctionInfo = new LocalExtinctionInfo {
+                    Date = DateUtilities.GetCurrentDateUtc(),
+                    Reason = reason,
+                    Zone = zone
+                };
+
+                await Db.AddLocalExtinctionAsync(species, localExtinctionInfo);
+
+                await ReplySuccessAsync($"{TaxonFormatter.GetString(species, false).ToBold()} is now extinct in {zone.GetFullName().ToBold()}.");
+
+            }
+            else {
+
+                await ReplyErrorAsync($"{TaxonFormatter.GetString(species, false).ToBold()} is not present in {zone.GetFullName().ToBold()}.");
+
+            }
 
         }
 

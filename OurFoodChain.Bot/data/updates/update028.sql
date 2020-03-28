@@ -1,0 +1,2 @@
+﻿-- Add a table for storing local extinctions.
+CREATE TABLE IF NOT EXISTS LocalExtinctions(species_id INTEGER, zone_id INTEGER, reason TEXT, timestamp INTEGER, FOREIGN KEY(species_id) REFERENCES Species(id), FOREIGN KEY(zone_id) REFERENCES Zones(id));

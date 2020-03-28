@@ -254,7 +254,7 @@ namespace OurFoodChain {
         public async Task<ISpeciesAmbiguityResolverResult> ReplyResolveAmbiguityAsync(string arg0, string arg1, string arg2, string arg3 = "", AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
 
             ISpeciesAmbiguityResolver resolver = new SpeciesAmbiguityResolver(await GetDatabaseAsync());
-            ISpeciesAmbiguityResolverResult result = string.IsNullOrWhiteSpace(arg3) ? await resolver.ResolveAsync(arg0, arg1, arg2, options) : await resolver.ResolveAsync(arg0, arg1, arg2, arg3, options);
+            ISpeciesAmbiguityResolverResult result = string.IsNullOrWhiteSpace(arg3) ? await resolver.Resolve2SpeciesAsync(arg0, arg1, arg2, options) : await resolver.Resolve2SpeciesAsync(arg0, arg1, arg2, arg3, options);
 
             ISpecies species1 = null;
             ISpecies species2 = null;
@@ -340,8 +340,8 @@ namespace OurFoodChain {
 
                 embed.Title = "[EXTINCT] " + embed.Title;
 
-                if (!string.IsNullOrEmpty(species.Status.ExtinctionReason))
-                    descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(DateUtilities.GetTimestampFromDate((DateTimeOffset)species.Status.ExtinctionDate), BotContext), species.Status.ExtinctionReason));
+                if (!string.IsNullOrEmpty(species.Status.Reason))
+                    descriptionBuilder.AppendLine(string.Format("**Extinct ({0}):** _{1}_\n", await BotUtils.TimestampToDateStringAsync(DateUtilities.GetTimestampFromDate((DateTimeOffset)species.Status.Date), BotContext), species.Status.Reason));
 
             }
 

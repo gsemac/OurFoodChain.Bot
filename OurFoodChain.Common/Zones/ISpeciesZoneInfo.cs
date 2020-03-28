@@ -5,11 +5,11 @@ using System.Text;
 
 namespace OurFoodChain.Common.Zones {
 
-    public interface ISpeciesZoneInfo {
+    public interface ISpeciesZoneInfo :
+        ITimestampedEvent {
 
         IZone Zone { get; set; }
         string Notes { get; set; }
-        DateTimeOffset? Date { get; set; }
 
     }
 

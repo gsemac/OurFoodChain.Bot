@@ -20,7 +20,7 @@ namespace OurFoodChain.Data {
 
         }
 
-        public async Task<ISpeciesAmbiguityResolverResult> ResolveAsync(string arg0, string arg1, string arg2, AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
+        public async Task<ISpeciesAmbiguityResolverResult> Resolve2SpeciesAsync(string arg0, string arg1, string arg2, AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
 
             // 1. <genus> <species> <species>
 
@@ -134,7 +134,7 @@ namespace OurFoodChain.Data {
             return new SpeciesAmbiguityResolverResult(species1, species2, suggestionHint);
 
         }
-        public async Task<ISpeciesAmbiguityResolverResult> ResolveAsync(string arg0, string arg1, string arg2, string arg3, AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
+        public async Task<ISpeciesAmbiguityResolverResult> Resolve2SpeciesAsync(string arg0, string arg1, string arg2, string arg3, AmbiguityResolverOptions options = AmbiguityResolverOptions.None) {
 
             // 1. <genus> <species> <?> <?>
 

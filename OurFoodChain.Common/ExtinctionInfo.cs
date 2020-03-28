@@ -4,10 +4,9 @@ using System.Text;
 
 namespace OurFoodChain.Common {
 
-    public class ConservationStatus :
-       IConservationStatus {
+    public class ExtinctionInfo :
+        IExtinctionInfo {
 
-        public bool IsExinct => Date.HasValue;
         public DateTimeOffset? Date { get; set; }
         public string Reason { get; set; }
 

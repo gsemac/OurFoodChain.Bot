@@ -18,6 +18,7 @@ using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Utilities;
 using OurFoodChain.Extensions;
 using OurFoodChain.Discord.Messaging;
+using OurFoodChain.Attributes;
 
 namespace OurFoodChain.Modules {
 
@@ -312,6 +313,38 @@ namespace OurFoodChain.Modules {
                 // The user does not exist in the database.
 
                 await ReplyErrorAsync("No such user exists.");
+
+            }
+
+        }
+
+        [Command("PickServer"), Alias("DMGuild", "DMServer", "PickGuild"), RequireDMChannel]
+        public async Task DmServer([Remainder]string guildName) {
+
+            guildName = StringUtilities.StripOuterQuotes(guildName);
+
+            // Get all guilds shared with the user.
+
+            List<IGuild> sharedGuilds = new List<IGuild>();
+
+            foreach (IGuild guild in await Context.Client.GetGuildsAsync())
+                if (await guild.GetUserAsync(Context.User.Id) != null)
+                    sharedGuilds.Add(guild);
+
+            // Find the guild that they named by index, ID, or name.
+
+            IGuild selectedGuild = sharedGuilds.Where(g => g.Name.Equals(guildName, StringComparison.OrdinalIgnoreCase) || g.Id.ToString().Equals(guildName) || (sharedGuilds.IndexOf(g) + 1).ToString().Equals(guildName)).FirstOrDefault();
+
+            if (selectedGuild != null) {
+
+                await SetUserDMGuildAsync(Context.User, selectedGuild);
+
+                await ReplySuccessAsync($"Successfully set {selectedGuild.Name.ToBold()} as {Context.User.Username.ToPossessive()} DM guild.");
+
+            }
+            else {
+
+                await ReplyErrorAsync($"{guildName.ToBold()} is not a valid guild.");
 
             }
 

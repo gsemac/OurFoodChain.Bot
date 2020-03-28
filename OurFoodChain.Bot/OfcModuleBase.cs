@@ -19,6 +19,7 @@ using OurFoodChain.Services;
 using OurFoodChain.Trophies;
 using OurFoodChain.Wiki.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -70,18 +71,33 @@ namespace OurFoodChain {
 
         public async Task<SQLiteDatabase> GetDatabaseAsync() {
 
-            try {
+            if (Context.Guild is null) {
+
+                // The is probably interacting with the bot through DMs.
+
+                return await GetDatabaseFromDMAsync();
+
+            }
+            else {
 
                 return await DatabaseService.GetDatabaseAsync(Context.Guild);
 
             }
-            catch (Exception ex) {
 
-                await ReplyErrorAsync(ex.Message);
+        }
+        public async Task<IGuild> GetUserDMGuildAsync(IUser user) {
 
-                throw ex;
+            if (userDmGuilds.TryGetValue(user.Id, out IGuild value))
+                return await Task.FromResult(value);
 
-            }
+            return null;
+
+        }
+        public async Task SetUserDMGuildAsync(IUser user, IGuild guild) {
+
+            userDmGuilds[user.Id] = guild;
+
+            await Task.CompletedTask;
 
         }
 
@@ -791,6 +807,8 @@ namespace OurFoodChain {
 
         // Private members
 
+        private static readonly ConcurrentDictionary<ulong, IGuild> userDmGuilds = new ConcurrentDictionary<ulong, IGuild>();
+
         private async Task<ITaxon> GetTaxonOrReplyAsync(IEnumerable<ITaxon> matchingTaxa, TaxonRankType rank, string taxonName) {
 
             ITaxon taxon = null;
@@ -818,6 +836,81 @@ namespace OurFoodChain {
             }
 
             return taxon;
+
+        }
+        private async Task<SQLiteDatabase> GetDatabaseFromDMAsync() {
+
+            if (Config.SingleDatabase) {
+
+                // If we're running in single-database mode, there is only one database to choose from.
+
+                return await DatabaseService.GetDatabaseAsync(Context.Guild);
+
+            }
+            else {
+
+                // Find guilds that we share with the user.
+
+                List<IGuild> sharedGuilds = new List<IGuild>();
+
+                foreach (IGuild guild in await Context.Client.GetGuildsAsync())
+                    if (await guild.GetUserAsync(Context.User.Id) != null)
+                        sharedGuilds.Add(guild);
+
+                // If the user has a DM guild set and is still in that guild, use it.
+
+                IGuild userDMGuild = await GetUserDMGuildAsync(Context.User);
+
+                if (userDMGuild != null && sharedGuilds.Any(guild => guild.Id == userDMGuild.Id)) {
+
+                    return await DatabaseService.GetDatabaseAsync(userDMGuild);
+
+                }
+                else {
+
+                    // The user does not have a DM guild set.
+
+                    List<SQLiteDatabase> databases = new List<SQLiteDatabase>();
+
+                    foreach (IGuild guild in sharedGuilds)
+                        databases.Add(await DatabaseService.GetDatabaseAsync(guild));
+
+                    if (databases.Count() == 1) {
+
+                        return databases.First();
+
+                    }
+                    else if (databases.Count() > 0) {
+
+                        IPaginatedMessage message = new PaginatedMessage();
+
+                        message.AddLines(string.Empty, sharedGuilds.Select(
+                            (guild, index) => $"`{(index + 1).ToString().PadLeft(sharedGuilds.Count().ToString().Length)}.` {guild.Name}"),
+                            options: EmbedPaginationOptions.Default | EmbedPaginationOptions.AddPageNumbers);
+
+                        foreach (Discord.Messaging.IEmbed embed in message.Select(page => page.Embed)) {
+
+                            embed.Description = $"You share more than one guild with {Bot.Name}. You can pick which guild you would like to interact with using the `{Config.Prefix}pickserver` command.\n\n"
+                                + embed.Description;
+
+                        }
+
+                        message.SetTitle($"Shared Guilds ({sharedGuilds.Count()})");
+
+                        await ReplyAsync(message);
+
+                        throw new Exception($"You must specify which guild you would like to interact with using the `{Config.Prefix}pickserver` command.");
+
+                    }
+                    else {
+
+                        throw new Exception($"You must share at least one guild with {Bot.Name}.");
+
+                    }
+
+                }
+
+            }
 
         }
 

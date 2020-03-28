@@ -265,6 +265,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\RequireDMChannelAttribute.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Extensions\GotchiExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseGenerationExtensions.cs" />
@@ -300,7 +301,7 @@
     <Compile Include="Modules\TaxonModule.cs" />
     <Compile Include="Modules\ZoneModule.cs" />
     <Compile Include="Attributes\DifficultyLevelAttribute.cs" />
-    <Compile Include="Attributes\RequiredConfigSettingEnabledAttribute.cs" />
+    <Compile Include="Attributes\RequireConfigSettingEnabledAttribute.cs" />
     <Compile Include="OfcBotConfiguration.cs" />
     <Compile Include="Services\CommandHandlingService.cs" />
     <Compile Include="Global.cs" />

@@ -21,6 +21,8 @@ namespace OurFoodChain.Discord.Bots {
         [JsonIgnore]
         public string HelpDirectory => DataDirectory + "help/";
 
+        public bool DMsEnabled { get; set; } = true;
+
     }
 
 }

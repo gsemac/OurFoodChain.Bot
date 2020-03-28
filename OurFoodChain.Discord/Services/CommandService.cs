@@ -71,15 +71,19 @@ namespace OurFoodChain.Discord.Services {
 
         protected virtual async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
-            bool handled = false;
+            if (configuration.DMsEnabled || !(rawMessage.Channel is IDMChannel)) {
 
-            if (responsiveMessageService != null)
-                handled = await responsiveMessageService.HandleMessageAsync(rawMessage);
+                bool handled = false;
 
-            if (rawMessage.Content != configuration.Prefix && !handled) {
+                if (responsiveMessageService != null)
+                    handled = await responsiveMessageService.HandleMessageAsync(rawMessage);
 
-                if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage))
-                    await HandleCommandAsync(rawMessage);
+                if (rawMessage.Content != configuration.Prefix && !handled) {
+
+                    if (MessageIsUserMessage(rawMessage) && MessageIsCommand(rawMessage))
+                        await HandleCommandAsync(rawMessage);
+
+                }
 
             }
 
@@ -127,8 +131,13 @@ namespace OurFoodChain.Discord.Services {
                     embed.WithColor(Color.Red);
                     embed.WithTitle(string.Format("Incorrect use of \"{0}\" command", commandName.ToLower()));
                     embed.WithDescription("❌ " + result.ErrorReason);
-                    embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
-                        .Select(e => string.Format("`{0}{1}{2}`", configuration.Prefix, commandName, e.SkipWords(1)))));
+
+                    if (commandHelpInfo.Examples.Any()) {
+
+                        embed.AddField("Example(s) of correct usage:", string.Join(Environment.NewLine, commandHelpInfo.Examples
+                            .Select(e => string.Format("`{0}{1}{2}`", configuration.Prefix, commandName, e.SkipWords(1)))));
+
+                    }
 
                     await context.Channel.SendMessageAsync("", false, embed.Build());
 
@@ -170,6 +179,11 @@ namespace OurFoodChain.Discord.Services {
                     await DiscordUtilities.ReplyErrorAsync(context.Channel, $"Something went wrong while executing the **{command.Value.Name}** command.");
                 else
                     await DiscordUtilities.ReplyErrorAsync(context.Channel, $"Something went wrong while executing the command.");
+
+            }
+            else if (result is ExecuteResult executeResult && executeResult.Exception?.InnerException != null && !string.IsNullOrWhiteSpace(executeResult.Exception.InnerException.Message)) {
+
+                await DiscordUtilities.ReplyErrorAsync(context.Channel, executeResult.Exception.InnerException.Message);
 
             }
             else {

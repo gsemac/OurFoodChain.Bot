@@ -463,8 +463,18 @@ namespace OurFoodChain.Common.Utilities {
         }
         public static string StripOuterQuotes(string input) {
 
-            if (input.Length > 1 && input.StartsWith("\"") && input.EndsWith("\""))
-                input = input.Trim('"');
+            if (input.Length > 1) {
+
+                if (input.StartsWith("\"") && input.EndsWith("\"") ||
+                    input.StartsWith("“") && input.EndsWith("”") ||
+                    input.StartsWith("‘") && input.EndsWith("’") ||
+                    input.StartsWith("'") && input.EndsWith("'")) {
+
+                    input = input.Substring(1, input.Length - 2);
+
+                }
+
+            }
 
             return input;
 

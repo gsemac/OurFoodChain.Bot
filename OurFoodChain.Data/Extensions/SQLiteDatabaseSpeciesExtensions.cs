@@ -666,12 +666,12 @@ namespace OurFoodChain.Data.Extensions {
             }
 
         }
-        public static async Task<IEnumerable<ISpeciesZoneInfo>> GetZonesAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task<IEnumerable<ISpeciesZoneInfo>> GetZonesAsync(this SQLiteDatabase database, ISpecies species, GetZoneOptions options = GetZoneOptions.Default) {
 
-            return await database.GetZonesAsync(species.Id);
+            return await database.GetZonesAsync(species.Id, options);
 
         }
-        public static async Task<IEnumerable<ISpeciesZoneInfo>> GetZonesAsync(this SQLiteDatabase database, long? speciesId) {
+        public static async Task<IEnumerable<ISpeciesZoneInfo>> GetZonesAsync(this SQLiteDatabase database, long? speciesId, GetZoneOptions options = GetZoneOptions.Default) {
 
             List<ISpeciesZoneInfo> results = new List<ISpeciesZoneInfo>();
 
@@ -683,7 +683,10 @@ namespace OurFoodChain.Data.Extensions {
 
                     foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
-                        IZone zone = await database.GetZoneAsync(row.Field<long>("zone_id"));
+                        IZone zone = new Zone() { Id = row.Field<long>("zone_id") };
+
+                        if (!options.HasFlag(GetZoneOptions.IdsOnly))
+                            zone = await database.GetZoneAsync(row.Field<long>("zone_id"), options);
 
                         if (zone is null)
                             continue;

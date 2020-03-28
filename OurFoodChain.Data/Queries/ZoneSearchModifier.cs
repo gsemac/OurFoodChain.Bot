@@ -23,7 +23,7 @@ namespace OurFoodChain.Data.Queries {
 
             await result.FilterByAsync(async (species) => {
 
-                return !(await context.Database.GetZonesAsync(species)).Any(zone => ZoneIds.Any(id => id == zone.Zone.Id));
+                return !(await context.Database.GetZonesAsync(species, GetZoneOptions.IdsOnly)).Any(zone => ZoneIds.Any(id => id == zone.Zone.Id));
 
             }, Invert);
 

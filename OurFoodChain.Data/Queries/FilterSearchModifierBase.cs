@@ -9,7 +9,7 @@ namespace OurFoodChain.Data.Queries {
     public abstract class FilterSearchModifierBase :
         SearchModifierBase {
 
-        public abstract Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value);
+        // Public members
 
         public async override Task ApplyAsync(ISearchContext context, ISearchResult result) {
 
@@ -26,6 +26,10 @@ namespace OurFoodChain.Data.Queries {
             }, Invert);
 
         }
+
+        // Protected members
+
+        protected abstract Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value);
 
     }
 

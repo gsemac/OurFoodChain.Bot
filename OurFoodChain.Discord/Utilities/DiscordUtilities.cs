@@ -36,6 +36,8 @@ namespace OurFoodChain.Discord.Utilities {
         public const int MaxFieldCount = 25;
         public const int MaxEmbedLength = 2048;
 
+        public const int MaxEmbedLineLength = 80;
+
         public static async Task<IUserMessage> ReplySuccessAsync(IMessageChannel channel, string message) {
 
             return await channel.SendMessageAsync("", false, EmbedUtilities.BuildSuccessEmbed(message).ToDiscordEmbed());

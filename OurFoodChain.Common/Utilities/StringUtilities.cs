@@ -486,9 +486,17 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
-        public static string Truncate(string input, int maxLength) {
+        public static string Truncate(string input, int maxLength, bool ellipsis = false) {
 
-            return input.Substring(0, Math.Min(input.Length, maxLength));
+            if (ellipsis)
+                maxLength -= 3;
+
+            string result = input.Substring(0, Math.Min(input.Length, maxLength));
+
+            if (ellipsis && !string.IsNullOrWhiteSpace(result) && result.Length < input.Length)
+                result += "...";
+
+            return result;
 
         }
 

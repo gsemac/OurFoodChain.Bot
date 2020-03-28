@@ -13,9 +13,9 @@ namespace OurFoodChain.Data.Queries {
     public class TaxonSearchModifier :
         FilterSearchModifierBase {
 
-        // Public members
+        // Protected members
 
-        public override async Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value) {
+        protected override async Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value) {
 
             TaxonRankType rank = ParseRankType(Name);
 

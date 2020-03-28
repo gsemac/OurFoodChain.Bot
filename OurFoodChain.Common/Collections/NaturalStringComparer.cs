@@ -21,6 +21,9 @@ namespace OurFoodChain.Common.Collections {
 
         public int Compare(string a, string b) {
 
+            a = a ?? "";
+            b = b ?? "";
+
             return SafeNativeMethods.StrCmpLogicalW(a, b);
 
         }

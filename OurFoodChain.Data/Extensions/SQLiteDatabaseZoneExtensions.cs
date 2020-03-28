@@ -16,16 +16,19 @@ using System.Threading.Tasks;
 
 namespace OurFoodChain.Data.Extensions {
 
+    [Flags]
     public enum GetZoneOptions {
         None = 0,
-        Fast = 1
+        Fast = 1,
+        IdsOnly = 2,
+        Default = None
     }
 
     public static class SQLiteDatabaseZoneExtensions {
 
         // Public members
 
-        public static async Task<IZone> GetZoneAsync(this SQLiteDatabase database, long zoneId) {
+        public static async Task<IZone> GetZoneAsync(this SQLiteDatabase database, long zoneId, GetZoneOptions options = GetZoneOptions.Default) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Zones WHERE id = $zone_id")) {
 
@@ -34,14 +37,14 @@ namespace OurFoodChain.Data.Extensions {
                 DataRow row = await database.GetRowAsync(cmd);
 
                 if (row != null)
-                    return await database.CreateZoneFromDataRowAsync(row);
+                    return await database.CreateZoneFromDataRowAsync(row, options);
 
             }
 
             return null;
 
         }
-        public static async Task<IZone> GetZoneAsync(this SQLiteDatabase database, string name, GetZoneOptions options = GetZoneOptions.None) {
+        public static async Task<IZone> GetZoneAsync(this SQLiteDatabase database, string name, GetZoneOptions options = GetZoneOptions.Default) {
 
             if (string.IsNullOrWhiteSpace(name))
                 return null;
@@ -215,7 +218,7 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<IZone> CreateZoneFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetZoneOptions options = GetZoneOptions.None) {
+        public static async Task<IZone> CreateZoneFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetZoneOptions options = GetZoneOptions.Default) {
 
             IZone zone = new Zone {
                 Id = row.Field<long>("id"),

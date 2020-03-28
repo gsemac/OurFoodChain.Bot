@@ -12,7 +12,7 @@ namespace OurFoodChain.Data.Queries {
     public class GenerationSearchModifier :
         FilterSearchModifierBase {
 
-        public override async Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value) {
+        protected override async Task<bool> IsFilteredAsync(ISearchContext context, ISpecies species, string value) {
 
             IGeneration gen = await context.Database.GetGenerationByDateAsync(species.CreationDate);
 

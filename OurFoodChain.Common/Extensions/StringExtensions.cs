@@ -72,9 +72,9 @@ namespace OurFoodChain.Common.Extensions {
 
         }
 
-        public static string Truncate(this string input, int maxLength) {
+        public static string Truncate(this string input, int maxLength, bool ellipsis = false) {
 
-            return StringUtilities.Truncate(input, maxLength);
+            return StringUtilities.Truncate(input, maxLength, ellipsis);
 
         }
 

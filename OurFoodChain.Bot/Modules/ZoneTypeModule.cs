@@ -19,7 +19,7 @@ namespace OurFoodChain.Modules {
         OfcModuleBase {
 
         [Command("zonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
-        public async Task GetZoneType(string arg0 = "") {
+        public async Task GetZoneType(string arg0) {
 
             if (!string.IsNullOrEmpty(arg0)) {
 
@@ -78,7 +78,11 @@ namespace OurFoodChain.Modules {
         [Command("zonetypes"), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task GetZoneTypes() {
 
-            IEnumerable<IZoneType> zoneTypes = await Db.GetZoneTypesAsync();
+            IEnumerable<IZone> zones = await Db.GetZonesAsync();
+
+            IEnumerable<IZoneType> zoneTypes = (await Db.GetZoneTypesAsync())
+                .OrderBy(type => type.Name)
+                .Where(type => zones.Any(zone => zone.TypeId == type.Id));
 
             if (zoneTypes.Any()) {
 
@@ -88,7 +92,9 @@ namespace OurFoodChain.Modules {
 
                     StringBuilder lineBuilder = new StringBuilder();
 
-                    lineBuilder.Append($"{zoneType.Icon} {zoneType.Name.ToTitle().ToBold()}");
+                    int zoneCount = zones.Where(zone => zone.TypeId == zoneType.Id).Count();
+
+                    lineBuilder.Append($"{zoneType.Icon} {zoneType.Name.ToTitle().ToBold()} ({zoneCount})");
 
                     if (!string.IsNullOrWhiteSpace(zoneType.Description)) {
 
@@ -97,7 +103,7 @@ namespace OurFoodChain.Modules {
 
                     }
 
-                    lines.Add(lineBuilder.ToString().Truncate(40));
+                    lines.Add(lineBuilder.ToString().Truncate(DiscordUtilities.MaxEmbedLineLength - 2, true));
 
                 }
 
@@ -107,8 +113,13 @@ namespace OurFoodChain.Modules {
 
                 message.AddLines($"All Zone Types ({zoneTypes.Count()})", lines, columnsPerPage: 1, options: EmbedPaginationOptions.AddPageNumbers);
 
-                foreach (IEmbed embed in message.Select(page => page.Embed))
+                foreach (IEmbed embed in message.Select(page => page.Embed)) {
+
                     embed.Description = description + embed.Description;
+                    embed.Footer += " — Empty types are not listed.";
+
+                }
+
 
                 await ReplyAsync(message);
 

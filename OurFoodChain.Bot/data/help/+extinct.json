@@ -2,9 +2,10 @@
   "name": "+extinct",
   "aliases": [ "setextinct" ],
   "category": "update",
-  "description": "Marks the given species as extinct.",
+  "description": "Marks the given species as extinct. It can also be used for local extinctions if a zone is provided.",
   "examples": [
-    "+extinct H. quattuorus \"died of starvation\"",
-    "+extinct H. quattuorus"
+    "+extinct C. aspersum",
+    "+extinct C. aspersum \"died of starvation\"",
+    "+extinct C. aspersum 1 \"died of starvation in zone 1\""
   ]
 }

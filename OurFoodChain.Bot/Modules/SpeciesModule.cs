@@ -1246,16 +1246,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (zonesInfo.Any(z => z.Zone.Id == zone.Id)) {
 
-                IZoneRecord zoneRecord = new ZoneRecord {
-                    Date = DateUtilities.GetCurrentDateUtc(),
-                    Reason = reason,
-                    Zone = zone,
-                    Type = ZoneRecordType.Removed
-                };
-
-                await Db.AddZoneRecordAsync(species, zoneRecord);
-
-                await Db.RemoveZonesAsync(species, new[] { zone });
+                await Db.RemoveZonesAsync(species, new[] { zone }, reason);
 
                 await ReplySuccessAsync($"{TaxonFormatter.GetString(species, false).ToBold()} is now extinct in {zone.GetFullName().ToBold()}.");
 

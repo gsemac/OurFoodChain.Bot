@@ -722,7 +722,7 @@ namespace OurFoodChain.Data.Extensions {
             return results.ToArray();
 
         }
-        public static async Task RemoveZonesAsync(this SQLiteDatabase database, ISpecies species, IEnumerable<IZone> zones) {
+        public static async Task RemoveZonesAsync(this SQLiteDatabase database, ISpecies species, IEnumerable<IZone> zones, string reason = "") {
 
             foreach (IZone zone in zones) {
 
@@ -734,6 +734,15 @@ namespace OurFoodChain.Data.Extensions {
                     await database.ExecuteNonQueryAsync(cmd);
 
                 }
+
+                IZoneRecord record = new ZoneRecord() {
+                    Date = DateUtilities.GetCurrentDateUtc(),
+                    Type = ZoneRecordType.Removed,
+                    Zone = zone,
+                    Reason = reason
+                };
+
+                await database.AddZoneRecordAsync(species, record);
 
             }
 

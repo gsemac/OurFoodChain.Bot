@@ -5,10 +5,11 @@ using System.Text;
 
 namespace OurFoodChain.Common {
 
-    public class LocalExtinctionInfo :
-        ExtinctionInfo {
+    public interface IZoneRecord :
+        IExtinctionInfo {
 
-        public IZone Zone { get; set; }
+        IZone Zone { get; set; }
+        ZoneRecordType Type { get; set; }
 
     }
 

@@ -663,6 +663,12 @@ namespace OurFoodChain.Data.Extensions {
 
                 }
 
+                await database.AddZoneRecordAsync(species, new ZoneRecord() {
+                    Date = DateUtilities.GetCurrentDateUtc(),
+                    Type = ZoneRecordType.Added,
+                    Zone = zone
+                });
+
             }
 
         }
@@ -843,38 +849,39 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task AddLocalExtinctionAsync(this SQLiteDatabase database, ISpecies species, LocalExtinctionInfo extinctionInfo) {
+        public static async Task AddZoneRecordAsync(this SQLiteDatabase database, ISpecies species, IZoneRecord zoneRecord) {
 
-            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO LocalExtinctions(species_id, zone_id, reason, timestamp) VALUES($species_id, $zone_id, $reason, $timestamp)")) {
+            using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO ZoneRecords(species_id, zone_id, reason, timestamp, record_type) VALUES($species_id, $zone_id, $reason, $timestamp, $record_type)")) {
 
                 cmd.Parameters.AddWithValue("$species_id", species.Id);
-                cmd.Parameters.AddWithValue("$zone_id", extinctionInfo.Zone.Id);
-                cmd.Parameters.AddWithValue("$reason", extinctionInfo.Reason);
-                cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetTimestampFromDate(extinctionInfo.Date ?? DateUtilities.GetCurrentDateUtc()));
+                cmd.Parameters.AddWithValue("$zone_id", zoneRecord.Zone.Id);
+                cmd.Parameters.AddWithValue("$reason", zoneRecord.Reason);
+                cmd.Parameters.AddWithValue("$reason", zoneRecord.Reason);
+                cmd.Parameters.AddWithValue("$timestamp", DateUtilities.GetTimestampFromDate(zoneRecord.Date ?? DateUtilities.GetCurrentDateUtc()));
+                cmd.Parameters.AddWithValue("$record_type", zoneRecord.Type);
 
                 await database.ExecuteNonQueryAsync(cmd);
 
             }
 
-            await database.RemoveZonesAsync(species, new[] { extinctionInfo.Zone });
-
         }
-        public static async Task<IEnumerable<LocalExtinctionInfo>> GetLocalExtinctionsAsync(this SQLiteDatabase database, ISpecies species) {
+        public static async Task<IEnumerable<IZoneRecord>> GetZoneRecordsAsync(this SQLiteDatabase database, ISpecies species) {
 
-            List<LocalExtinctionInfo> result = new List<LocalExtinctionInfo>();
+            List<ZoneRecord> result = new List<ZoneRecord>();
 
             if (species.IsValid()) {
 
-                using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM LocalExtinctions WHERE species_id = $species_id")) {
+                using (SQLiteCommand cmd = new SQLiteCommand(@"SELECT * FROM ZoneRecords WHERE species_id = $species_id")) {
 
                     cmd.Parameters.AddWithValue("$species_id", species.Id);
 
                     foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
-                        result.Add(new LocalExtinctionInfo {
+                        result.Add(new ZoneRecord {
                             Date = DateUtilities.GetDateFromTimestamp(row.Field<long>("timestamp")),
                             Reason = row.Field<string>("reason"),
-                            Zone = await database.GetZoneAsync(row.Field<long>("zone_id"))
+                            Zone = await database.GetZoneAsync(row.Field<long>("zone_id")),
+                            Type = (ZoneRecordType)row.Field<long>("record_type")
                         });
 
                     }

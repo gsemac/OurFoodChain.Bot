@@ -909,10 +909,9 @@ namespace OurFoodChain.Bot.Modules {
 
                 // Get timestamped events that we will display in the migration info.
 
-                IEnumerable<ITimestampedEvent> zoneEvents = await Db.GetZonesAsync(species);
-                IEnumerable<ITimestampedEvent> localExtinctionEvents = await Db.GetLocalExtinctionsAsync(species);
+                IEnumerable<IZoneRecord> zoneRecords = await Db.GetZoneRecordsAsync(species);
 
-                if (zoneEvents.Count() <= 0) {
+                if (zoneRecords.Count() <= 0) {
 
                     // There are no events to show.
 
@@ -924,8 +923,8 @@ namespace OurFoodChain.Bot.Modules {
                     // Group events that occurred on the same date.
                     // We should only group events that are of the same type.
 
-                    var groupedEvents = zoneEvents.GroupBy(ev => ev.Date?.Date ?? species.CreationDate)
-                        .Concat(localExtinctionEvents.GroupBy(ev => ev.Date?.Date ?? species.CreationDate))
+                    var groupedEvents = zoneRecords.Where(record => record.Type == ZoneRecordType.Added).GroupBy(ev => ev.Date?.Date ?? species.CreationDate)
+                        .Concat(zoneRecords.Where(record => record.Type == ZoneRecordType.Removed).GroupBy(ev => ev.Date?.Date ?? species.CreationDate))
                         .OrderBy(g => g.Key);
 
                     StringBuilder result = new StringBuilder();
@@ -937,21 +936,20 @@ namespace OurFoodChain.Bot.Modules {
 
                         result.Append(string.Format("{0} - ", await GetDateStringAsync(timestamp, DateStringFormat.Short)));
 
-                        if (eventGroup.First() is ISpeciesZoneInfo) {
+                        if (eventGroup.First().Type == ZoneRecordType.Added) {
 
                             result.Append(isFirstLine ? "Started in " : "Spread to ");
                             result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
-                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.OfType<ISpeciesZoneInfo>().Select(ev => ev.Zone.GetShortName())));
+                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName())));
 
                         }
-                        else if (eventGroup.First() is LocalExtinctionInfo) {
+                        else if (eventGroup.First().Type == ZoneRecordType.Removed) {
 
                             result.Append("Went extinct in ");
                             result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
-                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.OfType<LocalExtinctionInfo>().GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName())));
+                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName())));
 
-                            string reason = eventGroup.OfType<LocalExtinctionInfo>()
-                                .Select(ev => ev.Reason)
+                            string reason = eventGroup.Select(ev => ev.Reason)
                                 .Where(r => !string.IsNullOrEmpty(r))
                                 .FirstOrDefault();
 
@@ -1248,13 +1246,16 @@ namespace OurFoodChain.Bot.Modules {
 
             if (zonesInfo.Any(z => z.Zone.Id == zone.Id)) {
 
-                LocalExtinctionInfo localExtinctionInfo = new LocalExtinctionInfo {
+                IZoneRecord zoneRecord = new ZoneRecord {
                     Date = DateUtilities.GetCurrentDateUtc(),
                     Reason = reason,
-                    Zone = zone
+                    Zone = zone,
+                    Type = ZoneRecordType.Removed
                 };
 
-                await Db.AddLocalExtinctionAsync(species, localExtinctionInfo);
+                await Db.AddZoneRecordAsync(species, zoneRecord);
+
+                await Db.RemoveZonesAsync(species, new[] { zone });
 
                 await ReplySuccessAsync($"{TaxonFormatter.GetString(species, false).ToBold()} is now extinct in {zone.GetFullName().ToBold()}.");
 

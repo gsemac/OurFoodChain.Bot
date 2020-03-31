@@ -59,7 +59,7 @@ namespace OurFoodChain.Drawing {
 
         }
 
-        public void SaveTo(Stream stream) {
+        public void Save(Stream stream) {
 
             using (SKImage image = surface.Snapshot())
             using (SKData data = image.Encode(SKEncodedImageFormat.Png, 100))

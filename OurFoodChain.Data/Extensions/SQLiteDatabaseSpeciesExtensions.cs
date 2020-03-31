@@ -933,6 +933,60 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
+        public static async Task<ICladogram> BuildCladogramAsync(this SQLiteDatabase database, ISpecies species, CladogramType type = CladogramType.Default) {
+
+            // Start by finding the earliest ancestor of this species.
+
+            List<long> ancestorIds = new List<long>();
+
+            if (type != CladogramType.Descendants)
+                ancestorIds.AddRange(await database.GetAncestorIdsAsync(species.Id));
+
+            ancestorIds.Add((long)species.Id);
+
+            // Starting from the earliest ancestor, generate all tiers, down to the latest descendant.
+
+            CladogramNode root = new CladogramNode(await database.GetSpeciesAsync(ancestorIds.First()), true);
+
+            Queue<CladogramNode> queue = new Queue<CladogramNode>();
+            HashSet<long> seenIds = new HashSet<long>();
+
+            queue.Enqueue(root);
+
+            while (queue.Count() > 0) {
+
+                IEnumerable<ISpecies> descendants = await database.GetDirectDescendantsAsync(queue.First().Value.Species);
+
+                foreach (ISpecies descendant in descendants) {
+
+                    CladogramNode node = new CladogramNode(descendant, ancestorIds.Contains((long)descendant.Id));
+
+                    if (type != CladogramType.Ancestors || node.Value.IsAncestor) {
+
+                        queue.First().Children.Add(node);
+                        queue.Enqueue(node);
+
+                        if (descendant.Id.HasValue) {
+
+                            if (seenIds.Contains(descendant.Id.Value))
+                                throw new CycleException(descendant);
+
+                            seenIds.Add(descendant.Id.Value);
+
+                        }
+
+                    }
+
+                }
+
+                queue.Dequeue();
+
+            }
+
+            return new Cladogram(root);
+
+        }
+
         public static async Task<ISpecies> CreateSpeciesFromDataRowAsync(this SQLiteDatabase database, DataRow row, GetSpeciesOptions options = GetSpeciesOptions.Default) {
 
             long genusId = row.Field<long>("genus_id");

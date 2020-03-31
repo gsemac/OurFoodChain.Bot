@@ -1,45 +1,36 @@
-﻿using OurFoodChain.Common;
-using OurFoodChain.Common.Collections;
+﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
-using SkiaSharp;
+using OurFoodChain.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 
 namespace OurFoodChain.Drawing {
 
-    public sealed class HierarchicalSpeciesTreeRenderer :
-        ISpeciesTreeRenderer {
+    public sealed class DefaultCladogramRenderer :
+        CladogramRendererBase {
 
         // Public members
 
-        public Color BackgroundColor { get; set; } = Color.FromArgb(54, 57, 63);
-        public Color TextColor { get; set; } = Color.White;
-        public Color LineColor { get; set; } = Color.White;
-        public Color HighlightColor { get; set; } = Color.Yellow;
-        public SizeF Size => CalculateTreeBounds(tree).Size;
+        public DefaultCladogramRenderer(ICladogram cladogram) {
 
-        public ISpecies HighlightedSpecies { get; set; }
-
-        public HierarchicalSpeciesTreeRenderer(TreeNode<ISpecies> tree) {
-
-            this.tree = BuildTree(tree);
+            this.cladogram = cladogram;
 
         }
 
-        public void DrawTo(ICanvas canvas) {
+        public override void Render(ICanvas canvas) {
 
-            DrawNode(canvas, tree);
+            DrawNode(canvas, BuildTree(cladogram.Root), GetFont());
 
         }
 
-        public void Dispose() {
+        // Protected members
 
-            if (font != null)
-                font.Dispose();
+        protected override RectangleF GetTreeBounds() {
+
+            return CalculateTreeBounds(BuildTree(cladogram.Root));
 
         }
 
@@ -47,7 +38,7 @@ namespace OurFoodChain.Drawing {
 
         private class NodeData {
 
-            public ISpecies Species { get; set; }
+            public CladogramNodeData Data { get; set; }
             public RectangleF Bounds { get; set; } = new RectangleF();
 
         }
@@ -59,30 +50,35 @@ namespace OurFoodChain.Drawing {
 
         }
 
-        private readonly TreeNode<NodeData> tree;
-        private readonly Font font = new Font("Calibri", 12);
+        private readonly ICladogram cladogram;
 
-        private static TreeNode<NodeData> BuildTree(TreeNode<ISpecies> tree) {
+        private static Font GetFont() {
 
-            TreeNode<NodeData> root = tree.Copy(n => new NodeData {
-                Species = n
+            return new Font("Calibri", 12);
+
+        }
+
+        private TreeNode<NodeData> BuildTree(CladogramNode cladogramRoot) {
+
+            TreeNode<NodeData> root = cladogramRoot.Copy(cladogramNodeData => new NodeData {
+                Data = cladogramNodeData
             });
 
-            using (Font font = new Font("Calibri", 12)) {
+            using (Font font = GetFont()) {
 
                 // Measure the size of each node.
 
-                float nodePaddingX = 5.0f;
+                float horizontalPadding = 5.0f;
 
                 root.PostOrderTraverse(node => {
 
-                    SizeF textSize = DrawingUtilities.MeasureText(node.Value.Species.BinomialName.ToString(BinomialNameFormat.Abbreviated), font);
+                    SizeF size = DrawingUtilities.MeasureText(StringUtilities.StripMarkup(TaxonFormatter.GetString(node.Value.Data.Species)), font);
 
-                    node.Value.Bounds = new RectangleF(node.Value.Bounds.X, node.Value.Bounds.Y, textSize.Width + nodePaddingX, textSize.Height);
+                    node.Value.Bounds = new RectangleF(node.Value.Bounds.X, node.Value.Bounds.Y, size.Width + horizontalPadding, size.Height);
 
                 });
 
-                // Calculate positions for each node.
+                // Calculate node positions.
 
                 CalculateNodePositions(root);
 
@@ -90,7 +86,7 @@ namespace OurFoodChain.Drawing {
 
                 RectangleF bounds = CalculateTreeBounds(root);
 
-                // Shift the tree so that it is within the bounds of the image.
+                // Shift the tree so that the entire thing is visible.
 
                 float minX = 0.0f;
 
@@ -108,6 +104,21 @@ namespace OurFoodChain.Drawing {
             }
 
         }
+        private static void ShiftTree(TreeNode<NodeData> root, float deltaX, float deltaY) {
+
+            root.PostOrderTraverse(node => {
+
+                node.Value.Bounds = new RectangleF(
+                    node.Value.Bounds.X + deltaX,
+                    node.Value.Bounds.Y + deltaY,
+                    node.Value.Bounds.Width,
+                    node.Value.Bounds.Height
+                    );
+
+            });
+
+        }
+
         private static void CalculateNodePositions(TreeNode<NodeData> node) {
 
             InitializeNodePositions(node);
@@ -254,47 +265,37 @@ namespace OurFoodChain.Drawing {
             });
 
         }
+
         private static RectangleF CalculateTreeBounds(TreeNode<NodeData> node) {
 
-            float min_x = node.Value.Bounds.X;
-            float max_x = node.Value.Bounds.X + node.Value.Bounds.Width;
-            float min_y = node.Value.Bounds.Y;
-            float max_y = node.Value.Bounds.Y + node.Value.Bounds.Height;
+            float minX = node.Value.Bounds.X;
+            float maxX = node.Value.Bounds.X + node.Value.Bounds.Width;
+            float minY = node.Value.Bounds.Y;
+            float maxY = node.Value.Bounds.Y + node.Value.Bounds.Height;
 
             foreach (TreeNode<NodeData> child in node.Children) {
 
                 RectangleF bounds = CalculateTreeBounds(child);
 
-                min_x = Math.Min(bounds.X, min_x);
-                max_x = Math.Max(bounds.X + bounds.Width, max_x);
-                min_y = Math.Min(bounds.Y, min_y);
-                max_y = Math.Max(bounds.Y + bounds.Height, max_y);
+                minX = Math.Min(bounds.X, minX);
+                maxX = Math.Max(bounds.X + bounds.Width, maxX);
+                minY = Math.Min(bounds.Y, minY);
+                maxY = Math.Max(bounds.Y + bounds.Height, maxY);
 
             }
 
-            return new RectangleF(min_x, min_y, max_x - min_x, max_y - min_y);
-
-        }
-        private static void ShiftTree(TreeNode<NodeData> root, float deltaX, float deltaY) {
-
-            root.PostOrderTraverse(node => {
-
-                node.Value.Bounds = new RectangleF(
-                    node.Value.Bounds.X + deltaX,
-                    node.Value.Bounds.Y + deltaY,
-                    node.Value.Bounds.Width,
-                    node.Value.Bounds.Height
-                    );
-
-            });
+            return new RectangleF(minX, minY, maxX - minX, maxY - minY);
 
         }
 
-        private void DrawNode(ICanvas canvas, TreeNode<NodeData> node) {
+        private void DrawNode(ICanvas canvas, TreeNode<NodeData> node, Font font) {
 
             // Cross-out the species if it's extinct.
 
-            if (node.Value.Species.Status.IsExinct) {
+            string speciesName = TaxonFormatter.GetString(node.Value.Data.Species);
+            bool isHighlighted = node.Value.Data.IsAncestor && !node.Children.Any(child => child.Value.Data.IsAncestor);
+
+            if (node.Value.Data.Species.Status.IsExinct && StringUtilities.GetMarkupProperties(speciesName).HasFlag(MarkupProperties.Strikethrough)) {
 
                 using (Brush brush = new SolidBrush(TextColor))
                 using (Pen pen = new Pen(brush, 1.0f)) {
@@ -309,16 +310,13 @@ namespace OurFoodChain.Drawing {
 
             // Draw the name of the species.
 
-            canvas.DrawText(node.Value.Species.GetShortName(),
-                new PointF(node.Value.Bounds.X, node.Value.Bounds.Y),
-                font,
-                node.Value.Species.Id == HighlightedSpecies.Id ? HighlightColor : TextColor);
+            canvas.DrawText(StringUtilities.StripMarkup(speciesName), new PointF(node.Value.Bounds.X, node.Value.Bounds.Y), font, isHighlighted ? HighlightColor : TextColor);
 
             // Draw child nodes.
 
             foreach (TreeNode<NodeData> child in node.Children) {
 
-                using (Brush brush = new SolidBrush(false ? HighlightColor : TextColor)) // child.Value.IsAncestor
+                using (Brush brush = new SolidBrush(child.Value.Data.IsAncestor ? HighlightColor : TextColor))
                 using (Pen pen = new Pen(brush, 2.0f)) {
 
                     pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
@@ -329,7 +327,7 @@ namespace OurFoodChain.Drawing {
 
                 }
 
-                DrawNode(canvas, child);
+                DrawNode(canvas, child, font);
 
             }
 

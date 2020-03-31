@@ -1,5 +1,6 @@
 ﻿using OurFoodChain.Common.Collections;
 using OurFoodChain.Common.Extensions;
+using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Discord.Utilities;
 using System;
@@ -13,7 +14,7 @@ namespace OurFoodChain {
 
         // Public members
 
-        public TreeNode<AncestryTree.NodeData> Tree { get; set; } = null;
+        public CladogramNode Tree { get; set; } = null;
 
         public int MaxLength { get; set; } = int.MaxValue;
         public bool DrawLines { get; set; } = true;
@@ -22,12 +23,16 @@ namespace OurFoodChain {
 
         public AncestryTreeTextRenderer() {
         }
-        public AncestryTreeTextRenderer(TreeNode<AncestryTree.NodeData> tree) {
+        public AncestryTreeTextRenderer(CladogramNode tree) {
+
             Tree = tree;
+
         }
 
         public override string ToString() {
+
             return _treeToString();
+
         }
 
         // Private members
@@ -106,7 +111,7 @@ namespace OurFoodChain {
 
                 }
 
-                line += DiscordUtilities.StripMarkup(TaxonFormatter.GetString(x.Value.Species, false));
+                line += StringUtilities.StripMarkup(TaxonFormatter.GetString(x.Value.Species, false));
 
                 lines.Add(line);
 

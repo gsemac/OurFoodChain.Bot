@@ -17,6 +17,12 @@ namespace OurFoodChain.Common.Utilities {
         BreakOnInitials = 1
     }
 
+    [Flags]
+    public enum MarkupProperties {
+        None = 0,
+        Strikethrough = 1
+    }
+
     public static class StringUtilities {
 
         // Public members
@@ -497,6 +503,24 @@ namespace OurFoodChain.Common.Utilities {
                 result += "...";
 
             return result;
+
+        }
+
+        public static string StripMarkup(string input) {
+
+            input = input.Trim('~', '_', '*');
+
+            return input;
+
+        }
+        public static MarkupProperties GetMarkupProperties(string input) {
+
+            MarkupProperties properties = MarkupProperties.None;
+
+            if (Regex.IsMatch(input, "~~.+?~~", RegexOptions.Singleline))
+                properties |= MarkupProperties.Strikethrough;
+
+            return properties;
 
         }
 

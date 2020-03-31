@@ -331,10 +331,8 @@
     <Compile Include="Utilities\DiscordUtils.cs" />
     <Compile Include="Gotchis\GotchiType.cs" />
     <Compile Include="Gotchis\GotchiTypeRegistry.cs" />
-    <Compile Include="Drawing\AncestryTreeImageRenderer.cs" />
     <Compile Include="Drawing\AncestryTreeTextRenderer.cs" />
     <Compile Include="Drawing\GraphicsUtils.cs" />
-    <Compile Include="Taxa\AncestryTree.cs" />
     <Compile Include="Taxa\ExtinctionInfo.cs" />
     <Compile Include="Gotchis\GotchiBattleState.cs" />
     <Compile Include="Gotchis\Gotchi.cs" />

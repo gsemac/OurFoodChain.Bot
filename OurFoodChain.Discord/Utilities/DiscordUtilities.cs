@@ -21,12 +21,6 @@ namespace OurFoodChain.Discord.Utilities {
         DeleteFileAfterUpload = 1
     }
 
-    [Flags]
-    public enum MarkupProperties {
-        None = 0,
-        Strikethrough = 1
-    }
-
     public static class DiscordUtilities {
 
         // Public members
@@ -112,6 +106,8 @@ namespace OurFoodChain.Discord.Utilities {
                     client.Headers[HttpRequestHeader.UserAgent] = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0";
                     client.Headers[HttpRequestHeader.Accept] = "*/*";
 
+                    client.Encoding = Encoding.UTF8; // important to read unicode characters correctly
+
                     await Task.Run(() => content = client.DownloadString(attachment.Url));
 
                 }
@@ -127,24 +123,6 @@ namespace OurFoodChain.Discord.Utilities {
         public static bool IsDiscordImageUrl(string imageUrl) {
 
             return Regex.IsMatch(imageUrl, @"^https:\/\/.+?\.discordapp\.(?:com|net)\/.+?\.(?:jpg|png)(?:\?.+)?$", RegexOptions.IgnoreCase);
-
-        }
-
-        public static string StripMarkup(string input) {
-
-            input = input.Trim('~', '_', '*');
-
-            return input;
-
-        }
-        public static MarkupProperties GetMarkupProperties(string input) {
-
-            MarkupProperties properties = MarkupProperties.None;
-
-            if (Regex.IsMatch(input, "~~.+?~~", RegexOptions.Singleline))
-                properties |= MarkupProperties.Strikethrough;
-
-            return properties;
 
         }
 

@@ -44,7 +44,7 @@ namespace OurFoodChain.Drawing {
 
         }
 
-        public void SaveTo(Stream stream) {
+        public void Save(Stream stream) {
 
             canvas.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
 

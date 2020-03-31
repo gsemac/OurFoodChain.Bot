@@ -13,6 +13,8 @@ using OurFoodChain.Data.Queries;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Discord.Messaging;
 using OurFoodChain.Discord.Utilities;
+using OurFoodChain.Drawing;
+using OurFoodChain.Drawing.Extensions;
 using OurFoodChain.Extensions;
 using System;
 using System.Collections.Generic;
@@ -826,10 +828,10 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(Db, species, AncestryTreeGenerationFlags.AncestorsOnly);
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Ancestors);
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
-                    Tree = tree,
+                    Tree = cladogram.Root,
                     DrawLines = false,
                     MaxLength = DiscordUtilities.MaxMessageLength - 6, // account for code block markup
                     TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result,
@@ -850,9 +852,17 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.Full, formatter: TaxonFormatter);
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Full);
 
-                await Context.Channel.SendFileAsync(image);
+                ICladogramRenderer cladogramRenderer = new DefaultCladogramRenderer(cladogram) {
+                    TaxonFormatter = TaxonFormatter
+                };
+
+                string filePath = System.IO.Path.Combine(Constants.TempDirectory, "anc", StringUtilities.GetMD5(species.GetShortName()) + ".png");
+
+                cladogramRenderer.Save(filePath);
+
+                await Context.Channel.SendFileAsync(filePath);
 
             }
 
@@ -867,10 +877,10 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                TreeNode<AncestryTree.NodeData> tree = await AncestryTree.GenerateTreeAsync(Db, species, AncestryTreeGenerationFlags.DescendantsOnly);
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Descendants);
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
-                    Tree = tree,
+                    Tree = cladogram.Root,
                     MaxLength = DiscordUtils.MaxMessageLength - 6, // account for code block markup
                     TimestampFormatter = x => GetDateStringAsync(DateUtilities.GetDateFromTimestamp(x), DateStringFormat.Short).Result,
                     TaxonFormatter = TaxonFormatter
@@ -890,9 +900,17 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                string image = await AncestryTreeImageRenderer.Save(Db, species, AncestryTreeGenerationFlags.DescendantsOnly, formatter: TaxonFormatter);
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Descendants);
 
-                await Context.Channel.SendFileAsync(image);
+                ICladogramRenderer cladogramRenderer = new DefaultCladogramRenderer(cladogram) {
+                    TaxonFormatter = TaxonFormatter
+                };
+
+                string filePath = System.IO.Path.Combine(Constants.TempDirectory, "anc", StringUtilities.GetMD5(species.GetShortName()) + ".png");
+
+                cladogramRenderer.Save(filePath);
+
+                await Context.Channel.SendFileAsync(filePath);
 
             }
 

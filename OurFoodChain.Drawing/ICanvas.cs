@@ -15,7 +15,7 @@ namespace OurFoodChain.Drawing {
 
         SizeF MeasureText(string text, Font font);
 
-        void SaveTo(Stream stream);
+        void Save(Stream stream);
 
     }
 

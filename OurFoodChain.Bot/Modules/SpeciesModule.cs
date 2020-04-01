@@ -854,7 +854,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Full);
 
-                ICladogramRenderer cladogramRenderer = new DefaultCladogramRenderer(cladogram) {
+                ICladogramRenderer cladogramRenderer = new StraightLineCladogramRenderer(cladogram) {
                     TaxonFormatter = TaxonFormatter
                 };
 
@@ -902,7 +902,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Descendants);
 
-                ICladogramRenderer cladogramRenderer = new DefaultCladogramRenderer(cladogram) {
+                ICladogramRenderer cladogramRenderer = new StraightLineCladogramRenderer(cladogram) {
                     TaxonFormatter = TaxonFormatter
                 };
 

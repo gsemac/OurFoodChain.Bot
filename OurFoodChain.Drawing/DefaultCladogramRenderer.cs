@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace OurFoodChain.Drawing {
 
-    public sealed class DefaultCladogramRenderer :
+    public class DefaultCladogramRenderer :
         CladogramRendererBase {
 
         // Public members
@@ -22,11 +22,18 @@ namespace OurFoodChain.Drawing {
 
         public override void Render(ICanvas canvas) {
 
-            DrawNode(canvas, BuildTree(cladogram.Root), GetFont());
+            RenderNode(canvas, BuildTree(cladogram.Root), GetFont());
 
         }
 
         // Protected members
+
+        protected class NodeData {
+
+            public CladogramNodeData Data { get; set; }
+            public RectangleF Bounds { get; set; } = new RectangleF();
+
+        }
 
         protected override RectangleF GetTreeBounds() {
 
@@ -34,14 +41,62 @@ namespace OurFoodChain.Drawing {
 
         }
 
-        // Private members
+        protected virtual void RenderNode(ICanvas canvas, TreeNode<NodeData> node, Font font) {
 
-        private class NodeData {
+            // Cross-out the species if it's extinct.
 
-            public CladogramNodeData Data { get; set; }
-            public RectangleF Bounds { get; set; } = new RectangleF();
+            string speciesName = TaxonFormatter.GetString(node.Value.Data.Species);
+            bool isHighlighted = node.Value.Data.IsAncestor && !node.Children.Any(child => child.Value.Data.IsAncestor);
+
+            if (node.Value.Data.Species.Status.IsExinct && StringUtilities.GetMarkupProperties(speciesName).HasFlag(MarkupProperties.Strikethrough)) {
+
+                using (Brush brush = new SolidBrush(TextColor))
+                using (Pen pen = new Pen(brush, 1.0f)) {
+
+                    canvas.DrawLine(pen,
+                        new PointF(node.Value.Bounds.X, (float)Math.Round(node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f)),
+                        new PointF(node.Value.Bounds.X + (node.Value.Bounds.Width - 10.0f), (float)Math.Round(node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f)));
+
+                }
+
+            }
+
+            // Draw the name of the species.
+
+            RenderText(canvas, StringUtilities.StripMarkup(speciesName), new PointF(node.Value.Bounds.X, node.Value.Bounds.Y), font, isHighlighted ? HighlightColor : TextColor);
+
+            // Draw child nodes.
+
+            RenderChildNodes(canvas, node, font);
 
         }
+        protected virtual void RenderChildNodes(ICanvas canvas, TreeNode<NodeData> node, Font font) {
+
+            foreach (TreeNode<NodeData> child in node.Children) {
+
+                using (Brush brush = new SolidBrush(child.Value.Data.IsAncestor ? HighlightColor : TextColor))
+                using (Pen pen = new Pen(brush, 2.0f)) {
+
+                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+
+                    canvas.DrawLine(pen,
+                        new PointF(node.Value.Bounds.X + (node.Value.Bounds.Width / 2.0f), node.Value.Bounds.Y + node.Value.Bounds.Height),
+                        new PointF(child.Value.Bounds.X + (child.Value.Bounds.Width / 2.0f), child.Value.Bounds.Y));
+
+                }
+
+                RenderNode(canvas, child, font);
+
+            }
+
+        }
+        protected virtual void RenderText(ICanvas canvas, string text, PointF position, Font font, Color color) {
+
+            canvas.DrawText(text, position, font, color);
+
+        }
+
+        // Private members
 
         private class NodeBoundsPair {
 
@@ -251,16 +306,40 @@ namespace OurFoodChain.Drawing {
 
                 // Finally, center the parent node over its children.
 
-                float child_min_x = node.Children.First().Value.Bounds.X;
-                float child_max_x = node.Children.Last().Value.Bounds.X + node.Children.Last().Value.Bounds.Width;
-                float child_width = child_max_x - child_min_x;
+                float midpoint = 0.0f;
 
-                node.Value.Bounds = new RectangleF(
-                    child_min_x + (child_width / 2.0f) - (node.Value.Bounds.Width / 2.0f),
-                    node.Value.Bounds.Y,
-                    node.Value.Bounds.Width,
-                    node.Value.Bounds.Height
-                    );
+                if (node.Children.Count() % 2 == 1) {
+
+                    // Center over the middle child.
+
+                    var centerChild = node.Children.ElementAt((int)Math.Truncate(node.Children.Count() / 2.0f));
+
+                    midpoint = centerChild.Value.Bounds.X + (centerChild.Value.Bounds.Width / 2.0f) - (node.Value.Bounds.Width / 2.0f);
+
+                }
+                else {
+
+                    // Center between two middle children.
+
+                    var leftCenterChild = node.Children.ElementAt((node.Children.Count() / 2) - 1);
+                    var rightCenterChild = node.Children.ElementAt(node.Children.Count() / 2);
+
+                    midpoint = leftCenterChild.Value.Bounds.X + ((leftCenterChild.Value.Bounds.Width + rightCenterChild.Value.Bounds.Width) / 2.0f) - (node.Value.Bounds.Width / 2.0f);
+
+                }
+
+                node.Value.Bounds = new RectangleF(midpoint, node.Value.Bounds.Y, node.Value.Bounds.Width, node.Value.Bounds.Height);
+
+                //float child_min_x = node.Children.First().Value.Bounds.X;
+                //float child_max_x = node.Children.Last().Value.Bounds.X + node.Children.Last().Value.Bounds.Width;
+                //float child_width = child_max_x - child_min_x;
+
+                //node.Value.Bounds = new RectangleF(
+                //    child_min_x + (child_width / 2.0f) - (node.Value.Bounds.Width / 2.0f),
+                //    node.Value.Bounds.Y,
+                //    node.Value.Bounds.Width,
+                //    node.Value.Bounds.Height
+                //    );
 
             });
 
@@ -285,51 +364,6 @@ namespace OurFoodChain.Drawing {
             }
 
             return new RectangleF(minX, minY, maxX - minX, maxY - minY);
-
-        }
-
-        private void DrawNode(ICanvas canvas, TreeNode<NodeData> node, Font font) {
-
-            // Cross-out the species if it's extinct.
-
-            string speciesName = TaxonFormatter.GetString(node.Value.Data.Species);
-            bool isHighlighted = node.Value.Data.IsAncestor && !node.Children.Any(child => child.Value.Data.IsAncestor);
-
-            if (node.Value.Data.Species.Status.IsExinct && StringUtilities.GetMarkupProperties(speciesName).HasFlag(MarkupProperties.Strikethrough)) {
-
-                using (Brush brush = new SolidBrush(TextColor))
-                using (Pen pen = new Pen(brush, 1.0f)) {
-
-                    canvas.DrawLine(pen,
-                        new PointF(node.Value.Bounds.X, node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f),
-                        new PointF(node.Value.Bounds.X + node.Value.Bounds.Width - 5.0f, node.Value.Bounds.Y + node.Value.Bounds.Height / 2.0f));
-
-                }
-
-            }
-
-            // Draw the name of the species.
-
-            canvas.DrawText(StringUtilities.StripMarkup(speciesName), new PointF(node.Value.Bounds.X, node.Value.Bounds.Y), font, isHighlighted ? HighlightColor : TextColor);
-
-            // Draw child nodes.
-
-            foreach (TreeNode<NodeData> child in node.Children) {
-
-                using (Brush brush = new SolidBrush(child.Value.Data.IsAncestor ? HighlightColor : TextColor))
-                using (Pen pen = new Pen(brush, 2.0f)) {
-
-                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
-
-                    canvas.DrawLine(pen,
-                        new PointF(node.Value.Bounds.X + (node.Value.Bounds.Width / 2.0f), node.Value.Bounds.Y + node.Value.Bounds.Height),
-                        new PointF(child.Value.Bounds.X + (child.Value.Bounds.Width / 2.0f), child.Value.Bounds.Y));
-
-                }
-
-                DrawNode(canvas, child, font);
-
-            }
 
         }
 

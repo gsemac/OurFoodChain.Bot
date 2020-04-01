@@ -16,7 +16,7 @@ namespace OurFoodChain.Drawing {
             canvas = new Bitmap(width, height);
             graphics = Graphics.FromImage(canvas);
 
-            graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
         }

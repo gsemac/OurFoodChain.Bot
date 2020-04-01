@@ -306,29 +306,38 @@ namespace OurFoodChain.Drawing {
 
                 // Finally, center the parent node over its children.
 
-                float midpoint = 0.0f;
+                if (node.Children.Any()) {
 
-                if (node.Children.Count() % 2 == 1) {
+                    float midpoint = 0.0f;
 
-                    // Center over the middle child.
+                    if (node.Children.Count() % 2 == 1) {
 
-                    var centerChild = node.Children.ElementAt((int)Math.Truncate(node.Children.Count() / 2.0f));
+                        // Center over the middle child.
 
-                    midpoint = centerChild.Value.Bounds.X + (centerChild.Value.Bounds.Width / 2.0f) - (node.Value.Bounds.Width / 2.0f);
+                        var centerChild = node.Children.ElementAt((int)Math.Truncate(node.Children.Count() / 2.0f));
+
+                        midpoint = centerChild.Value.Bounds.X + (centerChild.Value.Bounds.Width / 2.0f) - (node.Value.Bounds.Width / 2.0f);
+
+                    }
+                    else {
+
+                        // Center between two middle children.
+
+                        var leftCenterChild = node.Children.ElementAt((node.Children.Count() / 2) - 1);
+                        var rightCenterChild = node.Children.ElementAt(node.Children.Count() / 2);
+
+                        float leftCenterChildMidpoint = leftCenterChild.Value.Bounds.X + (leftCenterChild.Value.Bounds.Width / 2.0f);
+                        float rightCenterChildMidpoint = rightCenterChild.Value.Bounds.X + (rightCenterChild.Value.Bounds.Width / 2.0f);
+
+                        float totalWidth = rightCenterChildMidpoint - leftCenterChildMidpoint;
+
+                        midpoint = leftCenterChildMidpoint + (totalWidth / 2.0f) - (node.Value.Bounds.Width / 2.0f);
+
+                    }
+
+                    node.Value.Bounds = new RectangleF(midpoint, node.Value.Bounds.Y, node.Value.Bounds.Width, node.Value.Bounds.Height);
 
                 }
-                else {
-
-                    // Center between two middle children.
-
-                    var leftCenterChild = node.Children.ElementAt((node.Children.Count() / 2) - 1);
-                    var rightCenterChild = node.Children.ElementAt(node.Children.Count() / 2);
-
-                    midpoint = leftCenterChild.Value.Bounds.X + ((leftCenterChild.Value.Bounds.Width + rightCenterChild.Value.Bounds.Width) / 2.0f) - (node.Value.Bounds.Width / 2.0f);
-
-                }
-
-                node.Value.Bounds = new RectangleF(midpoint, node.Value.Bounds.Y, node.Value.Bounds.Width, node.Value.Bounds.Height);
 
                 //float child_min_x = node.Children.First().Value.Bounds.X;
                 //float child_max_x = node.Children.Last().Value.Bounds.X + node.Children.Last().Value.Bounds.Width;

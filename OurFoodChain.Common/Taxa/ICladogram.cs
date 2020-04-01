@@ -6,10 +6,12 @@ using System.Text;
 
 namespace OurFoodChain.Common.Taxa {
 
-    public enum CladogramType {
-        Full,
-        Ancestors,
-        Descendants,
+    [Flags]
+    public enum CladogramOptions {
+        None = 0,
+        Ancestors = 1,
+        Descendants = 2,
+        Full = Ancestors | Descendants,
         Default = Full
     }
 

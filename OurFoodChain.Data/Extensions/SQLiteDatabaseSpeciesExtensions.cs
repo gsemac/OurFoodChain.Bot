@@ -933,13 +933,13 @@ namespace OurFoodChain.Data.Extensions {
 
         }
 
-        public static async Task<ICladogram> BuildCladogramAsync(this SQLiteDatabase database, ISpecies species, CladogramType type = CladogramType.Default) {
+        public static async Task<ICladogram> BuildCladogramAsync(this SQLiteDatabase database, ISpecies species, CladogramOptions options = CladogramOptions.Default) {
 
             // Start by finding the earliest ancestor of this species.
 
             List<long> ancestorIds = new List<long>();
 
-            if (type != CladogramType.Descendants)
+            if (options.HasFlag(CladogramOptions.Ancestors))
                 ancestorIds.AddRange(await database.GetAncestorIdsAsync(species.Id));
 
             ancestorIds.Add((long)species.Id);
@@ -961,7 +961,7 @@ namespace OurFoodChain.Data.Extensions {
 
                     CladogramNode node = new CladogramNode(descendant, ancestorIds.Contains((long)descendant.Id));
 
-                    if (type != CladogramType.Ancestors || node.Value.IsAncestor) {
+                    if (options.HasFlag(CladogramOptions.Descendants) || node.Value.IsAncestor) {
 
                         queue.First().Children.Add(node);
                         queue.Enqueue(node);

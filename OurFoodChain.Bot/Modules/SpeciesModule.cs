@@ -828,8 +828,8 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Ancestors);
-
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Ancestors);
+                
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = cladogram.Root,
                     DrawLines = false,
@@ -852,8 +852,8 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Full);
-
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Full);
+            
                 ICladogramRenderer cladogramRenderer = new StraightLineCladogramRenderer(cladogram) {
                     TaxonFormatter = TaxonFormatter
                 };
@@ -877,7 +877,7 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Descendants);
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Descendants);
 
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = cladogram.Root,
@@ -900,8 +900,8 @@ namespace OurFoodChain.Bot.Modules {
 
             if (species.IsValid()) {
 
-                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramType.Descendants);
-
+                ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Descendants);
+               
                 ICladogramRenderer cladogramRenderer = new StraightLineCladogramRenderer(cladogram) {
                     TaxonFormatter = TaxonFormatter
                 };

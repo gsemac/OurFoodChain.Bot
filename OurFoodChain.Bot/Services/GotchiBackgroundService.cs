@@ -14,7 +14,7 @@ namespace OurFoodChain.Bot.Services {
 
         // Public members
 
-        public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
+        public int DelayMilliseconds { get; set; } = (int)TimeSpan.FromMinutes(20).TotalMilliseconds;
 
         public GotchiBackgroundService(IOfcBotConfiguration botConfiguration, IDatabaseService databaseService) {
 
@@ -27,8 +27,6 @@ namespace OurFoodChain.Bot.Services {
 
             _ = Task.Run(async () => {
 
-                await Task.Delay(DelayMilliseconds, cancellationTokenSource.Token);
-
                 while (!cancellationTokenSource.Token.IsCancellationRequested) {
 
                     try {
@@ -38,6 +36,8 @@ namespace OurFoodChain.Bot.Services {
                         // Exceptions shouldn't kill the task.
                         // #todo log the error
                     }
+
+                    await Task.Delay(DelayMilliseconds, cancellationTokenSource.Token);
 
                 }
 

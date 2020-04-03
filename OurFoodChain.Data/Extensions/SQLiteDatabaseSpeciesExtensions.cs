@@ -887,7 +887,7 @@ namespace OurFoodChain.Data.Extensions {
                     foreach (DataRow row in await database.GetRowsAsync(cmd)) {
 
                         result.Add(new ZoneRecord {
-                            Date = DateUtilities.GetDateFromTimestamp(row.Field<long>("timestamp")),
+                            Date = DateUtilities.GetDateFromTimestamp(row.Field<long?>("timestamp") ?? DateUtilities.GetTimestampFromDate(species.CreationDate)),
                             Reason = row.Field<string>("reason"),
                             Zone = await database.GetZoneAsync(row.Field<long>("zone_id")),
                             Type = (ZoneRecordType)row.Field<long>("record_type")

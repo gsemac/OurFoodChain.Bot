@@ -972,7 +972,7 @@ namespace OurFoodChain.Bot.Modules {
                                 .FirstOrDefault();
 
                             if (!string.IsNullOrWhiteSpace(reason))
-                                result.Append($" ({reason.ToLowerInvariant()})");
+                                result.Append($" ({reason.ToLowerInvariant().Trim()})");
 
                         }
 

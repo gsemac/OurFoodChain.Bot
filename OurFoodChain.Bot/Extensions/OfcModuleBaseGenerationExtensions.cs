@@ -31,7 +31,7 @@ namespace OurFoodChain.Extensions {
             if (newSpecies.Count() > 0)
                 EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"New species ({newSpecies.Count()})", newSpecies.Select(species => moduleBase.TaxonFormatter.GetString(species))));
 
-            if (newSpecies.Count() > 0)
+            if (extinctSpecies.Count() > 0)
                 EmbedUtilities.AppendEmbedPages(pages, EmbedUtilities.CreateEmbedPages($"Extinctions ({extinctSpecies.Count()})", extinctSpecies.Select(species => moduleBase.TaxonFormatter.GetString(species, false))));
 
             EmbedUtilities.AddPageNumbers(pages);

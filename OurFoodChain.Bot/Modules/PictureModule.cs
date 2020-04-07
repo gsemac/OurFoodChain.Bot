@@ -299,7 +299,7 @@ namespace OurFoodChain.Bot {
                     foreach (ISpecies species in await Db.GetSpeciesAsync(taxon))
                         pictures.AddRange(await Db.GetPicturesAsync(species));
 
-                    await ShowGalleryAsync(taxon.GetName(), pictures);
+                    await ReplyGalleryAsync(taxon.GetName(), pictures);
 
                 }
 
@@ -328,51 +328,11 @@ namespace OurFoodChain.Bot {
 
         // Private members
 
-        public async Task ShowGalleryAsync(string galleryName, IEnumerable<IPicture> pictures) {
-
-            if (pictures.Count() <= 0) {
-
-                // If there were no images for this query, show a message and quit.
-
-                await ReplyInfoAsync($"{galleryName.ToTitle().ToBold()} does not have any pictures.");
-
-            }
-            else {
-
-                // Display a paginated image gallery.
-
-                IPaginatedMessage message = new PaginatedMessage();
-
-                int index = 1;
-
-                foreach (IPicture p in pictures) {
-
-                    Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed();
-
-                    string title = string.Format("Pictures of {0} ({1} of {2})", galleryName, index, pictures.Count());
-                    string footer = string.Format("\"{0}\" by {1} — {2}", p.GetName(), (await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, p.Artist))?.ToCreator() ?? p.Artist, p.Caption);
-
-                    embed.Title = title;
-                    embed.ImageUrl = p.Url;
-                    embed.Description = p.Description;
-                    embed.Footer = footer;
-
-                    message.AddPage(embed);
-
-                    ++index;
-
-                }
-
-                await ReplyAsync(message);
-
-            }
-
-        }
         private async Task ShowGalleryAsync(ISpecies species) {
 
             IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(species);
 
-            await ShowGalleryAsync(TaxonFormatter.GetString(species, false), pictures);
+            await ReplyGalleryAsync(TaxonFormatter.GetString(species, false), pictures);
 
         }
 

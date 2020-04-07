@@ -533,7 +533,7 @@ namespace OurFoodChain.Bot.Modules {
                     List<IPicture> pictures = new List<IPicture>();
 
                     foreach (ISpecies species in await result.GetResultsAsync())
-                        pictures.AddRange(species.Pictures);
+                        pictures.AddRange(await Db.GetPicturesAsync(species));
 
                     await ReplyGalleryAsync($"search results ({result.TotalResults()})", pictures);
 
@@ -829,7 +829,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.IsValid()) {
 
                 ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Ancestors);
-                
+
                 AncestryTreeTextRenderer renderer = new AncestryTreeTextRenderer {
                     Tree = cladogram.Root,
                     DrawLines = false,
@@ -853,7 +853,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.IsValid()) {
 
                 ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Full);
-            
+
                 ICladogramRenderer cladogramRenderer = new StraightLineCladogramRenderer(cladogram) {
                     TaxonFormatter = TaxonFormatter
                 };
@@ -901,7 +901,7 @@ namespace OurFoodChain.Bot.Modules {
             if (species.IsValid()) {
 
                 ICladogram cladogram = await Db.BuildCladogramAsync(species, CladogramOptions.Descendants);
-               
+
                 ICladogramRenderer cladogramRenderer = new StraightLineCladogramRenderer(cladogram) {
                     TaxonFormatter = TaxonFormatter
                 };

@@ -157,7 +157,7 @@ namespace OurFoodChain.Bot.Modules {
 
         }
 
-        [Command("name")]
+        [Command("name"), Alias("nick")]
         public async Task Name(string name) {
 
             Gotchi gotchi = await Db.GetGotchiAsync(Context.User.ToCreator());

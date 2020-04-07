@@ -637,6 +637,10 @@
       <Project>{e24f30fd-e82f-4709-b0c3-68c7eab7ac61}</Project>
       <Name>OurFoodChain.Drawing</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OurFoodChain.Gotchis\OurFoodChain.Gotchis.csproj">
+      <Project>{1456fc2c-3ae3-42ff-a0cf-bc3558327e09}</Project>
+      <Name>OurFoodChain.Gotchis</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OurFoodChain.Trophies\OurFoodChain.Trophies.csproj">
       <Project>{bd426b2e-c9e4-4e76-9f04-ae0666052131}</Project>
       <Name>OurFoodChain.Trophies</Name>

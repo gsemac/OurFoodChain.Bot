@@ -25,12 +25,17 @@ namespace OurFoodChain.Extensions {
 
         public static async Task AddGotchiAsync(this SQLiteDatabase database, ICreator user, ISpecies species) {
 
-            // We need to generate a name for this Gotchi that doesn't already exist for this user.
+            // Generate a unique name for the user's gotchi, but duplicate names are allowed if necessary (e.g. all generated names exhausted).
 
-            string name = GenerateGotchiName(user, species);
+            IEnumerable<Gotchi> existingGotchis = await database.GetGotchisAsync(user);
 
-            while (!(await database.GetGotchiAsync(user.UserId, name) is null))
-                name = GenerateGotchiName(user, species);
+            IGotchiNameGenerator nameGenerator = new GotchiNameGenerator();
+
+            string name = nameGenerator.GetName(user, species);
+            const int maxNamingAttempts = 10;
+
+            for (int i = 0; i < maxNamingAttempts && existingGotchis.Any(gotchi => gotchi.Name.Equals(name, StringComparison.OrdinalIgnoreCase)); ++i)
+                name = nameGenerator.GetName(user, species);
 
             // Add the Gotchi to the database.
 
@@ -134,20 +139,29 @@ namespace OurFoodChain.Extensions {
             return gotchis;
 
         }
-        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, ulong userId) {
+        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, ulong? userId) {
 
             List<Gotchi> gotchis = new List<Gotchi>();
 
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id = $owner_id ORDER BY born_ts ASC;")) {
+            if (userId.HasValue) {
 
-                cmd.Parameters.AddWithValue("$owner_id", userId);
+                using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id = $owner_id ORDER BY born_ts ASC;")) {
 
-                foreach (DataRow row in await database.GetRowsAsync(cmd))
-                    gotchis.Add(CreateGotchFromDataRow(row));
+                    cmd.Parameters.AddWithValue("$owner_id", userId);
+
+                    foreach (DataRow row in await database.GetRowsAsync(cmd))
+                        gotchis.Add(CreateGotchFromDataRow(row));
+
+                }
 
             }
 
             return gotchis;
+
+        }
+        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, ICreator creator) {
+
+            return await database.GetGotchisAsync(creator.UserId);
 
         }
 
@@ -648,44 +662,6 @@ namespace OurFoodChain.Extensions {
             }
 
             return defaultFileName;
-
-        }
-
-        public static string GenerateGotchiName(ICreator user, ISpecies species) {
-
-            List<string> name_options = new List<string>();
-
-            // Add the default name first.
-            name_options.Add(string.Format("{0} Jr.", user.Name));
-
-            // We'll generate some names using some portion of the species name.
-            // For example, "gigas" might generate "gi-gi", "mr. giga", or "giga".
-
-            string species_name = species.Name;
-            MatchCollection vowel_matches = Regex.Matches(species_name, "[aeiou]");
-            string[] roots = vowel_matches.Cast<Match>().Where(x => x.Index > 1).Select(x => species_name.Substring(0, x.Index + 1)).ToArray();
-
-            for (int i = 0; i < 2; ++i) {
-
-                string name = roots[NumberUtilities.GetRandomInteger(roots.Count())];
-
-                if (NumberUtilities.GetRandomInteger(2) == 0)
-                    name = name.Substring(0, name.Length - 1); // cut off the last vowel
-
-                if (NumberUtilities.GetRandomInteger(2) == 0 && name.Length <= 5)
-                    name += "-" + name;
-
-                if (NumberUtilities.GetRandomInteger(2) == 0 && name.Length > 1 && (name.Last() == 'r' || name.Last() == 't'))
-                    name += "y";
-
-                if (NumberUtilities.GetRandomInteger(2) == 0)
-                    name = (new string[] { "Mr.", "Sir" }).Random() + " " + name;
-
-                name_options.Add(name);
-
-            }
-
-            return name_options.Select(x => StringUtilities.ToTitleCase(x)).ToArray()[NumberUtilities.GetRandomInteger(name_options.Count())];
 
         }
 

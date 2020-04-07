@@ -24,6 +24,12 @@ namespace OurFoodChain.Common.Utilities {
 
         }
 
+        public static bool GetRandomBoolean() {
+
+            return GetRandomInteger(2) == 0;
+
+        }
+
         // Private members
 
         private static readonly Random random = new Random();

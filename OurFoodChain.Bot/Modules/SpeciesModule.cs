@@ -958,14 +958,14 @@ namespace OurFoodChain.Bot.Modules {
 
                             result.Append(isFirstLine ? "Started in " : "Spread to ");
                             result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
-                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName())));
+                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName()).OrderBy(name => name, new NaturalStringComparer())));
 
                         }
                         else if (eventGroup.First().Type == ZoneRecordType.Removed) {
 
                             result.Append("Went extinct in ");
                             result.Append(eventGroup.Count() == 1 ? "Zone " : "Zones ");
-                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName())));
+                            result.Append(StringUtilities.ConjunctiveJoin(eventGroup.GroupBy(ev => ev.Zone.Id).Select(ev => ev.First().Zone.GetShortName()).OrderBy(name => name, new NaturalStringComparer())));
 
                             string reason = eventGroup.Select(ev => ev.Reason)
                                 .Where(r => !string.IsNullOrEmpty(r))

@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using OurFoodChain.Discord.Bots;
+using OurFoodChain.Common.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;

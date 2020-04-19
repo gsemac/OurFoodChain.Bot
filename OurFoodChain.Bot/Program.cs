@@ -1,5 +1,5 @@
-﻿using OurFoodChain.Debug;
-using OurFoodChain.Discord.Bots;
+﻿using OurFoodChain.Common.Configuration;
+using OurFoodChain.Debug;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +28,7 @@ namespace OurFoodChain {
             Console.WriteLine(new LogMessage(LogSeverity.Info, "Init", $"To configure your bot, edit the {configFilePath} file.").ToString());
 
             Bot.OfcBotConfiguration configuration =
-                    ConfigurationBase.Open<Bot.OfcBotConfiguration>(configFilePath);
+                    Configuration.FromFile<Bot.OfcBotConfiguration>(configFilePath);
 
             if (string.IsNullOrWhiteSpace(configuration.Token)) {
 
@@ -38,7 +38,7 @@ namespace OurFoodChain {
 
                 string token = Console.ReadLine().Trim();
 
-                if(!string.IsNullOrWhiteSpace(token)) {
+                if (!string.IsNullOrWhiteSpace(token)) {
 
                     configuration.Token = token;
 

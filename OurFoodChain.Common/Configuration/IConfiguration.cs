@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OurFoodChain.Discord.Bots {
+namespace OurFoodChain.Common.Configuration {
 
     [JsonConverter(typeof(ConfigurationJsonConverter))]
     public interface IConfiguration {

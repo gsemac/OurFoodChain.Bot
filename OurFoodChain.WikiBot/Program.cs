@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using OurFoodChain.Common;
+using OurFoodChain.Common.Configuration;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
@@ -20,18 +21,21 @@ namespace OurFoodChain.Wiki {
         // Public members
 
         string SpeciesTemplateFilePath { get; } = "data/templates/species_template.txt";
-        SQLiteDatabase Db { get; } = SQLiteDatabase.FromFile(Constants.DatabaseFilePath);
 
         static void Main(string[] args)
              => new Program().MainAsync(args).GetAwaiter().GetResult();
 
         public async Task MainAsync(string[] args) {
 
-            Log("loading configuration");
+            Log("Loading configuration");
 
-            Config config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("wikibot-config.json"));
+            IWikiBotConfiguration config = Configuration.FromFile<WikiBotConfiguration>(System.IO.File.ReadAllText("wikibot-config.json"));
 
-            Log("initializing mediawiki client");
+            Log("Loading database");
+
+            SQLiteDatabase database = SQLiteDatabase.FromFile(args[0]);
+
+            Log("Initializing MediaWiki client");
 
             MediaWikiClient client = new MediaWikiClient {
                 Protocol = config.Protocol,
@@ -46,14 +50,14 @@ namespace OurFoodChain.Wiki {
 
             if (client.Login(config.Username, config.Password).Success) {
 
-                Log("generating link dictionary");
+                Log("Generating link dictionary");
 
                 WikiLinkList LinkifyList = await _generateLinkifyListAsync();
 
-                Log("synchronizing species");
-                Log("getting species from database");
+                Log("Synchronizing species");
+                Log("Getting species from database");
 
-                ISpecies[] speciesList = await SpeciesUtils.GetSpeciesAsync();
+                IEnumerable<ISpecies> speciesList = await database.GetSpeciesAsync();
 
                 Log(string.Format("got {0} results", speciesList.Count()));
 

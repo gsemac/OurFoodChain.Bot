@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace OurFoodChain.Discord.Bots {
+namespace OurFoodChain.Common.Configuration {
 
     public abstract class ConfigurationBase :
         IConfiguration {
@@ -62,17 +62,6 @@ namespace OurFoodChain.Discord.Bots {
                 },
                 Formatting = Formatting.Indented
             }));
-
-        }
-
-        public static T Open<T>(string filePath) {
-
-            return Parse<T>(System.IO.File.ReadAllText(filePath));
-
-        }
-        public static T Parse<T>(string json) {
-
-            return JsonConvert.DeserializeObject<T>(json);
 
         }
 

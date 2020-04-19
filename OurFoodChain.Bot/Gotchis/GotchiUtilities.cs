@@ -3,13 +3,13 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using OurFoodChain.Bot;
+using OurFoodChain.Common.Configuration;
 using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Common.Zones;
 using OurFoodChain.Data;
 using OurFoodChain.Data.Extensions;
-using OurFoodChain.Discord.Bots;
 using OurFoodChain.Discord.Extensions;
 using OurFoodChain.Extensions;
 using System;
@@ -193,7 +193,7 @@ namespace OurFoodChain.Gotchis {
 
                 if (System.IO.File.Exists(path)) {
 
-                    result = ConfigurationBase.Open<GotchiConfiguration>(path);
+                    result = Configuration.FromFile<GotchiConfiguration>(path);
 
                     return true;
 

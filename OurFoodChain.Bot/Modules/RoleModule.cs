@@ -233,7 +233,7 @@ namespace OurFoodChain.Bot {
                 }
 
                 Discord.Messaging.IEmbed embed = new Discord.Messaging.Embed {
-                    Title = $"{species.GetShortName()}'s role(s) ({roles.Count()})",
+                    Title = $"{species.GetShortName().ToPossessive()} role(s) ({roles.Count()})",
                     Description = lines.ToString()
                 };
 

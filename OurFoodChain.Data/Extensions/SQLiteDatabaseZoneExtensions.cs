@@ -20,6 +20,9 @@ namespace OurFoodChain.Data.Extensions {
     public enum GetZoneOptions {
         None = 0,
         Fast = 1,
+        /// <summary>
+        /// Only read zone IDs from the database, ignoring all other zone information.
+        /// </summary>
         IdsOnly = 2,
         Default = None
     }

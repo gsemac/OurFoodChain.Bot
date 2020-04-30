@@ -266,6 +266,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\RequireDMChannelAttribute.cs" />
+    <Compile Include="Attributes\RequireGuildChannelAttribute.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Extensions\GotchiExtensions.cs" />
     <Compile Include="Extensions\OfcModuleBaseGenerationExtensions.cs" />

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using OurFoodChain.Attributes;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
 using OurFoodChain.Common.Extensions;
@@ -20,13 +21,13 @@ namespace OurFoodChain.Bot {
 
         // Public members
 
-        [Command("setpic", RunMode = RunMode.Async), Alias("setspeciespic", "setspic")]
+        [Command("setpic", RunMode = RunMode.Async), Alias("setspeciespic", "setspic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPic(string speciesName, string imageUrl) {
 
             await SetPic(string.Empty, speciesName, imageUrl);
 
         }
-        [Command("setpic", RunMode = RunMode.Async), Alias("setspeciespic", "setspic")]
+        [Command("setpic", RunMode = RunMode.Async), Alias("setspeciespic", "setspic"), RequirePrivilege(PrivilegeLevel.ServerModerator)]
         public async Task SetPic(string genusName, string speciesName, string imageUrl) {
 
             // Updates the default picture for the given species.
@@ -36,7 +37,7 @@ namespace OurFoodChain.Bot {
 
             if (species.IsValid()) {
 
-                if (await ReplyValidatePrivilegeAsync(PrivilegeLevel.ServerModerator, species) && await ReplyValidateImageUrlAsync(imageUrl)) {
+                if (await ReplyValidateImageUrlAsync(imageUrl)) {
 
                     IPictureGallery gallery = await Db.GetGalleryAsync(species) ?? new PictureGallery();
                     bool isFirstPicture = gallery.Count() <= 0;
@@ -54,13 +55,13 @@ namespace OurFoodChain.Bot {
 
         }
 
-        [Command("+pic", RunMode = RunMode.Async)]
+        [Command("+pic", RunMode = RunMode.Async), RequireGuildChannel(Group = "Permission"), RequirePrivilege(PrivilegeLevel.ServerModerator, Group = "Permission")]
         public async Task PlusPic(string speciesName, string imageUrl) {
 
             await PlusPic(string.Empty, speciesName, imageUrl, string.Empty);
 
         }
-        [Command("+pic", RunMode = RunMode.Async)]
+        [Command("+pic", RunMode = RunMode.Async), RequireGuildChannel(Group = "Permission"), RequirePrivilege(PrivilegeLevel.ServerModerator, Group = "Permission")]
         public async Task PlusPic(string arg0, string arg1, string arg2) {
 
             // This command can be used in the following ways:
@@ -95,7 +96,7 @@ namespace OurFoodChain.Bot {
             await PlusPic(genus, species, url, description);
 
         }
-        [Command("+pic", RunMode = RunMode.Async)]
+        [Command("+pic", RunMode = RunMode.Async), RequireGuildChannel(Group = "Permission"), RequirePrivilege(PrivilegeLevel.ServerModerator, Group = "Permission")]
         public async Task PlusPic(string genusName, string speciesName, string imageUrl, string description) {
 
             // Get the species.

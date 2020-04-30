@@ -420,17 +420,17 @@ namespace OurFoodChain.Wiki {
         }
         private void LogInfo(string message) {
 
-            OnLog(new LogMessage(LogSeverity.Info, message, "mwclient"));
+            OnLog(new LogMessage(LogSeverity.Info, "mwclient", message));
 
         }
         private void LogWarn(string message) {
 
-            OnLog(new LogMessage(LogSeverity.Warning, message, "mwclient"));
+            OnLog(new LogMessage(LogSeverity.Warning, "mwclient", message));
 
         }
         private void LogError(string message) {
 
-            OnLog(new LogMessage(LogSeverity.Error, message, "mwclient"));
+            OnLog(new LogMessage(LogSeverity.Error, "mwclient", message));
 
         }
 

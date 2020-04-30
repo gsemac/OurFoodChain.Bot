@@ -1,5 +1,7 @@
 ﻿using OurFoodChain.Common.Extensions;
 using OurFoodChain.Common.Taxa;
+using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,22 +13,26 @@ namespace OurFoodChain.Wiki {
 
     public class SpeciesPageBuilder {
 
+        // Public members
+
         public ISpecies Species { get; set; }
-        public ISpecies[] AllSpecies { get; set; }
+        public IEnumerable<ISpecies> AllSpecies { get; set; }
         public WikiPageTemplate Template { get; set; }
         public WikiLinkList LinkList { get; set; }
         public List<string> PictureFilenames { get; set; } = new List<string>();
 
-        public SpeciesPageBuilder(ISpecies species, WikiPageTemplate template) {
+        public SpeciesPageBuilder(ISpecies species, WikiPageTemplate template, SQLiteDatabase database) {
 
             if (species is null)
-                throw new ArgumentNullException("species");
+                throw new ArgumentNullException(nameof(species));
 
             if (template is null)
-                throw new ArgumentNullException("template");
+                throw new ArgumentNullException(nameof(template));
 
             Species = species;
             Template = template;
+
+            this.database = database;
 
         }
 
@@ -39,13 +45,17 @@ namespace OurFoodChain.Wiki {
 
         }
 
+        // Private members
+
+        private readonly SQLiteDatabase database;
+
         private async Task<string> BuildTitleAsync() {
             return await BuildTitleAsync(Species);
         }
         private async Task<string> BuildTitleAsync(ISpecies species) {
 
             if (species is null)
-                throw new ArgumentNullException("species");
+                throw new ArgumentNullException(nameof(species));
 
             // Pages are created based on the first/primary common name (where available).
             // The full species name is added as a redirect.
@@ -56,10 +66,10 @@ namespace OurFoodChain.Wiki {
                 title = species.GetCommonName();
             else {
 
-                CommonName[] commonNames = await SpeciesUtils.GetCommonNamesAsync(species);
+                IEnumerable<string> commonNames = species.CommonNames;
 
                 if (commonNames.Count() > 0)
-                    title = commonNames.First().Value;
+                    title = commonNames.First();
                 else
                     title = species.GetFullName();
 
@@ -117,13 +127,15 @@ namespace OurFoodChain.Wiki {
             return await Task.FromResult(Species.IsExtinct() ? "Extinct" : "Extant");
         }
         private async Task<string> GetCommonNamesTokenValueAsync() {
-            return await Task.FromResult(string.Join(", ", SpeciesUtils.GetCommonNamesAsync(Species).Result.Select(x => x.Value)));
+
+            return await Task.FromResult(string.Join(", ", Species.CommonNames.Select(n => n.ToTitle())));
+
         }
         private async Task<string> GetZonesTokenValueAsync() {
-            return string.Join(", ", (await SpeciesUtils.GetZonesAsync(Species)).Select(x => x.Zone.ShortName));
+            return string.Join(", ", (await database.GetZonesAsync(Species)).Select(x => x.Zone.GetShortName()));
         }
         private async Task<string> GetRolesTokenValueAsync() {
-            return string.Join(", ", (await SpeciesUtils.GetRolesAsync(Species)).Select(x => x.Name));
+            return string.Join(", ", (await database.GetRolesAsync(Species)).Select(x => x.GetName()));
         }
         private async Task<string> GetGenusTokenValueAsync() {
             return await Task.FromResult(Species.Genus.GetName());
@@ -133,7 +145,7 @@ namespace OurFoodChain.Wiki {
         }
         private async Task<string> GetAncestorTokenValueAsync() {
 
-            ISpecies ancestorSpecies = await SpeciesUtils.GetAncestorAsync(Species);
+            ISpecies ancestorSpecies = await database.GetAncestorAsync(Species);
 
             if (ancestorSpecies != null)
                 return await BuildTitleAsync(ancestorSpecies);
@@ -146,20 +158,16 @@ namespace OurFoodChain.Wiki {
         }
         private async Task<string> GetExtinctionDateTokenValueAsync() {
 
-            ExtinctionInfo extinctionInfo = await SpeciesUtils.GetExtinctionInfoAsync(Species);
-
-            if (extinctionInfo.IsExtinct)
-                return await Task.FromResult(FormatDate(extinctionInfo.Date));
+            if (Species.IsExtinct())
+                return await Task.FromResult(FormatDate(Species.Status.Date.Value.Date));
             else
                 return await Task.FromResult(string.Empty);
 
         }
         private async Task<string> GetExtinctionReasonTokenValueAsync() {
 
-            ExtinctionInfo extinctionInfo = await SpeciesUtils.GetExtinctionInfoAsync(Species);
-
-            if (extinctionInfo.IsExtinct)
-                return await Task.FromResult(extinctionInfo.Reason);
+            if (Species.IsExtinct())
+                return await Task.FromResult(Species.Status.Reason);
             else
                 return await Task.FromResult(string.Empty);
 

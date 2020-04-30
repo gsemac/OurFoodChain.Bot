@@ -29,7 +29,7 @@ namespace OurFoodChain.Wiki {
 
             Log("Loading configuration");
 
-            IWikiBotConfiguration config = Configuration.FromFile<WikiBotConfiguration>(System.IO.File.ReadAllText("wikibot-config.json"));
+            IWikiBotConfiguration config = Configuration.FromFile<WikiBotConfiguration>("wikibot-config.json");
 
             Log("Loading database");
 
@@ -52,7 +52,7 @@ namespace OurFoodChain.Wiki {
 
                 Log("Generating link dictionary");
 
-                WikiLinkList LinkifyList = await _generateLinkifyListAsync();
+                WikiLinkList LinkifyList = await _generateLinkifyListAsync(database);
 
                 Log("Synchronizing species");
                 Log("Getting species from database");
@@ -67,7 +67,7 @@ namespace OurFoodChain.Wiki {
 
                     // Create the page builder.
 
-                    SpeciesPageBuilder pageBuilder = new SpeciesPageBuilder(species, WikiPageTemplate.Open(SpeciesTemplateFilePath)) {
+                    SpeciesPageBuilder pageBuilder = new SpeciesPageBuilder(species, WikiPageTemplate.Open(SpeciesTemplateFilePath), database) {
                         AllSpecies = speciesList,
                         LinkList = LinkifyList
                     };
@@ -75,7 +75,7 @@ namespace OurFoodChain.Wiki {
                     // Attempt to upload the species' picture.
 
                     pageBuilder.PictureFilenames.Add(await UploadSpeciesPictureAsync(client, history, species));
-                    pageBuilder.PictureFilenames.AddRange(await UploadSpeciesGalleryAsync(client, history, species));
+                    pageBuilder.PictureFilenames.AddRange(await UploadSpeciesGalleryAsync(client, history, database, species));
                     pageBuilder.PictureFilenames.RemoveAll(x => string.IsNullOrWhiteSpace(x));
 
                     // Generate page content.
@@ -143,7 +143,7 @@ namespace OurFoodChain.Wiki {
 
         }
 
-        private static async Task<WikiLinkList> _generateLinkifyListAsync() {
+        private static async Task<WikiLinkList> _generateLinkifyListAsync(SQLiteDatabase database) {
 
             // Returns a dictionary of substrings that should be turned into page links in page content.
 
@@ -151,7 +151,7 @@ namespace OurFoodChain.Wiki {
 
             // Add species names to the dictionary.
 
-            ISpecies[] species_list = await SpeciesUtils.GetSpeciesAsync();
+            IEnumerable<ISpecies> species_list = await database.GetSpeciesAsync();
 
             foreach (ISpecies species in species_list) {
 
@@ -177,7 +177,7 @@ namespace OurFoodChain.Wiki {
 
             // Add zone names to the dictionary.
 
-            IZone[] zones_list = await ZoneUtils.GetZonesAsync();
+            IEnumerable<IZone> zones_list = await database.GetZonesAsync();
 
             foreach (IZone zone in zones_list) {
 
@@ -239,11 +239,11 @@ namespace OurFoodChain.Wiki {
             return string.Empty;
 
         }
-        private async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, ISpecies species) {
+        private async Task<string[]> UploadSpeciesGalleryAsync(MediaWikiClient client, EditHistory history, SQLiteDatabase database, ISpecies species) {
 
             // Upload all images in the given species' gallery.
 
-            IEnumerable<IPicture> pictures = await Db.GetPicturesAsync(species);
+            IEnumerable<IPicture> pictures = await database.GetPicturesAsync(species);
             List<string> uploadedFilenames = new List<string>();
 
             if (pictures != null) {

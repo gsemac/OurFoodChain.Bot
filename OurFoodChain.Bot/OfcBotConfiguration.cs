@@ -15,8 +15,9 @@ namespace OurFoodChain.Bot {
         BotConfiguration,
         IOfcBotConfiguration {
 
-        public ulong[] BotAdminUserIds { get; set; }
-        public ulong[] ModRoleIds { get; set; }
+        public IEnumerable<ulong> BotAdminUserIds { get; set; }
+        public IEnumerable<ulong> ModRoleIds { get; set; }
+        public IEnumerable<ulong> BannedUserIds { get; set; }
 
         public ulong ScratchChannel { get; set; }
         public ulong ScratchServer { get; set; }

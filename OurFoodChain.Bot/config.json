@@ -1,6 +1,7 @@
 ﻿{
   "botAdminUserIds": [],
   "modRoleIds": [],
+  "bannedUserIds": [],
   "scratchChannel": 0,
   "scratchServer": 0,
   "reviewChannels": null,

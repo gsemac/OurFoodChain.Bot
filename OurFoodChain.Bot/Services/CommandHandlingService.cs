@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using OurFoodChain.Discord.Services;
+using OurFoodChain.Discord.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace OurFoodChain.Bot.Services {
             ) :
             base(configuration, serviceProvider, helpService, responsiveMessageService, discordClient, commandService) {
 
-            _configuration = configuration;
+            botConfiguration = configuration;
 
         }
 
@@ -33,10 +34,10 @@ namespace OurFoodChain.Bot.Services {
 
             await base.InstallCommandsAsync();
 
-            if (!_configuration.TrophiesEnabled)
+            if (!botConfiguration.TrophiesEnabled)
                 await DiscordCommandService.RemoveModuleAsync<Modules.TrophyModule>();
 
-            if (!_configuration.GotchisEnabled)
+            if (!botConfiguration.GotchisEnabled)
                 await DiscordCommandService.RemoveModuleAsync<Modules.GotchiModule>();
 
         }
@@ -45,13 +46,21 @@ namespace OurFoodChain.Bot.Services {
 
         protected override async Task OnMessageReceivedAsync(SocketMessage rawMessage) {
 
-            await base.OnMessageReceivedAsync(rawMessage);
+            ulong userId = rawMessage.Author.Id;
+
+            // If the user has been banned, show an error message.
+            // Bot admins cannot be banned.
+
+            if (botConfiguration.BannedUserIds.Any(id => id.Equals(userId)) && !botConfiguration.BotAdminUserIds.Any(id => id.Equals(userId)))
+                await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, "You do not have the permissions to use this command.");
+            else
+                await base.OnMessageReceivedAsync(rawMessage);
 
         }
 
         // Private members
 
-        private readonly IOfcBotConfiguration _configuration;
+        private readonly IOfcBotConfiguration botConfiguration;
 
     }
 

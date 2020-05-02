@@ -51,8 +51,11 @@ namespace OurFoodChain.Bot.Services {
             // If the user has been banned, show an error message.
             // Bot admins cannot be banned.
 
-            if (botConfiguration.BannedUserIds.Any(id => id.Equals(userId)) && !botConfiguration.BotAdminUserIds.Any(id => id.Equals(userId)))
-                await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, "You do not have the permissions to use this command.");
+            bool userIsBanned = botConfiguration.BannedUserIds?.Any(id => id.Equals(userId)) ?? false;
+            bool userIsBotAdmin = botConfiguration.BotAdminUserIds?.Any(id => id.Equals(userId)) ?? false;
+
+            if (userIsBanned && !userIsBotAdmin)
+                await DiscordUtilities.ReplyErrorAsync(rawMessage.Channel, "You do not have permission to use this command.");
             else
                 await base.OnMessageReceivedAsync(rawMessage);
 

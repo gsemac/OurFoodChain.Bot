@@ -28,13 +28,13 @@ namespace OurFoodChain.Data.Queries {
                     // Get all of the ancestor IDs for this species, ordered from the oldest to the latest.
                     // Skip until we find the ancestor ID we're looking for.
 
-                    IEnumerable<long> ancestorIds = (await context.Database.GetAncestorIdsAsync(species.Id)).OrderBy(id => id);
+                    IEnumerable<long> ancestorIds = await context.Database.GetAncestorIdsAsync(species.Id);
 
                     // Skip until we find the ID of the ancestor we're looking for.
                     // If we find it, all species beyond this point also have the ancestor.
                     // If we don't find it, none of these species has the ancestor.
 
-                    IEnumerable<long> idsWithAncestor = ancestorIds.SkipWhile(id => id != ancestorSpecies.Id).Skip(1);
+                    IEnumerable<long> idsWithAncestor = ancestorIds.SkipWhile(id => id != ancestorSpecies.Id);
 
                     if (idsWithAncestor.Any()) {
 
@@ -43,7 +43,7 @@ namespace OurFoodChain.Data.Queries {
                         isFiltered = false;
 
                         foreach (long id in idsWithAncestor)
-                            resultCache[id] = isFiltered;
+                            resultCache[id] = false;
 
                     }
                     else {
@@ -53,7 +53,7 @@ namespace OurFoodChain.Data.Queries {
                         isFiltered = true;
 
                         foreach (long id in ancestorIds)
-                            resultCache[id] = isFiltered;
+                            resultCache[id] = true;
 
                     }
 

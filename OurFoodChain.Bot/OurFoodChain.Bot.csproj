@@ -555,6 +555,7 @@
     <None Include="data\help\+prey.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="data\updates\update029.sql" />
     <Content Include="data\updates\update025.sql" />
     <Content Include="data\updates\update026.sql" />
     <Content Include="data\updates\update027.sql" />

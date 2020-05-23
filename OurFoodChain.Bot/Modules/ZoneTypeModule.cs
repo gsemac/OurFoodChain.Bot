@@ -191,7 +191,7 @@ namespace OurFoodChain.Modules {
 
         }
 
-        [Command("setzonetype"), DifficultyLevel(DifficultyLevel.Advanced)]
+        [Command("setzonetype"), RequirePrivilege(PrivilegeLevel.ServerModerator), DifficultyLevel(DifficultyLevel.Advanced)]
         public async Task SetZoneType(string zoneName, string zoneType) {
 
             IZone zone = await Db.GetZoneAsync(zoneName);

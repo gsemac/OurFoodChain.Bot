@@ -187,6 +187,14 @@ WHERE
       )
   );
 
+DELETE FROM Galleries WHERE name IN (SELECT "species" || id FROM Species);
+
+-- Move common names from SpeciesCommonNames to TaxaCommonNames.
+
+INSERT OR IGNORE INTO TaxaCommonNames(taxon_id, name) SELECT Taxa.id, SpeciesCommonNames.name FROM SpeciesCommonNames, Taxa WHERE SpeciesCommonNames.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp);
+
+DROP TABLE SpeciesCommonNames;
+
 -- Recreate tables that have a foreign key to the Species table to refer to the Taxa table instead.
 
 -- Recreate the Ancestors table.
@@ -226,12 +234,158 @@ DROP TABLE Ancestors;
 ALTER TABLE Ancestors2 RENAME TO Ancestors;
 
 -- Recreate the Extinctions table.
+
+CREATE TABLE Extinctions2(species_id INTEGER, reason TEXT, timestamp INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, UNIQUE(species_id));
+
+INSERT INTO Extinctions2 SELECT Taxa.id, Extinctions.reason, Extinctions.timestamp FROM Taxa, Extinctions WHERE (Extinctions.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp));
+
+DROP TABLE Extinctions;
+
+ALTER TABLE Extinctions2 RENAME TO Extinctions;
+
 -- Recreate the Favorites table.
+
+INSERT OR IGNORE INTO Users(user_id) SELECT user_id FROM Favorites;
+
+CREATE TABLE Favorites2(user_id INTEGER, species_id INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE, UNIQUE(user_id, species_id));
+
+INSERT INTO Favorites2 SELECT Users.id, Taxa.id FROM Favorites, Users, Taxa WHERE Favorites.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp) AND Favorites.user_id = Users.user_id;
+
+DROP TABLE Favorites;
+
+ALTER TABLE Favorites2 RENAME TO Favorites;
+
 -- Recreate the Gotchi table.
+
+INSERT OR IGNORE INTO Users(user_id) SELECT owner_id FROM Gotchi;
+
+CREATE TABLE Gotchis(id INTEGER PRIMARY KEY AUTOINCREMENT, species_id INTEGER, user_id INTEGER, name TEXT, fed_ts INTEGER, born_ts INTEGER, evolved_ts INTEGER, level INTEGER, exp REAL, training_ts INTEGER, training_left INTEGER, viewed_ts INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE, UNIQUE(user_id, name));
+
+INSERT INTO Gotchis(species_id, user_id, name, fed_ts, born_ts, evolved_ts, level, exp, training_ts, training_left, viewed_ts) SELECT Taxa.id, Users.id, Gotchi.name, fed_ts, born_ts, evolved_ts, level, exp, training_ts, training_left, viewed_ts FROM Taxa, Users, Gotchi WHERE (Gotchi.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp)) AND Gotchi.owner_id = Users.user_id;
+
+-- Recreate the GotchiUsers table.
+
+INSERT OR IGNORE INTO Users(user_id) SELECT user_id FROM GotchiUser;
+
+CREATE TABLE GotchiUsers(user_id INTEGER, g INTEGER, gotchi_limit INTEGER, primary_gotchi_id INTEGER, FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE, FOREIGN KEY(primary_gotchi_id) REFERENCES Gotchis(id) ON DELETE SET NULL, UNIQUE(user_id));
+
+INSERT INTO GotchiUsers SELECT Users.id, g, gotchi_limit, Gotchis.id FROM Users, GotchiUser, Gotchis WHERE (primary_gotchi_id = (SELECT Gotchi.id FROM Gotchi WHERE Gotchi.name = Gotchis.name AND Gotchi.born_ts = Gotchis.born_ts)) AND GotchiUser.user_id = Users.user_id;
+INSERT INTO GotchiUsers(user_id, g, gotchi_limit) SELECT Users.id, g, gotchi_limit FROM Users, GotchiUser WHERE GotchiUser.user_id = Users.user_id AND Users.id NOT IN (SELECT user_id FROM GotchiUsers);
+
+DROP TABLE GotchiUser;
+DROP TABLE Gotchi;
+
 -- Recreate the Predates table.
--- Recreate the SpeciesCommonNames table.
+
+CREATE TABLE Predators(species_id INTEGER, prey_id INTEGER, notes TEXT, timestamp INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(prey_id) REFERENCES Taxa(id) ON DELETE CASCADE, UNIQUE(species_id, prey_id));
+
+INSERT INTO Predators(species_id, prey_id, notes)
+SELECT 
+  Taxa2.id AS species_id, 
+  Taxa.id AS prey_id,
+   Predates.notes
+FROM 
+  Taxa, 
+  Taxa AS Taxa2, 
+  Predates 
+WHERE 
+  Predates.species_id = (
+    SELECT 
+      Species.id 
+    FROM 
+      Species 
+    WHERE 
+      Species.name = Taxa.name 
+      AND Species.timestamp = Taxa.timestamp
+  ) 
+  AND Predates.eats_id = (
+    SELECT 
+      Species.id 
+    FROM 
+      Species 
+    WHERE 
+      Species.name = Taxa2.name 
+      AND Species.timestamp = Taxa2.timestamp
+  );
+
+DROP TABLE Predates;
+
 -- Recreate the SpeciesRelationships table.
+
+CREATE TABLE SpeciesRelationships2(species1_id INTEGER, species2_id INTEGER, relationship_id INTEGER, notes TEXT, timestamp INTEGER, FOREIGN KEY(species1_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(species2_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(relationship_id) REFERENCES Relationships(id) ON DELETE CASCADE, UNIQUE(species1_id, species2_id, relationship_id));
+
+INSERT INTO SpeciesRelationships2(species1_id, species2_id, relationship_id)
+SELECT 
+  Taxa2.id AS species_id, 
+  Taxa.id AS prey_id,
+  relationship_id
+FROM 
+  Taxa, 
+  Taxa AS Taxa2,
+  SpeciesRelationships 
+WHERE 
+  SpeciesRelationships.species1_id = (
+    SELECT 
+      Species.id 
+    FROM 
+      Species 
+    WHERE 
+      Species.name = Taxa.name 
+      AND Species.timestamp = Taxa.timestamp
+  ) 
+  AND SpeciesRelationships.species2_id = (
+    SELECT 
+      Species.id 
+    FROM 
+      Species 
+    WHERE 
+      Species.name = Taxa2.name 
+      AND Species.timestamp = Taxa2.timestamp
+  );
+
+DROP TABLE SpeciesRelationships;
+
+ALTER TABLE SpeciesRelationships2 RENAME TO SpeciesRelationships;
+
 -- Recreate the SpeciesRoles table.
+
+CREATE TABLE SpeciesRoles2(species_id INTEGER, role_id INTEGER, notes TEXT, timestamp INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(role_id) REFERENCES Roles(id) ON DELETE CASCADE, UNIQUE(species_id, role_id));
+
+INSERT INTO SpeciesRoles2(species_id, role_id, notes) SELECT Taxa.id, SpeciesRoles.role_id, SpeciesRoles.notes FROM SpeciesRoles, Taxa WHERE SpeciesRoles.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp);
+
+DROP TABLE SpeciesRoles;
+
+ALTER TABLE SpeciesRoles2 RENAME TO SpeciesRoles;
+
 -- Recreate the SpeciesZones table.
+
+CREATE TABLE SpeciesZones2(species_id INTEGER, zone_id INTEGER, notes TEXT, timestamp INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(zone_id) REFERENCES Zones(id) ON DELETE CASCADE, UNIQUE(species_id, zone_id));
+
+INSERT INTO SpeciesZones2 SELECT Taxa.id, SpeciesZones.zone_id, SpeciesZones.notes, SpeciesZones.timestamp FROM SpeciesZones, Taxa WHERE SpeciesZones.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp);
+
+DROP TABLE SpeciesZones;
+
+ALTER TABLE SpeciesZones2 RENAME TO SpeciesZones;
+
+-- Recreate the ZoneRecords table.
+
+CREATE TABLE ZoneRecords2(species_id INTEGER, zone_id INTEGER, reason TEXT, timestamp INTEGER, record_type INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(zone_id) REFERENCES Zones(id) ON DELETE CASCADE);
+
+INSERT INTO ZoneRecords2 SELECT Taxa.id, zone_id, reason, ZoneRecords.timestamp, record_type FROM ZoneRecords, Taxa WHERE ZoneRecords.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp);
+
+DROP TABLE ZoneRecords;
+
+ALTER TABLE ZoneRecords2 RENAME TO ZoneRecords;
+
+-- Finally, drop all obselete tables.
+
+DROP TABLE Species;
+DROP TABLE Genus;
+DROP TABLE Family;
+DROP TABLE Ord;
+DROP TABLE Class;
+DROP TABLE Phylum;
+DROP TABLE Kingdom;
+DROP TABLE Domain;
 
 COMMIT;

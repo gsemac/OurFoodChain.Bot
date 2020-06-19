@@ -10,7 +10,7 @@ namespace OurFoodChain.Common.Taxa {
         ISpecies {
 
         public virtual ITaxon Genus { get; set; }
-        public virtual ICreator Creator { get; set; }
+        public virtual IUser Creator { get; set; }
         public virtual DateTimeOffset CreationDate { get; set; } = DateUtilities.GetCurrentDateUtc();
         public virtual IConservationStatus Status { get; set; } = new ConservationStatus();
         public virtual long? Id { get; set; }

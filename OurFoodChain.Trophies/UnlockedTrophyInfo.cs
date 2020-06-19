@@ -9,12 +9,12 @@ namespace OurFoodChain.Trophies {
     public class UnlockedTrophyInfo :
         IUnlockedTrophyInfo {
 
-        public ICreator Creator { get; }
+        public IUser Creator { get; }
         public ITrophy Trophy { get; }
         public int TimesUnlocked { get; set; } = 1;
         public DateTimeOffset DateUnlocked { get; set; } = DateUtilities.GetCurrentDateUtc();
 
-        public UnlockedTrophyInfo(ICreator creator, ITrophy trophy) {
+        public UnlockedTrophyInfo(IUser creator, ITrophy trophy) {
 
             this.Creator = creator;
             this.Trophy = trophy;

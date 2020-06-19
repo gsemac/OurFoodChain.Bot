@@ -12,7 +12,7 @@ namespace OurFoodChain.Common {
         string Url { get; set; }
         string Name { get; set; }
         string Description { get; set; }
-        ICreator Artist { get; set; }
+        IUser Artist { get; set; }
         string Caption { get; set; }
 
     }

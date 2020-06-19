@@ -10,7 +10,7 @@ namespace OurFoodChain.Extensions {
 
     public static class OfcModuleBaseTrophyExtensions {
 
-        public static async Task ScanTrophiesAsync(this OfcModuleBase moduleBase, ICreator creator, bool scanImmediately = false) {
+        public static async Task ScanTrophiesAsync(this OfcModuleBase moduleBase, IUser creator, bool scanImmediately = false) {
 
             if (moduleBase.TrophyScanner != null && moduleBase.Config.TrophiesEnabled) {
 

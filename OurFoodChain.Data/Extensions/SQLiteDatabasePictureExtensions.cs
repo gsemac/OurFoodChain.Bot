@@ -192,7 +192,7 @@ namespace OurFoodChain.Data.Extensions {
                 Url = row.Field<string>("url"),
                 Name = row.Field<string>("name"),
                 Description = row.Field<string>("description"),
-                Artist = new Creator(row.Field<string>("artist"))
+                Artist = new User(row.Field<string>("artist"))
             };
 
             if (!row.IsNull("gallery_id"))

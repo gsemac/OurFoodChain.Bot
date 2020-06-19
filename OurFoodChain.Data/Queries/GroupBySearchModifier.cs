@@ -48,7 +48,7 @@ namespace OurFoodChain.Data.Queries {
                         return new string[] { (await context.Database.GetTaxaAsync(species)).GetOrDefault(TaxonRankType.Domain)?.Name ?? "N/A" };
 
                     case GroupBy.Creator:
-                        return new string[] { (await context.GetCreatorAsync(species.Creator))?.Name ?? new Creator("?").Name };
+                        return new string[] { (await context.GetCreatorAsync(species.Creator))?.Name ?? new User("?").Name };
 
                     case GroupBy.Status:
                         return new string[] { await Task.FromResult(species.Status.IsExinct ? "extinct" : "extant") };

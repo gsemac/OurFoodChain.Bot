@@ -10,7 +10,7 @@ namespace OurFoodChain.Trophies {
     public interface ITrophyScannerContext {
 
         ICommandContext CommandContext { get; }
-        ICreator Creator { get; }
+        IUser Creator { get; }
         SQLiteDatabase Database { get; }
 
     }

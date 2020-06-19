@@ -14,7 +14,7 @@ namespace OurFoodChain.Extensions {
 
         // Public members
 
-        public static async Task<Gotchi> GetGotchiOrReplyAsync(this OfcModuleBase moduleBase, ICreator creator) {
+        public static async Task<Gotchi> GetGotchiOrReplyAsync(this OfcModuleBase moduleBase, Common.IUser creator) {
 
             Gotchi gotchi = await moduleBase.Db.GetGotchiAsync(creator);
 

@@ -7,7 +7,7 @@ namespace OurFoodChain.Trophies {
 
     public interface IUnlockedTrophyInfo {
 
-        ICreator Creator { get; }
+        IUser Creator { get; }
         ITrophy Trophy { get; }
         int TimesUnlocked { get; set; }
         DateTimeOffset DateUnlocked { get; set; }

@@ -8,9 +8,9 @@ namespace OurFoodChain.Discord.Extensions {
 
     public static class UserExtensions {
 
-        public static ICreator ToCreator(this IUser user) {
+        public static Common.IUser ToCreator(this global::Discord.IUser user) {
 
-            return new Creator(user.Id, user.Username);
+            return new User(user.Id, user.Username);
 
         }
 

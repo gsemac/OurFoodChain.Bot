@@ -23,7 +23,7 @@ namespace OurFoodChain.Extensions {
 
         // Public members
 
-        public static async Task AddGotchiAsync(this SQLiteDatabase database, ICreator user, ISpecies species) {
+        public static async Task AddGotchiAsync(this SQLiteDatabase database, IUser user, ISpecies species) {
 
             // Generate a unique name for the user's gotchi, but duplicate names are allowed if necessary (e.g. all generated names exhausted).
 
@@ -72,7 +72,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<Gotchi> GetGotchiAsync(this SQLiteDatabase database, ICreator creator) {
+        public static async Task<Gotchi> GetGotchiAsync(this SQLiteDatabase database, IUser creator) {
 
             GotchiUserInfo userData = await database.GetUserInfoAsync(creator);
 
@@ -159,7 +159,7 @@ namespace OurFoodChain.Extensions {
             return gotchis;
 
         }
-        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, ICreator creator) {
+        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, IUser creator) {
 
             return await database.GetGotchisAsync(creator.UserId);
 
@@ -357,7 +357,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<GotchiUserInfo> GetUserInfoAsync(this SQLiteDatabase database, ICreator creator) {
+        public static async Task<GotchiUserInfo> GetUserInfoAsync(this SQLiteDatabase database, IUser creator) {
 
             return await database.GetUserInfoAsync(creator.UserId);
 
@@ -383,7 +383,7 @@ namespace OurFoodChain.Extensions {
             return new GotchiUserInfo(userId);
 
         }
-        public static async Task<long> GetGotchiCountAsync(this SQLiteDatabase database, ICreator creator) {
+        public static async Task<long> GetGotchiCountAsync(this SQLiteDatabase database, IUser creator) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Gotchi WHERE owner_id = $user_id")) {
 

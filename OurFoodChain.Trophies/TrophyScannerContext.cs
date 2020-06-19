@@ -11,10 +11,10 @@ namespace OurFoodChain.Trophies {
         ITrophyScannerContext {
 
         public ICommandContext CommandContext { get; }
-        public ICreator Creator { get; }
+        public IUser Creator { get; }
         public SQLiteDatabase Database { get; }
 
-        public TrophyScannerContext(ICommandContext commandContext, ICreator creator, SQLiteDatabase database) {
+        public TrophyScannerContext(ICommandContext commandContext, IUser creator, SQLiteDatabase database) {
 
             this.CommandContext = commandContext;
             this.Creator = creator;

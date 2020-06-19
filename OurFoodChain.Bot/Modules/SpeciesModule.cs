@@ -411,13 +411,13 @@ namespace OurFoodChain.Bot.Modules {
         }
 
         [Command("setowner", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetOwner(string speciesName, IUser user) {
+        public async Task SetOwner(string speciesName, global::Discord.IUser user) {
 
             await SetOwner(string.Empty, speciesName, user);
 
         }
         [Command("setowner", RunMode = RunMode.Async), RequirePrivilege(PrivilegeLevel.ServerModerator)]
-        public async Task SetOwner(string genusName, string speciesName, IUser user) {
+        public async Task SetOwner(string genusName, string speciesName, global::Discord.IUser user) {
 
             ISpecies species = await GetSpeciesOrReplyAsync(genusName, speciesName);
 
@@ -451,7 +451,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 // If we've seen this user before, get their user ID from the database.
 
-                ICreator creator = await Db.GetCreatorAsync(ownerName);
+                Common.IUser creator = await Db.GetCreatorAsync(ownerName);
 
                 if (creator.IsValid()) {
 
@@ -460,7 +460,7 @@ namespace OurFoodChain.Bot.Modules {
                 }
                 else {
 
-                    species.Creator = new Creator(ownerName);
+                    species.Creator = new User(ownerName);
 
                     await ReplyWarningAsync($"**{species.Creator}** is not an existing user. Was this intentional?");
 

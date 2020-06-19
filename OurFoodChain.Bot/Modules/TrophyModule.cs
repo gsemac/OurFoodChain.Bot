@@ -22,12 +22,12 @@ namespace OurFoodChain.Bot.Modules {
         OfcModuleBase {
 
         [Command("trophies"), Alias("achievements")]
-        public async Task Trophies(IUser user = null) {
+        public async Task Trophies(global::Discord.IUser user = null) {
 
             if (user is null)
                 user = Context.User;
 
-            ICreator creator = new Creator(user.Id, user.Username);
+            Common.IUser creator = new User(user.Id, user.Username);
             IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(creator, TrophyService.GetTrophies())).ToArray();
 
             Array.Sort(unlocked, (x, y) => x.DateUnlocked.CompareTo(y.DateUnlocked));
@@ -181,7 +181,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 foreach (IUnlockedTrophyInfo trophy_user in earners) {
 
-                    IUser user = await Context.Guild.GetUserAsync(trophy_user.Creator.UserId.Value);
+                    global::Discord.IUser user = await Context.Guild.GetUserAsync(trophy_user.Creator.UserId.Value);
 
                     if (!(user is null)) {
 
@@ -195,7 +195,7 @@ namespace OurFoodChain.Bot.Modules {
 
                 foreach (IUnlockedTrophyInfo trophy_user in earners.Reverse()) {
 
-                    IUser user = await Context.Guild.GetUserAsync(trophy_user.Creator.UserId.Value);
+                    global::Discord.IUser user = await Context.Guild.GetUserAsync(trophy_user.Creator.UserId.Value);
 
                     if (!(user is null)) {
 
@@ -230,7 +230,7 @@ namespace OurFoodChain.Bot.Modules {
 
             // #todo Show warning and do nothing if the user already has the trophy
 
-            await Db.UnlockTrophyAsync(new Creator(user.Id, user.Username), trophy);
+            await Db.UnlockTrophyAsync(new User(user.Id, user.Username), trophy);
 
             await BotUtils.ReplyAsync_Success(Context, string.Format("Successfully awarded **{0}** trophy to {1}.", trophy.Name, user.Mention));
 

@@ -181,7 +181,7 @@ namespace OurFoodChain.Data.Extensions {
             }
 
         }
-        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, ICreator creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
+        public static async Task<IEnumerable<ISpecies>> GetSpeciesAsync(this SQLiteDatabase database, IUser creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
 
             string query = !creator.UserId.HasValue ?
                 "SELECT * FROM Species WHERE owner = $owner" :
@@ -1025,7 +1025,7 @@ namespace OurFoodChain.Data.Extensions {
                 // We should at least try to handle this situation gracefully.
                 Genus = genus ?? new Taxon(TaxonRankType.Genus, "?"),
                 Description = row.Field<string>("description"),
-                Creator = new Creator(row.IsNull("user_id") ? default(ulong?) : (ulong)row.Field<long>("user_id"), row.Field<string>("owner") ?? "?"),
+                Creator = new User(row.IsNull("user_id") ? default(ulong?) : (ulong)row.Field<long>("user_id"), row.Field<string>("owner") ?? "?"),
                 CreationDate = DateUtilities.GetDateFromTimestamp((long)row.Field<decimal>("timestamp"))
             };
 

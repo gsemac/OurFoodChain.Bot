@@ -10,7 +10,7 @@ namespace OurFoodChain.Common.Taxa {
 
         ITaxon Genus { get; set; }
         BinomialName BinomialName { get; }
-        ICreator Creator { get; set; }
+        IUser Creator { get; set; }
         DateTimeOffset CreationDate { get; set; }
         IConservationStatus Status { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using OurFoodChain.Common;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data;
+using OurFoodChain.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,7 +14,7 @@ namespace OurFoodChain.Trophies.Extensions {
 
     public static class SQLiteDatabaseTrophyExtensions {
 
-        public static async Task<IEnumerable<IUnlockedTrophyInfo>> GetUnlockedTrophiesAsync(this SQLiteDatabase database, ICreator creator, IEnumerable<ITrophy> trophyList) {
+        public static async Task<IEnumerable<IUnlockedTrophyInfo>> GetUnlockedTrophiesAsync(this SQLiteDatabase database, IUser creator, IEnumerable<ITrophy> trophyList) {
 
             List<IUnlockedTrophyInfo> unlocked = new List<IUnlockedTrophyInfo>();
 
@@ -56,7 +57,7 @@ namespace OurFoodChain.Trophies.Extensions {
             return unlocked;
 
         }
-        public static async Task UnlockTrophyAsync(this SQLiteDatabase database, ICreator creator, ITrophy trophy) {
+        public static async Task UnlockTrophyAsync(this SQLiteDatabase database, IUser creator, ITrophy trophy) {
 
             if (creator.UserId.HasValue) {
 
@@ -96,7 +97,7 @@ namespace OurFoodChain.Trophies.Extensions {
 
                 foreach (DataRow row in rows) {
 
-                    ICreator creator = new Creator((ulong)row.Field<long>("user_id"), string.Empty);
+                    IUser creator = new User((ulong)row.Field<long>("user_id"), string.Empty);
                     DateTimeOffset dateEarned = DateUtilities.GetDateFromTimestamp(row.Field<long>("timestamp"));
 
                     results.Add(new UnlockedTrophyInfo(creator, trophy) {
@@ -124,7 +125,7 @@ namespace OurFoodChain.Trophies.Extensions {
             return (total_users <= 0) ? 0.0 : (100.0 * times_unlocked / total_users);
 
         }
-        public static async Task<double> GetTrophyCompletionRateAsync(this SQLiteDatabase database, ICreator creator, IEnumerable<ITrophy> trophyList, bool includeOneTimeTrophies = false) {
+        public static async Task<double> GetTrophyCompletionRateAsync(this SQLiteDatabase database, IUser creator, IEnumerable<ITrophy> trophyList, bool includeOneTimeTrophies = false) {
 
             IEnumerable<IUnlockedTrophyInfo> unlocked = await database.GetUnlockedTrophiesAsync(creator, trophyList);
 

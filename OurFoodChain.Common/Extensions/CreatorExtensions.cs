@@ -6,7 +6,7 @@ namespace OurFoodChain.Common.Extensions {
 
     public static class CreatorExtensions {
 
-        public static bool IsValid(this ICreator creator) {
+        public static bool IsValid(this IUser creator) {
 
             return creator != null && (!string.IsNullOrEmpty(creator.Name) || creator.UserId.HasValue);
 

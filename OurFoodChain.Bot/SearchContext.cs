@@ -26,14 +26,14 @@ namespace OurFoodChain {
 
         }
 
-        public async override Task<ICreator> GetCreatorAsync(ICreator creator) {
+        public async override Task<Common.IUser> GetCreatorAsync(Common.IUser creator) {
 
-            IUser discordUser = await DiscordUtilities.GetDiscordUserFromStringAsync(commandContext, creator.Name);
+            global::Discord.IUser discordUser = await DiscordUtilities.GetDiscordUserFromStringAsync(commandContext, creator.Name);
 
             if (discordUser is null)
                 return creator;
             else
-                return new Creator(discordUser.Id, discordUser.Username);
+                return new User(discordUser.Id, discordUser.Username);
 
         }
 

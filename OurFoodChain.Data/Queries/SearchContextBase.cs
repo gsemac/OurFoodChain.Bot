@@ -60,7 +60,7 @@ namespace OurFoodChain.Data.Queries {
 
         }
 
-        public virtual async Task<ICreator> GetCreatorAsync(ICreator creator) => await Task.FromResult(creator);
+        public virtual async Task<IUser> GetCreatorAsync(IUser creator) => await Task.FromResult(creator);
 
         // Protected members
 

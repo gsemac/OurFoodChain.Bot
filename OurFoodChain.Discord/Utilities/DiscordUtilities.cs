@@ -53,7 +53,7 @@ namespace OurFoodChain.Discord.Utilities {
 
         }
 
-        public static async Task<IUser> GetDiscordUserFromCreatorAsync(ICommandContext context, ICreator creator) {
+        public static async Task<global::Discord.IUser> GetDiscordUserFromCreatorAsync(ICommandContext context, Common.IUser creator) {
 
             if (!creator.UserId.HasValue)
                 return await GetDiscordUserFromStringAsync(context, creator.Name);
@@ -66,7 +66,7 @@ namespace OurFoodChain.Discord.Utilities {
             return users.Where(user => user.Id == creator.UserId).FirstOrDefault();
 
         }
-        public static async Task<IUser> GetDiscordUserFromStringAsync(ICommandContext context, string usernameOrMention) {
+        public static async Task<global::Discord.IUser> GetDiscordUserFromStringAsync(ICommandContext context, string usernameOrMention) {
 
             if (context is null || context.Guild is null)
                 return null;

@@ -32,7 +32,7 @@ namespace OurFoodChain.Modules {
             await Profile(Context.User);
         }
         [Command("profile")]
-        public async Task Profile(IUser user) {
+        public async Task Profile(global::Discord.IUser user) {
 
             // Begin building the embed (add default parameters).
 
@@ -44,7 +44,7 @@ namespace OurFoodChain.Modules {
             // Get basic information about the user.
             // This will return null if the user hasn't been seen before.
 
-            ICreator userInfo = await Db.GetCreatorAsync(user.ToCreator(), UserInfoQueryFlags.MatchEither);
+            Common.IUser userInfo = await Db.GetCreatorAsync(user.ToCreator(), UserInfoQueryFlags.MatchEither);
 
             if (userInfo is null) {
 
@@ -76,7 +76,7 @@ namespace OurFoodChain.Modules {
 
                 string rarest_trophy = "N/A";
 
-                IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyService.GetTrophies())).ToArray();
+                IUnlockedTrophyInfo[] unlocked = (await Db.GetUnlockedTrophiesAsync(new User(user.Id, user.Username), TrophyService.GetTrophies())).ToArray();
 
                 if (unlocked.Count() > 0) {
 
@@ -121,8 +121,8 @@ namespace OurFoodChain.Modules {
                 if (Config.TrophiesEnabled) {
 
                     embed.AddField("Trophies", string.Format("{0} ({1:0.0}%)",
-                        (await Db.GetUnlockedTrophiesAsync(new Creator(user.Id, user.Username), TrophyService.GetTrophies())).Count(),
-                        await Db.GetTrophyCompletionRateAsync(new Creator(user.Id, user.Username), TrophyService.GetTrophies())), inline: true);
+                        (await Db.GetUnlockedTrophiesAsync(new User(user.Id, user.Username), TrophyService.GetTrophies())).Count(),
+                        await Db.GetTrophyCompletionRateAsync(new User(user.Id, user.Username), TrophyService.GetTrophies())), inline: true);
 
                     embed.AddField("Rarest trophy", rarest_trophy, inline: true);
 
@@ -142,7 +142,7 @@ namespace OurFoodChain.Modules {
 
             foreach (UserRank userRank in userRanks) {
 
-                IUser user = Context.Guild is null ? null : await Context.Guild.GetUserAsync(userRank.User.Id);
+                global::Discord.IUser user = Context.Guild is null ? null : await Context.Guild.GetUserAsync(userRank.User.Id);
 
                 leaderboard.Add(user?.Username ?? userRank.User.Username, userRank.User.SubmissionCount);
 
@@ -275,9 +275,9 @@ namespace OurFoodChain.Modules {
 
         }
         [Command("addedby"), Alias("ownedby", "own", "owned")]
-        public async Task AddedBy(IUser user) {
+        public async Task AddedBy(global::Discord.IUser user) {
 
-            ICreator creator = (user ?? Context.User).ToCreator();
+            Common.IUser creator = (user ?? Context.User).ToCreator();
 
             // Get all species belonging to this user.
 
@@ -295,7 +295,7 @@ namespace OurFoodChain.Modules {
 
             // If we've seen the user before, we can get their information from the database.
 
-            ICreator creator = await Db.GetCreatorAsync(owner);
+            Common.IUser creator = await Db.GetCreatorAsync(owner);
 
             if (creator.IsValid()) {
 
@@ -352,7 +352,7 @@ namespace OurFoodChain.Modules {
 
         // Private members
 
-        private async Task ReplySpeciesAddedByAsync(ICreator creator, string thumbnailUrl, IEnumerable<ISpecies> species) {
+        private async Task ReplySpeciesAddedByAsync(Common.IUser creator, string thumbnailUrl, IEnumerable<ISpecies> species) {
 
             if (species.Count() <= 0) {
 

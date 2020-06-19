@@ -15,7 +15,7 @@ namespace OurFoodChain.Gotchis {
 
         // Public members
 
-        public string GetName(ICreator owner, ISpecies species) {
+        public string GetName(IUser owner, ISpecies species) {
 
             List<string> names = new List<string> {
                 GenerateJrName(owner, species)
@@ -41,12 +41,12 @@ namespace OurFoodChain.Gotchis {
                 .Select(x => input.Substring(0, x.Index + 1));
         }
 
-        private string GenerateJrName(ICreator owner, ISpecies species) {
+        private string GenerateJrName(IUser owner, ISpecies species) {
 
             return $"{owner.Name} Jr.";
 
         }
-        private string GenerateSubstringBasedName(ICreator owner, ISpecies species) {
+        private string GenerateSubstringBasedName(IUser owner, ISpecies species) {
 
             IEnumerable<string> substrings = GetSubstrings(species.GetName());
 

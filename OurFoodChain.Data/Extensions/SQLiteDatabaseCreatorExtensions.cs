@@ -21,19 +21,19 @@ namespace OurFoodChain.Data.Extensions {
 
     public static class SQLiteDatabaseCreatorExtensions {
 
-        public static async Task<ICreator> GetCreatorAsync(this SQLiteDatabase database, string name) {
+        public static async Task<IUser> GetCreatorAsync(this SQLiteDatabase database, string name) {
 
-            return await database.GetCreatorAsync(new Creator(name));
-
-        }
-        public static async Task<ICreator> GetCreatorAsync(this SQLiteDatabase database, ulong? userId) {
-
-            return await database.GetCreatorAsync(new Creator(userId, string.Empty));
+            return await database.GetCreatorAsync(new User(name));
 
         }
-        public static async Task<ICreator> GetCreatorAsync(this SQLiteDatabase database, ICreator creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
+        public static async Task<IUser> GetCreatorAsync(this SQLiteDatabase database, ulong? userId) {
 
-            ICreator result = null;
+            return await database.GetCreatorAsync(new User(userId, string.Empty));
+
+        }
+        public static async Task<IUser> GetCreatorAsync(this SQLiteDatabase database, IUser creator, UserInfoQueryFlags flags = UserInfoQueryFlags.Default) {
+
+            IUser result = null;
 
             // Note that we may have a null username or a null user ID.
             // At least one of them has to be non-null.
@@ -79,7 +79,7 @@ namespace OurFoodChain.Data.Extensions {
                             long firstSpeciesTimestamp = rows.Select(row => (long)row.Field<decimal>("timestamp")).OrderBy(timestamp => timestamp).FirstOrDefault();
                             long lastSpeciesTimestamp = rows.Select(rowx => (long)rowx.Field<decimal>("timestamp")).OrderByDescending(timestamp => timestamp).FirstOrDefault();
 
-                            result = new Creator(userId, username) {
+                            result = new User(userId, username) {
                                 SpeciesCount = rows.Count(),
                                 FirstSpeciesDate = firstSpeciesTimestamp > 0 ? DateUtilities.GetDateFromTimestamp(firstSpeciesTimestamp) : default(DateTimeOffset?),
                                 LastSpeciesDate = lastSpeciesTimestamp > 0 ? DateUtilities.GetDateFromTimestamp(lastSpeciesTimestamp) : default(DateTimeOffset?)

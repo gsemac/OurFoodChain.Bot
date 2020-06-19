@@ -14,7 +14,7 @@ namespace OurFoodChain.Data.Queries {
         ISearchModifier GetSearchModifier(string modifier);
         ISearchModifier GetSearchModifier(string name, string value);
 
-        Task<ICreator> GetCreatorAsync(ICreator creator);
+        Task<IUser> GetCreatorAsync(IUser creator);
 
     }
 

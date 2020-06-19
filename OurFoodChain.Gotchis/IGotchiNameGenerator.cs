@@ -8,7 +8,7 @@ namespace OurFoodChain.Gotchis {
 
     public interface IGotchiNameGenerator {
 
-        string GetName(ICreator owner, ISpecies species);
+        string GetName(IUser owner, ISpecies species);
 
     }
 

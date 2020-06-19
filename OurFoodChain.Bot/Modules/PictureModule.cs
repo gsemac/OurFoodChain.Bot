@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using Discord.Commands;
 using OurFoodChain.Attributes;
 using OurFoodChain.Bot.Attributes;
 using OurFoodChain.Common;
@@ -8,11 +7,11 @@ using OurFoodChain.Common.Taxa;
 using OurFoodChain.Common.Utilities;
 using OurFoodChain.Data.Extensions;
 using OurFoodChain.Discord.Extensions;
-using OurFoodChain.Discord.Messaging;
-using OurFoodChain.Discord.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using IUser = Discord.IUser;
 
 namespace OurFoodChain.Bot {
 
@@ -218,7 +217,7 @@ namespace OurFoodChain.Bot {
                 if (pictureIndex >= 0 && pictureIndex < pictures.Count()) {
 
                     IPicture picture = pictures.ElementAt(pictureIndex);
-                    picture.Artist = new Creator(artist);
+                    picture.Artist = new User(artist);
 
                     await Db.AddPictureAsync(species, picture);
 
@@ -260,7 +259,7 @@ namespace OurFoodChain.Bot {
         }
 
         [Command("gallery", RunMode = RunMode.Async), Alias("pic", "pics", "picture", "pictures", "image", "images")]
-        public async Task Gallery([Remainder]string arg0) {
+        public async Task Gallery([Remainder] string arg0) {
 
             arg0 = StringUtilities.StripOuterQuotes(arg0);
 

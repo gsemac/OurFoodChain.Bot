@@ -184,7 +184,7 @@ namespace OurFoodChain.Bot {
         private async Task TrophyUnlockedAsync(TrophyUnlockedArgs args) {
 
             ICommandContext commandContext = args.Context.CommandContext;
-            ICreator creator = args.Context.Creator;
+            Common.IUser creator = args.Context.Creator;
             ITrophy trophy = args.TrophyInfo.Trophy;
 
             if (commandContext != null) {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace OurFoodChain.Common {
 
-    public interface ICreator {
+    public interface IUser {
 
         ulong? UserId { get; set; }
         string Name { get; set; }

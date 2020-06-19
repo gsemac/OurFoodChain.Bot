@@ -14,11 +14,11 @@ namespace OurFoodChain.Data.Queries {
 
         public async override Task ApplyAsync(ISearchContext context, ISearchResult result) {
 
-            ICreator creator = await context.GetCreatorAsync(new Creator(Value));
+            IUser creator = await context.GetCreatorAsync(new User(Value));
 
             await result.FilterByAsync(async (species) => {
 
-                ICreator speciesCreator = await context.GetCreatorAsync(species.Creator);
+                IUser speciesCreator = await context.GetCreatorAsync(species.Creator);
 
                 if (creator is null || !creator.UserId.HasValue || !speciesCreator.UserId.HasValue) {
 

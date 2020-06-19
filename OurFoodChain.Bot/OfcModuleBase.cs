@@ -85,7 +85,7 @@ namespace OurFoodChain {
             }
 
         }
-        public async Task<IGuild> GetUserDMGuildAsync(IUser user) {
+        public async Task<IGuild> GetUserDMGuildAsync(global::Discord.IUser user) {
 
             if (userDmGuilds.TryGetValue(user.Id, out IGuild value))
                 return await Task.FromResult(value);
@@ -93,7 +93,7 @@ namespace OurFoodChain {
             return null;
 
         }
-        public async Task SetUserDMGuildAsync(IUser user, IGuild guild) {
+        public async Task SetUserDMGuildAsync(global::Discord.IUser user, IGuild guild) {
 
             userDmGuilds[user.Id] = guild;
 
@@ -775,9 +775,9 @@ namespace OurFoodChain {
 
         }
 
-        public async Task<ICreator> GetCreatorAsync(ICreator creator) {
+        public async Task<Common.IUser> GetCreatorAsync(Common.IUser creator) {
 
-            IUser user = await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, creator);
+            global::Discord.IUser user = await DiscordUtilities.GetDiscordUserFromCreatorAsync(Context, creator);
 
             return user?.ToCreator() ?? creator;
 

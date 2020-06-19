@@ -1,23 +1,7 @@
 ﻿using OurFoodChain.Common.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OurFoodChain.Gotchis {
-
-    public enum GotchiState {
-        Happy,
-        Hungry,
-        Eating,
-        Dead,
-        Energetic,
-        Sleeping,
-        Tired,
-        Evolved
-    }
 
     public class Gotchi {
 

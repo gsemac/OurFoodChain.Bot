@@ -259,9 +259,9 @@ ALTER TABLE Favorites2 RENAME TO Favorites;
 
 INSERT OR IGNORE INTO Users(user_id) SELECT owner_id FROM Gotchi;
 
-CREATE TABLE Gotchis(id INTEGER PRIMARY KEY AUTOINCREMENT, species_id INTEGER, user_id INTEGER, name TEXT, fed_ts INTEGER, born_ts INTEGER, evolved_ts INTEGER, level INTEGER, exp REAL, training_ts INTEGER, training_left INTEGER, viewed_ts INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE, UNIQUE(user_id, name));
+CREATE TABLE Gotchis(id INTEGER PRIMARY KEY AUTOINCREMENT, species_id INTEGER, user_id INTEGER, name TEXT, exp REAL, fed_ts INTEGER, born_ts INTEGER, evolved_ts INTEGER, viewed_ts INTEGER, training_ts INTEGER, training_left INTEGER, FOREIGN KEY(species_id) REFERENCES Taxa(id) ON DELETE CASCADE, FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE, UNIQUE(user_id, name));
 
-INSERT INTO Gotchis(species_id, user_id, name, fed_ts, born_ts, evolved_ts, level, exp, training_ts, training_left, viewed_ts) SELECT Taxa.id, Users.id, Gotchi.name, fed_ts, born_ts, evolved_ts, level, exp, training_ts, training_left, viewed_ts FROM Taxa, Users, Gotchi WHERE (Gotchi.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp)) AND Gotchi.owner_id = Users.user_id;
+INSERT INTO Gotchis(species_id, user_id, name, exp, fed_ts, born_ts, evolved_ts, viewed_ts, training_ts, training_left) SELECT Taxa.id, Users.id, Gotchi.name, exp, fed_ts, born_ts, evolved_ts, viewed_ts, training_ts, training_left FROM Taxa, Users, Gotchi WHERE (Gotchi.species_id = (SELECT Species.id FROM Species WHERE Species.name = Taxa.name AND Species.timestamp = Taxa.timestamp)) AND Gotchi.owner_id = Users.user_id;
 
 -- Recreate the GotchiUsers table.
 

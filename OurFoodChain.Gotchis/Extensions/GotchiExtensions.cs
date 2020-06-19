@@ -18,28 +18,18 @@ namespace OurFoodChain.Gotchis.Extensions {
 
         }
 
-        public static bool CanEvolve(this IGotchi gotchi) {
-
-            return gotchi.IsAlive() && gotchi.HoursSinceEvolved() >= 7 * 24;
-
-        }
-
         // Private members
 
         public const long HoursPerDay = 24;
 
-        private static bool IsAlive(this IGotchi gotchi) {
+        private static bool IsAlive(this IGotchi gotchi, int maxMissedFeedings) {
 
-            throw new NotImplementedException();
-
-            //return gotchi.HoursSinceFed() <= (HoursPerDay * Global.GotchiContext.Config.MaxMissedFeedings);
+            return gotchi.HoursSinceFed() <= (HoursPerDay * maxMissedFeedings);
 
         }
-        private static bool IsSleeping(this IGotchi gotchi) {
+        private static bool IsSleeping(this IGotchi gotchi, int sleepHours) {
 
-            throw new NotImplementedException();
-
-            //return (gotchi.HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - Global.GotchiContext.Config.SleepHours);
+            return (gotchi.HoursSinceBirth() % HoursPerDay) >= (HoursPerDay - sleepHours);
 
         }
         private static bool IsEating(this IGotchi gotchi) {
@@ -60,31 +50,34 @@ namespace OurFoodChain.Gotchis.Extensions {
             return gotchi.ViewedTimestamp.HasValue && gotchi.ViewedTimestamp < gotchi.EvolvedTimestamp;
 
         }
+        private static bool CanEvolve(this IGotchi gotchi, int maxMissedFeedings) {
 
-        private static long HoursOfSleepLeft(this IGotchi gotchi) {
+            return gotchi.IsAlive(maxMissedFeedings) && gotchi.HoursSinceEvolved() >= 7 * 24;
 
-            if (!gotchi.IsSleeping())
+        }
+
+        private static long HoursOfSleepLeft(this IGotchi gotchi, int sleepHours) {
+
+            if (!gotchi.IsSleeping(sleepHours))
                 return 0;
 
             return HoursPerDay - (gotchi.HoursSinceBirth() % HoursPerDay);
 
         }
-        private static long HoursSinceLastSlept(this IGotchi gotchi) {
+        private static long HoursSinceLastSlept(this IGotchi gotchi, int sleepHours) {
 
-            if (gotchi.IsSleeping())
+            if (gotchi.IsSleeping(sleepHours))
                 return 0;
 
             return gotchi.HoursSinceBirth() % HoursPerDay;
 
         }
-        private static long HoursUntilSleep(this IGotchi gotchi) {
+        private static long HoursUntilSleep(this IGotchi gotchi, int sleepHours) {
 
-            throw new NotImplementedException();
+            if (gotchi.IsSleeping(sleepHours))
+                return 0;
 
-            //if (gotchi.IsSleeping())
-            //    return 0;
-
-            //return (HoursPerDay - Global.GotchiContext.Config.SleepHours) - (gotchi.HoursSinceBirth() % HoursPerDay);
+            return HoursPerDay - sleepHours - (gotchi.HoursSinceBirth() % HoursPerDay);
 
         }
         private static long HoursSinceBirth(this IGotchi gotchi) {

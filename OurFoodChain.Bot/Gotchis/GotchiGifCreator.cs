@@ -12,7 +12,7 @@ namespace OurFoodChain.Gotchis {
         public Gotchi gotchi = null;
         public int x = 0;
         public int y = 0;
-        public GotchiState state = GotchiState.Happy;
+        public GotchiStates state = GotchiStates.Happy;
         public bool auto = true;
 
     }
@@ -36,7 +36,7 @@ namespace OurFoodChain.Gotchis {
 
         // Public methods
 
-        public void AddGotchi(int x, int y, Bitmap image, GotchiState type) {
+        public void AddGotchi(int x, int y, Bitmap image, GotchiStates type) {
 
             // Make the background color transparent (if it isn't already).
 
@@ -58,26 +58,26 @@ namespace OurFoodChain.Gotchis {
             _gotchi_params.Add(p);
 
         }
-        public void AddGotchi(Bitmap image, GotchiState type) {
+        public void AddGotchi(Bitmap image, GotchiStates type) {
 
             Point pos;
 
             switch (type) {
 
                 default:
-                case GotchiState.Happy:
-                case GotchiState.Dead:
-                case GotchiState.Energetic:
-                case GotchiState.Tired:
+                case GotchiStates.Happy:
+                case GotchiStates.Dead:
+                case GotchiStates.Energetic:
+                case GotchiStates.Tired:
                     pos = new Point(150, 140);
                     break;
 
-                case GotchiState.Sleeping:
+                case GotchiStates.Sleeping:
                     pos = new Point(250, 140);
                     break;
 
-                case GotchiState.Hungry:
-                case GotchiState.Eating:
+                case GotchiStates.Hungry:
+                case GotchiStates.Eating:
                     pos = new Point(75, 140);
                     break;
 
@@ -123,14 +123,14 @@ namespace OurFoodChain.Gotchis {
                     _drawBackground(gfx, _background_image.Bitmap);
 
                     // If any gotchi is eating, draw food in the food dish.
-                    if (_gotchi_params.Any(x => x.Type == GotchiState.Eating))
+                    if (_gotchi_params.Any(x => x.Type == GotchiStates.Eating))
                         _drawFood(gfx);
 
                     foreach (GotchiParams p in _gotchi_params)
                         _drawGotchi(gfx, p, _getAnimationTransforms(p.Type)[i]);
 
                     // If any gotchi is sleeping, dim the lighting.
-                    if (_gotchi_params.Any(x => x.Type == GotchiState.Sleeping))
+                    if (_gotchi_params.Any(x => x.Type == GotchiStates.Sleeping))
                         using (Brush brush = new SolidBrush(Color.FromArgb(100, Color.DarkBlue)))
                             gfx.FillRectangle(brush, new Rectangle(0, 0, _screen_size.Width, _screen_size.Height));
 
@@ -218,7 +218,7 @@ namespace OurFoodChain.Gotchis {
 
             public Point Position;
             public PossibleOwnershipBitmap Image;
-            public GotchiState Type = GotchiState.Happy;
+            public GotchiStates Type = GotchiStates.Happy;
 
             public void Dispose() {
                 Image.Dispose();
@@ -242,7 +242,7 @@ namespace OurFoodChain.Gotchis {
 
         // Private methods
 
-        private GotchiTransform[] _getAnimationTransforms(GotchiState type) {
+        private GotchiTransform[] _getAnimationTransforms(GotchiStates type) {
 
             GotchiTransform[] transforms = new GotchiTransform[2];
 
@@ -256,33 +256,33 @@ namespace OurFoodChain.Gotchis {
             switch (type) {
 
                 default:
-                case GotchiState.Hungry:
+                case GotchiStates.Hungry:
                     transforms[0].Offset.Y = 0;
                     transforms[1].Offset.Y = 2;
                     break;
 
-                case GotchiState.Eating:
-                case GotchiState.Happy:
+                case GotchiStates.Eating:
+                case GotchiStates.Happy:
                     transforms[0].Angle = 10;
                     transforms[1].Angle = -10;
                     break;
 
-                case GotchiState.Sleeping:
+                case GotchiStates.Sleeping:
                     transforms[0].Angle = 90;
                     transforms[1].Angle = 90;
                     break;
 
-                case GotchiState.Dead:
+                case GotchiStates.Dead:
                     transforms[0].Angle = 180;
                     transforms[1].Angle = 180;
                     break;
 
-                case GotchiState.Tired:
+                case GotchiStates.Tired:
                     transforms[0].Offset.Y = 0;
                     transforms[1].Offset.Y = 1;
                     break;
 
-                case GotchiState.Energetic:
+                case GotchiStates.Energetic:
                     transforms[0].Angle = 10;
                     transforms[1].Angle = -10;
                     transforms[0].Offset.Y = 0;
@@ -294,41 +294,41 @@ namespace OurFoodChain.Gotchis {
             return transforms;
 
         }
-        private void _drawEmote(Graphics gfx, GotchiState type, int x, int y, int gotchiW, int gotchiH) {
+        private void _drawEmote(Graphics gfx, GotchiStates type, int x, int y, int gotchiW, int gotchiH) {
 
             string fname = string.Empty;
 
             switch (type) {
 
-                case GotchiState.Happy:
+                case GotchiStates.Happy:
                     fname = "bubble_happy.png";
                     break;
 
-                case GotchiState.Hungry:
+                case GotchiStates.Hungry:
                     fname = "bubble_hungry.png";
                     break;
 
-                case GotchiState.Dead:
+                case GotchiStates.Dead:
                     fname = "bubble_dead.png";
                     break;
 
-                case GotchiState.Eating:
+                case GotchiStates.Eating:
                     fname = "bubble_eating.png";
                     break;
 
-                case GotchiState.Sleeping:
+                case GotchiStates.Sleeping:
                     fname = "bubble_sleeping.png";
                     break;
 
-                case GotchiState.Energetic:
+                case GotchiStates.Energetic:
                     fname = "bubble_energetic.png";
                     break;
 
-                case GotchiState.Tired:
+                case GotchiStates.Tired:
                     fname = "bubble_tired.png";
                     break;
 
-                case GotchiState.Evolved:
+                case GotchiStates.Evolved:
                     fname = "bubble_evolved.png";
                     break;
 

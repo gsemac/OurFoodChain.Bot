@@ -363,7 +363,7 @@ namespace OurFoodChain.Gotchis {
                 gotchi = state.player1.Gotchi.Gotchi,
                 x = 50,
                 y = 150,
-                state = state.player1.Gotchi.Stats.Hp > 0 ? (state.player2.Gotchi.Stats.Hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                state = state.player1.Gotchi.Stats.Hp > 0 ? (state.player2.Gotchi.Stats.Hp <= 0 ? GotchiStates.Happy : GotchiStates.Energetic) : GotchiStates.Dead,
                 auto = false
             };
 
@@ -371,7 +371,7 @@ namespace OurFoodChain.Gotchis {
                 gotchi = state.player2.Gotchi.Gotchi,
                 x = 250,
                 y = 150,
-                state = state.player2.Gotchi.Stats.Hp > 0 ? (state.player1.Gotchi.Stats.Hp <= 0 ? GotchiState.Happy : GotchiState.Energetic) : GotchiState.Dead,
+                state = state.player2.Gotchi.Stats.Hp > 0 ? (state.player1.Gotchi.Stats.Hp <= 0 ? GotchiStates.Happy : GotchiStates.Energetic) : GotchiStates.Dead,
                 auto = false
             };
 

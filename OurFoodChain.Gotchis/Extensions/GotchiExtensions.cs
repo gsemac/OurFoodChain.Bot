@@ -8,6 +8,11 @@ namespace OurFoodChain.Gotchis.Extensions {
 
         // Public members
 
+        public static string GetName(this IGotchi gotchi) {
+
+            return StringUtilities.ToTitleCase(gotchi.Name, TitleOptions.CapitalizeRomanNumerals);
+
+        }
         public static long GetAge(this IGotchi gotchi) {
 
             Debug.Assert(gotchi.BornTimestamp.HasValue);
@@ -15,6 +20,41 @@ namespace OurFoodChain.Gotchis.Extensions {
             DateTimeOffset ts = DateUtilities.GetCurrentDateUtc();
 
             return (long)Math.Floor((ts - gotchi.BornTimestamp.Value).TotalDays);
+
+        }
+
+        public static GotchiStates GetStates(this IGotchi gotchi, IGotchiOptions options) {
+
+            GotchiStates states = 0;
+
+            if (!gotchi.IsAlive(options.MaxMissedFeedings))
+                states |= GotchiStates.Dead;
+            else if (gotchi.IsSleeping(options.SleepHours))
+                states |= GotchiStates.Sleeping;
+            else if (gotchi.IsEvolved())
+                states |= GotchiStates.Evolved;
+            else if (gotchi.IsHungry())
+                states |= GotchiStates.Hungry;
+            else if (gotchi.IsEating())
+                states |= GotchiStates.Eating;
+            else if (gotchi.HoursSinceLastSlept(options.SleepHours) < 1)
+                states |= GotchiStates.Energetic;
+            else if (gotchi.HoursUntilSleep(options.SleepHours) <= 1)
+                states |= GotchiStates.Tired;
+
+            if (!states.HasFlag(GotchiStates.Dead) && gotchi.IsReadyToEvolve())
+                states |= GotchiStates.ReadyToEvolve;
+
+            return states;
+
+        }
+
+        public static long HoursOfSleepLeft(this IGotchi gotchi, int sleepHours) {
+
+            if (!gotchi.IsSleeping(sleepHours))
+                return 0;
+
+            return HoursPerDay - (gotchi.HoursSinceBirth() % HoursPerDay);
 
         }
 
@@ -50,20 +90,12 @@ namespace OurFoodChain.Gotchis.Extensions {
             return gotchi.ViewedTimestamp.HasValue && gotchi.ViewedTimestamp < gotchi.EvolvedTimestamp;
 
         }
-        private static bool CanEvolve(this IGotchi gotchi, int maxMissedFeedings) {
+        private static bool IsReadyToEvolve(this IGotchi gotchi) {
 
-            return gotchi.IsAlive(maxMissedFeedings) && gotchi.HoursSinceEvolved() >= 7 * 24;
-
-        }
-
-        private static long HoursOfSleepLeft(this IGotchi gotchi, int sleepHours) {
-
-            if (!gotchi.IsSleeping(sleepHours))
-                return 0;
-
-            return HoursPerDay - (gotchi.HoursSinceBirth() % HoursPerDay);
+            return gotchi.HoursSinceEvolved() >= 7 * 24;
 
         }
+
         private static long HoursSinceLastSlept(this IGotchi gotchi, int sleepHours) {
 
             if (gotchi.IsSleeping(sleepHours))

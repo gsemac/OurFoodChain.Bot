@@ -86,25 +86,25 @@ namespace OurFoodChain.Gotchis {
             }
         }
 
-        public GotchiState State {
+        public GotchiStates State {
             get {
 
                 if (!IsAlive)
-                    return GotchiState.Dead;
+                    return GotchiStates.Dead;
                 else if (IsSleeping)
-                    return GotchiState.Sleeping;
+                    return GotchiStates.Sleeping;
                 else if (IsEvolved)
-                    return GotchiState.Evolved;
+                    return GotchiStates.Evolved;
                 else if (IsHungry)
-                    return GotchiState.Hungry;
+                    return GotchiStates.Hungry;
                 else if (IsEating)
-                    return GotchiState.Eating;
+                    return GotchiStates.Eating;
                 else if (HoursSinceLastSlept() < 1)
-                    return GotchiState.Energetic;
+                    return GotchiStates.Energetic;
                 else if (HoursUntilSleep() <= 1)
-                    return GotchiState.Tired;
+                    return GotchiStates.Tired;
 
-                return GotchiState.Happy;
+                return GotchiStates.Happy;
 
 
             }

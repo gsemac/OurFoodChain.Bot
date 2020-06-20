@@ -53,32 +53,32 @@ namespace OurFoodChain.Bot.Modules {
 
             switch (gotchi.State) {
 
-                case GotchiState.Dead:
+                case GotchiStates.Dead:
                     status = "Oh no... {0} has died...";
                     break;
 
-                case GotchiState.Evolved:
+                case GotchiStates.Evolved:
                     status = "Congratulations, {0} " + string.Format("evolved into {0}!", species.GetShortName());
                     break;
 
-                case GotchiState.Sleeping:
+                case GotchiStates.Sleeping:
                     long hours_left = gotchi.HoursOfSleepLeft();
                     status = "{0} is taking a nap. " + string.Format("Check back in {0} hour{1}.", hours_left, hours_left > 1 ? "s" : string.Empty);
                     break;
 
-                case GotchiState.Hungry:
+                case GotchiStates.Hungry:
                     status = "{0} is feeling hungry!";
                     break;
 
-                case GotchiState.Eating:
+                case GotchiStates.Eating:
                     status = "{0} is enjoying some delicious Suka-Flakes™!";
                     break;
 
-                case GotchiState.Energetic:
+                case GotchiStates.Energetic:
                     status = "{0} is feeling rowdy!";
                     break;
 
-                case GotchiState.Tired:
+                case GotchiStates.Tired:
                     status = "{0} is getting a bit sleepy...";
                     break;
 

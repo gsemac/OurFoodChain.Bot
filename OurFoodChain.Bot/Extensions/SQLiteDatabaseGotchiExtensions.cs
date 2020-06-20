@@ -23,7 +23,7 @@ namespace OurFoodChain.Extensions {
 
         // Public members
 
-        public static async Task AddGotchiAsync(this SQLiteDatabase database, IUser user, ISpecies species) {
+        public static async Task AddGotchiAsync(this ISQLiteDatabase database, IUser user, ISpecies species) {
 
             // Generate a unique name for the user's gotchi, but duplicate names are allowed if necessary (e.g. all generated names exhausted).
 
@@ -39,6 +39,10 @@ namespace OurFoodChain.Extensions {
 
             // Add the Gotchi to the database.
 
+            await database.AddUserAsync(user);
+
+            user = await database.GetUserAsync(user);
+
             long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT INTO Gotchi(species_id, name, owner_id, fed_ts, born_ts, died_ts, evolved_ts) VALUES($species_id, $name, $owner_id, $fed_ts, $born_ts, $died_ts, $evolved_ts)")) {
@@ -48,7 +52,6 @@ namespace OurFoodChain.Extensions {
                 cmd.Parameters.AddWithValue("$name", name.ToLower());
                 cmd.Parameters.AddWithValue("$fed_ts", ts - 60 * 60); // subtract an hour to keep it from eating immediately after creation
                 cmd.Parameters.AddWithValue("$born_ts", ts);
-                cmd.Parameters.AddWithValue("$died_ts", 0);
                 cmd.Parameters.AddWithValue("$evolved_ts", ts);
 
                 await database.ExecuteNonQueryAsync(cmd);
@@ -72,7 +75,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<Gotchi> GetGotchiAsync(this SQLiteDatabase database, IUser creator) {
+        public static async Task<Gotchi> GetGotchiAsync(this ISQLiteDatabase database, IUser creator) {
 
             GotchiUserInfo userData = await database.GetUserInfoAsync(creator);
 
@@ -101,7 +104,7 @@ namespace OurFoodChain.Extensions {
             return gotchi;
 
         }
-        public static async Task<Gotchi> GetGotchiAsync(this SQLiteDatabase database, long gotchiId) {
+        public static async Task<Gotchi> GetGotchiAsync(this ISQLiteDatabase database, long gotchiId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE id = $id;")) {
 
@@ -114,7 +117,7 @@ namespace OurFoodChain.Extensions {
             }
 
         }
-        public static async Task<Gotchi> GetGotchiAsync(this SQLiteDatabase database, ulong? userId, string name) {
+        public static async Task<Gotchi> GetGotchiAsync(this ISQLiteDatabase database, ulong? userId, string name) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM Gotchi WHERE owner_id = $owner_id AND name = $name;")) {
 
@@ -128,7 +131,7 @@ namespace OurFoodChain.Extensions {
             }
 
         }
-        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database) {
+        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this ISQLiteDatabase database) {
 
             List<Gotchi> gotchis = new List<Gotchi>();
 
@@ -139,7 +142,7 @@ namespace OurFoodChain.Extensions {
             return gotchis;
 
         }
-        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, ulong? userId) {
+        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this ISQLiteDatabase database, ulong? userId) {
 
             List<Gotchi> gotchis = new List<Gotchi>();
 
@@ -159,13 +162,13 @@ namespace OurFoodChain.Extensions {
             return gotchis;
 
         }
-        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this SQLiteDatabase database, IUser creator) {
+        public static async Task<IEnumerable<Gotchi>> GetGotchisAsync(this ISQLiteDatabase database, IUser creator) {
 
             return await database.GetGotchisAsync(creator.UserId);
 
         }
 
-        public static async Task SetGotchiNameAsync(this SQLiteDatabase database, Gotchi gotchi, string name) {
+        public static async Task SetGotchiNameAsync(this ISQLiteDatabase database, Gotchi gotchi, string name) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET name = $name WHERE owner_id = $owner_id AND id = $id")) {
 
@@ -179,7 +182,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<int> FeedGotchisAsync(this SQLiteDatabase database, GotchiContext context, ulong userId) {
+        public static async Task<int> FeedGotchisAsync(this ISQLiteDatabase database, GotchiContext context, ulong userId) {
 
             // Although we only display the state of the primary Gotchi at the moment, update the feed time for all Gotchis owned by this user.
             // Only Gotchis that are still alive (i.e. have been fed recently enough) get their timestamp updated.
@@ -196,12 +199,12 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<bool> EvolveAndUpdateGotchiAsync(this SQLiteDatabase database, Gotchi gotchi) {
+        public static async Task<bool> EvolveAndUpdateGotchiAsync(this ISQLiteDatabase database, Gotchi gotchi) {
 
             return await database.EvolveAndUpdateGotchiAsync(gotchi, string.Empty);
 
         }
-        public static async Task<bool> EvolveAndUpdateGotchiAsync(this SQLiteDatabase database, Gotchi gotchi, string desiredEvo) {
+        public static async Task<bool> EvolveAndUpdateGotchiAsync(this ISQLiteDatabase database, Gotchi gotchi, string desiredEvo) {
 
             bool evolved = false;
 
@@ -282,7 +285,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<BattleGotchi> GenerateGotchiAsync(this SQLiteDatabase database, GotchiGenerationParameters parameters) {
+        public static async Task<BattleGotchi> GenerateGotchiAsync(this ISQLiteDatabase database, GotchiGenerationParameters parameters) {
 
             BattleGotchi result = new BattleGotchi();
 
@@ -345,7 +348,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task DeleteGotchiAsync(this SQLiteDatabase database, long gotchiId) {
+        public static async Task DeleteGotchiAsync(this ISQLiteDatabase database, long gotchiId) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("DELETE FROM Gotchi WHERE id = $id")) {
 
@@ -357,12 +360,12 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<GotchiUserInfo> GetUserInfoAsync(this SQLiteDatabase database, IUser creator) {
+        public static async Task<GotchiUserInfo> GetUserInfoAsync(this ISQLiteDatabase database, IUser creator) {
 
             return await database.GetUserInfoAsync(creator.UserId);
 
         }
-        public static async Task<GotchiUserInfo> GetUserInfoAsync(this SQLiteDatabase database, ulong? userId) {
+        public static async Task<GotchiUserInfo> GetUserInfoAsync(this ISQLiteDatabase database, ulong? userId) {
 
             if (userId.HasValue) {
 
@@ -383,7 +386,7 @@ namespace OurFoodChain.Extensions {
             return new GotchiUserInfo(userId);
 
         }
-        public static async Task<long> GetGotchiCountAsync(this SQLiteDatabase database, IUser creator) {
+        public static async Task<long> GetGotchiCountAsync(this ISQLiteDatabase database, IUser creator) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Gotchi WHERE owner_id = $user_id")) {
 
@@ -396,7 +399,7 @@ namespace OurFoodChain.Extensions {
             }
 
         }
-        public static async Task UpdateUserInfoAsync(this SQLiteDatabase database, GotchiUserInfo userInfo) {
+        public static async Task UpdateUserInfoAsync(this ISQLiteDatabase database, GotchiUserInfo userInfo) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("INSERT OR REPLACE INTO GotchiUser(user_id, g, gotchi_limit, primary_gotchi_id) VALUES ($user_id, $g, $gotchi_limit, $primary_gotchi_id)")) {
 
@@ -411,7 +414,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<string> CreateGotchiGifAsync(this SQLiteDatabase database, Gotchi gotchi) {
+        public static async Task<string> CreateGotchiGifAsync(this ISQLiteDatabase database, Gotchi gotchi) {
 
             GotchiGifCreatorParams p = new GotchiGifCreatorParams {
                 gotchi = gotchi,
@@ -423,12 +426,12 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task SetViewedTimestampAsync(this SQLiteDatabase database, Gotchi gotchi, long viewedTimestamp) {
+        public static async Task SetViewedTimestampAsync(this ISQLiteDatabase database, Gotchi gotchi, long viewedTimestamp) {
 
             await database.SetViewedTimestampAsync(gotchi.Id, viewedTimestamp);
 
         }
-        public static async Task SetViewedTimestampAsync(this SQLiteDatabase database, long gotchiId, long viewedTimestamp) {
+        public static async Task SetViewedTimestampAsync(this ISQLiteDatabase database, long gotchiId, long viewedTimestamp) {
 
             using (SQLiteCommand cmd = new SQLiteCommand("UPDATE Gotchi SET viewed_ts = $viewed_ts WHERE id = $id")) {
 
@@ -441,7 +444,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<GotchiInventory> GetInventoryAsync(this SQLiteDatabase database, ulong userId) {
+        public static async Task<GotchiInventory> GetInventoryAsync(this ISQLiteDatabase database, ulong userId) {
 
             List<GotchiInventoryItem> items = new List<GotchiInventoryItem>();
 
@@ -463,7 +466,7 @@ namespace OurFoodChain.Extensions {
             return new GotchiInventory(items.OrderBy(x => x.Item.Id));
 
         }
-        public static async Task<GotchiInventoryItem> AddItemToInventoryAsync(this SQLiteDatabase database, ulong userId, GotchiItem item, long count) {
+        public static async Task<GotchiInventoryItem> AddItemToInventoryAsync(this ISQLiteDatabase database, ulong userId, GotchiItem item, long count) {
 
             // We could just increment the "count" field, but the user is not guaranteed to already have the item.
 
@@ -484,12 +487,12 @@ namespace OurFoodChain.Extensions {
             return inventoryItem;
 
         }
-        public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(this SQLiteDatabase database, ulong userId, GotchiItem item) {
+        public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(this ISQLiteDatabase database, ulong userId, GotchiItem item) {
 
             return await database.GetItemFromInventoryAsync(userId, (GotchiItemId)item.Id);
 
         }
-        public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(this SQLiteDatabase database, ulong userId, GotchiItemId itemId) {
+        public static async Task<GotchiInventoryItem> GetItemFromInventoryAsync(this ISQLiteDatabase database, ulong userId, GotchiItemId itemId) {
 
             return (await database.GetInventoryAsync(userId))
                 .Where(i => i.Item.Id == (int)itemId)
@@ -541,7 +544,7 @@ namespace OurFoodChain.Extensions {
 
         }
 
-        public static async Task<string> CreateGotchiGifAsync(this SQLiteDatabase database, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
+        public static async Task<string> CreateGotchiGifAsync(this ISQLiteDatabase database, GotchiGifCreatorParams[] gifParams, GotchiGifCreatorExtraParams extraParams) {
 
             // Create the temporary directory where the GIF will be saved.
 
@@ -597,7 +600,7 @@ namespace OurFoodChain.Extensions {
             return outputPath;
 
         }
-        private static async Task<string> DownloadGotchiImageAsync(this SQLiteDatabase database, Gotchi gotchi) {
+        private static async Task<string> DownloadGotchiImageAsync(this ISQLiteDatabase database, Gotchi gotchi) {
 
             // Get the species.
 
@@ -642,7 +645,7 @@ namespace OurFoodChain.Extensions {
             return gotchi_pic;
 
         }
-        public static async Task<string> GetGotchiBackgroundFilenameAsync(this SQLiteDatabase database, Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
+        public static async Task<string> GetGotchiBackgroundFilenameAsync(this ISQLiteDatabase database, Gotchi gotchi, string defaultFileName = "home_aquatic.png") {
 
             // Returns a background image based on the gotchi passed in (i.e., corresponding to the zone it resides in).
 

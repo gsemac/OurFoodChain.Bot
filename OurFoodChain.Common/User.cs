@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OurFoodChain.Common {
 
     public class User :
         IUser {
 
+        public long? Id { get; set; }
         public ulong? UserId { get; set; }
         public string Name { get; set; }
 

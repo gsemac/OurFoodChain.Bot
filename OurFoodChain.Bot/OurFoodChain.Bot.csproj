@@ -336,7 +336,6 @@
     <Compile Include="Drawing\GraphicsUtils.cs" />
     <Compile Include="Taxa\ExtinctionInfo.cs" />
     <Compile Include="Gotchis\GotchiBattleState.cs" />
-    <Compile Include="Gotchis\Gotchi.cs" />
     <Compile Include="Modules\GotchiModule.cs" />
     <Compile Include="Gotchis\GotchiGifCreator.cs" />
     <Compile Include="Gotchis\GotchiItem.cs" />
